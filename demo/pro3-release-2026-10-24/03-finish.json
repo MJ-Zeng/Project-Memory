@@ -1,0 +1,44 @@
+{
+  "base_sha": "1fa0032280cc3a53b5520107050f0ef6a804440a",
+  "blockers": [
+    "pr_merge_evidence",
+    "test_evidence_present",
+    "docs_impact",
+    "review_attestation"
+  ],
+  "close_issue_automatically": false,
+  "gates": [
+    {
+      "detail": "No PR provided",
+      "id": "pr_merge_evidence",
+      "status": "unknown"
+    },
+    {
+      "detail": "Provide test run URL/log; passing this gate does not independently verify CI",
+      "id": "test_evidence_present",
+      "status": "unknown"
+    },
+    {
+      "detail": "Documentation impact not assessed",
+      "id": "docs_impact",
+      "status": "unknown"
+    },
+    {
+      "detail": "Awaiting human review attestation",
+      "id": "review_attestation",
+      "status": "unknown"
+    },
+    {
+      "detail": "Local deterministic audit has 0 high-severity findings",
+      "id": "knowledge_audit",
+      "status": "pass"
+    }
+  ],
+  "generated_at": "2026-10-24T15:47:03+00:00",
+  "kind": "completion_report",
+  "pr_number": null,
+  "provenance_warning": "PASS means evidence/attestation present, not independently verified CI, reviewers or snapshot; only authorized humans and GitHub policy can close the task.",
+  "recommendation": "do_not_close",
+  "schema_version": "1.1",
+  "task": "pro3-release-2026-10-24"
+}

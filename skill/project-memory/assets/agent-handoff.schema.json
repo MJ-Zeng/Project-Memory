@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/project-memory/v1/agent-handoff.schema.json",
+  "title": "agent-handoff",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "task",
+    "agent",
+    "run_id",
+    "base_sha",
+    "completed",
+    "remaining",
+    "status"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.1"
+    },
+    "kind": {
+      "const": "agent_handoff"
+    },
+    "task": {
+      "type": [
+        "string",
+        "integer"
+      ],
+      "minLength": 1,
+      "minimum": 1
+    },
+    "agent": {
+      "type": "string",
+      "minLength": 1
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "base_sha": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[a-f0-9]{40}$"
+    },
+    "vcs": {
+      "enum": [
+        "git",
+        "none"
+      ]
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completed": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "remaining": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "status": {
+      "const": "reported_unverified"
+    }
+  },
+  "additionalProperties": true
+}

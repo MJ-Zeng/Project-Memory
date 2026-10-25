@@ -1,0 +1,8 @@
+{
+  "number": 342,
+  "title": "Refactor authorization middleware (refs #325)",
+  "body": "Refs #325. Updates docs/architecture/overview.md and adds tests.",
+  "state": "closed",
+  "merged_at": "2026-10-21T13:00:00Z",
+  "changed_files_list": ["src/auth/middleware.py", "docs/architecture/overview.md", "tests/test_auth.py"]
+}

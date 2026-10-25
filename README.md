@@ -1,0 +1,113 @@
+# Project Memory：让多个 Agent 共用一套仓库记忆
+
+这是一个本地优先的 Agent Skill 和 Python CLI，用来处理多人和多个 Agent 在同一个 Git 仓库里协作时的记忆问题。任务背景、交接状态、设计决策、文档现状和审计结果都写成仓库里的文件，跟着代码一起提交和评审。
+
+它不负责审批、合并、关闭 Issue，也不判断文档里的结论是否正确。这些仍由人和 GitHub 规则决定。
+
+## 快速开始
+
+需要 Python 3.11 或更高版本。默认功能不依赖第三方库。
+
+```bash
+# 在分发目录运行测试
+cd project-memory-mvp
+python3 -m unittest discover -s tests -v
+
+# 初始化一个已经建好的 Git 仓库；只补缺失文件，不覆盖
+python3 -m project_memory init --repo /path/to/git/repo --install both
+cd /path/to/git/repo
+
+# 初始化后的仓库自带 CLI，CI 和离线环境都能用
+PYTHONPATH=.project-memory/tooling python3 -m project_memory audit --repo . --scope current --fail-on high
+PYTHONPATH=.project-memory/tooling python3 -m project_memory search --repo . '项目 状态'
+```
+
+也可以从分发目录安装：`python3 -m pip install -e .`，然后直接运行 `project-memory --help`。
+
+Windows 上用 Git Bash 时，先设置 `PYTHONUTF8=1`，并把 `python3` 换成实际可用的解释器路径。
+
+## 两种审计范围
+
+`--scope current` 只审当前知识：canonical 根下状态为 `current`、`draft`、`in_flight`、`unclassified` 的文档，加上全部 ADR。镜像、历史、证据和已归档文档不参与。它适合放在合并门禁里。
+
+默认的 `audit`（`--scope all`）会扫 canonical、镜像和历史目录，用来做周期复核。镜像和历史里的问题通常不在这次改动范围内，不应为了把数字清零去改旧文档。
+
+## 入口文档与新鲜度
+
+`.project-memory/config.json` 里的 `entry_doc` 指向唯一一篇给人看的入口文档。设置后，审计要求它存在、属于 canonical、显式声明 `status: "current"`。
+
+`last_verified_at` 记录人最后一次核对结论的日期，和只记录编辑的 `updated_at` 分开。入口没有这个日期会报 low；超过 `max_verified_age_days`（默认 90 天）会报 medium。`init --profile full` 生成的 CURRENT_STATE 模板不写核验日期，填完内容并核对过事实之后，再由人补上。
+
+`--profile overlay` 不生成入口文档。接入已有 `doc/` 或 `doc/new_doc` 布局时用它，接入后需要自己补一篇入口并设置 `entry_doc`。
+
+## 已有文档布局
+
+不要为了接入再建一棵 `docs/`。把真实目录声明出来：
+
+```bash
+python3 -m project_memory init --repo /path/to/workspace --install none --profile overlay \
+  --docs-root doc/new_doc \
+  --mirror-root pro2-mixed-training/docs/project-docs \
+  --legacy-root doc/_legacy_2026-10-23
+```
+
+`overlay` 只创建 `.project-memory/` 和 ADR 目录说明，不改已有文档，也不碰业务代码。`mirror_roots` 只读；`legacy_roots` 默认不参与检索。`mirror_policy: frozen` 表示人已经接受镜像长期只读，镜像漂移会以 medium 继续报告，但仍然不允许把镜像内容复制回 canonical。
+
+## 八个命令
+
+| 用途 | 命令 | 是否写入 |
+|---|---|---|
+| 初始化 | `init --repo . --install both`，或 `--profile overlay --docs-root ...` | 只创建缺失文件 |
+| 取任务上下文 | `start --issue 325 --slug ORG/REPO` 或 `start --task-file task.json` | 否 |
+| Agent 交接 | `handoff --task 325 --agent codex --run-id run-1 --remaining 'test' [--store PATH]` | 写本地不可变记录 |
+| 完成检查 | `finish --issue 325 --pr 342 --slug ORG/REPO --docs-impact unknown` | 否 |
+| 起草 ADR | `decision --title 'Cache' --topic cache --issue 325 --owner team --rationale '...'` | 创建 proposed ADR |
+| 新建文档 | `new-doc --id DOC-CACHE-001 --title 'Cache' --kind canonical --status draft --owner team --path docs/topics/cache.md` | 创建固定格式草稿，不覆盖 |
+| 文档审计 | `audit --scope current --fail-on high`（门禁）/ `audit`（全量复核） | 否 |
+| 图谱与检索 | `graph`、`search 'query'`、`search --backend semantic --model /local/model 'query'` | 只写图谱缓存 |
+
+本地或离线时，`start` 和 `finish` 可以用 `--issue-file`、`--pr-file` 替代 `--issue` / `--pr` 与 `--slug`。本地任务文件至少要有 `id`，以及 `title` 或 `body` 之一。任务 ID 可以是字符串；没有 Git 的工作区会返回 `base_sha: null`。
+
+`new-doc` 不能直接创建 `current`：canonical 文档只能从 `draft` 或 `in_flight` 开始，证据文档只能从 `evidence` 开始。它会拒绝重复 ID、ADR 目录、镜像/历史根和配置文档根之外的路径。写入规则见 `skill/project-memory/references/document-authoring.md`。
+
+## 凭据与权限
+
+只有 `start` 和 `finish` 会访问 GitHub API，而且只调只读接口。凭据从环境变量 `GITHUB_TOKEN` 读取，不放在命令行参数里。建议使用 GitHub App 安装令牌，或限制到具体仓库的 fine-grained token。
+
+`decision`、`handoff` 和 `init` 只写本地文件，不推送、不合并、不审批、不关闭 Issue、不部署。`--reviewed-by` 和 `--test-evidence` 是声明，不是独立验证；真正的权限仍由 GitHub 规则和 CI 决定。
+
+## 语义检索的限制
+
+默认 `search` 是词法匹配，英文按 token，中文按双字，不涉及模型。`--backend semantic` 需要额外安装 `sentence-transformers`，并提供一个本地的模型目录：
+
+```bash
+python3 -m pip install -e '.[semantic]'
+```
+
+代码不会自动下载模型，也不会把私有文档发给第三方嵌入服务。当前没有向量持久化、批处理服务或组织级知识图谱。
+
+## 还需要人工完成的事
+
+1. 检查生成的示例，补全入口文档、架构说明和 ADR 负责人。
+2. 参考 `.github/CODEOWNERS.example` 配置真正的 CODEOWNERS，并在 GitHub 开启分支 Ruleset、必需审查和必需 CI。CLI 不能替你做这些。
+3. 把 Actions 固定到审核过的完整 SHA。
+4. 接入有权限的 GitHub 数据；如果要把完成门禁全自动化，还需要独立核对 CI 和 review 状态，不能只依赖快照声明。
+5. 把 Skill 和 CLI 的改动当作受保护变更来审查，不要在不信任的仓库工作流里跑带密钥的任务。
+
+## 文档
+
+- [教程与工作流](docs/TUTORIAL.zh-CN.md)：从临时仓库试跑到真实仓库接入，以及日常协作节奏。
+- [技术设计](docs/ARCHITECTURE.zh-CN.md)：模块、目录模型、数据契约和后续门槛。
+- [操作手册](docs/OPERATIONS.zh-CN.md)：接入步骤、文档写入、新人接手和上线检查。
+- [验证记录](docs/TEST_REPORT.md)：跑过的测试、真实仓库结果和未验证项。
+- [Skill 说明](skill/project-memory/SKILL.md) 与 `skill/project-memory/references/`：Agent 执行时读的规则和字段契约。
+
+## 参考
+
+- [Agent Skills specification](https://agentskills.io/specification)
+- [Codex skill locations](https://learn.chatgpt.com/docs/customization/overview)
+- [Claude Skills](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview)
+- [Cursor Skills](https://cursor.com/docs/skills)
+- [GitHub REST API](https://docs.github.com/en/rest)
+- [GitHub Rulesets](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets)
+- [GitHub Actions pull_request_target 的安全用法](https://docs.github.com/en/actions/reference/security/securely-using-pull_request_target)

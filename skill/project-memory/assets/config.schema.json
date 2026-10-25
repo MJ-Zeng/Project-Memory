@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/project-memory/v1/config.schema.json",
+  "title": "config",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "doc_roots",
+    "adr_dir",
+    "task_source",
+    "agent_policy"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.1"
+    },
+    "canonical_root": {
+      "type": "string",
+      "minLength": 1
+    },
+    "doc_roots": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "mirror_roots": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "legacy_roots": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "mirror_policy": {
+      "enum": [
+        "active",
+        "frozen"
+      ],
+      "description": "active：镜像分歧按 high 阻断 CI；frozen：镜像为永久只读，分歧按 medium 报告且不得回灌规范"
+    },
+    "repo_kind": {
+      "enum": [
+        "git",
+        "workspace"
+      ]
+    },
+    "adr_dir": {
+      "type": "string",
+      "minLength": 1
+    },
+    "task_source": {
+      "enum": [
+        "github_issues",
+        "github_issues_or_local_files"
+      ]
+    },
+    "branch": {
+      "type": "string",
+      "minLength": 1
+    },
+    "semantic_model_path": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "agent_policy": {
+      "type": "string",
+      "minLength": 1
+    },
+    "max_search_results": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "entry_doc": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "唯一人类入口文档的仓库相对路径。设置后必须是 canonical、status 为 current，并按 last_verified_at 检查时效。"
+    },
+    "max_verified_age_days": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "current 文档（尤其是入口文档）超过多少天未核对就报告过期。"
+    }
+  },
+  "additionalProperties": true
+}

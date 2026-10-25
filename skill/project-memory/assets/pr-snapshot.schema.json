@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/project-memory/v1/pr-snapshot.schema.json",
+  "title": "pr-snapshot",
+  "type": "object",
+  "required": [
+    "number",
+    "title",
+    "merged_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.1"
+    },
+    "number": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "title": {
+      "type": "string"
+    },
+    "body": {
+      "type": "string"
+    },
+    "state": {
+      "type": "string"
+    },
+    "merged_at": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "changed_files_list": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": true
+}

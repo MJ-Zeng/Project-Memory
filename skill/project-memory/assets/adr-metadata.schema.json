@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/project-memory/v1/adr-metadata.schema.json",
+  "title": "adr-metadata",
+  "type": "object",
+  "required": [
+    "id",
+    "kind",
+    "title",
+    "topic",
+    "status",
+    "owner",
+    "related_issues"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.1"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^ADR-[0-9]{4,}$"
+    },
+    "kind": {
+      "const": "adr"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "topic": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "enum": [
+        "proposed",
+        "under-review",
+        "accepted",
+        "rejected",
+        "superseded"
+      ]
+    },
+    "owner": {
+      "type": "string",
+      "minLength": 1
+    },
+    "related_issues": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      }
+    },
+    "supersedes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "approved_by": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}

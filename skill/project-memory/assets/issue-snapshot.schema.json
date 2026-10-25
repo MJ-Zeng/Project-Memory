@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/project-memory/v1/issue-snapshot.schema.json",
+  "title": "issue-snapshot",
+  "type": "object",
+  "required": [
+    "number",
+    "title",
+    "body"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.1"
+    },
+    "number": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "title": {
+      "type": "string"
+    },
+    "body": {
+      "type": "string"
+    },
+    "state": {
+      "type": "string"
+    },
+    "updated_at": {
+      "type": "string"
+    },
+    "html_url": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}

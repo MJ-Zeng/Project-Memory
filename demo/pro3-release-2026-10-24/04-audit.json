@@ -1,0 +1,45 @@
+{
+  "authorities": {
+    "canonical": 20,
+    "legacy": 0,
+    "mirror": 0,
+    "other": 0
+  },
+  "canonical_docs_scanned": 20,
+  "counts": {
+    "high": 0,
+    "low": 0,
+    "medium": 3
+  },
+  "doc_roots": [
+    "PriAlcOxidationML-final-release/docs"
+  ],
+  "docs_scanned": 20,
+  "findings": [
+    {
+      "code": "broken_document_reference",
+      "location": "PriAlcOxidationML-final-release/docs/文档审核报告-2026-10.md",
+      "message": "Missing: docs/GAP结论汇总.md",
+      "severity": "medium"
+    },
+    {
+      "code": "broken_document_reference",
+      "location": "PriAlcOxidationML-final-release/docs/文档审核报告-2026-10.md",
+      "message": "Missing: docs/两处干活顺序不一致的分析.md",
+      "severity": "medium"
+    },
+    {
+      "code": "broken_document_reference",
+      "location": "PriAlcOxidationML-final-release/docs/文档审核报告-2026-10.md",
+      "message": "Missing: docs/伯醇项目优化清单-大白话版.md",
+      "severity": "medium"
+    }
+  ],
+  "kind": "knowledge_audit",
+  "mirror_roots": [],
+  "note": "Structural and heuristic findings, NOT proof of semantic correctness.",
+  "schema_version": "1.1",
+  "statuses": {
+    "unclassified": 20
+  }
+}

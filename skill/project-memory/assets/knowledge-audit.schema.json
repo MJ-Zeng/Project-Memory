@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/project-memory/v1/knowledge-audit.schema.json",
+  "title": "knowledge-audit",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "findings",
+    "counts",
+    "docs_scanned"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.1"
+    },
+    "kind": {
+      "const": "knowledge_audit"
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "severity",
+          "code",
+          "location",
+          "message"
+        ],
+        "properties": {
+          "severity": {
+            "enum": [
+              "high",
+              "medium",
+              "low"
+            ]
+          },
+          "code": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "counts": {
+      "type": "object"
+    },
+    "docs_scanned": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "scope": {
+      "enum": [
+        "all",
+        "current"
+      ]
+    },
+    "docs_scanned_total": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "docs_excluded": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "mirror_policy": {
+      "enum": [
+        "active",
+        "frozen"
+      ]
+    },
+    "entry_doc": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "max_verified_age_days": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "additionalProperties": true
+}

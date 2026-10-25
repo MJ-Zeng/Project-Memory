@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/project-memory/v1/adr-proposal.schema.json",
+  "title": "adr-proposal",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "path",
+    "status",
+    "requires_human_approval"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.1"
+    },
+    "kind": {
+      "const": "adr_proposal"
+    },
+    "path": {
+      "type": "string",
+      "pattern": "^docs/decisions/ADR-"
+    },
+    "status": {
+      "const": "proposed"
+    },
+    "requires_human_approval": {
+      "const": true
+    }
+  },
+  "additionalProperties": true
+}

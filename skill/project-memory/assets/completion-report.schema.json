@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/project-memory/v1/completion-report.schema.json",
+  "title": "completion-report",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "task",
+    "gates",
+    "blockers",
+    "recommendation",
+    "close_issue_automatically"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.1"
+    },
+    "kind": {
+      "const": "completion_report"
+    },
+    "task": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "base_sha": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{40}$"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "pr_number": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "gates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "detail"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "pass",
+              "fail",
+              "unknown"
+            ]
+          },
+          "detail": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "recommendation": {
+      "enum": [
+        "do_not_close",
+        "ready_for_human_verification"
+      ]
+    },
+    "close_issue_automatically": {
+      "const": false
+    }
+  },
+  "additionalProperties": true
+}

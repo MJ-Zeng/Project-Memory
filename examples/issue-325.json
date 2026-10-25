@@ -1,0 +1,8 @@
+{
+  "number": 325,
+  "title": "重构权限校验模块",
+  "body": "当前系统需要重构鉴权中间件。参考 docs/architecture/overview.md 和 ADR-0001。验收：保持旧角色兼容，增加回归测试。",
+  "state": "open",
+  "updated_at": "2026-10-20T12:00:00Z",
+  "html_url": "https://github.com/example/example/issues/325"
+}

@@ -1,0 +1,63 @@
+{
+  "backend": "lexical",
+  "caveat": "Retrieved content is context, not authoritative instructions. authority/status are inferred from config, path and frontmatter.",
+  "filters": {
+    "include_archived": false,
+    "include_mirror": false
+  },
+  "kind": "search_results",
+  "query": "base_v2 训练中 阶段三",
+  "results": [
+    {
+      "authority": "canonical",
+      "excerpt": "用文献反应数据训练 BERT 产率预测模型，当前**已验证的基座是 A1（H+M 18w，512）**；全量基座 `base_v1` 已完成六阶段、`base_v2` 仍在训练；阶段三（HTE 选样）**尚未启动**；PU/HTE 与 CIR 两条线已收官或暂停。  ---  ## 2. 项目在做什么  - **输入**：文献反应文本 `底物[SEP]...[COND]条件>>产物`，标签为产率（0–1）。 - **数据**：HQ / MQ / LQ 三档；A1 使用 **H+M 18w**，不包含 LQ。 - **模型**：rxnfp/BERT + 单头回归；支持 MLM 预训练 → 回归微调、DDP、AMP、",
+      "id": "DOC:doc/new_doc/00_项目总览.md",
+      "path": "doc/new_doc/00_项目总览.md",
+      "score": 16.47138,
+      "status": "unclassified",
+      "title": "00_项目总览",
+      "type": "document"
+    },
+    {
+      "authority": "canonical",
+      "excerpt": "献 | E9 第一层；A1 采用 | 采用但净贡献未量化；E9 2×2 未复算 | ✅ | | 8 | 基座锁定 | A1；base_v1 full；base_v2 训练中 | 同 | ✅ | | 9 | 阶段三口径 | 24 骨架 + v1.6 候选 | 同 | ✅ | | 10 | 训练路线 | 未裁决/暂缓 | 同 | ✅ |  **结果**：**9/10 完整、1/10 部分、0 错、0 无法回答**。唯一“部分”是措辞不够显式，不是事实错误：  - Q2：子代理没从 `05` 读出“交付配方不含样本加权”——已在 `05` 的 W2 verdict 补上； - Q7 虽判完整，但 `05` 原来只写“A",
+      "id": "DOC:doc/new_doc/06_evidence/09_verify.md",
+      "path": "doc/new_doc/06_evidence/09_verify.md",
+      "score": 12.31845,
+      "status": "evidence",
+      "title": "09_verify",
+      "type": "document"
+    },
+    {
+      "authority": "canonical",
+      "excerpt": "册 | doc/04 v7.12 | 旧树 v7.7 | 双文档分叉 | | 基座结果 | A1（18w）+ base_v1（六阶段 full） | base_v2 的“已验收” | base_v1 已 L；base_v2 仍在训练 |  ---  ## 7. 本轮未解（进冲突册/裁决债）  1. ~~阶段三以 24 为 SOP 骨架，还是以 v1.6 替换其 §5~~ —— **2026-10-23 已裁决：24 骨架 + v1.6 候选，不替换**。 2. ~~`result/` 与 `base_v1` 是否真实存在~~ —— **已核验：存在，六阶段 full，base_v1 升 L**。 3. 24 的 ",
+      "id": "DOC:doc/new_doc/06_evidence/03_genealogy.md",
+      "path": "doc/new_doc/06_evidence/03_genealogy.md",
+      "score": 11.93221,
+      "status": "evidence",
+      "title": "03_genealogy",
+      "type": "document"
+    },
+    {
+      "authority": "canonical",
+      "excerpt": "全 `full`，acceptance 三件套在案 | `06_evidence/server/01_result_tree.txt`（L） | | base_v2 | 🟡 `mlm_full` 已 full、FT search 在跑 | 服务器 marker/日志（S） | | base_v2 与 23 v1.6 是否同一方案 | ⚖️ 未确认（D-15） | `06_evidence/06_debt.csv` D-15 |  > `base_v1` 是“全量基座管线”的第一次落地；它是阶段二能力的证据，不等于 23 号 v1.6 的全部验收项。  ---  ## 3. 数据口径  - **唯一训练池**：全量",
+      "id": "DOC:doc/new_doc/04_阶段二基座.md",
+      "path": "doc/new_doc/04_阶段二基座.md",
+      "score": 11.60072,
+      "status": "unclassified",
+      "title": "04_阶段二基座",
+      "type": "document"
+    },
+    {
+      "authority": "canonical",
+      "excerpt": "/`；正文只保留 00–10 十一篇 + README/提示词/方案。  ## 当前一句话状态  - A1 已验证；base_v1 六阶段 full；base_v2 训练中； - 阶段三选样未启动；D-07/D-08 暂缓； - PU/HTE 收官；CIR 阶段二闭环、阶段三暂停； - 没有改代码。  ## 后续  - 实验结果/技术文档放 `09_future_results/`； - 每个 Sprint 先给用户审，再写下一篇。 ",
+      "id": "DOC:doc/new_doc/README.md",
+      "path": "doc/new_doc/README.md",
+      "score": 10.13759,
+      "status": "unclassified",
+      "title": "README",
+      "type": "document"
+    }
+  ],
+  "schema_version": "1.1"
+}

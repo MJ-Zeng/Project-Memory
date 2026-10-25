@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/project-memory/v1/init-report.schema.json",
+  "title": "init-report",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "created",
+    "skipped_existing"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.1"
+    },
+    "kind": {
+      "const": "init_report"
+    },
+    "created": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "profile": {
+      "enum": [
+        "full",
+        "overlay"
+      ]
+    },
+    "docs_root": {
+      "type": "string",
+      "minLength": 1
+    },
+    "mirror_roots": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "legacy_roots": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "entry_doc": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "skipped_existing": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "manual_actions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": true
+}
