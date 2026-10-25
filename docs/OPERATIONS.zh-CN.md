@@ -20,10 +20,90 @@
 2. 检查新增文件，补全架构和负责人，修改示例模板。`full` 会生成 CURRENT_STATE，把它改成真实现状，核对后补 `last_verified_at`；`overlay` 不生成入口，需要自己补建，并在配置里设置 `entry_doc`。
 3. 通过 PR 提交。配置 `.github/CODEOWNERS`，开启分支 Ruleset，要求 CI 和人工审查。这些都要在 GitHub 侧完成。
 4. 先用一个真实 Issue 或本地任务 JSON 跑一次 `start`，确认检索到的文档、ADR 和 SHA 是对的。
-5. 让第二个 Agent 读同一任务的 `handoff`，不要复制完整聊天上下文。
-6. 把 PR 的测试证据带进 `finish`，对照真实的 GitHub 审查状态看一眼。
-7. 每次合并前跑 `audit --scope current --fail-on high`。每周再跑一次全量 `audit`，把历史、镜像和证据区的高价值发现转成 Issue，由人决定整改还是忽略。
-8. 需要了解知识关系时运行 `graph` 和 `search`。索引不是新的事实来源。
+5. 为这项工作总结可核验的成功标准，创建 Goal；由授权人转 `approved`，再转 `active`。
+6. Agent 用 `run start` 登记实际模型、会话、分支和 base SHA；换模型或换会话时开新的 run ID。
+7. 让第二个 Agent 读同一任务的 `handoff` 或 `run resume` 接手包，不要复制完整聊天上下文。
+8. 另一个执行记录用 `verify` 独立检查目标提交；发现转成缺陷，修复后复验。
+9. 把 PR 的测试证据带进 `finish`，对照真实的 GitHub 审查状态看一眼。
+10. 每次合并前跑 `audit --scope current --fail-on high` 和 `reconcile --fail-on high`。每周再跑一次全量 `audit`，把历史、镜像和证据区的高价值发现转成 Issue，由人决定整改还是忽略。
+11. Goal 标准全部满足后，由授权人转 `achieved`。Agent 的评估建议不等于批准。
+12. 需要了解知识关系时运行 `graph` 和 `search`。索引不是新的事实来源。
+
+## 目标、执行与验证
+
+Goal 至少有一条必达成功标准。标准要能用提交、测试日志、验证记录或人工批准判断：
+
+```bash
+PYTHONPATH=.project-memory/tooling python3 -m project_memory goal create --repo . \
+  --id G-AUTH --title '修复认证绕过' --outcome '未授权请求被拒绝' \
+  --owner backend-team --criterion '无令牌请求返回 401' --issue 325
+```
+
+默认是 `proposed`。授权人批准后才进入执行：
+
+```bash
+PYTHONPATH=.project-memory/tooling python3 -m project_memory goal transition --repo . \
+  --id G-AUTH --to approved --approved-by 'human-owner' --reason 'Grooming 通过'
+PYTHONPATH=.project-memory/tooling python3 -m project_memory goal transition --repo . \
+  --id G-AUTH --to active
+```
+
+每次执行单独登记，模型 ID 写实际值：
+
+```bash
+PYTHONPATH=.project-memory/tooling python3 -m project_memory run start --repo . \
+  --goal G-AUTH --task 325 --run-id run-dev-1 --agent qoder \
+  --model-provider qoder-cn --model-id dfmodel --tool qoder-desktop \
+  --role executor --branch fix/auth --base-sha <40位SHA> \
+  --authorization 'Issue #325 范围内修改认证代码，不合并、不部署'
+```
+
+有进展就写检查点，结束用 `run finish`。它生成 1.2 handoff，但不验证工作：
+
+```bash
+PYTHONPATH=.project-memory/tooling python3 -m project_memory run checkpoint --repo . \
+  --task 325 --run-id run-dev-1 --completed '定位绕过路径' --remaining '补测试'
+
+PYTHONPATH=.project-memory/tooling python3 -m project_memory run finish --repo . \
+  --task 325 --run-id run-dev-1 --completed '拒绝无令牌请求' \
+  --remaining '独立验证' --commit <40位SHA> --changed-file src/auth.py \
+  --test-command 'python -m unittest' --test-exit 0 --test-log tests.log
+```
+
+接手时先看恢复包，不要直接继续旧会话：
+
+```bash
+PYTHONPATH=.project-memory/tooling python3 -m project_memory run resume --repo . --task 325
+```
+
+`resume_ready` 只表示记录齐全。`needs_handoff`、`needs_human` 和 `stale_base` 都要人工处理。
+
+独立验证必须使用另一个 run，并登记为 `role=verifier`；验证者的 agent/model/session 至少一项要不同：
+
+```bash
+PYTHONPATH=.project-memory/tooling python3 -m project_memory run start --repo . \
+  --goal G-AUTH --task 325 --run-id run-verify-1 --agent qoder \
+  --model-provider qoder-cn --model-id qfmodel --role verifier --base-sha <40位SHA>
+
+PYTHONPATH=.project-memory/tooling python3 -m project_memory verify --repo . \
+  --target-run run-dev-1 --verifier-run run-verify-1 \
+  --standard '认证与凭据审查' --verdict pass --evidence-level locally_observed \
+  --test-command 'python -m unittest' --test-exit 0 --test-log verify.log \
+  --expected-sha <被验证执行的head SHA>
+```
+
+`agent_claimed` 不能 pass。本地观察需要命令、整数退出码和存在的非空证据日志（不能是 canonical 文档）；外部验证需要 CI URL 和 passed，但 CLI 不联网抓取；人工批准需要 review URL 和 approved，但 CLI 不认证审批人。发现用 `--findings-file` 提交，high 级发现会阻断 pass。
+
+把通过的验证挂到目标标准，评估和对账：
+
+```bash
+PYTHONPATH=.project-memory/tooling python3 -m project_memory goal evidence --repo . \
+  --id G-AUTH --criterion C1 --kind verification --ref <verification-id>
+PYTHONPATH=.project-memory/tooling python3 -m project_memory goal evaluate --repo . --id G-AUTH
+PYTHONPATH=.project-memory/tooling python3 -m project_memory reconcile --repo . --fail-on high
+```
+
+`goal evaluate` 未满足时退出 2；`verify` 未通过时退出 2；`run resume` 在阻断状态退出 2；`reconcile --fail-on high` 有 high 时退出 2。`reconcile` 只报告，不自动改文档，也不关闭任务。
 
 ## 写文档
 
@@ -72,8 +152,15 @@ PYTHONPATH=.project-memory/tooling python3 -m project_memory handoff \
 PYTHONPATH=.project-memory/tooling python3 -m project_memory audit \
   --repo . --scope current --fail-on high
 PYTHONPATH=.project-memory/tooling python3 -m project_memory audit --repo .
+PYTHONPATH=.project-memory/tooling python3 -m project_memory goal list --repo .
+PYTHONPATH=.project-memory/tooling python3 -m project_memory run list --repo .
+PYTHONPATH=.project-memory/tooling python3 -m project_memory reconcile \
+  --repo . --format markdown --fail-on high
 PYTHONPATH=.project-memory/tooling python3 -m project_memory graph --repo .
+PYTHONPATH=.project-memory/tooling python3 -m project_memory sync-tooling --repo .
 ```
+
+`sync-tooling` 默认只报告差异；确认后再加 `--write`。它不删除多余文件，也不覆盖已安装的 Skill 副本。
 
 Windows 上用 Git Bash 时，先 `export PYTHONUTF8=1`，并把 `python3` 换成实际可用的解释器路径。
 
@@ -95,6 +182,14 @@ Windows 上用 Git Bash 时，先 `export PYTHONUTF8=1`，并把 `python3` 换�
 | 单测 | ADR 状态与引用 | 只创建 proposed；重复 ID 或缺少审批会被审计提醒 |
 | 单测 | Handoff 重试 | 相同内容幂等，不同内容拒绝 |
 | 单测 | 缺 PR 或测试证据 | Completion 含 unknown，建议 do_not_close |
+| 单测 | Agent 自报测试或审查 | 只能是 agent_claimed，不能 pass |
+| 单测 | 验证提交已变化 | 拒绝 pass，标记 stale |
+| 单测 | 重复 run ID | 相同内容幂等，不同内容报错 |
+| 单测 | 中断恢复 | 检查点齐全时 resume_ready；缺 handoff 时 needs_handoff |
+| 单测 | 同一任务多个活跃 executor | resume 报 needs_human，对账报告 |
+| 单测 | 缺陷生命周期 | fixed 必须绑定 SHA，verified 只能由复验产生，修复提交必须在被验证历史中 |
+| 单测 | Goal 未满足 | evaluate 返回 2，achieved 转换被拒绝 |
+| 单测 | Goal 已达成但证据过期 | 对账报 high/medium，不自动改状态 |
 | 单测 | 文档断链和冲突 | Finding 带精确位置和 code |
 | 单测 | 中英混合检索 | 返回源路径、分数和原文片段 |
 | 集成 | Git 快照前后变动 | Context 的 base SHA 反映最新提交 |
@@ -106,7 +201,10 @@ Windows 上用 Git Bash 时，先 `export PYTHONUTF8=1`，并把 `python3` 换�
 
 ## 已知限制
 
-- 没有在实际 GitHub 仓库上在线运行过，因为没有提供仓库和 Token。
+- 没有在实际 GitHub 仓库上在线运行过，因为没有提供仓库和 Token。Issue、PR、review 和 CI 证据均为 NOT RUN。
+- 没有完成跨模型接续实验。Qoder CN 客户端需要手动切换模型，CLI 不调度模型；真实实验只验证了同一模型的独立会话。
+- 没有把 Skill 安装到全局目录；需要用户确认后才执行。
+- 没有自动模型编排、后台调度器或并发锁。多 Agent 同时写仍靠乐观检查和人工裁决。
 - 没有 GitHub Projects GraphQL 状态读写，也不自动更新 Issue/PR。
 - 不自动判断所有自然语言矛盾，语义冲突要人工对账。
 - `finish` 不独立请求 CI 或 Review API。人工声明和快照只能标成“报告里有这个字段”，不是独立验证。

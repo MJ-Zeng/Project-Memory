@@ -171,3 +171,10 @@ def validate_identifier(value: str, label: str = 'id') -> str:
     if not re.fullmatch(r'[a-zA-Z0-9][a-zA-Z0-9_.-]{0,100}', value):
         raise PMError(f'{label} 不合法：{value!r}')
     return value
+
+
+def path_component(value) -> str:
+    text = re.sub(r'[<>:"/\\|?*\x00-\x1f]', '_', str(value).strip())
+    if text in ('', '.', '..'):
+        text = '_'
+    return text[:120]

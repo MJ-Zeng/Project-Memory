@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/project-memory/v1/defect.schema.json",
+  "title": "defect",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "defect_id",
+    "task",
+    "goal_id",
+    "verification_id",
+    "target_run",
+    "severity",
+    "location",
+    "summary",
+    "status",
+    "created_at",
+    "updated_at",
+    "revision"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.2"
+    },
+    "kind": {
+      "const": "defect"
+    },
+    "defect_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "task": {
+      "type": "string",
+      "minLength": 1
+    },
+    "goal_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "verification_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "target_run": {
+      "type": "string",
+      "minLength": 1
+    },
+    "severity": {
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ]
+    },
+    "location": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "type": "string"
+        },
+        "line": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        }
+      },
+      "additionalProperties": true
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "repro": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "open",
+        "fixed",
+        "verified",
+        "wontfix",
+        "closed"
+      ]
+    },
+    "fixed_in_sha": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[a-f0-9]{40}$"
+    },
+    "verified_by": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "additionalProperties": true
+}

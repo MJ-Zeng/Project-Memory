@@ -1,7 +1,7 @@
 """Non-destructive repository initialization and skill installation."""
 from __future__ import annotations
 from pathlib import Path
-from .common import PMError, git_sha_optional, json_text, md_header, today, write_new
+from .common import PMError, atomic_replace, git_sha_optional, json_text, md_header, today, write_new
 
 TOOL_ROOT = Path(__file__).resolve().parent.parent
 SKILL_SOURCE = TOOL_ROOT / 'skill' / 'project-memory'
@@ -67,6 +67,61 @@ def _docs_root(value: str) -> str:
     if not root or root == '.' or '..' in root.split('/'):
         raise PMError('--docs-root 必须是非空的相对目录')
     return root
+
+
+def sync_tooling(repo: Path, write: bool = False) -> dict:
+    """Refresh vendored tooling from this distribution; dry-run unless write=True.
+
+    Installed Skill copies under .agents/ or .claude/ are intentionally not touched:
+    they may contain repository-specific instructions and need human review.
+    """
+    pairs = ((TOOL_ROOT / 'project_memory', repo / '.project-memory' / 'tooling' / 'project_memory'),
+             (SKILL_SOURCE, repo / '.project-memory' / 'tooling' / 'skill' / 'project-memory'))
+    added, changed, extra, written = [], [], [], []
+    unchanged = 0
+    expected = set()
+    for source, target in pairs:
+        files = [p for p in source.rglob('*') if p.is_file()
+                 and '__pycache__' not in p.parts and p.suffix != '.pyc']
+        for path in sorted(files):
+            rel = path.relative_to(source)
+            out = target / rel
+            key = out.relative_to(repo).as_posix()
+            expected.add(key)
+            content = path.read_text(encoding='utf-8')
+            if not out.is_file():
+                added.append(key)
+                if write:
+                    atomic_replace(out, content)
+                    written.append(key)
+            elif out.read_text(encoding='utf-8') != content:
+                changed.append(key)
+                if write:
+                    atomic_replace(out, content)
+                    written.append(key)
+            else:
+                unchanged += 1
+        if target.is_dir():
+            for path in target.rglob('*'):
+                if not path.is_file() or path.suffix == '.pyc' or '__pycache__' in path.parts:
+                    continue
+                key = path.relative_to(repo).as_posix()
+                if key not in expected:
+                    extra.append(key)
+    return {
+        'schema_version': '1.2',
+        'kind': 'tooling_sync_report',
+        'dry_run': not write,
+        'added': sorted(added),
+        'changed': sorted(changed),
+        'extra': sorted(extra),
+        'unchanged': unchanged,
+        'written': sorted(written),
+        'manual_actions': [
+            '安装在 .agents/skills 或 .claude/skills 下的 Skill 副本没有被自动覆盖；需要人工比较并提交。',
+            'extra 中的文件未删除；确认不再使用后由人手动移除。',
+        ] if write or added or changed else [],
+    }
 
 
 def init(repo: Path, install: str = 'agents', docs_root: str = 'docs', profile: str = 'full',

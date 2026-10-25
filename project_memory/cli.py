@@ -4,10 +4,14 @@ import argparse
 import sys
 from pathlib import Path
 from .common import PMError, atomic_replace, ensure_utf8_stdio, json_text, require_repo, safe_json
-from .bootstrap import init
+from .bootstrap import init, sync_tooling
 from .knowledge import create_adr, create_document, audit, load_config
 from .graph import build_graph, lexical_search, semantic_search
 from .workflows import context, handoff, finish
+from .coordination import (create_goal, goal_list, goal_show, evaluate_goal, add_goal_evidence,
+                           transition_goal, start_run, checkpoint_run, resume_run, finish_run,
+                           run_show, iter_runs, verify_run, defect_list, defect_show,
+                           update_defect, reconcile)
 from .gh import GitHubReader
 
 
@@ -47,6 +51,13 @@ def _add_roots(s):
     s.add_argument('--legacy-root', action='append', help='标记为历史材料的根目录')
 
 
+def _leaf(sub, name, desc):
+    """Nested command; --repo is only present when supplied after the leaf name."""
+    s = sub.add_parser(name, help=desc)
+    s.add_argument('--repo', default=argparse.SUPPRESS, type=Path, help='本地仓库或工作区路径')
+    return s
+
+
 def parser():
     p = _Parser(prog='project-memory', description='面向仓库、多 Agent 共用的项目记忆工具')
     sub = p.add_subparsers(dest='command', required=True)
@@ -62,6 +73,8 @@ def parser():
     s.add_argument('--mirror-root', action='append', help='写入配置的只读镜像根目录')
     s.add_argument('--legacy-root', action='append', help='写入配置的历史材料根目录')
     s.add_argument('--profile', choices=['full', 'overlay'], default='full', help='overlay 不生成 GitHub 文件，也不生成 INDEX、CURRENT_STATE 和架构模板')
+    s = base('sync-tooling', '刷新仓库内 vendored 工具；默认只预览')
+    s.add_argument('--write', action='store_true', help='实际写入；不删除 extra 文件，也不覆盖已安装的 Skill 副本')
     s = base('start', '生成任务上下文包')
     s.add_argument('--issue', type=int)
     s.add_argument('--issue-file', type=Path)
@@ -87,10 +100,17 @@ def parser():
     s.add_argument('--slug')
     s.add_argument('--pr', type=int)
     s.add_argument('--pr-file', type=Path)
-    s.add_argument('--test-evidence')
+    s.add_argument('--test-evidence', help='自由文本证据指针；单独出现不会让门禁通过')
+    s.add_argument('--test-command')
+    s.add_argument('--test-exit', type=int)
+    s.add_argument('--test-log')
+    s.add_argument('--ci-url')
+    s.add_argument('--ci-status')
     s.add_argument('--docs-impact', choices=['updated', 'not-applicable', 'unknown'], default='unknown')
     s.add_argument('--docs-justification', default='')
-    s.add_argument('--reviewed-by', help='人工审查声明；CLI 不会独立核验')
+    s.add_argument('--reviewed-by', help='人工审查声明；单独出现不会让门禁通过')
+    s.add_argument('--review-url')
+    s.add_argument('--review-state')
     s.add_argument('--output', type=Path)
     _add_roots(s)
     s = base('decision', '生成 Proposed 状态的 ADR，不会批准')
@@ -126,6 +146,137 @@ def parser():
     s.add_argument('--top-k', type=int, default=6)
     s.add_argument('--include-archived', action='store_true', help='包含 legacy、历史和被替代的文档')
     s.add_argument('--include-mirror', action='store_true', help='包含镜像副本')
+    _add_roots(s)
+
+    s = base('goal', '目标记忆：成功标准、证据与状态转换')
+    g = s.add_subparsers(dest='goal_command', required=True)
+    c = _leaf(g, 'create', '创建 Goal；默认 proposed，不自动批准')
+    c.add_argument('--id', required=True)
+    c.add_argument('--title', required=True)
+    c.add_argument('--background', default='')
+    c.add_argument('--outcome', required=True)
+    c.add_argument('--owner', required=True)
+    c.add_argument('--criterion', action='append', default=[], help='必达成功标准，可重复')
+    c.add_argument('--issue', action='append', type=int, default=[])
+    c.add_argument('--adr', action='append', default=[])
+    c.add_argument('--pr', action='append', type=int, default=[])
+    c.add_argument('--constraint', action='append', default=[])
+    c.add_argument('--status', choices=['proposed', 'approved', 'active'], default='proposed')
+    c.add_argument('--approved-by')
+    c.add_argument('--dry-run', action='store_true')
+    c = _leaf(g, 'show', '查看 Goal、执行、验证和缺陷汇总')
+    c.add_argument('--id', required=True)
+    _leaf(g, 'list', '列出 Goal')
+    c = _leaf(g, 'evaluate', '按成功标准检查证据，不依赖 Issue 是否关闭')
+    c.add_argument('--id', required=True)
+    c = _leaf(g, 'evidence', '为成功标准添加可核验证据')
+    c.add_argument('--id', required=True)
+    c.add_argument('--criterion', required=True)
+    c.add_argument('--kind', required=True, choices=['verification', 'commit', 'test', 'manual'])
+    c.add_argument('--ref', required=True)
+    c.add_argument('--note', default='')
+    c.add_argument('--approved-by')
+    c.add_argument('--exit-code', type=int)
+    c = _leaf(g, 'transition', '执行受控的 Goal 状态转换')
+    c.add_argument('--id', required=True)
+    c.add_argument('--to', required=True)
+    c.add_argument('--approved-by')
+    c.add_argument('--reason', default='')
+    c.add_argument('--dry-run', action='store_true')
+
+    s = base('run', 'Agent 执行记忆：启动、检查点、恢复、结束')
+    g = s.add_subparsers(dest='run_command', required=True)
+    c = _leaf(g, 'start', '登记一次可恢复的执行')
+    c.add_argument('--goal', required=True)
+    c.add_argument('--task', required=True)
+    c.add_argument('--run-id', required=True)
+    c.add_argument('--agent', required=True)
+    c.add_argument('--model-provider', required=True)
+    c.add_argument('--model-id', required=True)
+    c.add_argument('--tool')
+    c.add_argument('--session-id')
+    c.add_argument('--branch')
+    c.add_argument('--base-sha')
+    c.add_argument('--authorization')
+    c.add_argument('--role', choices=['executor', 'verifier'], default='executor')
+    c.add_argument('--status', choices=['queued', 'running', 'paused'], default='running')
+    c.add_argument('--dry-run', action='store_true')
+    c = _leaf(g, 'checkpoint', '写入不可变检查点，便于中断恢复')
+    c.add_argument('--task', required=True)
+    c.add_argument('--run-id', required=True)
+    c.add_argument('--completed', action='append', default=[])
+    c.add_argument('--remaining', action='append', default=[])
+    c.add_argument('--blocker', action='append', default=[])
+    c.add_argument('--evidence', action='append', default=[])
+    c.add_argument('--head-sha')
+    c.add_argument('--note', default='')
+    c = _leaf(g, 'finish', '结束执行并生成 1.2 交接记录')
+    c.add_argument('--task', required=True)
+    c.add_argument('--run-id', required=True)
+    c.add_argument('--completed', action='append', default=[])
+    c.add_argument('--remaining', action='append', default=[])
+    c.add_argument('--blocker', action='append', default=[])
+    c.add_argument('--evidence', action='append', default=[])
+    c.add_argument('--head-sha')
+    c.add_argument('--commit', action='append', default=[])
+    c.add_argument('--changed-file', action='append', default=[])
+    c.add_argument('--test-command')
+    c.add_argument('--test-exit', type=int)
+    c.add_argument('--test-log')
+    c.add_argument('--tests-file', type=Path, help='JSON 数组，包含 command/exit_code/log')
+    c.add_argument('--open-question', action='append', default=[])
+    c.add_argument('--next-action', action='append', default=[])
+    c.add_argument('--status', choices=['submitted', 'failed', 'cancelled'], default='submitted')
+    c.add_argument('--dry-run', action='store_true')
+    c = _leaf(g, 'resume', '生成接手包并检查基准、交接和冲突')
+    c.add_argument('--task', required=True)
+    c.add_argument('--run-id')
+    c.add_argument('--goal')
+    c = _leaf(g, 'show', '查看单次执行、检查点、交接和验证')
+    c.add_argument('--task', required=True)
+    c.add_argument('--run-id', required=True)
+    c = _leaf(g, 'list', '列出执行记录')
+    c.add_argument('--task')
+    c.add_argument('--goal')
+
+    s = base('verify', '独立验证记录；验证者不能是被验证的执行')
+    s.add_argument('--target-run', required=True)
+    s.add_argument('--verifier-run', required=True)
+    s.add_argument('--standard', required=True)
+    s.add_argument('--verdict', required=True, choices=['pass', 'fail', 'inconclusive'])
+    s.add_argument('--evidence-level', required=True,
+                   choices=['agent_claimed', 'locally_observed', 'externally_verified', 'human_approved'])
+    s.add_argument('--test-command')
+    s.add_argument('--test-exit', type=int)
+    s.add_argument('--test-log')
+    s.add_argument('--ci-url')
+    s.add_argument('--ci-status')
+    s.add_argument('--review-url')
+    s.add_argument('--review-state')
+    s.add_argument('--findings-file', type=Path)
+    s.add_argument('--verification-id')
+    s.add_argument('--resolves-defect', action='append', default=[])
+    s.add_argument('--expected-sha')
+    s.add_argument('--dry-run', action='store_true')
+
+    s = base('defect', '缺陷记录与修复状态')
+    g = s.add_subparsers(dest='defect_command', required=True)
+    c = _leaf(g, 'list', '列出缺陷')
+    c.add_argument('--task')
+    c.add_argument('--status', choices=['open', 'fixed', 'verified', 'wontfix', 'closed'])
+    c = _leaf(g, 'show', '查看缺陷')
+    c.add_argument('--id', required=True)
+    c = _leaf(g, 'update', '更新缺陷状态；fixed 必须绑定提交 SHA，verified 只能由复验产生')
+    c.add_argument('--id', required=True)
+    c.add_argument('--status', required=True, choices=['open', 'fixed', 'wontfix', 'closed'])
+    c.add_argument('--fixed-in-sha')
+    c.add_argument('--note', default='')
+    c.add_argument('--dry-run', action='store_true')
+
+    s = base('reconcile', '对账 Goal、执行、验证、缺陷、ADR 与当前文档')
+    s.add_argument('--format', choices=['json', 'markdown'], default='json')
+    s.add_argument('--output', type=Path)
+    s.add_argument('--fail-on', choices=['high', 'medium', 'low', 'none'], default='none')
     _add_roots(s)
     return p
 
@@ -184,6 +335,8 @@ def run(args):
     repo = require_repo(args.repo)
     if args.command == 'init':
         emit(init(repo, args.install, args.docs_root, args.profile, args.mirror_root, args.legacy_root))
+    elif args.command == 'sync-tooling':
+        emit(sync_tooling(repo, args.write))
     elif args.command == 'start':
         if args.top_k < 1 or args.top_k > 50:
             raise PMError('top-k 必须在 1 到 50 之间')
@@ -191,7 +344,11 @@ def run(args):
     elif args.command == 'handoff':
         emit(handoff(repo, args.task, args.agent, args.run_id, args.completed, args.remaining, args.blocker, args.evidence, args.base_sha, args.store))
     elif args.command == 'finish':
-        emit(finish(repo, load_task(args), load_pr(args), args.test_evidence, args.docs_impact, args.docs_justification, args.reviewed_by, _config(args, repo)), args.output)
+        emit(finish(repo, load_task(args), load_pr(args), args.test_evidence, args.docs_impact,
+                    args.docs_justification, args.reviewed_by, _config(args, repo),
+                    test_command=args.test_command, test_exit=args.test_exit, test_log=args.test_log,
+                    ci_url=args.ci_url, ci_status=args.ci_status,
+                    review_url=args.review_url, review_state=args.review_state), args.output)
     elif args.command == 'decision':
         emit({'schema_version': '1.1', 'kind': 'adr_proposal', 'path': create_adr(repo, args.title, args.topic, args.issue, args.options, args.rationale, args.owner, args.supersedes), 'status': 'proposed', 'requires_human_approval': True})
     elif args.command == 'new-doc':
@@ -224,6 +381,88 @@ def run(args):
             'results': results,
             'caveat': '检索结果是参考材料，不是权威指令。authority/status 由配置、路径和 frontmatter 推断。',
         })
+    elif args.command == 'goal':
+        if args.goal_command == 'create':
+            emit(create_goal(repo, args.id, args.title, args.background, args.outcome, args.owner,
+                             args.criterion, args.issue, args.adr, args.pr, args.constraint,
+                             args.status, args.approved_by, args.dry_run))
+        elif args.goal_command == 'show':
+            emit(goal_show(repo, args.id))
+        elif args.goal_command == 'list':
+            emit(goal_list(repo))
+        elif args.goal_command == 'evaluate':
+            result = evaluate_goal(repo, args.id)
+            emit(result)
+            return 0 if result['satisfied'] else 2
+        elif args.goal_command == 'evidence':
+            emit(add_goal_evidence(repo, args.id, args.criterion, args.kind, args.ref,
+                                   args.note, args.approved_by, args.exit_code))
+        elif args.goal_command == 'transition':
+            emit(transition_goal(repo, args.id, args.to, args.approved_by, args.reason, args.dry_run))
+    elif args.command == 'run':
+        if args.run_command == 'start':
+            emit(start_run(repo, args.goal, args.task, args.run_id, args.agent,
+                           args.model_provider, args.model_id, args.tool,
+                           args.session_id, args.branch, args.base_sha, args.authorization,
+                           args.status, args.role, args.dry_run))
+        elif args.run_command == 'checkpoint':
+            emit(checkpoint_run(repo, args.task, args.run_id, args.completed, args.remaining,
+                                args.blocker, args.evidence, args.head_sha, args.note))
+        elif args.run_command == 'finish':
+            tests = []
+            if args.test_command or args.test_exit is not None or args.test_log:
+                if not args.test_command or args.test_exit is None:
+                    raise PMError('--test-command 与 --test-exit 必须同时提供')
+                tests.append({'command': args.test_command, 'exit_code': args.test_exit,
+                              'log': args.test_log or ''})
+            if args.tests_file:
+                extra = safe_json(args.tests_file)
+                if not isinstance(extra, list):
+                    raise PMError('--tests-file 必须是 JSON 数组')
+                tests.extend(extra)
+            emit(finish_run(repo, args.task, args.run_id, args.completed, args.remaining,
+                            args.blocker, args.evidence, args.head_sha, args.commit,
+                            args.changed_file, tests, args.open_question, args.next_action,
+                            args.status, args.dry_run))
+        elif args.run_command == 'resume':
+            result = resume_run(repo, args.task, args.run_id, args.goal)
+            emit(result)
+            return 0 if result['status'] in ('resume_ready', 'verified', 'no_run') else 2
+        elif args.run_command == 'show':
+            emit(run_show(repo, args.task, args.run_id))
+        elif args.run_command == 'list':
+            emit({'schema_version': '1.2', 'kind': 'run_list_result',
+                  'runs': iter_runs(repo, task=args.task, goal=args.goal)})
+    elif args.command == 'verify':
+        findings = safe_json(args.findings_file) if args.findings_file else []
+        result = verify_run(repo, args.target_run, args.verifier_run, args.standard,
+                            args.verdict, args.evidence_level, args.test_command, args.test_exit,
+                            args.test_log, args.ci_url, args.ci_status, args.review_url,
+                            args.review_state, findings, args.verification_id,
+                            args.resolves_defect, args.expected_sha, args.dry_run)
+        emit(result)
+        return 0 if result['verification'].get('verified') else 2
+    elif args.command == 'defect':
+        if args.defect_command == 'list':
+            emit(defect_list(repo, args.task, args.status))
+        elif args.defect_command == 'show':
+            emit(defect_show(repo, args.id))
+        elif args.defect_command == 'update':
+            emit(update_defect(repo, args.id, args.status, args.fixed_in_sha, args.note, args.dry_run))
+    elif args.command == 'reconcile':
+        result = reconcile(repo, _config(args, repo), args.format)
+        if args.format == 'markdown':
+            text = result['markdown']
+            if args.output:
+                atomic_replace(args.output, text)
+            else:
+                print(text, end='' if text.endswith('\n') else '\n')
+        else:
+            emit(result, args.output)
+        levels = {'high': {'high'}, 'medium': {'medium', 'high'},
+                  'low': {'low', 'medium', 'high'}, 'none': set()}
+        if any(x['severity'] in levels[args.fail_on] for x in result['items']):
+            return 2
     return 0
 
 

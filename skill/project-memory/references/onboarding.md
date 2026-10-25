@@ -5,7 +5,7 @@
 ## 谁读什么
 
 - 人读仓库里提交的 Markdown。接手流程不能依赖运行 Python。
-- Agent 先读配置里的 `entry_doc`，再用 `audit --scope current` 确认当前有效文档集合。
+- Agent 先读配置里的 `entry_doc`，再用 `audit --scope current` 确认当前有效文档集合，用 `goal list` 和 `run resume` 看目标和在办执行。
 - `search` 用来回答具体问题，比如“这个数字在哪里定义”，不适合当作项目导览。不要靠反复搜索来浏览项目。
 
 ## 阅读顺序
@@ -15,6 +15,18 @@
 3. 只读入口文档列为当前的内容，按它给出的顺序读。
 4. 第一次修改之前，用仓库、日志或命令核对一条具体事实。
 5. 入口没覆盖的内容，用 `search` 查，按返回的 `path`、`status` 和 `authority` 判断。能改现有 canonical 文档，就不要再写一份摘要。
+
+## 接手在办目标与执行
+
+有 Goal 或 Agent Run 时，先看记录，再看代码：
+
+1. `goal list` 找 active 或 evaluating 的目标，`goal show` 看成功标准、关联 Issue/ADR/PR、执行、验证和缺陷。
+2. `goal evaluate` 确认哪些标准有证据、哪些没有。不要因为 Issue 关闭就认为目标达成。
+3. `run resume --task TASK` 或 `--goal GOAL` 取接手包。`resume_ready` 只表示记录齐全；逐项核对 `checks`、未关闭缺陷和 handoff 中的提交。
+4. `stale_base` 或 `needs_human` 时停下来，请人裁决，不要自行 rebase、重置或覆盖别人的执行。
+5. 换模型或换会话时开新的 run ID，base 指向前一个 head。不要接着用旧 run ID 写检查点或 finish。
+6. 声称“已修复”的缺陷要看 `fixed_in_sha` 是否存在，以及有没有 pass 的复验。`fixed` 不等于 `verified`。
+7. 记录里的 `agent_claimed` 只是声明。继续之前用独立验证或自己运行命令核对。
 
 ## 接手自检
 
@@ -33,6 +45,8 @@
 - `legacy_roots`、档案目录、`90_原始档案`、`_history`。
 - 证据快照、原始日志、截图和一次性输出。
 - `proposed` 或 `under-review` 的 ADR。决策还没有批准。
+- 状态是 `proposed` 的 Goal，或没有 `approved_by` 的标准变更。目标意图不是已批准的范围。
+- `reported_unverified` 的 handoff、检查点里未经核对的完成项，以及 `agent_claimed` 的证据。
 - 重构方案、迁移日志和旧 handover，除非你在追查项目为什么走到今天。
 - 状态是 `draft`、`in_flight`、`historical`、`superseded`、`archived` 或 `unclassified` 的文档。
 

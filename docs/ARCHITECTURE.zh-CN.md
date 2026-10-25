@@ -2,14 +2,14 @@
 
 ## 一、目标与不做什么
 
-目标：在 GitHub 上有多人、多个模型、多个 Agent 协作时，把任务、决策、当前知识和执行证据关联起来，让上下文生成、交接和知识对账可以重复执行。工具要能在不连 GitHub 的本地仓库运行，并且始终能说清哪份内容是权威。
+目标：在 GitHub 上有多人、多个模型、多个 Agent 协作时，把目标、成功标准、执行记录、独立验证、缺陷、任务、决策、当前知识和执行证据关联起来，让上下文生成、交接、验证和知识对账可以重复执行。工具要能在不连 GitHub 的本地仓库运行，并且始终能说清哪份内容是权威。
 
-不做什么：不替代 GitHub Issues/Projects，不自动审批，不自动发布生产，不保证 LLM 的语义判断正确，不构建多租户服务端，不做 GitHub Projects 双向同步，也不把 Agent 当安全边界。当前所有 GitHub 接口都是只读的。
+不做什么：不替代 GitHub Issues/Projects，不调度模型，不自动审批，不自动发布生产，不保证 LLM 的语义判断正确，不构建多租户服务端，不做 GitHub Projects 双向同步，也不把 Agent 当安全边界。当前所有 GitHub 接口都是只读的。
 
 ## 二、逻辑架构
 
 ```text
-开发者 / Claude Code / Codex / Cursor
+开发者 / Claude Code / Codex / Cursor / Qoder
                    |
             project-memory Skill
                    | 按意图分派 workflow
@@ -17,7 +17,7 @@
            /       |         \
 GitHub REST (只读)  Git/worktree   doc_roots + ADR + 快照
            \       |         /
-            context / handoff / finish / audit
+  goal / run / verify / reconcile / context / handoff / finish / audit
                          |
                   派生图与检索
                          |
@@ -26,11 +26,11 @@ GitHub REST (只读)  Git/worktree   doc_roots + ADR + 快照
            GitHub PR + 人/CODEOWNER 审查
 ```
 
-权威来源：Git commit 是代码变更，PR 是审查和合并记录，Issues/Projects 或本地任务文件是任务状态，`.project-memory/config.json` 里声明的 `doc_roots` 是当前规范，accepted ADR 是人工批准的设计理由。
+权威来源：Git commit 是代码变更，PR 是审查和合并记录，Issues/Projects 或本地任务文件是任务状态，`.project-memory/config.json` 里声明的 `doc_roots` 是当前规范，accepted ADR 是人工批准的设计理由。Goal 的成功标准描述意图，Agent Run 记录执行事实，Verification 记录独立检查结果；三者都不是 canonical 文档，也不能替代 Git 和 PR。
 
 `mirror_roots` 只是只读副本，`legacy_roots` 只是历史证据，两者都不是权威。`mirror_policy: frozen` 表示人已经接受镜像永久只读：分歧以 medium 继续报告，仍然可见，但不允许把镜像内容复制回 canonical。
 
-Context Package、Handoff、Audit、Graph 和 Search results 都是派生数据，可以重建，不能直接变成新的正式事实。
+Context Package、Handoff、Audit、Graph、Search results 和 Reconciliation 都是派生或协作数据，可以重建或重新生成，不能直接变成新的正式事实。
 
 ## 三、目录结构
 
@@ -43,7 +43,8 @@ project-memory-mvp/
 │   ├── knowledge.py        # ADR 草案与一致性审计
 │   ├── graph.py            # 证据图与检索
 │   ├── workflows.py        # context、handoff、完成门禁
-│   └── bootstrap.py        # 非破坏性初始化
+│   ├── coordination.py     # Goal、Run、验证、缺陷、对账
+│   └── bootstrap.py        # 非破坏性初始化与工具同步
 ├── skill/project-memory/
 │   ├── SKILL.md
 │   ├── references/         # 治理、契约、工作流
@@ -55,9 +56,26 @@ project-memory-mvp/
 └── pyproject.toml
 ```
 
-初始化目标仓库后，会在 `.project-memory/tooling/project_memory/` 留一份经过 PR 审核的项目级 CLI，减少 CI 对发行包的依赖。Codex 和 Cursor 默认从 `.agents/skills/project-memory/` 加载，Claude Code 使用 `.claude/skills/project-memory/`。升级时用新的发行包提 PR；初始安装不覆盖已有文件，也不悄悄覆盖已有 Skill。
+初始化目标仓库后，会在 `.project-memory/` 下建立：
 
-## 四、八个工作流
+```text
+.project-memory/
+├── config.json
+├── goals/<goal-id>.json
+├── runs/<task>/<run-id>.json
+├── runs/<task>/<run-id>.checkpoints/NNNN.json
+├── handoffs/<task>/<run-id>.json
+├── verifications/<task>/<verification-id>.json
+├── defects/<task>/<defect-id>.json
+├── tooling/project_memory/
+└── cache/
+```
+
+`goals`、`runs`、`handoffs`、`verifications` 和 `defects` 是协作记录，不是 canonical 文档。它们随 PR 审查，但不会被 `audit` 当成当前知识。`cache/` 是派生数据，可以重建。
+
+初始化目标仓库还会在 `.project-memory/tooling/project_memory/` 留一份经过 PR 审核的项目级 CLI，减少 CI 对发行包的依赖。Codex 和 Cursor 默认从 `.agents/skills/project-memory/` 加载，Claude Code 使用 `.claude/skills/project-memory/`。升级时用新的发行包提 PR；初始安装不覆盖已有文件，也不悄悄覆盖已有 Skill。分发目录更新后，用 `sync-tooling` 先看差异，再 `--write`；它不删除多余文件。
+
+## 四、工作流
 
 ### A. `start`：生成任务上下文
 
@@ -109,6 +127,8 @@ Issue 认领只能算约定。Agent 通过独立分支和工作树隔离写入�
 
 所有写入都是 no-clobber。`init` 不写 GitHub Ruleset，不 commit，不 push，不覆盖已有文件。真正生效仍需要 CODEOWNERS、必需审查和 Actions 权限设置。
 
+分发目录的 Skill 或 CLI 更新后，用 `sync-tooling` 对比 `added`、`changed`、`extra` 和 `unchanged`。默认只报告；`--write` 用原子替换更新已跟踪文件，不删除 `extra`，也不覆盖已安装的 `.agents`/`.claude` Skill 副本。Skill 和 CLI 变更属于受保护变更。
+
 ### G. `graph` 和 `search`：关系与检索
 
 Graph 节点包括 `DOC:<path>`、`ADR-0001`、`ISSUE:<n>`、`PR:<n>`，边是 `references` 和 `supersedes`。输入来自配置的 doc/mirror/legacy 根，以及 `.project-memory/issues`、`.project-memory/prs` 下的本地快照；这两个快照目录默认被 `.gitignore` 排除，避免未经审查就把私有任务内容提交进仓库。`graph.json` 是可重建索引。
@@ -123,14 +143,56 @@ Graph 节点包括 `DOC:<path>`、`ADR-0001`、`ISSUE:<n>`、`PR:<n>`，边是 `
 
 `canonical` 只能从 `draft` 或 `in_flight` 开始，`evidence` 只能从 `evidence` 开始。命令拒绝直接创建 `current`、重复 ID、已存在路径、ADR 目录、mirror/legacy 根，以及 canonical 根之外的路径。它只生成固定 frontmatter 和章节骨架，不填结论，不验证证据，也不提升状态。规则见 `skill/project-memory/references/document-authoring.md`。
 
+### I. `goal`：目标与成功标准
+
+Goal 记录 `id`、标题、背景、预期结果、负责人、约束、关联 Issue/ADR/PR 和成功标准。标准至少一条，且至少一条必达；每条标准有独立 ID、可核验陈述和证据数组。
+
+创建默认 `proposed`。`approved` 和 `achieved` 必须由授权人提供 `approved_by`；`blocked` 和 `cancelled` 必须写原因。`achieved` 前自动评估，必达标准未满足时拒绝。已批准标准只能由授权人通过可审查变更修改。
+
+证据类型是 `verification`、`commit`、`test`、`manual`。`test` 要求本地日志存在且退出码为 0；`manual` 要求 `approved_by`；`commit` 要求完整 SHA 在当前历史中；`verification` 要求 pass、未 stale，且绑定被验证执行的当前 head。
+
+`goal evaluate` 只检查证据存在性和绑定关系，不判断证据在语义上是否支持标准，也不因为 Issue 关闭而判定达成。
+
+### J. `run`：可恢复的 Agent 执行
+
+Agent Run 记录 Goal、任务、Agent、模型 provider/id、工具、会话 ID、base/head SHA、分支、授权范围、角色和状态。角色是 `executor` 或 `verifier`。独立验证必须使用另一个 verifier run，且验证者的 agent/model/session 至少一项与被验证执行不同。模型身份只保留 provider 和 id，不保存模型密钥。
+
+状态机：`queued -> running -> submitted -> verified`，另有 `paused`、`failed`、`cancelled`、`superseded`。`run finish` 生成 1.2 handoff，包含模型、head、提交、变更文件、测试、文档变化、未决问题和下一步，把执行置为 `submitted`、`failed` 或 `cancelled`。
+
+检查点是递增编号的不可变文件，包含 head、已完成、剩余、阻塞和证据。它与上一个检查点完全相同会幂等返回；执行结束后拒绝写入。
+
+`run resume` 汇总最新检查点、handoff、验证和缺陷，并检查 base 是否为当前 HEAD 的祖先、head 是否变化、是否缺 handoff、是否有多个活跃 executor。默认只选 executor；没有 handoff 的活跃执行可以用最近检查点恢复。状态是 `resume_ready`、`verified`、`no_run`、`needs_handoff`、`needs_human` 或 `stale_base`。执行标为 verified 但提交漂移时返回 `needs_human`。恢复包不证明前任 Agent 的声明为真。
+
+并发控制是乐观的：Run、Goal 和 Defect 用 revision 检查，Handoff 和验证记录用原子 no-clobber。没有分布式锁；GitHub 任务认领只是约定。
+
+### K. `verify` 与 `defect`：执行之后的独立检查
+
+验证记录独立于执行，包含验证 ID、目标 run、验证者 run、验证者模型/工具/会话、目标 head、当前 head、标准、证据级别、测试/CI/审查结果、发现、结论和可信级别。
+
+证据级别从低到高是 `agent_claimed`、`locally_observed`、`externally_verified`、`human_approved`。`agent_claimed` 不能产生 pass。本地观察需要命令、整数退出码和存在的非空证据日志，日志不能是 canonical 文档；外部验证需要 CI URL 和 passed；人工批准需要 review URL 和 approved。CLI 离线时不抓取 CI 或 review，后两者标为 `declared_unfetched`，仍属调用方声明。
+
+pass 条件还要求没有 high 级发现、目标 head 未变化、验证记录属于同一 Goal。验证绑定 `target_head_sha`；代码变化后旧验证不自动有效。pass 把目标执行置为 `verified`，fail 置为 `failed`。
+
+每条 finding 生成一个缺陷，记录任务、验证来源、代码位置、复现、严重度和状态。缺陷状态是 `open`、`fixed`、`verified`、`wontfix`、`closed`。`fixed` 必须绑定存在的完整提交 SHA；`verified` 由复验的 `--resolves-defect` 产生，不能直接更新；修复提交必须在被验证提交的历史中。
+
+### L. `reconcile`：知识对账
+
+`reconcile` 关联 Goal、Issue 引用、Agent Run、验证、缺陷、ADR 和当前文档，输出带 severity 的 JSON 或 Markdown 报告。检查包括：已达成的 Goal 仍有未满足标准、有 Goal 没有执行、高等级缺陷、pass 没有验证记录、孤立执行、未验证提交、验证记录缺失、handoff 缺失、base 不是祖先、多个活跃 executor、旧提交验证、Agent 自报 pass、缺陷标为 verified 却没有有效验证记录、修复提交不在历史中、文档审计发现、accepted ADR 未关联。verifier run 不参与未验证提交和并发判断。
+
+对账只报告，不自动改 canonical 文档、不合并、不关闭任务。报告是可重建的派生数据，不是第二份权威存储。
+
 ## 五、数据与引用契约
 
-- 所有结构化输出都带 `schema_version: "1.1"` 和 `kind`。
-- JSON Schema（Draft 2020-12）放在 `skill/project-memory/assets/`，共 13 份：Task Context、Handoff、Completion、Audit、Graph、Config、Init、ADR proposal/metadata、Search results、Issue/PR snapshot、Document draft。当前只验证 JSON 能解析，还没有接入 Draft 2020-12 实例校验器。
+- 结构化输出都带 `schema_version` 和 `kind`。新记录使用 `1.2`；通用 handoff 兼容 `1.1`，完成报告仍是 `1.1` 并增加 `evidence_levels`。下游拒绝未知主版本，忽略额外字段。
+- JSON Schema（Draft 2020-12）放在 `skill/project-memory/assets/`，共 19 份：Task Context、Handoff、Completion、Audit、Graph、Config、Init、ADR proposal/metadata、Search results、Issue/PR snapshot、Document draft，以及 Goal、Agent Run、Run Checkpoint、Verification Record、Defect、Knowledge Reconciliation。当前只验证 JSON 能解析，还没有接入 Draft 2020-12 实例校验器。
+- Goal 记录成功标准和证据，状态为 `proposed`、`approved`、`active`、`evaluating`、`achieved`、`blocked`、`cancelled`；`approved` 和 `achieved` 需要 `approved_by`。
+- Agent Run 记录模型 provider/id、工具、会话、base/head SHA、分支、授权范围、角色和状态。检查点不可变；handoff 1.2 增加模型、head、提交、测试和下一步。
+- Verification Record 独立于执行，绑定 `target_head_sha`，证据级别为 `agent_claimed`、`locally_observed`、`externally_verified`、`human_approved`。Defect 记录位置、复现、严重度和修复提交。
 - ADR frontmatter 使用 `id`、`kind`、`title`、`topic`、`status`、`owner`、`updated_at`、`related_issues`、`supersedes`、`approved_by` 等键。脚本只支持受限 YAML 子集。
 - 文档 frontmatter 可以带 `last_verified_at`，表示人重新核对结论的日期，与只记录编辑的 `updated_at` 不同。`entry_doc` 指向唯一人工入口，`max_verified_age_days` 控制过期阈值。
-- Git SHA 是工作基准，40 位，可以为空。任务 ID 可以是数字 Issue，也可以是稳定字符串。`run_id` 唯一，但不是业务事务 ID。
+- Git SHA 是工作基准，40 位，可以为空。任务 ID 可以是数字 Issue，也可以是稳定字符串。`run_id` 唯一，但不是业务事务 ID；复验要生成新的验证 ID。
 - 搜索结果必须显示原文件路径。链接边只证明存在引用，不证明实现一致或结论正确。
+- 1.1 数据保持可读，不批量重写。下一次 `run finish` 会生成 1.2 handoff；批量迁移需要受审查的一次性脚本。
 
 ## 六、权限模型与失败处理
 
@@ -138,8 +200,10 @@ Graph 节点包括 `DOC:<path>`、`ADR-0001`、`ISSUE:<n>`、`PR:<n>`，边是 `
 |---|---|---|---|---|
 | 读取仓库和 Issue | 允许 | 允许 | 允许 | 允许 |
 | 修改任务分支 | 默认不允许 | 在受控范围内允许 | 默认不允许 | 按仓库策略 |
+| 登记 Agent Run | 禁止 | 允许（executor） | 允许（verifier） | 允许 |
+| 独立验证 | 禁止 | 禁止自验 | 允许（`role=verifier`，且 agent/model/session 至少一项不同） | 允许 |
 | 生成 ADR 草案 | 允许 | 允许 | 允许 | 允许 |
-| 审批 ADR、合并 PR | 禁止 | 禁止 | 禁止 | 受 GitHub Ruleset 约束 |
+| 批准 Goal 达成、审批 ADR、合并 PR | 禁止 | 禁止 | 禁止 | 受 GitHub Ruleset 约束 |
 | 生产部署 | 禁止 | 禁止 | 禁止 | 受环境审批控制 |
 
 这些是治理目标，必须靠 GitHub 权限、CODEOWNERS、Rulesets、CI 和独立的 Agent 凭据来执行。单独的 Skill 指令、任务标签或本地脚本挡不住越权。
@@ -147,8 +211,13 @@ Graph 节点包括 `DOC:<path>`、`ADR-0001`、`ISSUE:<n>`、`PR:<n>`，边是 `
 失败时的处理方式：
 
 - 缺令牌或没有 Issue：列出需要的参数并停止。
-- Git SHA 无效：停止。
-- 同一个 run-id 的交接内容变了：报错。
+- Git SHA 无效、不是完整 40 位、或不在当前历史中：停止。
+- 同一个 run-id 的交接内容变了：报错，换新的 run ID。
+- base 不是当前 HEAD 的祖先：报 `stale_base`，请人对齐分支。
+- 同一任务有多个活跃 executor：报 `needs_human`，不自行覆盖；verifier 不计入。
+- 验证时 HEAD 已变化：拒绝 pass，要求重新对齐和复验。
+- Agent 自报证据：记录为 `agent_claimed`，不能 pass。
+- 有 high 级发现：拒绝 pass，生成缺陷。
 - frontmatter 不在支持的 YAML 子集内：按高风险报告。
 - 语义检索模型不可用：明确报错，不悄悄退回并声称是语义结果。
 - 证据缺失：记为 `unknown`，不假设成功。
@@ -161,3 +230,4 @@ Graph 节点包括 `DOC:<path>`、`ADR-0001`、`ISSUE:<n>`、`PR:<n>`，边是 `
 4. 文档索引按 commit SHA 做增量缓存；检索使用私有本地 embedding 或 reranker，并带上证据级别和失效标记。
 5. 更严格的 schema validator、循环引用检测、frontmatter 解析和迁移工具。
 6. 多仓库知识 URI、审计日志，以及防止敏感文件进入检索索引的规则。
+7. 多模型编排只保留接口设计：客户端不支持自动切换时，由人生成 handoff 并在新会话继续；不要做后台调度器。自动编排需要显式的模型能力探测、授权和审计轨迹。

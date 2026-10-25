@@ -20,6 +20,8 @@
 | 被取代的结论 | 现有文档 | `superseded` | 链接到新文档 |
 | 不再代表现状的材料 | 现有文档 | `historical` | 写清原因和从什么时候开始 |
 
+Goal、Agent Run、检查点、验证和缺陷记录留在 `.project-memory/`，不要复制成 canonical 文档。对账报告和图谱是派生结果，可以重建，不是第二份权威存储。要把执行结论写进文档时，先经过审查，并在证据里链接验证记录或提交。
+
 `new-doc` 不能创建 `current`，只接受两种组合：
 
 - `kind: canonical` 配 `status: draft` 或 `in_flight`

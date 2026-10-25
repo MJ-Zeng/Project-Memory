@@ -8,11 +8,15 @@ import threading
 import unittest
 from pathlib import Path
 
-from project_memory.bootstrap import init
+from project_memory.bootstrap import init, sync_tooling
 from project_memory.common import PMError, frontmatter, git_sha, md_header, today
 from project_memory.knowledge import create_adr, create_document, audit, load_config
 from project_memory.graph import build_graph, lexical_search, terms
 from project_memory.workflows import context, finish, handoff
+from project_memory.coordination import (add_goal_evidence, checkpoint_run, create_goal,
+                                         defect_list, evaluate_goal, finish_run, iter_runs,
+                                         iter_verifications, reconcile, resume_run, start_run,
+                                         transition_goal, update_defect, verify_run)
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -83,6 +87,24 @@ class ProjectMemoryTest(unittest.TestCase):
         self.assertTrue((self.repo / '.project-memory/templates/document.md').exists())
         workflow = (self.repo / '.github/workflows/project-memory-check.yml').read_text(encoding='utf-8')
         self.assertIn('--scope current --fail-on high', workflow)
+
+    def test_sync_tooling_is_dry_run_then_updates_without_deleting_extra(self):
+        init(self.repo, 'none')
+        vendored = self.repo / '.project-memory/tooling/project_memory/cli.py'
+        stale = vendored.read_text(encoding='utf-8') + '\n# stale local copy\n'
+        vendored.write_text(stale, encoding='utf-8')
+        extra = self.repo / '.project-memory/tooling/project_memory/obsolete.py'
+        extra.write_text('# old module\n', encoding='utf-8')
+        report = sync_tooling(self.repo)
+        self.assertTrue(report['dry_run'])
+        self.assertIn('.project-memory/tooling/project_memory/cli.py', report['changed'])
+        self.assertIn('.project-memory/tooling/project_memory/obsolete.py', report['extra'])
+        self.assertEqual(vendored.read_text(encoding='utf-8'), stale)
+        applied = sync_tooling(self.repo, write=True)
+        self.assertFalse(applied['dry_run'])
+        self.assertEqual(vendored.read_text(encoding='utf-8'),
+                         (ROOT / 'project_memory/cli.py').read_text(encoding='utf-8'))
+        self.assertTrue(extra.is_file())
 
     def test_installed_offline_cli_can_install_skill_later(self):
         init(self.repo, 'none')
@@ -190,17 +212,45 @@ class ProjectMemoryTest(unittest.TestCase):
             self.assertFalse((self.repo / '.project-memory/handoffs').exists())
             self.assertTrue(rec['stored_at'].endswith('325/run-ext.json'))
 
-    def test_finish_unknown_and_declared(self):
+    def test_finish_rejects_declarations_and_accepts_structured_evidence(self):
         init(self.repo, 'none')
         a = finish(self.repo, self.issue, None, None, 'unknown', '', None)
         self.assertEqual(a['recommendation'], 'do_not_close')
         self.assertFalse(a['close_issue_automatically'])
         self.assertTrue(any(x['status'] == 'unknown' for x in a['gates']))
+
+        # 快照、任意测试字符串和审查者姓名都不能通过门禁。
         b = finish(self.repo, self.issue, self.pr, 'https://ci.example.invalid/run', 'updated', '', 'Alice PR review')
-        self.assertEqual(b['recommendation'], 'ready_for_human_verification')
-        self.assertFalse(b['close_issue_automatically'])
-        c = finish(self.repo, self.issue, self.pr, 'CI', 'not-applicable', 'short', 'Alice')
-        self.assertEqual(c['recommendation'], 'do_not_close')
+        self.assertEqual(b['recommendation'], 'do_not_close')
+        self.assertEqual(next(g for g in b['gates'] if g['id'] == 'pr_merge_evidence')['status'], 'unknown')
+        self.assertEqual(next(g for g in b['gates'] if g['id'] == 'test_evidence_present')['status'], 'unknown')
+        self.assertEqual(next(g for g in b['gates'] if g['id'] == 'review_attestation')['status'], 'unknown')
+
+        log = self.repo / 'test.log'
+        log.write_text('ok\n', encoding='utf-8')
+        live_pr = dict(self.pr, _provenance='github_api')
+        c = finish(self.repo, self.issue, live_pr, None, 'not-applicable',
+                   '该任务只修改内部脚本，不需要更新规范文档',
+                   None, test_command='python -m unittest', test_exit=0, test_log='test.log',
+                   ci_url='https://ci.example.invalid/run/1', ci_status='success',
+                   review_url='https://github.example.invalid/review/1', review_state='approved')
+        self.assertEqual(c['recommendation'], 'ready_for_human_verification', c['gates'])
+        self.assertEqual(c['evidence_levels']['tests'], 'locally_observed')
+        self.assertEqual(c['evidence_levels']['pr_merge'], 'externally_verified')
+        self.assertEqual(c['evidence_levels']['review'], 'human_approved')
+
+        d = finish(self.repo, self.issue, self.pr, 'CI', 'not-applicable', 'short', 'Alice')
+        self.assertEqual(d['recommendation'], 'do_not_close')
+
+        empty = self.repo / 'empty.log'
+        empty.write_text('', encoding='utf-8')
+        e = finish(self.repo, self.issue, live_pr, None, 'not-applicable',
+                   '该任务只修改内部脚本，不需要更新规范文档', None,
+                   test_command='python -m unittest', test_exit=0, test_log='empty.log',
+                   ci_url='https://ci.example.invalid/run/1', ci_status='success',
+                   review_url='https://github.example.invalid/review/1', review_state='approved')
+        self.assertEqual(e['recommendation'], 'do_not_close')
+        self.assertEqual(next(g for g in e['gates'] if g['id'] == 'test_evidence_present')['status'], 'unknown')
 
     def test_adr_proposal_and_approved_gate(self):
         init(self.repo, 'none')
@@ -576,10 +626,13 @@ class ProjectMemoryTest(unittest.TestCase):
         (self.repo / 'doc/new_doc').mkdir(parents=True)
         (self.repo / 'doc/new_doc/current.md').write_text('# current\n', encoding='utf-8')
         self.write_config(['doc/new_doc'])
-        pr = {'number': 1, 'merged_at': '2026-10-24T00:00:00Z', 'changed_files_list': ['doc/new_doc/current.md']}
-        report = finish(self.repo, {'id': 'local-1', 'title': 'x'}, pr, 'CI', 'updated', '', 'Human')
+        pr = {'number': 1, 'merged_at': '2026-10-24T00:00:00Z',
+              'changed_files_list': ['doc/new_doc/current.md'], '_provenance': 'github_api'}
+        report = finish(self.repo, {'id': 'local-1', 'title': 'x'}, pr, None, 'updated', '', None)
         docs_gate = next(g for g in report['gates'] if g['id'] == 'docs_impact')
         self.assertEqual(docs_gate['status'], 'pass')
+        snapshot = finish(self.repo, {'id': 'local-1', 'title': 'x'}, dict(pr, _provenance=None), None, 'updated', '', None)
+        self.assertEqual(next(g for g in snapshot['gates'] if g['id'] == 'docs_impact')['status'], 'unknown')
 
     def test_schema_files_are_valid_json(self):
         schemas = sorted((ROOT / 'skill/project-memory/assets').glob('*.schema.json'))
@@ -588,6 +641,499 @@ class ProjectMemoryTest(unittest.TestCase):
             obj = json.loads(path.read_text(encoding='utf-8'))
             self.assertIsInstance(obj, dict)
             self.assertIn('$schema', obj, path.name)
+
+
+class CoordinationTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.repo = Path(self.tmp.name)
+        self.git('init', '-q')
+        self.git('config', 'user.email', 'test@example.invalid')
+        self.git('config', 'user.name', 'Test')
+        (self.repo / 'README.md').write_text('hello', encoding='utf-8')
+        self.git('add', 'README.md')
+        self.git('commit', '-qm', 'first commit')
+        self.base = git_sha(self.repo)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def git(self, *args):
+        return subprocess.run(['git', '-C', str(self.repo), *args], check=True,
+                              capture_output=True, text=True, encoding='utf-8')
+
+    def commit(self, name='change.txt'):
+        (self.repo / name).write_text('x', encoding='utf-8')
+        self.git('add', name)
+        self.git('commit', '-qm', name)
+        return git_sha(self.repo)
+
+    def make_goal(self, goal_id='G-1', criterion='模块通过测试'):
+        return create_goal(self.repo, goal_id, goal_id + ' title', 'background', 'outcome',
+                           'owner', [criterion], issues=[325])
+
+    def start(self, goal='G-1', run_id='run-dev', task='325', agent='dev-agent',
+              model='auto', base=None, role='executor'):
+        return start_run(self.repo, goal, task, run_id, agent, 'qodercn', model,
+                         base_sha=base or git_sha(self.repo), role=role)
+
+    def test_goal_requires_criteria_and_approval(self):
+        with self.assertRaises(PMError):
+            create_goal(self.repo, 'G-0', 't', '', 'o', 'owner', [])
+        self.make_goal()
+        with self.assertRaises(PMError):
+            transition_goal(self.repo, 'G-1', 'approved')
+        approved = transition_goal(self.repo, 'G-1', 'approved', approved_by='human-lead')
+        self.assertEqual(approved['goal']['approved_by'], 'human-lead')
+        self.assertEqual(approved['goal']['approvals'][0]['by'], 'human-lead')
+        transition_goal(self.repo, 'G-1', 'active')
+        with self.assertRaises(PMError):
+            transition_goal(self.repo, 'G-1', 'achieved', approved_by='human-lead')
+        transition_goal(self.repo, 'G-1', 'evaluating')
+        with self.assertRaises(PMError):
+            transition_goal(self.repo, 'G-1', 'achieved', approved_by='human-lead')
+        with self.assertRaises(PMError):
+            transition_goal(self.repo, 'G-1', 'proposed')
+
+    def test_goal_evaluation_uses_criteria_not_issue_closure(self):
+        self.make_goal()
+        result = evaluate_goal(self.repo, 'G-1')
+        self.assertFalse(result['satisfied'])
+        self.assertEqual(result['blocking'], ['C1'])
+        with self.assertRaises(PMError):
+            add_goal_evidence(self.repo, 'G-1', 'C1', 'test', 'missing.log', exit_code=0)
+        with self.assertRaises(PMError):
+            add_goal_evidence(self.repo, 'G-1', 'C1', 'manual', 'verbal approval')
+        (self.repo / 'test.log').write_text('ok\n', encoding='utf-8')
+        add_goal_evidence(self.repo, 'G-1', 'C1', 'test', 'test.log', exit_code=0)
+        self.assertTrue(evaluate_goal(self.repo, 'G-1')['satisfied'])
+        add_goal_evidence(self.repo, 'G-1', 'C1', 'commit', self.base)
+        transition_goal(self.repo, 'G-1', 'approved', approved_by='human-lead')
+        transition_goal(self.repo, 'G-1', 'active')
+        transition_goal(self.repo, 'G-1', 'evaluating')
+        done = transition_goal(self.repo, 'G-1', 'achieved', approved_by='human-lead')
+        self.assertEqual(done['goal']['status'], 'achieved')
+
+    def test_duplicate_and_concurrent_runs(self):
+        self.make_goal()
+        self.start(run_id='run-a')
+        second = self.start(run_id='run-b')
+        self.assertTrue(any('已有活跃执行' in w for w in second['warnings']))
+        same = self.start(run_id='run-a')
+        self.assertFalse(same['created'])
+        with self.assertRaises(PMError):
+            self.start(run_id='run-a', model='other-model')
+        report = reconcile(self.repo)
+        self.assertIn('multiple_active_runs', {i['code'] for i in report['items']})
+
+    def test_checkpoint_is_idempotent_and_closed_after_finish(self):
+        self.make_goal()
+        self.start()
+        first = checkpoint_run(self.repo, '325', 'run-dev', ['read'], ['write'], head_sha=self.base)
+        self.assertTrue(first['created'])
+        again = checkpoint_run(self.repo, '325', 'run-dev', ['read'], ['write'], head_sha=self.base)
+        self.assertFalse(again['created'])
+        newer = checkpoint_run(self.repo, '325', 'run-dev', ['read', 'write'], ['test'], head_sha=self.base)
+        self.assertTrue(newer['created'])
+        finish_run(self.repo, '325', 'run-dev', ['read'], ['test'], head_sha=self.base)
+        with self.assertRaises(PMError):
+            checkpoint_run(self.repo, '325', 'run-dev', ['read'], ['test'], head_sha=self.base)
+
+    def test_finish_writes_12_handoff_and_resume_package(self):
+        self.make_goal()
+        self.start()
+        (self.repo / 'test.log').write_text('ok\n', encoding='utf-8')
+        checkpoint_run(self.repo, '325', 'run-dev', ['read'], ['write'], head_sha=self.base)
+        self.assertEqual([r['run_id'] for r in iter_runs(self.repo)], ['run-dev'])
+        result = finish_run(self.repo, '325', 'run-dev', ['implemented'], ['verify'],
+                            head_sha=self.base, commits=[self.base],
+                            changed_files=['src/auth.py'],
+                            tests=[{'command': 'pytest', 'exit_code': 0, 'log': 'test.log'}],
+                            next_actions=['run independent verification'])
+        handoff = result['handoff']
+        self.assertEqual(handoff['schema_version'], '1.2')
+        self.assertEqual(handoff['goal_id'], 'G-1')
+        self.assertEqual(handoff['model']['id'], 'auto')
+        self.assertEqual(handoff['tests'][0]['exit_code'], 0)
+        self.assertEqual(result['run']['status'], 'submitted')
+        resumed = resume_run(self.repo, '325')
+        self.assertEqual(resumed['status'], 'resume_ready')
+        self.assertEqual(resumed['run_id'], 'run-dev')
+        self.assertEqual(resumed['model']['id'], 'auto')
+        self.assertEqual(resumed['remaining'], ['verify'])
+        self.assertEqual(resumed['next_actions'], ['run independent verification'])
+        self.assertEqual(resumed['checkpoints'], 1)
+
+    def test_resume_detects_stale_base(self):
+        origin = self.git('branch', '--show-current').stdout.strip()
+        self.git('checkout', '-q', '-b', 'side')
+        side = self.commit('side.txt')
+        self.make_goal('G-SIDE')
+        self.start(goal='G-SIDE', run_id='run-side', task='900', base=side)
+        self.git('checkout', '-q', origin)
+        resumed = resume_run(self.repo, '900')
+        self.assertEqual(resumed['status'], 'stale_base')
+
+    def test_legacy_11_handoff_is_readable_with_warning(self):
+        self.make_goal()
+        self.start(run_id='run-legacy')
+        handoff(self.repo, 325, 'legacy-agent', 'run-legacy', ['read'], ['write'], [], [],
+                base_sha=self.base)
+        resumed = resume_run(self.repo, '325')
+        self.assertEqual(resumed['status'], 'resume_ready')
+        self.assertTrue(any('1.1' in w for w in resumed['warnings']))
+
+    def test_verification_requires_independent_evidence_and_current_sha(self):
+        self.make_goal()
+        (self.repo / 'test.log').write_text('ok\n', encoding='utf-8')
+        self.start(run_id='run-target')
+        finish_run(self.repo, '325', 'run-target', ['implemented'], ['verify'], head_sha=self.base,
+                   tests=[{'command': 'pytest', 'exit_code': 0, 'log': 'test.log'}])
+        self.start(run_id='run-verifier', agent='verifier-agent', role='verifier')
+        common = dict(target_run='run-target', verifier_run='run-verifier',
+                      standard='acceptance check', verdict='pass')
+        with self.assertRaises(PMError):
+            verify_run(self.repo, **dict(common, verifier_run='run-target',
+                                         evidence_level='locally_observed',
+                                         test_command='pytest', test_exit=0, test_log='test.log'))
+        with self.assertRaises(PMError):
+            verify_run(self.repo, **dict(common, evidence_level='agent_claimed'))
+        with self.assertRaises(PMError):
+            verify_run(self.repo, **dict(common, evidence_level='externally_verified'))
+        with self.assertRaises(PMError):
+            verify_run(self.repo, **dict(common, evidence_level='human_approved'))
+        with self.assertRaises(PMError):
+            verify_run(self.repo, **dict(common, evidence_level='locally_observed',
+                                         test_command='pytest', test_exit=0, test_log='test.log',
+                                         expected_sha='0' * 40))
+        passed = verify_run(self.repo, **dict(common, evidence_level='locally_observed',
+                                              test_command='pytest', test_exit=0, test_log='test.log'))
+        self.assertTrue(passed['verification']['verified'])
+        target = next(r for r in iter_runs(self.repo) if r['run_id'] == 'run-target')
+        self.assertEqual(target['status'], 'verified')
+        finish_run(self.repo, '325', 'run-verifier', ['verification delivered'], ['none'],
+                   head_sha=self.base)
+        report = reconcile(self.repo)
+        self.assertNotIn('unverified_submission', {i['code'] for i in report['items']})
+        next_commit = self.commit('later.txt')
+        self.assertNotEqual(next_commit, self.base)
+        with self.assertRaises(PMError):
+            verify_run(self.repo, **dict(common, evidence_level='locally_observed',
+                                         test_command='pytest', test_exit=0, test_log='test.log'))
+        report = reconcile(self.repo)
+        self.assertIn('verification_behind_head', {i['code'] for i in report['items']})
+
+    def test_defect_lifecycle_and_reverification(self):
+        self.make_goal()
+        (self.repo / 'test.log').write_text('failed\n', encoding='utf-8')
+        self.start(run_id='run-target')
+        finish_run(self.repo, '325', 'run-target', ['implemented'], ['verify'], head_sha=self.base)
+        self.start(run_id='run-verifier', agent='verifier-agent', role='verifier')
+        findings = [{'severity': 'high', 'file': 'src/auth.py', 'line': 10,
+                     'summary': '权限检查缺失', 'repro': 'call without token'}]
+        failed = verify_run(self.repo, 'run-target', 'run-verifier', 'security review',
+                            'fail', 'locally_observed', test_command='pytest', test_exit=1,
+                            test_log='test.log', findings=findings)
+        defect_id = failed['defects'][0]['defect_id']
+        self.assertEqual(failed['defects'][0]['status'], 'open')
+        report = reconcile(self.repo)
+        self.assertIn('open_high_defect', {i['code'] for i in report['items']})
+        with self.assertRaises(PMError):
+            update_defect(self.repo, defect_id, 'verified')
+        with self.assertRaises(PMError):
+            update_defect(self.repo, defect_id, 'fixed')
+        preview = update_defect(self.repo, defect_id, 'fixed', fixed_in_sha=self.base, dry_run=True)
+        self.assertEqual(preview['defect']['status'], 'fixed')
+        self.assertEqual(defect_list(self.repo)['defects'][0]['status'], 'open')
+        update_defect(self.repo, defect_id, 'fixed', fixed_in_sha=self.base)
+        passed = verify_run(self.repo, 'run-target', 'run-verifier', 'security review',
+                            'pass', 'locally_observed', test_command='pytest', test_exit=0,
+                            test_log='test.log', resolves_defects=[defect_id])
+        self.assertTrue(passed['verification']['verified'])
+        defect = defect_list(self.repo)[ 'defects'][0]
+        self.assertEqual(defect['status'], 'verified')
+        self.assertEqual(defect['verified_by'], passed['verification']['verification_id'])
+        report = reconcile(self.repo)
+        self.assertNotIn('open_high_defect', {i['code'] for i in report['items']})
+        self.assertNotIn('defect_verified_without_record', {i['code'] for i in report['items']})
+
+    def test_reconcile_detects_tampering_orphans_and_unverified_submission(self):
+        self.make_goal()
+        self.start()
+        finish_run(self.repo, '325', 'run-dev', ['implemented'], ['verify'], head_sha=self.base)
+        report = reconcile(self.repo)
+        self.assertIn('unverified_submission', {i['code'] for i in report['items']})
+        goal_path = self.repo / '.project-memory/goals/G-1.json'
+        goal = json.loads(goal_path.read_text(encoding='utf-8'))
+        goal['status'] = 'achieved'
+        goal_path.write_text(json.dumps(goal, ensure_ascii=False), encoding='utf-8')
+        report = reconcile(self.repo)
+        self.assertIn('achieved_goal_unsatisfied', {i['code'] for i in report['items']})
+        goal_path.unlink()
+        report = reconcile(self.repo)
+        self.assertIn('run_orphan_goal', {i['code'] for i in report['items']})
+
+    def test_handoff_12_metadata_is_part_of_idempotency(self):
+        metadata = {'goal_id': 'G-1', 'from_run': 'run-1', 'model': {'provider': 'qodercn', 'id': 'auto'},
+                    'tests': [{'command': 'pytest', 'exit_code': 0, 'log': 'test.log'}]}
+        record = handoff(self.repo, 325, 'agent-a', 'run-1', ['read'], ['write'], [], [],
+                         base_sha=self.base, metadata=metadata)
+        self.assertEqual(record['schema_version'], '1.2')
+        self.assertEqual(record['goal_id'], 'G-1')
+        again = handoff(self.repo, 325, 'agent-a', 'run-1', ['read'], ['write'], [], [],
+                        base_sha=self.base, metadata=metadata)
+        self.assertEqual(again['schema_version'], '1.2')
+        with self.assertRaises(PMError):
+            handoff(self.repo, 325, 'agent-a', 'run-1', ['read'], ['write'], [], [],
+                    base_sha=self.base, metadata=dict(metadata, goal_id='G-2'))
+
+    def test_verifier_role_and_independence_are_enforced(self):
+        self.make_goal()
+        (self.repo / 'test.log').write_text('ok\n', encoding='utf-8')
+        self.start(run_id='run-target', agent='same-agent', model='auto')
+        finish_run(self.repo, '325', 'run-target', ['implemented'], ['verify'], head_sha=self.base)
+        self.start(run_id='run-same', agent='same-agent', model='auto', role='verifier')
+        with self.assertRaises(PMError) as ctx:
+            verify_run(self.repo, 'run-target', 'run-same', 'acceptance', 'pass',
+                       'locally_observed', test_command='pytest', test_exit=0, test_log='test.log')
+        self.assertIn('独立', str(ctx.exception))
+        self.start(run_id='run-exec2', agent='other-agent', role='executor')
+        with self.assertRaises(PMError) as ctx:
+            verify_run(self.repo, 'run-target', 'run-exec2', 'acceptance', 'pass',
+                       'locally_observed', test_command='pytest', test_exit=0, test_log='test.log')
+        self.assertIn('verifier', str(ctx.exception))
+        self.start(run_id='run-other-model', agent='same-agent', model='qwen3.8-flash', role='verifier')
+        passed = verify_run(self.repo, 'run-target', 'run-other-model', 'acceptance', 'pass',
+                            'locally_observed', test_command='pytest', test_exit=0, test_log='test.log')
+        self.assertEqual(passed['verification']['independence']['basis'], ['model'])
+
+    def test_verification_evidence_cannot_cross_goal(self):
+        self.make_goal('G-1')
+        self.make_goal('G-2', '另一个目标')
+        (self.repo / 'test.log').write_text('ok\n', encoding='utf-8')
+        self.start(goal='G-1', run_id='run-a', task='100')
+        finish_run(self.repo, '100', 'run-a', ['implemented'], ['verify'], head_sha=self.base)
+        self.start(goal='G-1', run_id='run-v', task='100', agent='verifier-agent', role='verifier')
+        passed = verify_run(self.repo, 'run-a', 'run-v', 'acceptance', 'pass',
+                            'locally_observed', test_command='pytest', test_exit=0, test_log='test.log')
+        vid = passed['verification']['verification_id']
+        with self.assertRaises(PMError) as ctx:
+            add_goal_evidence(self.repo, 'G-2', 'C1', 'verification', vid)
+        self.assertIn('其他目标', str(ctx.exception))
+
+    def test_stale_verification_stops_goal_and_resume(self):
+        self.make_goal()
+        (self.repo / 'test.log').write_text('ok\n', encoding='utf-8')
+        self.start(run_id='run-target')
+        finish_run(self.repo, '325', 'run-target', ['implemented'], ['verify'], head_sha=self.base)
+        self.start(run_id='run-verifier', agent='verifier-agent', role='verifier')
+        passed = verify_run(self.repo, 'run-target', 'run-verifier', 'acceptance', 'pass',
+                            'locally_observed', test_command='pytest', test_exit=0, test_log='test.log')
+        vid = passed['verification']['verification_id']
+        add_goal_evidence(self.repo, 'G-1', 'C1', 'verification', vid)
+        self.assertTrue(evaluate_goal(self.repo, 'G-1')['satisfied'])
+        self.assertEqual(resume_run(self.repo, '325')['status'], 'verified')
+        self.commit('after-verification.txt')
+        evaluation = evaluate_goal(self.repo, 'G-1')
+        self.assertFalse(evaluation['satisfied'])
+        self.assertEqual(evaluation['blocking'], ['C1'])
+        resumed = resume_run(self.repo, '325')
+        self.assertNotEqual(resumed['status'], 'verified')
+        self.assertEqual(resumed['current_verifications'], [])
+        self.assertTrue(any('当前 HEAD' in w for w in resumed['warnings']))
+
+    def test_failed_resolves_defect_leaves_no_pass_record(self):
+        self.make_goal()
+        (self.repo / 'test.log').write_text('failed\n', encoding='utf-8')
+        self.start(run_id='run-target')
+        finish_run(self.repo, '325', 'run-target', ['implemented'], ['verify'], head_sha=self.base)
+        self.start(run_id='run-verifier', agent='verifier-agent', role='verifier')
+        findings = [{'severity': 'high', 'file': 'src/auth.py', 'line': 10,
+                     'summary': '权限检查缺失', 'repro': 'call without token'}]
+        failed = verify_run(self.repo, 'run-target', 'run-verifier', 'security review',
+                            'fail', 'locally_observed', test_command='pytest', test_exit=1,
+                            test_log='test.log', findings=findings)
+        defect_id = failed['defects'][0]['defect_id']
+        update_defect(self.repo, defect_id, 'fixed', fixed_in_sha=self.base)
+        with self.assertRaises(PMError):
+            verify_run(self.repo, 'run-target', 'run-verifier', 'security review',
+                       'pass', 'locally_observed', test_command='pytest', test_exit=0,
+                       test_log='test.log', resolves_defects=[defect_id, 'DEF-missing'])
+        self.assertEqual(len(iter_verifications(self.repo)), 1)
+        self.assertEqual(defect_list(self.repo)['defects'][0]['status'], 'fixed')
+
+    def test_resolves_defect_requires_fix_in_verified_history(self):
+        self.make_goal()
+        (self.repo / 'test.log').write_text('failed\n', encoding='utf-8')
+        self.start(run_id='run-target')
+        finish_run(self.repo, '325', 'run-target', ['implemented'], ['verify'], head_sha=self.base)
+        self.start(run_id='run-verifier', agent='verifier-agent', role='verifier')
+        findings = [{'severity': 'high', 'file': 'src/auth.py', 'line': 10,
+                     'summary': '权限检查缺失', 'repro': 'call without token'}]
+        failed = verify_run(self.repo, 'run-target', 'run-verifier', 'security review',
+                            'fail', 'locally_observed', test_command='pytest', test_exit=1,
+                            test_log='test.log', findings=findings)
+        defect_id = failed['defects'][0]['defect_id']
+        origin = self.git('branch', '--show-current').stdout.strip()
+        self.git('checkout', '-q', '-b', 'unmerged-fix')
+        side = self.commit('unmerged.txt')
+        self.git('checkout', '-q', origin)
+        update_defect(self.repo, defect_id, 'fixed', fixed_in_sha=side)
+        with self.assertRaises(PMError) as ctx:
+            verify_run(self.repo, 'run-target', 'run-verifier', 'security review',
+                       'pass', 'locally_observed', test_command='pytest', test_exit=0,
+                       test_log='test.log', resolves_defects=[defect_id])
+        self.assertIn('修复提交', str(ctx.exception))
+        self.assertEqual(len(iter_verifications(self.repo)), 1)
+
+    def test_resume_skips_verifier_and_uses_checkpoint(self):
+        self.make_goal()
+        self.start(run_id='run-dev')
+        checkpoint_run(self.repo, '325', 'run-dev', ['read'], ['write'], head_sha=self.base)
+        self.start(run_id='run-verifier', agent='verifier-agent', role='verifier')
+        resumed = resume_run(self.repo, '325')
+        self.assertEqual(resumed['run_id'], 'run-dev')
+        self.assertEqual(resumed['role'], 'executor')
+        self.assertEqual(resumed['status'], 'resume_ready')
+        self.assertEqual(resumed['completed'], ['read'])
+        self.assertEqual(resumed['remaining'], ['write'])
+        report = reconcile(self.repo)
+        self.assertNotIn('multiple_active_runs', {i['code'] for i in report['items']})
+
+    def test_duplicate_run_id_across_tasks_is_rejected(self):
+        self.make_goal()
+        self.start(task='325', run_id='dup-run')
+        with self.assertRaises(PMError) as ctx:
+            self.start(task='900', run_id='dup-run')
+        self.assertIn('全局唯一', str(ctx.exception))
+
+    def test_run_record_does_not_store_model_key(self):
+        self.make_goal()
+        self.start()
+        text = (self.repo / '.project-memory/runs/325/run-dev.json').read_text(encoding='utf-8')
+        self.assertNotIn('"key"', text)
+        self.assertNotIn('secret', text)
+
+    def test_task_id_with_colon_finishes_on_windows(self):
+        self.make_goal()
+        start_run(self.repo, 'G-1', 'A:B', 'run-colon', 'dev-agent', 'qodercn', 'auto',
+                  base_sha=self.base)
+        finish_run(self.repo, 'A:B', 'run-colon', ['implemented'], ['verify'], head_sha=self.base)
+        resumed = resume_run(self.repo, 'A:B')
+        self.assertEqual(resumed['status'], 'resume_ready')
+        self.assertTrue((self.repo / '.project-memory/runs/A_B/run-colon.json').is_file())
+
+    def test_run_transition_is_enforced(self):
+        self.make_goal()
+        start_run(self.repo, 'G-1', '325', 'run-queued', 'dev-agent', 'qodercn', 'auto',
+                  base_sha=self.base, status='queued')
+        with self.assertRaises(PMError):
+            finish_run(self.repo, '325', 'run-queued', ['implemented'], ['verify'],
+                       head_sha=self.base)
+
+    def test_dry_run_reports_existing_records_truthfully(self):
+        self.make_goal()
+        same = create_goal(self.repo, 'G-1', 'G-1 title', 'background', 'outcome',
+                           'owner', ['模块通过测试'], issues=[325], dry_run=True)
+        self.assertFalse(same['created'])
+        with self.assertRaises(PMError):
+            create_goal(self.repo, 'G-1', 'different title', 'background', 'outcome',
+                        'owner', ['模块通过测试'], issues=[325], dry_run=True)
+        self.start(run_id='run-dev')
+        existing = start_run(self.repo, 'G-1', '325', 'run-dev', 'dev-agent', 'qodercn', 'auto',
+                             base_sha=self.base, dry_run=True)
+        self.assertFalse(existing['created'])
+        preview = transition_goal(self.repo, 'G-1', 'approved', approved_by='human-lead',
+                                  dry_run=True)
+        self.assertEqual(preview['goal']['status'], 'approved')
+        stored = json.loads((self.repo / '.project-memory/goals/G-1.json').read_text(encoding='utf-8'))
+        self.assertEqual(stored['status'], 'proposed')
+
+    def test_reconcile_flags_verified_defect_without_record(self):
+        self.make_goal()
+        (self.repo / 'test.log').write_text('failed\n', encoding='utf-8')
+        self.start(run_id='run-target')
+        finish_run(self.repo, '325', 'run-target', ['implemented'], ['verify'], head_sha=self.base)
+        self.start(run_id='run-verifier', agent='verifier-agent', role='verifier')
+        findings = [{'severity': 'high', 'file': 'src/auth.py', 'line': 10,
+                     'summary': '权限检查缺失', 'repro': 'call without token'}]
+        failed = verify_run(self.repo, 'run-target', 'run-verifier', 'security review',
+                            'fail', 'locally_observed', test_command='pytest', test_exit=1,
+                            test_log='test.log', findings=findings)
+        defect_id = failed['defects'][0]['defect_id']
+        path = self.repo / '.project-memory/defects/325' / f'{defect_id}.json'
+        defect = json.loads(path.read_text(encoding='utf-8'))
+        defect['status'] = 'verified'
+        defect['verified_by'] = None
+        path.write_text(json.dumps(defect, ensure_ascii=False), encoding='utf-8')
+        report = reconcile(self.repo)
+        self.assertIn('defect_verified_without_record', {i['code'] for i in report['items']})
+
+    def test_goal_evidence_accumulates_across_criteria(self):
+        create_goal(self.repo, 'G-2', 'two criteria', 'background', 'outcome', 'owner',
+                    ['第一项', '第二项'])
+        (self.repo / 'test.log').write_text('ok\n', encoding='utf-8')
+        self.assertFalse(evaluate_goal(self.repo, 'G-2')['satisfied'])
+        with self.assertRaises(PMError):
+            add_goal_evidence(self.repo, 'G-2', 'C1', 'test', 'README.md', exit_code=0)
+        add_goal_evidence(self.repo, 'G-2', 'C1', 'test', 'test.log', exit_code=0)
+        add_goal_evidence(self.repo, 'G-2', 'C2', 'commit', self.base)
+        goal = json.loads((self.repo / '.project-memory/goals/G-2.json').read_text(encoding='utf-8'))
+        self.assertEqual([c['id'] for c in goal['success_criteria'] if c['evidence']], ['C1', 'C2'])
+        self.assertTrue(evaluate_goal(self.repo, 'G-2')['satisfied'])
+
+    def test_github_errors_do_not_include_token(self):
+        from project_memory.gh import GitHubReader
+        from unittest.mock import patch
+        from urllib.error import URLError
+        with patch('project_memory.gh.urllib.request.urlopen', side_effect=URLError('boom')):
+            with self.assertRaises(PMError) as ctx:
+                GitHubReader('a/repo', token='super-secret-token').issue(1)
+        self.assertNotIn('super-secret-token', str(ctx.exception))
+
+    def cli(self, *args, expect=0):
+        env = os.environ.copy()
+        env['PYTHONPATH'] = str(ROOT)
+        env['PYTHONUTF8'] = '1'
+        result = subprocess.run([sys.executable, '-m', 'project_memory', *args,
+                                 '--repo', str(self.repo)],
+                                cwd=self.repo, env=env, capture_output=True, text=True,
+                                encoding='utf-8')
+        self.assertEqual(result.returncode, expect, result.stderr)
+        return json.loads(result.stdout) if result.stdout.strip() else None
+
+    def test_cli_goal_run_verify_reconcile_end_to_end(self):
+        (self.repo / 'test.log').write_text('ok\n', encoding='utf-8')
+        self.cli('init', '--install', 'none')
+        self.cli('goal', 'create', '--id', 'G-CLI', '--title', 'CLI goal', '--outcome', 'works',
+                 '--owner', 'owner', '--criterion', 'CLI 流程可验证')
+        self.cli('goal', 'transition', '--id', 'G-CLI', '--to', 'approved', '--approved-by', 'human')
+        self.cli('goal', 'transition', '--id', 'G-CLI', '--to', 'active')
+        self.cli('run', 'start', '--goal', 'G-CLI', '--task', '325', '--run-id', 'run-target',
+                 '--agent', 'dev-agent', '--model-provider', 'qodercn', '--model-id', 'auto',
+                 '--base-sha', self.base)
+        self.cli('run', 'finish', '--task', '325', '--run-id', 'run-target',
+                 '--completed', 'implemented', '--remaining', 'verify',
+                 '--test-command', 'pytest', '--test-exit', '0', '--test-log', 'test.log',
+                 '--head-sha', self.base)
+        self.cli('run', 'start', '--goal', 'G-CLI', '--task', '325', '--run-id', 'run-verifier',
+                 '--agent', 'verifier-agent', '--model-provider', 'qodercn',
+                 '--model-id', 'qwen3.8-flash', '--role', 'verifier', '--base-sha', self.base)
+        verified = self.cli('verify', '--target-run', 'run-target', '--verifier-run', 'run-verifier',
+                            '--standard', 'CLI acceptance', '--verdict', 'pass',
+                            '--evidence-level', 'locally_observed',
+                            '--test-command', 'pytest', '--test-exit', '0', '--test-log', 'test.log')
+        verification_id = verified['verification']['verification_id']
+        self.cli('goal', 'evidence', '--id', 'G-CLI', '--criterion', 'C1', '--kind', 'verification',
+                 '--ref', verification_id)
+        evaluation = self.cli('goal', 'evaluate', '--id', 'G-CLI')
+        self.assertTrue(evaluation['satisfied'])
+        self.cli('goal', 'transition', '--id', 'G-CLI', '--to', 'evaluating')
+        self.cli('goal', 'transition', '--id', 'G-CLI', '--to', 'achieved', '--approved-by', 'human')
+        report = self.cli('reconcile', '--fail-on', 'high')
+        self.assertEqual(report['state'], 'clean', report['items'])
+        resumed = self.cli('run', 'resume', '--task', '325', '--run-id', 'run-target')
+        self.assertEqual(resumed['status'], 'verified')
 
 
 if __name__ == '__main__':

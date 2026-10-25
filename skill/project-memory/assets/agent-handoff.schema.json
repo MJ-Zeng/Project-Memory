@@ -16,7 +16,10 @@
   ],
   "properties": {
     "schema_version": {
-      "const": "1.1"
+      "enum": [
+        "1.1",
+        "1.2"
+      ]
     },
     "kind": {
       "const": "agent_handoff"
@@ -80,6 +83,95 @@
     },
     "status": {
       "const": "reported_unverified"
+    },
+    "goal_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "from_run": {
+      "type": "string",
+      "minLength": 1
+    },
+    "model": {
+      "type": "object",
+      "required": [
+        "provider",
+        "id"
+      ],
+      "properties": {
+        "provider": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string",
+          "description": "Legacy field kept for reading old records; new writers must not emit it."
+        }
+      }
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "head_sha": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[a-f0-9]{40}$"
+    },
+    "commits": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{40}$"
+      }
+    },
+    "changed_files": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "tests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "command",
+          "exit_code"
+        ],
+        "properties": {
+          "command": {
+            "type": "string"
+          },
+          "exit_code": {
+            "type": "integer"
+          },
+          "log": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "docs_changed": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "open_questions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "next_actions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     }
   },
   "additionalProperties": true

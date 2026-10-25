@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/project-memory/v1/verification-record.schema.json",
+  "title": "verification-record",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "verification_id",
+    "task",
+    "goal_id",
+    "target_run",
+    "verifier_run",
+    "verifier",
+    "target_head_sha",
+    "standard",
+    "verdict",
+    "evidence_level",
+    "verified",
+    "checks",
+    "findings",
+    "created_at",
+    "revision"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.2"
+    },
+    "kind": {
+      "const": "verification_record"
+    },
+    "verification_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "task": {
+      "type": "string",
+      "minLength": 1
+    },
+    "goal_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "target_run": {
+      "type": "string",
+      "minLength": 1
+    },
+    "verifier_run": {
+      "type": "string",
+      "minLength": 1
+    },
+    "verifier": {
+      "type": "object",
+      "properties": {
+        "agent": {
+          "type": "string"
+        },
+        "model": {
+          "type": "object"
+        },
+        "tool": {
+          "type": "string"
+        },
+        "session_id": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "target_head_sha": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[a-f0-9]{40}$"
+    },
+    "current_head_sha": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[a-f0-9]{40}$"
+    },
+    "stale": {
+      "type": "boolean"
+    },
+    "standard": {
+      "type": "string",
+      "minLength": 1
+    },
+    "verdict": {
+      "enum": [
+        "pass",
+        "fail",
+        "inconclusive"
+      ]
+    },
+    "evidence_level": {
+      "enum": [
+        "agent_claimed",
+        "locally_observed",
+        "externally_verified",
+        "human_approved"
+      ]
+    },
+    "verified": {
+      "type": "boolean"
+    },
+    "checks": {
+      "type": "object",
+      "properties": {
+        "tests": {
+          "type": "object"
+        },
+        "ci": {
+          "type": "object"
+        },
+        "review": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": true
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "additionalProperties": true
+}

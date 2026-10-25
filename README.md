@@ -1,8 +1,8 @@
 # Project Memory：让多个 Agent 共用一套仓库记忆
 
-这是一个本地优先的 Agent Skill 和 Python CLI，用来处理多人和多个 Agent 在同一个 Git 仓库里协作时的记忆问题。任务背景、交接状态、设计决策、文档现状和审计结果都写成仓库里的文件，跟着代码一起提交和评审。
+这是一个本地优先的 Agent Skill 和 Python CLI，用来处理多人和多个 Agent 在同一个 Git 仓库里协作时的记忆问题。它把目标、执行记录、独立验证、缺陷、任务背景、交接状态、设计决策、文档现状和审计结果写成仓库里的文件，跟着代码一起提交和评审。
 
-它不负责审批、合并、关闭 Issue，也不判断文档里的结论是否正确。这些仍由人和 GitHub 规则决定。
+它不负责审批、合并、关闭 Issue，也不判断文档里的结论是否正确。目标达成、ADR 接受和生产变更仍由人和 GitHub 规则决定。
 
 ## 快速开始
 
@@ -25,6 +25,54 @@ PYTHONPATH=.project-memory/tooling python3 -m project_memory search --repo . '�
 也可以从分发目录安装：`python3 -m pip install -e .`，然后直接运行 `project-memory --help`。
 
 Windows 上用 Git Bash 时，先设置 `PYTHONUTF8=1`，并把 `python3` 换成实际可用的解释器路径。
+
+## 目标、执行与独立验证
+
+目标用可衡量的成功标准描述，不把 Issue 关闭当成完成：
+
+```bash
+# Goal 默认 proposed；approved/achieved 必须由授权人提供 --approved-by
+python3 -m project_memory goal create --repo . --id G-AUTH \
+  --title '修复认证绕过' --outcome '未授权请求被拒绝' --owner backend-team \
+  --criterion '无令牌请求返回 401'
+
+# 每次执行登记真实模型、会话、分支和基准 SHA
+python3 -m project_memory run start --repo . --goal G-AUTH --task 325 \
+  --run-id run-dev-1 --agent qoder --model-provider qoder-cn --model-id dfmodel \
+  --role executor --base-sha <40位SHA>
+
+# 结束时生成 1.2 handoff；换模型或换会话时用新的 run ID
+python3 -m project_memory run finish --repo . --task 325 --run-id run-dev-1 \
+  --completed '拒绝无令牌请求' --remaining '独立验证' \
+  --test-command 'python -m unittest' --test-exit 0 --test-log tests.log
+```
+
+验证必须由另一个执行记录完成，并登记为 `role=verifier`；验证者的 agent/model/session 至少一项要不同，不能自验：
+
+```bash
+python3 -m project_memory run start --repo . --goal G-AUTH --task 325 \
+  --run-id run-verify-1 --agent qoder --model-provider qoder-cn --model-id qfmodel \
+  --role verifier --base-sha <40位SHA>
+
+python3 -m project_memory verify --repo . \
+  --target-run run-dev-1 --verifier-run run-verify-1 \
+  --standard '认证与凭据审查' --verdict pass --evidence-level locally_observed \
+  --test-command 'python -m unittest' --test-exit 0 --test-log verify.log \
+  --expected-sha <被验证执行的head SHA>
+```
+
+`agent_claimed` 不能产生 pass；本地测试需要命令、整数退出码和存在的非空证据日志；外部 CI 需要 URL 和 passed 状态，但 CLI 不联网抓取；人工批准需要 review URL 和 approved 状态，但 CLI 不认证审批人。验证绑定提交 SHA，代码变化后旧验证只作为历史证据，且不能跨 Goal 复用。
+
+把验证记录挂到目标标准，再评估和对账：
+
+```bash
+python3 -m project_memory goal evidence --repo . --id G-AUTH \
+  --criterion C1 --kind verification --ref <verification-id>
+python3 -m project_memory goal evaluate --repo . --id G-AUTH
+python3 -m project_memory reconcile --repo . --fail-on high
+```
+
+`goal evaluate` 满足时退出 0，未满足时退出 2；`verify` 未通过时退出 2；`run resume` 在 `needs_handoff`、`needs_human` 或 `stale_base` 时退出 2。`reconcile` 只报告，不自动改 canonical 文档，也不关闭任务。
 
 ## 两种审计范围
 
@@ -53,13 +101,19 @@ python3 -m project_memory init --repo /path/to/workspace --install none --profil
 
 `overlay` 只创建 `.project-memory/` 和 ADR 目录说明，不改已有文档，也不碰业务代码。`mirror_roots` 只读；`legacy_roots` 默认不参与检索。`mirror_policy: frozen` 表示人已经接受镜像长期只读，镜像漂移会以 medium 继续报告，但仍然不允许把镜像内容复制回 canonical。
 
-## 八个命令
+## 主要命令
 
 | 用途 | 命令 | 是否写入 |
 |---|---|---|
-| 初始化 | `init --repo . --install both`，或 `--profile overlay --docs-root ...` | 只创建缺失文件 |
+| 初始化与工具同步 | `init --repo . --install both`，`sync-tooling [--write]` | 只创建或更新缺失/已跟踪工具 |
+| 定义与评估目标 | `goal create/show/list/evaluate/evidence/transition` | 写 `.project-memory/goals/` |
+| 登记执行 | `run start/checkpoint/finish/show/list` | 写 `.project-memory/runs/` 和 handoff |
+| 恢复执行 | `run resume --task 325 [--run-id run-1]` | 否 |
+| 独立验证 | `verify --target-run A --verifier-run B --standard '...' --verdict pass --evidence-level locally_observed ...` | 写验证和缺陷记录 |
+| 缺陷跟踪 | `defect list/show/update` | 更新缺陷状态 |
+| 知识对账 | `reconcile [--format markdown] [--fail-on high]` | 否，或写指定报告 |
 | 取任务上下文 | `start --issue 325 --slug ORG/REPO` 或 `start --task-file task.json` | 否 |
-| Agent 交接 | `handoff --task 325 --agent codex --run-id run-1 --remaining 'test' [--store PATH]` | 写本地不可变记录 |
+| 通用交接 | `handoff --task 325 --agent codex --run-id run-1 --remaining 'test' [--store PATH]` | 写本地不可变记录 |
 | 完成检查 | `finish --issue 325 --pr 342 --slug ORG/REPO --docs-impact unknown` | 否 |
 | 起草 ADR | `decision --title 'Cache' --topic cache --issue 325 --owner team --rationale '...'` | 创建 proposed ADR |
 | 新建文档 | `new-doc --id DOC-CACHE-001 --title 'Cache' --kind canonical --status draft --owner team --path docs/topics/cache.md` | 创建固定格式草稿，不覆盖 |
@@ -74,7 +128,7 @@ python3 -m project_memory init --repo /path/to/workspace --install none --profil
 
 只有 `start` 和 `finish` 会访问 GitHub API，而且只调只读接口。凭据从环境变量 `GITHUB_TOKEN` 读取，不放在命令行参数里。建议使用 GitHub App 安装令牌，或限制到具体仓库的 fine-grained token。
 
-`decision`、`handoff` 和 `init` 只写本地文件，不推送、不合并、不审批、不关闭 Issue、不部署。`--reviewed-by` 和 `--test-evidence` 是声明，不是独立验证；真正的权限仍由 GitHub 规则和 CI 决定。
+`decision`、`goal`、`run`、`verify`、`defect`、`reconcile`、`handoff` 和 `init` 只写本地文件，不推送、不合并、不审批、不关闭 Issue、不部署。`--reviewed-by` 和 `--test-evidence` 是声明，不是独立验证；真正的权限仍由 GitHub 规则和 CI 决定。
 
 ## 语义检索的限制
 
@@ -92,7 +146,9 @@ python3 -m pip install -e '.[semantic]'
 2. 参考 `.github/CODEOWNERS.example` 配置真正的 CODEOWNERS，并在 GitHub 开启分支 Ruleset、必需审查和必需 CI。CLI 不能替你做这些。
 3. 把 Actions 固定到审核过的完整 SHA。
 4. 接入有权限的 GitHub 数据；如果要把完成门禁全自动化，还需要独立核对 CI 和 review 状态，不能只依赖快照声明。
-5. 把 Skill 和 CLI 的改动当作受保护变更来审查，不要在不信任的仓库工作流里跑带密钥的任务。
+5. Qoder CN 等客户端目前需要手动切换模型。CLI 只记录实际模型，不调度模型，也不保证跨模型接续。
+6. Goal 的 `approved`/`achieved` 转换、ADR 接受、高风险变更和生产部署仍必须由授权人执行。
+7. 把 Skill 和 CLI 的改动当作受保护变更来审查，不要在不信任的仓库工作流里跑带密钥的任务。
 
 ## 文档
 
