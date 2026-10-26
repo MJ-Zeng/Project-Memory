@@ -15,8 +15,8 @@ from project_memory.graph import build_graph, lexical_search, terms
 from project_memory.workflows import context, finish, handoff
 from project_memory.coordination import (add_goal_evidence, checkpoint_run, create_goal,
                                          defect_list, evaluate_goal, finish_run, iter_runs,
-                                         iter_verifications, reconcile, resume_run, start_run,
-                                         transition_goal, update_defect, verify_run)
+                                         iter_verifications, load_goal, reconcile, resume_run,
+                                         start_run, transition_goal, update_defect, verify_run)
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -251,6 +251,20 @@ class ProjectMemoryTest(unittest.TestCase):
                    review_url='https://github.example.invalid/review/1', review_state='approved')
         self.assertEqual(e['recommendation'], 'do_not_close')
         self.assertEqual(next(g for g in e['gates'] if g['id'] == 'test_evidence_present')['status'], 'unknown')
+
+    def test_finish_rejects_logs_that_verify_would_reject(self):
+        init(self.repo, 'none')
+        live_pr = dict(self.pr, _provenance='github_api', changed_files_list=[])
+        docs_log = self.repo / 'docs/test.log'
+        docs_log.write_text('ok\n', encoding='utf-8')
+        (self.repo / 'notes.md').write_text('looks green\n', encoding='utf-8')
+        for ref in ('docs/test.log', 'notes.md', 'https://ci.example.invalid/log'):
+            report = finish(self.repo, self.issue, live_pr, None, 'not-applicable',
+                            '该任务只修改内部脚本，不需要更新规范文档', None,
+                            test_command='python -m unittest', test_exit=0, test_log=ref)
+            gate = next(g for g in report['gates'] if g['id'] == 'test_evidence_present')
+            self.assertEqual(gate['status'], 'unknown', (ref, gate))
+            self.assertEqual(report['evidence_levels']['tests'], 'agent_claimed')
 
     def test_adr_proposal_and_approved_gate(self):
         init(self.repo, 'none')
@@ -714,6 +728,22 @@ class CoordinationTest(unittest.TestCase):
         done = transition_goal(self.repo, 'G-1', 'achieved', approved_by='human-lead')
         self.assertEqual(done['goal']['status'], 'achieved')
 
+    def test_manual_goal_evidence_requires_traceable_approval(self):
+        self.make_goal()
+        with self.assertRaises(PMError):
+            add_goal_evidence(self.repo, 'G-1', 'C1', 'manual', 'PR #123')
+        with self.assertRaises(PMError):
+            add_goal_evidence(self.repo, 'G-1', 'C1', 'manual', 'verbal approval',
+                              approved_by='human-lead')
+        added = add_goal_evidence(self.repo, 'G-1', 'C1', 'manual',
+                                  'https://github.example.invalid/review/1',
+                                  approved_by='human-lead')
+        self.assertEqual(added['evidence']['approved_by'], 'human-lead')
+        evaluation = evaluate_goal(self.repo, 'G-1')
+        manual = next(e for e in evaluation['criteria'][0]['evidence'] if e['kind'] == 'manual')
+        self.assertTrue(manual['ok'])
+        self.assertEqual(manual['trust'], 'human_approved')
+
     def test_duplicate_and_concurrent_runs(self):
         self.make_goal()
         self.start(run_id='run-a')
@@ -763,6 +793,23 @@ class CoordinationTest(unittest.TestCase):
         self.assertEqual(resumed['remaining'], ['verify'])
         self.assertEqual(resumed['next_actions'], ['run independent verification'])
         self.assertEqual(resumed['checkpoints'], 1)
+
+    def test_resume_inherits_previous_handoff_after_model_switch(self):
+        self.make_goal()
+        (self.repo / 'test.log').write_text('ok\n', encoding='utf-8')
+        self.start(run_id='run-a', model='auto')
+        finish_run(self.repo, '325', 'run-a', ['stage one'], ['verify'], head_sha=self.base,
+                   tests=[{'command': 'pytest', 'exit_code': 0, 'log': 'test.log'}],
+                   next_actions=['run independent verification'])
+        self.start(run_id='run-b', model='qwen3.8-flash')
+        resumed = resume_run(self.repo, '325', 'run-b')
+        self.assertEqual(resumed['status'], 'resume_ready')
+        self.assertEqual(resumed['run_id'], 'run-b')
+        self.assertEqual(resumed['model']['id'], 'qwen3.8-flash')
+        self.assertEqual(resumed['handoff_inherited_from'], 'run-a')
+        self.assertEqual(resumed['remaining'], ['verify'])
+        self.assertEqual(resumed['next_actions'], ['run independent verification'])
+        self.assertTrue(any('继承自 run-a' in w for w in resumed['warnings']))
 
     def test_resume_detects_stale_base(self):
         origin = self.git('branch', '--show-current').stdout.strip()
@@ -920,6 +967,47 @@ class CoordinationTest(unittest.TestCase):
         with self.assertRaises(PMError) as ctx:
             add_goal_evidence(self.repo, 'G-2', 'C1', 'verification', vid)
         self.assertIn('其他目标', str(ctx.exception))
+
+    def test_verifier_run_must_match_target_task_and_goal(self):
+        self.make_goal('G-1')
+        self.make_goal('G-2', '另一个目标')
+        (self.repo / 'test.log').write_text('ok\n', encoding='utf-8')
+        self.start(goal='G-1', run_id='run-target', task='325')
+        finish_run(self.repo, '325', 'run-target', ['implemented'], ['verify'], head_sha=self.base,
+                   tests=[{'command': 'pytest', 'exit_code': 0, 'log': 'test.log'}])
+        self.start(goal='G-2', run_id='run-other-goal', task='325',
+                   agent='verifier-agent', role='verifier')
+        with self.assertRaises(PMError) as ctx:
+            verify_run(self.repo, 'run-target', 'run-other-goal', 'acceptance', 'pass',
+                       'locally_observed', test_command='pytest', test_exit=0, test_log='test.log')
+        self.assertIn('Goal', str(ctx.exception))
+        self.start(goal='G-1', run_id='run-other-task', task='999',
+                   agent='verifier-agent', role='verifier')
+        with self.assertRaises(PMError) as ctx:
+            verify_run(self.repo, 'run-target', 'run-other-task', 'acceptance', 'pass',
+                       'locally_observed', test_command='pytest', test_exit=0, test_log='test.log')
+        self.assertIn('任务', str(ctx.exception))
+
+    def test_handoff_test_evidence_requires_readable_log_and_real_commit(self):
+        self.make_goal()
+        self.start()
+        with self.assertRaises(PMError):
+            finish_run(self.repo, '325', 'run-dev', ['implemented'], ['verify'],
+                       head_sha=self.base, tests=[{'command': 'pytest', 'exit_code': 0}])
+        (self.repo / 'docs').mkdir()
+        (self.repo / 'docs/notes.md').write_text('green\n', encoding='utf-8')
+        with self.assertRaises(PMError):
+            finish_run(self.repo, '325', 'run-dev', ['implemented'], ['verify'],
+                       head_sha=self.base,
+                       tests=[{'command': 'pytest', 'exit_code': 0, 'log': 'docs/notes.md'}])
+        with self.assertRaises(PMError):
+            finish_run(self.repo, '325', 'run-dev', ['implemented'], ['verify'],
+                       head_sha=self.base, commits=['0' * 40])
+        (self.repo / 'test.log').write_text('ok\n', encoding='utf-8')
+        result = finish_run(self.repo, '325', 'run-dev', ['implemented'], ['verify'],
+                            head_sha=self.base, commits=[self.base],
+                            tests=[{'command': 'pytest', 'exit_code': 0, 'log': 'test.log'}])
+        self.assertEqual(result['run']['status'], 'submitted')
 
     def test_stale_verification_stops_goal_and_resume(self):
         self.make_goal()
@@ -1134,6 +1222,177 @@ class CoordinationTest(unittest.TestCase):
         self.assertEqual(report['state'], 'clean', report['items'])
         resumed = self.cli('run', 'resume', '--task', '325', '--run-id', 'run-target')
         self.assertEqual(resumed['status'], 'verified')
+
+    def test_self_approval_rejected_for_approved_transition(self):
+        """Agent 不能通过将 approved_by 设为自身标识来批准 Goal。"""
+        create_goal(self.repo, 'G-SA1', 'Self-Approval Test', 'Fix auth', 'Auth fixed',
+                    'owner', [{'id': 'C1', 'statement': 'Auth fixed', 'required': True}])
+        # Agent tries to approve itself
+        with self.assertRaises(PMError) as ctx:
+            transition_goal(self.repo, 'G-SA1', 'approved', approved_by='qoder-cn-pm01')
+        self.assertIn('Agent 不得自批准', str(ctx.exception))
+        # Human approval still works
+        transition_goal(self.repo, 'G-SA1', 'approved', approved_by='human-lead')
+        transition_goal(self.repo, 'G-SA1', 'active')
+
+    def test_self_approval_rejected_for_achieved_transition(self):
+        """Various agent identifier patterns are rejected for Goal achievement."""
+        create_goal(self.repo, 'G-SA2', 'Self-Approval Patterns', 'Fix bug', 'Bug fixed',
+                    'owner', [{'id': 'C1', 'statement': 'Bug fixed', 'required': True}])
+        transition_goal(self.repo, 'G-SA2', 'approved', approved_by='human-reviewer')
+        transition_goal(self.repo, 'G-SA2', 'active')
+        add_goal_evidence(self.repo, 'G-SA2', 'C1', 'commit', self.base)
+        transition_goal(self.repo, 'G-SA2', 'evaluating')
+        # Test various agent patterns
+        agent_ids = ['qoder-cn-pm01', 'qoder-cn-pm03', 'agent-dev', 'dev-agent', 'review-bot']
+        for agent_id in agent_ids:
+            with self.assertRaises(PMError, msg=f'Should reject {agent_id}') as ctx:
+                transition_goal(self.repo, 'G-SA2', 'achieved', approved_by=agent_id)
+            self.assertIn('Agent 不得自批准', str(ctx.exception))
+        # Human identifiers should still work
+        transition_goal(self.repo, 'G-SA2', 'achieved', approved_by='human-lead')
+        goal = load_goal(self.repo, 'G-SA2')
+        self.assertEqual(goal['status'], 'achieved')
+
+    # ---------------------------------------------------------------- adversarial security tests (RC 2026-10-26)
+
+    def test_manual_evidence_rejects_agent_self_approval(self):
+        """T-01: Agent self-approval via manual evidence must be rejected."""
+        self.make_goal()
+        with self.assertRaises(PMError) as ctx:
+            add_goal_evidence(self.repo, 'G-1', 'C1', 'manual',
+                              'https://example.invalid/review/1',
+                              approved_by='agent-self')
+        self.assertIn('Agent 不得作为人工批准者', str(ctx.exception))
+        # Human approval still works
+        added = add_goal_evidence(self.repo, 'G-1', 'C1', 'manual',
+                                  'https://github.example.invalid/review/1',
+                                  approved_by='human-reviewer')
+        self.assertEqual(added['evidence']['approved_by'], 'human-reviewer')
+
+    def test_declared_ci_cannot_grant_verified_status(self):
+        """T-02: declared_unfetched CI/review must not result in verified=True."""
+        self.make_goal()
+        (self.repo / 'test.log').write_text('ok\n', encoding='utf-8')
+        self.start(run_id='run-target')
+        finish_run(self.repo, '325', 'run-target', ['implemented'], ['verify'], head_sha=self.base,
+                   tests=[{'command': 'pytest', 'exit_code': 0, 'log': 'test.log'}])
+        self.start(run_id='run-verifier', agent='verifier-agent', role='verifier')
+        # CI declared but not fetched → verified must be False
+        result = verify_run(self.repo, 'run-target', 'run-verifier', 'acceptance',
+                            'pass', 'externally_verified',
+                            ci_url='https://example.invalid/ci/1', ci_status='passed',
+                            test_command='pytest', test_exit=0, test_log='test.log')
+        self.assertFalse(result['verification']['verified'])
+        # Review declared but not fetched → verified must be False
+        result2 = verify_run(self.repo, 'run-target', 'run-verifier', 'review check',
+                             'pass', 'human_approved',
+                             review_url='https://example.invalid/review/1', review_state='approved',
+                             test_command='pytest', test_exit=0, test_log='test.log')
+        self.assertFalse(result2['verification']['verified'])
+
+    def test_outside_repo_log_is_rejected(self):
+        """T-03: Logs outside the repository must be rejected."""
+        import tempfile
+        self.make_goal()
+        # Create a log file outside the repo
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.log', delete=False) as f:
+            f.write('fake pass\n')
+            outside_log = f.name
+        try:
+            (self.repo / 'test.log').write_text('ok\n', encoding='utf-8')
+            self.start(run_id='run-target')
+            finish_run(self.repo, '325', 'run-target', ['implemented'], ['verify'], head_sha=self.base)
+            self.start(run_id='run-verifier', agent='verifier-agent', role='verifier')
+            # Outside log should be rejected
+            with self.assertRaises(PMError) as ctx:
+                verify_run(self.repo, 'run-target', 'run-verifier', 'acceptance',
+                           'pass', 'locally_observed',
+                           test_command='pytest', test_exit=0, test_log=outside_log)
+            self.assertIn('必须在仓库内', str(ctx.exception))
+        finally:
+            import os
+            os.unlink(outside_log)
+
+    def test_log_content_hash_is_bound(self):
+        """T-03b: Log content hash must be stored in verification record."""
+        self.make_goal()
+        (self.repo / 'test.log').write_text('ok\n', encoding='utf-8')
+        self.start(run_id='run-target')
+        finish_run(self.repo, '325', 'run-target', ['implemented'], ['verify'], head_sha=self.base,
+                   tests=[{'command': 'pytest', 'exit_code': 0, 'log': 'test.log'}])
+        self.start(run_id='run-verifier', agent='verifier-agent', role='verifier')
+        result = verify_run(self.repo, 'run-target', 'run-verifier', 'acceptance',
+                            'pass', 'locally_observed',
+                            test_command='pytest', test_exit=0, test_log='test.log')
+        # Log hash must be recorded
+        tests_info = result['verification']['checks']['tests']
+        self.assertIsNotNone(tests_info.get('log_content_sha256'))
+        self.assertEqual(len(tests_info['log_content_sha256']), 64)  # SHA-256 hex length
+
+    def test_worktree_dirty_invalidates_verification(self):
+        """T-04: Worktree changes after verification must invalidate it."""
+        self.make_goal()
+        (self.repo / 'test.log').write_text('ok\n', encoding='utf-8')
+        self.git('add', 'test.log')
+        self.git('commit', '-qm', 'add test log')
+        clean_head = git_sha(self.repo)
+        self.start(run_id='run-target', base=clean_head)
+        finish_run(self.repo, '325', 'run-target', ['implemented'], ['verify'], head_sha=clean_head,
+                   tests=[{'command': 'pytest', 'exit_code': 0, 'log': 'test.log'}])
+        self.start(run_id='run-verifier', agent='verifier-agent', role='verifier')
+        result = verify_run(self.repo, 'run-target', 'run-verifier', 'acceptance',
+                            'pass', 'locally_observed',
+                            test_command='pytest', test_exit=0, test_log='test.log')
+        self.assertTrue(result['verification']['verified'])
+        # Now modify the worktree (create a new file without committing)
+        (self.repo / 'new_file.txt').write_text('change\n', encoding='utf-8')
+        # Verification should no longer be current
+        verifications = list(iter_verifications(self.repo))
+        self.assertEqual(len(verifications), 1)
+        from project_memory.coordination import _verification_current
+        is_current = _verification_current(self.repo, verifications[0])
+        self.assertFalse(is_current, 'Verification should be invalidated by dirty worktree')
+
+    def test_different_standard_creates_different_record(self):
+        """T-05a: Same verification_id with different standard must not be silently ignored."""
+        self.make_goal()
+        (self.repo / 'test.log').write_text('ok\n', encoding='utf-8')
+        self.start(run_id='run-target')
+        finish_run(self.repo, '325', 'run-target', ['implemented'], ['verify'], head_sha=self.base)
+        self.start(run_id='run-verifier', agent='verifier-agent', role='verifier')
+        # First verification with standard A
+        result1 = verify_run(self.repo, 'run-target', 'run-verifier', 'standard A',
+                             'pass', 'locally_observed',
+                             test_command='pytest', test_exit=0, test_log='test.log')
+        vid1 = result1['verification']['verification_id']
+        # Second verification with standard B should create a different record
+        result2 = verify_run(self.repo, 'run-target', 'run-verifier', 'standard B',
+                             'pass', 'locally_observed',
+                             test_command='pytest', test_exit=0, test_log='test.log')
+        vid2 = result2['verification']['verification_id']
+        # They should have different verification_ids (because standard is part of the hash)
+        self.assertNotEqual(vid1, vid2, 'Different standards should create different verification IDs')
+
+    def test_audit_log_records_all_attempts(self):
+        """T-05b: All verification attempts must be recorded in audit log."""
+        self.make_goal()
+        (self.repo / 'test.log').write_text('ok\n', encoding='utf-8')
+        self.start(run_id='run-target')
+        finish_run(self.repo, '325', 'run-target', ['implemented'], ['verify'], head_sha=self.base)
+        self.start(run_id='run-verifier', agent='verifier-agent', role='verifier')
+        verify_run(self.repo, 'run-target', 'run-verifier', 'acceptance',
+                   'pass', 'locally_observed',
+                   test_command='pytest', test_exit=0, test_log='test.log')
+        # Audit log must exist
+        audit_path = self.repo / '.project-memory' / 'audit' / 'verification_attempts.jsonl'
+        self.assertTrue(audit_path.is_file(), 'Audit log must be created')
+        lines = audit_path.read_text(encoding='utf-8').strip().split('\n')
+        self.assertGreaterEqual(len(lines), 1, 'At least one audit entry must be recorded')
+        entry = json.loads(lines[-1])
+        self.assertEqual(entry['target_run'], 'run-target')
+        self.assertEqual(entry['verifier_run'], 'run-verifier')
+        self.assertIn('log_content_sha256', entry)
 
 
 if __name__ == '__main__':

@@ -3,6 +3,7 @@ from __future__ import annotations
 import datetime as dt
 import re
 from pathlib import Path
+from urllib.parse import urlparse
 from .common import PMError, frontmatter, md_header, today, relpath, validate_identifier, write_new, safe_json, sha256_file
 
 ADR_ID = re.compile(r'\bADR-0*(\d+)\b', re.IGNORECASE)
@@ -17,6 +18,44 @@ AUDIT_SCOPES = {'all', 'current'}
 CURRENT_STATUSES = {'current', 'draft', 'in_flight', 'unclassified'}
 LEGACY_SEGMENTS = {'90_原始档案', '_legacy_2026-10-23', '_legacy', '_archive', 'archive', 'archived'}
 FENCE_START = re.compile(r'^[ \t]{0,3}(`{3,}|~{3,})')
+LOG_SUFFIXES = {'.log', '.txt', '.json', '.xml', '.out', '.tap', '.csv'}
+
+
+def valid_http_url(value: str | None) -> bool:
+    if not value:
+        return False
+    parsed = urlparse(value)
+    return parsed.scheme in ('http', 'https') and bool(parsed.netloc)
+
+
+def log_problem(repo: Path, ref: str | None, config: dict | None = None) -> str | None:
+    """Return why a claimed test log is not usable evidence, or None when it is.
+
+    One implementation is shared by the legacy finish gate, run handoffs and
+    independent verification so a report cannot pass one gate with a file the
+    others would reject.
+    """
+    if not ref:
+        return '缺少测试日志路径'
+    if valid_http_url(ref):
+        return '测试日志必须是本地文件，不能是 URL'
+    path = Path(ref)
+    if not path.is_absolute():
+        path = repo / path
+    if not path.is_file():
+        return f'测试日志不存在：{ref}'
+    if path.stat().st_size == 0:
+        return f'测试日志为空：{ref}'
+    if path.suffix.lower() not in LOG_SUFFIXES:
+        return f'测试日志必须是证据类文件（{"、".join(sorted(LOG_SUFFIXES))}）：{ref}'
+    cfg = config or load_config(repo)
+    try:
+        relative = path.resolve().relative_to(repo.resolve()).as_posix()
+    except ValueError:
+        return f'测试日志必须在仓库内：{ref}'
+    if relative and any(relative.startswith(root.rstrip('/') + '/') for root in cfg['doc_roots']):
+        return f'测试日志不能是 canonical 文档：{ref}'
+    return None
 
 DEFAULT_CONFIG = {
     'schema_version': '1.1',
@@ -82,7 +121,11 @@ def iter_docs(repo: Path, roots: list[str] | None = None):
         for path in sorted(base.rglob('*.md')):
             if not path.is_file():
                 continue
-            rel = relpath(repo, path)
+            try:
+                rel = relpath(repo, path)
+            except PMError:
+                # Junction or symlink pointing outside repo; skip with warning.
+                continue
             if rel not in seen:
                 seen.add(rel)
                 docs.append(path)

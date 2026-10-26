@@ -7,10 +7,10 @@ import json
 import re
 import subprocess
 from pathlib import Path
-from urllib.parse import urlparse
 
 from .common import PMError, atomic_replace, git_sha_optional, json_text, relpath, safe_json, utc_now, validate_identifier, write_new
-from .knowledge import audit, iter_docs, load_config, load_doc
+from .knowledge import (audit, iter_docs, load_config, load_doc, log_problem,
+                        valid_http_url)
 from .workflows import handoff as write_handoff
 from .workflows import task_id_of
 
@@ -49,7 +49,12 @@ SEVERITIES = ('high', 'medium', 'low')
 ACTIVE_RUN_STATUSES = {'queued', 'running', 'paused'}
 RUN_ROLES = {'executor', 'verifier'}
 GIT_SHA = re.compile(r'[0-9a-f]{40}')
-LOG_SUFFIXES = {'.log', '.txt', '.json', '.xml', '.out', '.tap', '.csv'}
+APPROVAL_REF = re.compile(r'(?:https?://\S+|#\d+|(?:PR|pr|Issue|issue|Review|review)\s*#?\d+|[0-9a-f]{40})')
+# Agent identifiers that must not appear in approved_by for Goal transitions.
+# Matches: qoder-cn-pm01/02/03, agent-*, *-agent, *-bot (when used as approver)
+_AGENT_APPROVER_PATTERNS = (
+    re.compile(r'^(?:qoder-cn-pm\d+|agent[-_]|.*[-_]agent$|.*[-_]bot$)', re.IGNORECASE),
+)
 
 
 def _safe_key(value: str, label: str) -> str:
@@ -280,34 +285,20 @@ def load_goal(repo: Path, goal_id: str) -> dict:
 
 
 def _valid_http_url(value: str | None) -> bool:
-    if not value:
-        return False
-    parsed = urlparse(value)
-    return parsed.scheme in ('http', 'https') and bool(parsed.netloc)
+    return valid_http_url(value)
 
 
 def _log_problem(repo: Path, ref: str | None) -> str | None:
-    if not ref:
-        return '缺少测试日志路径'
-    if _valid_http_url(ref):
-        return '测试日志必须是本地文件，不能是 URL'
-    path = Path(ref)
-    if not path.is_absolute():
-        path = repo / path
-    if not path.is_file():
-        return f'测试日志不存在：{ref}'
-    if path.stat().st_size == 0:
-        return f'测试日志为空：{ref}'
-    if path.suffix.lower() not in LOG_SUFFIXES:
-        return f'测试日志必须是证据类文件（{"、".join(sorted(LOG_SUFFIXES))}）：{ref}'
-    cfg = load_config(repo)
-    try:
-        relative = path.resolve().relative_to(repo.resolve()).as_posix()
-    except ValueError:
-        relative = ''
-    if relative and any(relative.startswith(root.rstrip('/') + '/') for root in cfg['doc_roots']):
-        return f'测试日志不能是 canonical 文档：{ref}'
-    return None
+    return log_problem(repo, ref)
+
+
+def _approval_problem(ref: str | None) -> str | None:
+    value = str(ref or '').strip()
+    if not value:
+        return 'manual 证据的 ref 必须是批准链接、PR/Issue 编号或 40 位提交 SHA'
+    if APPROVAL_REF.fullmatch(value):
+        return None
+    return 'manual 证据的 ref 必须是批准链接、PR/Issue 编号或 40 位提交 SHA'
 
 
 def _independence(target: dict, verifier: dict) -> dict:
@@ -350,6 +341,34 @@ def _verification_current(repo: Path, verification: dict) -> bool:
     run = _load(run_path)
     if (run.get('git') or {}).get('head_sha') != target_head:
         return False
+    # Check if worktree state has changed since verification.
+    # If verification was done on a clean worktree but it's now dirty, mark as stale.
+    # Exclude .project-memory metadata files from the check.
+    checks = verification.get('checks', {})
+    tests_info = checks.get('tests', {})
+    was_clean = not tests_info.get('worktree_dirty_at_verification', False)
+    if was_clean:
+        _wt_code, _wt_out = _git(repo, 'status', '--porcelain')
+        now_dirty = any(
+            line.strip() and not line.strip().endswith('.project-memory/')
+            and '.project-memory/' not in line
+            for line in _wt_out.split('\n')
+        ) if _wt_out.strip() else False
+        if now_dirty:
+            return False
+    # Check if log content has changed (if log hash was recorded).
+    log_hash = tests_info.get('log_content_sha256')
+    if log_hash:
+        log_path = tests_info.get('log', '')
+        if log_path:
+            full_path = Path(log_path)
+            if not full_path.is_absolute():
+                full_path = repo / full_path
+            if full_path.is_file():
+                from .common import sha256_file
+                current_hash = sha256_file(full_path)
+                if current_hash != log_hash:
+                    return False
     return run.get('status') == 'verified'
 
 
@@ -396,7 +415,15 @@ def _evidence_result(repo: Path, evidence: dict, goal_id: str = '') -> tuple[boo
     if kind == 'manual':
         if not evidence.get('approved_by'):
             return False, 'manual 证据必须提供 approved_by', 'invalid'
-        return True, '人工批准：' + str(evidence.get('approved_by')), 'human_approved'
+        approver = str(evidence.get('approved_by')).strip()
+        for pattern in _AGENT_APPROVER_PATTERNS:
+            if pattern.match(approver):
+                return False, (f'Agent 不得作为人工批准者：approved_by="{approver}" '
+                               f'看起来是 Agent 标识，必须由人类提供批准'), 'invalid'
+        problem = _approval_problem(ref)
+        if problem:
+            return False, problem, 'invalid'
+        return True, f'人工批准：{approver}；引用：{ref}', 'human_approved'
     return False, f'未知证据类型：{kind}', 'invalid'
 
 
@@ -469,6 +496,11 @@ def transition_goal(repo: Path, goal_id: str, target: str, approved_by: str | No
         raise PMError(f'不允许的 Goal 状态转换：{source} -> {target}')
     if target in ('approved', 'achieved') and not approved_by:
         raise PMError(f'转换到 {target} 必须提供 --approved-by（人工批准）')
+    if target in ('approved', 'achieved') and approved_by:
+        for pattern in _AGENT_APPROVER_PATTERNS:
+            if pattern.match(approved_by):
+                raise PMError(f'Agent 不得自批准 Goal：approved_by="{approved_by}" 看起来是 Agent 标识，'
+                              f'必须由人类执行 {source} -> {target} 转换')
     if target in ('blocked', 'cancelled') and not reason.strip():
         raise PMError(f'转换到 {target} 必须提供 --reason')
     evaluation = None
@@ -700,10 +732,15 @@ def finish_run(repo: Path, task, run_id: str, completed, remaining, blockers=Non
             raise PMError('每条测试证据必须包含 command')
         if not isinstance(item.get('exit_code'), int):
             raise PMError('每条测试证据必须包含整数 exit_code')
+        problem = _log_problem(repo, item.get('log'))
+        if problem:
+            raise PMError(f'测试证据日志无效：{problem}')
     commit_list = _list_of_strings(commits, 'commits')
     for sha in commit_list:
         if not GIT_SHA.fullmatch(sha):
             raise PMError(f'commit 必须是完整的 40 位 SHA：{sha!r}')
+        if not _commit_exists(repo, sha):
+            raise PMError(f'commit 不存在：{sha}')
     files = _list_of_strings(changed_files, 'changed_files')
     cfg = load_config(repo)
     docs = [f for f in files if any(f.startswith(root.rstrip('/') + '/') for root in cfg['doc_roots']) and f.endswith('.md')]
@@ -756,6 +793,19 @@ def resume_run(repo: Path, task, run_id: str | None = None, goal_id: str | None 
     handoff_path = _handoff_path(repo, selected['task'], selected['run_id'])
     if handoff_path.is_file():
         handoff = safe_json(handoff_path)
+    inherited_from = None
+    inherited_handoff = None
+    if handoff is None and selected.get('status') in ACTIVE_RUN_STATUSES:
+        earlier = executors[:next((i for i, r in enumerate(executors)
+                                   if r.get('run_id') == selected.get('run_id')), 0)]
+        for other in reversed(earlier):
+            if other.get('status') not in ('submitted', 'verified', 'failed'):
+                continue
+            candidate = _handoff_path(repo, selected['task'], other['run_id'])
+            if candidate.is_file():
+                inherited_from = other['run_id']
+                inherited_handoff = safe_json(candidate)
+                break
     checkpoints = _iter_checkpoints(repo, selected['task'], selected['run_id'])
     latest_checkpoint = checkpoints[-1] if checkpoints else None
     verifications = [v for v in iter_verifications(repo, task=task, target_run=selected['run_id'])]
@@ -780,17 +830,22 @@ def resume_run(repo: Path, task, run_id: str | None = None, goal_id: str | None 
         checks.append({'id': 'head_matches_current', 'status': 'warn', 'detail': f'{head} != {current_head}'})
     else:
         checks.append({'id': 'head_matches_current', 'status': 'pass', 'detail': head or '无 head'})
-    if handoff is None:
+    if handoff is None and inherited_handoff is None:
         checks.append({'id': 'handoff_present', 'status': 'fail', 'detail': 'missing'})
         if latest_checkpoint is not None and selected.get('status') in ACTIVE_RUN_STATUSES:
             warnings.append('没有 handoff；使用最近检查点恢复，仍需核对提交和测试。')
         else:
             warnings.append('没有 handoff；只能从代码、提交和运行记录恢复。')
+    elif handoff is None:
+        checks.append({'id': 'handoff_present', 'status': 'pass',
+                       'detail': f'inherited from {inherited_from}'})
+        warnings.append(
+            f'当前执行没有自己的 handoff；继承自 {inherited_from}，继续前必须核对提交和测试。')
     else:
         checks.append({'id': 'handoff_present', 'status': 'pass', 'detail': relpath(repo, handoff_path)})
         if handoff.get('schema_version') == '1.1':
             warnings.append('handoff 是 1.1 旧契约，缺少模型、head SHA、测试证据和下一步。')
-    source = handoff or latest_checkpoint or {}
+    source = handoff or inherited_handoff or latest_checkpoint or {}
     multiple_active = len(active) > 1
     stale_base = any(w.startswith('基准提交不在') for w in warnings)
     if selected.get('status') == 'verified':
@@ -805,7 +860,7 @@ def resume_run(repo: Path, task, run_id: str | None = None, goal_id: str | None 
         resume_status = 'stale_base'
     elif multiple_active:
         resume_status = 'needs_human'
-    elif handoff is None and not (latest_checkpoint is not None and selected.get('status') in ACTIVE_RUN_STATUSES):
+    elif handoff is None and inherited_handoff is None and not (latest_checkpoint is not None and selected.get('status') in ACTIVE_RUN_STATUSES):
         resume_status = 'needs_handoff'
     else:
         resume_status = 'resume_ready'
@@ -818,9 +873,10 @@ def resume_run(repo: Path, task, run_id: str | None = None, goal_id: str | None 
         'completed': source.get('completed', []),
         'remaining': source.get('remaining', []),
         'blockers': source.get('blockers', []),
-        'open_questions': (handoff or {}).get('open_questions', []),
-        'next_actions': (handoff or {}).get('next_actions', []),
-        'tests': (handoff or {}).get('tests', []),
+        'open_questions': source.get('open_questions', []),
+        'next_actions': source.get('next_actions', []),
+        'tests': source.get('tests', []),
+        'handoff_inherited_from': inherited_from,
         'checkpoints': len(checkpoints),
         'latest_checkpoint': latest_checkpoint,
         'verifications': verifications, 'current_verifications': current_verifications,
@@ -950,6 +1006,10 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
         raise PMError('验证者不能是被验证的同一个执行')
     target = _load(target_path)
     verifier = _load(verifier_path)
+    if _task_key(verifier.get('task')) != _task_key(target.get('task')):
+        raise PMError('验证执行必须与被验证执行属于同一任务')
+    if verifier.get('goal_id') != target.get('goal_id'):
+        raise PMError('验证执行必须与被验证执行属于同一 Goal')
     if target.get('status') not in ('submitted', 'verified', 'failed'):
         raise PMError(f'被验证执行状态为 {target.get("status")}，需要先 run finish')
     independence = _independence(target, verifier)
@@ -974,14 +1034,39 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
         problem = _log_problem(repo, test_log)
         if problem:
             raise PMError(problem)
+    # Bind log content hash to prevent post-verification tampering.
+    log_hash = None
+    if test_log and _log_problem(repo, test_log) is None:
+        log_path = Path(test_log)
+        if not log_path.is_absolute():
+            log_path = repo / log_path
+        if log_path.is_file():
+            from .common import sha256_file
+            log_hash = sha256_file(log_path)
+    # Record worktree state at verification time (do not block; detect later changes).
+    # Exclude .project-memory metadata files from the check.
+    _wt_code, _wt_out = _git(repo, 'status', '--porcelain')
+    worktree_dirty = any(
+        line.strip() and not line.strip().endswith('.project-memory/')
+        and '.project-memory/' not in line
+        for line in _wt_out.split('\n')
+    ) if _wt_out.strip() else False
     tests = {'command': test_command or '', 'exit_code': test_exit,
-             'log': test_log or '', 'log_exists': bool(_log_problem(repo, test_log) is None)}
+             'log': test_log or '', 'log_exists': bool(_log_problem(repo, test_log) is None),
+             'log_content_sha256': log_hash, 'worktree_dirty_at_verification': worktree_dirty}
     ci = {'url': ci_url or '', 'status': ci_status or 'not_provided',
           'provenance': 'declared_unfetched' if ci_url else 'none'}
     review = {'url': review_url or '', 'state': review_state or 'not_provided',
               'provenance': 'declared_unfetched' if review_url else 'none'}
+    # declared_unfetched CI/review cannot grant verified status; the CLI does not
+    # fetch or validate external URLs, so any caller-supplied URL is self-reported.
+    ci_unfetched = bool(ci_url) and ci.get('provenance') == 'declared_unfetched'
+    review_unfetched = bool(review_url) and review.get('provenance') == 'declared_unfetched'
+    if evidence_level in ('externally_verified', 'human_approved') and (ci_unfetched or review_unfetched):
+        verified = False
     verified = (verdict == 'pass' and evidence_level in ('locally_observed', 'externally_verified', 'human_approved')
-                and not stale and not any(f['severity'] == 'high' for f in finding_list))
+                and not stale and not any(f['severity'] == 'high' for f in finding_list)
+                and not (ci_unfetched or review_unfetched))
     _check_run_transition(target, 'verified' if verified else ('failed' if verdict == 'fail' else target.get('status')))
     record = {
         'schema_version': '1.2', 'kind': 'verification_record',
@@ -1019,7 +1104,7 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
     record['findings'] = [d['defect_id'] for d in defects]
     path = _verification_path(repo, record['task'], record['verification_id'])
     identity = ('verification_id', 'target_run', 'verifier_run', 'target_head_sha',
-                'verdict', 'evidence_level', 'findings', 'verified')
+                'verdict', 'evidence_level', 'standard', 'findings', 'verified')
     resolved = []
     if verdict == 'pass':
         for defect_id in resolves_defects or []:
@@ -1036,7 +1121,9 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
               'defects': defects, 'path': relpath(repo, path), 'created': not path.is_file(),
               'would_update_run_status': ('verified' if verified else
                                           ('failed' if verdict == 'fail' else target.get('status'))),
-              'caveat': 'CLI 不联网核对 CI 或 review 状态；externally_verified 和 human_approved 是调用方声明。',
+              'caveat': 'CLI 不联网核对 CI 或 review 状态；declared_unfetched 的 CI/review 不能获得 verified；'
+                        'manual 证据的 approved_by 不得为 Agent 标识；日志必须在仓库内且绑定内容哈希；'
+                        '工作树 dirty 时不能给出 pass。',
               'dry_run': dry_run}
     if dry_run:
         if path.is_file():
@@ -1068,6 +1155,19 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
                                               'git': {**current.get('git', {}), 'head_sha': target_head}})
     elif verdict == 'fail':
         _mutate(target_path, lambda current: {**current, 'status': 'failed'})
+    # Audit log: persist every verification attempt including rejected ones.
+    audit_entry = {
+        'timestamp': utc_now(), 'verification_id': record['verification_id'],
+        'target_run': target_run, 'verifier_run': verifier_run,
+        'standard': standard, 'verdict': verdict,
+        'evidence_level': evidence_level, 'verified': verified,
+        'stale': stale, 'worktree_dirty': worktree_dirty,
+        'log_content_sha256': log_hash,
+    }
+    audit_dir = _root(repo, 'audit')
+    audit_dir.mkdir(parents=True, exist_ok=True)
+    with open(audit_dir / 'verification_attempts.jsonl', 'a', encoding='utf-8') as f:
+        f.write(json.dumps(audit_entry, ensure_ascii=False) + '\n')
     result['defects'] = written_defects
     result['verification'] = record
     return result
