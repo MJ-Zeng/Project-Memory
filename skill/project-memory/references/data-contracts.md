@@ -55,12 +55,12 @@
 
 | kind | 通过条件 | 能否单独满足标准 | 可信级别 |
 |---|---|---|---|
-| `verification` | 验证记录 `status=VERIFIED`、`mapping_status=complete`，且该 criterion 有 `evidence_matched` 映射 | 能 | evidence_matched；若顶层声明更高，取实际可观察级别 |
+| `verification` | 验证记录 `verdict=pass`、`status=VERIFIED`、`verified=true`、`mapping_status=complete`、该 criterion 有 `evidence_matched` 映射，**且**记录带受保护信任锚的分离签名 | 只有签名验证通过时才能 | evidence_matched；本地未签名记录一律 untrusted |
 | `commit` | 完整 40 位 SHA，提交存在且在当前 HEAD 历史中 | 不能，只证明提交存在 | artifact |
 | `test` | 本地日志存在，`exit_code` 为 0 | 不能，只证明执行过；需要 criterion 映射和 coverage 复核 | locally_observed |
-| `manual` | 提供 `approved_by`，且 `ref` 是可追溯的批准链接、PR/Issue 编号或 40 位提交 SHA | 能 | human_approved |
+| `manual` | 提供 `approved_by`，且 `ref` 是可追溯的批准链接、PR/Issue 编号或 40 位提交 SHA | 不能；没有可信审批来源时只是未核验声明 | unverified_approval |
 
-`goal evaluate` 只接受已确认覆盖的 criterion 映射或人工批准。直接 `test`/`commit` 证据会被记录为补充材料，但不会让标准变成 satisfied。评估状态分为 `satisfied`、`needs_review`、`partial`、`insufficient_evidence` 和 `blocked_by_defect`；Issue 全部关闭不等于目标达成。
+`goal evaluate` 只接受已确认覆盖且带可信授权的 criterion 映射。直接 `test`/`commit` 证据会被记录为补充材料，但不会让标准变成 satisfied；`manual` 证据保持 `UNVERIFIED_APPROVAL`。没有配置 `PROJECT_MEMORY_TRUST_ANCHOR` 时，本地写出的验证记录不会满足任何标准，这是预期的 fail-closed 结果。评估状态分为 `satisfied`、`needs_review`、`partial`、`insufficient_evidence` 和 `blocked_by_defect`；Issue 全部关闭不等于目标达成。
 
 ### Criterion Evidence Mapping
 
@@ -76,10 +76,11 @@ pass 验证必须提供 `--criterion-evidence` JSON（模板见 `assets/criterio
 | `evidence_id` | 稳定的证据 ID；跨 Goal 复用会被拒绝 |
 | `evidence_source` | `test`、`check`、`command`、`ci` 或 `review` |
 | `evidence_command` / `evidence_log` | 本地执行证据必须有命令和可读取的非空日志 |
+| `evidence_receipt` | 本地执行证据必须提供 `test-run` 生成的执行收据；手写日志不算 |
 | `evidence_exit_code` | 本地执行证据必须有整数退出码；`passed` 时必须是 0 |
 | `execution_status` | `passed`、`failed`、`error`、`not_run` 或 `unknown` |
 | `coverage_claim` | 说明该检查覆盖标准的哪一部分；只是声明，不是证明 |
-| `coverage_review_status` | `confirmed` 才能用于 pass；由独立 verifier 复核 |
+| `coverage_review_status` | `confirmed` 才能用于 pass；由独立 verifier 复核，但仍属 Agent 声明 |
 | `independent_verifier` | 必须等于 verifier run 的 agent；与被验证执行的 agent 相同且 model/session 也相同时拒绝 |
 | `verification_result` | `pass`、`fail` 或 `inconclusive`；pass 验证中必须是 `pass` |
 
@@ -189,7 +190,7 @@ queued -> running -> submitted -> verified
 
 `verdict`：`pass`、`fail`、`inconclusive`。
 
-`status`：`VERIFIED`、`INSUFFICIENT_EVIDENCE`、`PARTIAL_COVERAGE`、`BLOCKED_BY_DEFECT`、`FAILED`、`INCONCLUSIVE`。只有 `VERIFIED` 会把目标执行置为 `verified`。
+`status`：`VERIFIED`、`MANUAL_REVIEW_REQUIRED`、`INSUFFICIENT_EVIDENCE`、`PARTIAL_COVERAGE`、`BLOCKED_BY_DEFECT`、`FAILED`、`INCONCLUSIVE`。只有 `VERIFIED` 会把目标执行置为 `verified`；本地 CLI 没有受保护签名，写出的完整记录也只能是 `MANUAL_REVIEW_REQUIRED`，`verified=false`。
 
 `mapping_status`：`missing`、`partial`、`complete`、`invalid`。pass 验证要求 `complete`。
 
@@ -198,11 +199,11 @@ queued -> running -> submitted -> verified
 | 级别 | 序号 | pass 条件 |
 |---|---|---|
 | `agent_claimed` | 0 | 永远不能 pass |
-| `locally_observed` | 1 | test command、整数 exit 0、存在的本地非空证据日志（`.log`/`.txt`/`.json` 等，不能是 canonical 文档） |
+| `locally_observed` | 1 | `test-run` 执行收据（命令、整数 exit 0、日志哈希、快照摘要可重算）；手写日志不算 |
 | `externally_verified` | 2 | CI URL、`ci_status=passed`；记录标记 `provenance: declared_unfetched` |
 | `human_approved` | 3 | review URL、`review_state=approved`；记录标记 `provenance: declared_unfetched` |
 
-`evidence_level` 是调用方声明。`trust_level` 取声明级别与实际可观察证据级别的较小值；手工提高声明不会提高 `trust_level`。
+`evidence_level` 是调用方声明。`trust_level` 取声明级别与实际可观察证据级别的较小值；手工提高声明不会提高 `trust_level`。即使 `trust_level` 较高，没有受保护信任锚签名的记录仍然不能被 `goal evidence` 当作达成依据。
 
 规则：
 
@@ -217,7 +218,8 @@ queued -> running -> submitted -> verified
 - pass 必须提供 `criterion_evidence`，覆盖全部必达标准，且每条映射 `evidence_matched=true`、`coverage_review_status=confirmed`、`target_commit_sha=target_head_sha`、`criterion_description` 与 Goal 标准一致。
 - 存在未关闭 high 缺陷（且未在本次 `--resolves-defect` 中处理）时返回 `BLOCKED_BY_DEFECT`。
 - 只有日志和退出码、但没有 criterion 映射时返回 `INSUFFICIENT_EVIDENCE`；只覆盖部分标准时返回 `PARTIAL_COVERAGE`。
-- `verified = (verdict == pass) and (evidence_level != agent_claimed) and not stale and mapping_status == complete and no high findings`。
+- `verified = (verdict == pass) and (evidence_level != agent_claimed) and not stale and mapping_status == complete and no high findings and authority.trusted`。
+- 本地 CLI 没有签名能力，所以 `verified` 恒为 false；只有外部签名器对记录做 detached signature 并通过 `PROJECT_MEMORY_TRUST_ANCHOR` 验证后，才可能变成 `VERIFIED`。
 - pass 且 `status=VERIFIED` 才把目标执行置为 `verified`；fail 置为 `failed`。
 - 验证记录不可变。代码变化后要重新验证，生成新记录。
 - 缺少 criterion 映射的旧 pass 记录可读，但 `goal evidence` 不会接受它作为标准达成依据；`reconcile` 会报告 `pass_without_criterion_mapping`。
@@ -324,9 +326,11 @@ agent_claimed < locally_observed < externally_verified < human_approved
 ```
 
 - `agent_claimed`：Agent 的文字声明、自由文本测试证据、单独出现的 `--reviewed-by`。
-- `locally_observed`：本地命令、整数退出码和存在的非空证据日志。
+- `locally_observed`：`test-run` 执行收据、整数退出码和可重算的日志/快照摘要；只证明执行事实。
 - `externally_verified`：外部 CI 声明。CLI 离线时不联网，记录为 `declared_unfetched`。
 - `human_approved`：review URL 和 approved 状态，或明确的 `approved_by`。CLI 不能认证审批人身份，仍属调用方声明。
+
+这四个级别描述证据强度，不等于授权。要把证据用于满足 Goal，还必须通过仓库外受保护信任锚的签名校验；否则一律视为本地声明。
 
 Handoff 和快照默认是 `reported_unverified`。检索命中不能直接当权威，必须先核对来源状态。
 

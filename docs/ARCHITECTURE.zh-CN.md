@@ -149,7 +149,7 @@ Goal 记录 `id`、标题、背景、预期结果、负责人、约束、关联 
 
 创建默认 `proposed`。`approved` 和 `achieved` 必须由授权人提供 `approved_by`；`blocked` 和 `cancelled` 必须写原因。`achieved` 前自动评估，必达标准未满足时拒绝。已批准标准只能由授权人通过可审查变更修改。
 
-证据类型是 `verification`、`commit`、`test`、`manual`。`test` 要求本地日志存在且退出码为 0；`manual` 要求 `approved_by`；`commit` 要求完整 SHA 在当前历史中；`verification` 要求 pass、未 stale，且绑定被验证执行的当前 head。
+证据类型是 `verification`、`commit`、`test`、`manual`。`test` 要求本地日志存在且退出码为 0，但只算 `executed_not_matched`；`manual` 要求 `approved_by`，但只是未核验的批准声明；`commit` 要求完整 SHA 在当前历史中，只算 artifact；`verification` 要求 pass、未 stale、绑定被验证执行的当前 head，并且必须带受保护信任锚的分离签名，否则一律作为 `untrusted` 拒绝。
 
 `goal evaluate` 只检查证据存在性和绑定关系，不判断证据在语义上是否支持标准，也不因为 Issue 关闭而判定达成。
 
@@ -169,7 +169,18 @@ Agent Run 记录 Goal、任务、Agent、模型 provider/id、工具、会话 ID
 
 验证记录独立于执行，包含验证 ID、目标 run、验证者 run、验证者模型/工具/会话、目标 head、当前 head、标准、证据级别、测试/CI/审查结果、发现、结论和可信级别。
 
-证据级别从低到高是 `agent_claimed`、`locally_observed`、`externally_verified`、`human_approved`。`agent_claimed` 不能产生 pass。本地观察需要命令、整数退出码和存在的非空证据日志，日志不能是 canonical 文档；外部验证需要 CI URL 和 passed；人工批准需要 review URL 和 approved。CLI 离线时不抓取 CI 或 review，后两者标为 `declared_unfetched`，仍属调用方声明。
+证据级别从低到高是 `agent_claimed`、`locally_observed`、`externally_verified`、`human_approved`。`agent_claimed` 不能产生 pass。本地观察必须绑定 `test-run` 生成的执行收据（命令、整数退出码、日志哈希和快照摘要可重算），手写日志不再算执行证据；外部验证需要 CI URL 和 passed；人工批准需要 review URL 和 approved。CLI 离线时不抓取 CI 或 review，后两者标为 `declared_unfetched`，仍属调用方声明。
+
+验证记录把四层事实分开：
+
+1. **内容完整性**：收据、日志和快照摘要可以重算，能发现后续修改。
+2. **执行事实**：收据记录了该命令在该快照内以该退出码执行过。
+3. **来源与权威**：本地 CLI 写出的 JSON 没有分离签名，只能算调用方声明。
+4. **标准的达成依据**：只有受保护信任锚签名的记录才能进入 `goal evidence`。
+
+因此本地记录最多是 `MANUAL_REVIEW_REQUIRED`，`verified` 恒为 `false`；`goal evidence` 会拒绝自报 `status: VERIFIED` 的记录。信任锚通过仓库外的 `PROJECT_MEMORY_TRUST_ANCHOR` 配置，用 OpenSSL 验证 detached signature；未配置时一律 fail-closed。
+
+`test-run` 有两种模式。`local` 是普通子进程，收据标 `local_untrusted`，只用于本地开发。`trusted` 只在 WSL2 可用时进入 user/mount/PID/network namespace：把快照复制到 tmpfs，屏蔽 Windows 盘符、宿主 home、`/root`、`/var`、`/tmp`、`/run` 和 `/etc/ssh`，挂载新的 `/proc`，用 `env -i` allowlist 执行，并在沙箱内写 attestation。预检失败返回 `BLOCKED`，不回退普通子进程；attestation 在仓库内且无外部签名，所以只代表隔离事实，不代表来源可信。
 
 pass 条件还要求没有 high 级发现、目标 head 未变化、验证记录属于同一 Goal。验证绑定 `target_head_sha`；代码变化后旧验证不自动有效。pass 把目标执行置为 `verified`，fail 置为 `failed`。
 

@@ -74,6 +74,42 @@
       ],
       "pattern": "^[a-f0-9]{40}$"
     },
+    "target_run_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "verifier_run_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "goal_criteria_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "authority": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "enum": ["trusted", "untrusted"]
+        },
+        "issuer": {"type": ["string", "null"]},
+        "anchor_id": {"type": ["string", "null"]},
+        "algorithm": {"type": ["string", "null"]},
+        "signed_payload_sha256": {"type": ["string", "null"]},
+        "signature_b64": {"type": ["string", "null"]},
+        "reason": {"type": "string"}
+      },
+      "additionalProperties": true
+    },
+    "authority_evaluation": {
+      "type": "object",
+      "properties": {
+        "trusted": {"type": "boolean"},
+        "status": {"enum": ["trusted", "untrusted", "unconfigured"]},
+        "reason": {"type": "string"}
+      },
+      "additionalProperties": true
+    },
     "current_head_sha": {
       "type": [
         "string",
@@ -109,6 +145,7 @@
     "status": {
       "enum": [
         "VERIFIED",
+        "MANUAL_REVIEW_REQUIRED",
         "INSUFFICIENT_EVIDENCE",
         "PARTIAL_COVERAGE",
         "BLOCKED_BY_DEFECT",

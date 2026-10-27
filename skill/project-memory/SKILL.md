@@ -106,7 +106,7 @@ overlay 不写 GitHub 模板，也不写 INDEX、CURRENT_STATE 和架构占位�
 1. 被验证执行必须已 `run finish`，状态为 `submitted`、`verified` 或 `failed`。验证者必须使用另一个 run ID，并登记为 `--role verifier`；验证执行必须与被验证执行属于同一 Goal 和任务，且 agent、model、session 三项都与被验证执行相同会被拒绝。
 2. 选择证据级别：
    - `agent_claimed`：只能记录声明，不能给出 pass。
-   - `locally_observed`：需要 `--test-command`、整数 `--test-exit` 和存在的非空本地证据日志；日志不能是 canonical 文档。
+   - `locally_observed`：必须先运行 `test-run` 并传 `--test-receipt`；收据包含命令、整数退出码、日志哈希和快照摘要。手写日志不算执行证据。
    - `externally_verified`：需要 `--ci-url` 和 `--ci-status passed`。CLI 不联网抓取，记录为 `declared_unfetched`。
    - `human_approved`：需要 `--review-url` 和 `--review-state approved`。CLI 不认证审批人，仍属调用方声明。
    证据级别是声明，不是通行证；最终可信度取声明级别与实际可观察证据的较小值。
@@ -114,7 +114,7 @@ overlay 不写 GitHub 模板，也不写 INDEX、CURRENT_STATE 和架构占位�
 4. pass 必须提供 `--criterion-evidence` JSON，为每个必达标准记录：`criterion_id`、`goal_id`、`task_id`、`criterion_description`、`target_repository`、`target_commit_sha`、`evidence_id`、`evidence_source`、`evidence_command`、`evidence_log`、`evidence_exit_code`、`execution_status`、`coverage_claim`、`coverage_review_status`、`independent_verifier`、`verification_result`。映射必须覆盖全部必达标准，绑定同一个 `target_commit_sha`，coverage 由独立 verifier 复核为 `confirmed`。字段模板见 `assets/criterion-evidence.schema.json`。
 5. 只有日志和 0 退出码、但没有 criterion 映射或 coverage 未确认时，返回 `INSUFFICIENT_EVIDENCE`，不写 pass 记录。只覆盖部分标准时返回 `PARTIAL_COVERAGE`。存在未关闭 high 缺陷时返回 `BLOCKED_BY_DEFECT`。
 6. 用 `--findings-file` 提交发现，每项包含 `severity`、`summary`、`file`、可选的 `line` 和 `repro`。有 high 级发现时不能 pass。
-7. 只有 `status=VERIFIED` 才把目标执行置为 `verified`；fail 置为 `failed`，并创建缺陷记录。验证记录绑定 `target_head_sha`，事后改代码不会自动让旧验证继续有效。
+7. 本地 CLI 没有受保护签名，写出的记录最多是 `MANUAL_REVIEW_REQUIRED`、`verified=false`，不会把目标执行置为 `verified`，也不能满足 Goal。只有仓库外信任锚（`PROJECT_MEMORY_TRUST_ANCHOR`）对记录做分离签名并验证通过，才可能成为 `VERIFIED`；未配置时停在人工复核是预期的 fail-closed 结果。fail 置为 `failed`，并创建缺陷记录。验证记录绑定 `target_head_sha`，事后改代码不会自动让旧验证继续有效。
 8. 同一模型的另一个会话可以算独立验证（会话必须可区分），但要在报告里写明“同模型独立验证”，不要暗示跨模型。验证记录不能跨 Goal 复用；同一 `evidence_id` 复用会被拒绝。缺少 criterion 映射的旧 pass 记录可读，但不能作为 Goal 达成依据。
 
 ## 流程：缺陷

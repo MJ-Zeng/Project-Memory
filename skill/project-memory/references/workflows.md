@@ -181,13 +181,20 @@ python3 -m project_memory run list --repo . --goal G-AUTH
 
 被验证执行必须已 `run finish`。验证者必须是另一个 run，且必须使用 `--role verifier`。验证者还必须在 agent、model 或 session 上与被验证执行不同；三项都相同会拒绝。只有记录层面的独立性，不代表结论正确。
 
+先跑快照执行，拿到收据：
+
+```bash
+python3 -m project_memory test-run --repo . --agent qoder \
+  --command 'python -m unittest tests.test_auth' --trusted
+# 输出 .project-memory/receipts/EXE-<id>.json
+```
+
 ```bash
 python3 -m project_memory verify --repo . \
   --target-run run-dev-1 --verifier-run run-verify-1 \
   --standard '认证绕过与凭据处理审查' \
   --verdict pass --evidence-level locally_observed \
-  --test-command 'python -m unittest tests.test_auth' --test-exit 0 \
-  --test-log artifacts/tests-verify.log \
+  --test-receipt .project-memory/receipts/EXE-<id>.json \
   --expected-sha <被验证执行的head SHA>
 ```
 
@@ -196,11 +203,13 @@ python3 -m project_memory verify --repo . \
 | 级别 | 通过条件 | 能否 pass |
 |---|---|---|
 | `agent_claimed` | 只有声明 | 不能 |
-| `locally_observed` | 测试命令、整数退出码、存在的非空证据日志（不能是 canonical 文档） | 可以，退出码必须为 0 |
+| `locally_observed` | `test-run` 执行收据（命令、整数退出码、日志哈希和快照摘要可重算）；手写日志不算 | 可以，退出码必须为 0 |
 | `externally_verified` | CI URL 和 `--ci-status passed` | 可以，但记录是 `declared_unfetched` |
 | `human_approved` | review URL 和 `--review-state approved`；CLI 不认证审批人 | 可以，但仍是调用方声明 |
 
 CLI 离线运行，不联网核对 CI 或 review；`externally_verified` 和 `human_approved` 是声明，不是已抓取的外部事实。验证拒绝的情况：自己验证自己、验证者不是 `role=verifier`、agent/model/session 三项都相同、目标执行还没结束、当前 HEAD 已变化、`--expected-sha` 与目标 head 不一致、有 high 级发现时要求 pass。验证记录绑定 `target_head_sha`；事后改代码不会自动让旧验证继续有效。验证记录只能用于同一 Goal 的证据，不能跨 Goal 复用。
+
+本地 CLI 写出的记录最多是 `MANUAL_REVIEW_REQUIRED`，`verified=false`，不会把执行升级为 `verified`，也不能满足 Goal；只有仓库外受保护信任锚对记录签名并通过 `PROJECT_MEMORY_TRUST_ANCHOR` 验证后，才可能成为 `VERIFIED`。没有配置信任锚时，这是预期的 fail-closed 结果。
 
 发现写入 JSON 文件：
 
@@ -215,8 +224,7 @@ CLI 离线运行，不联网核对 CI 或 review；`externally_verified` 和 `hu
 python3 -m project_memory verify --repo . \
   --target-run run-dev-1 --verifier-run run-verify-1 \
   --standard '凭据处理审查' --verdict fail --evidence-level locally_observed \
-  --test-command 'python -m unittest tests.test_auth' --test-exit 0 \
-  --test-log artifacts/tests-verify.log --findings-file findings.json
+  --test-receipt .project-memory/receipts/EXE-<id>.json --findings-file findings.json
 ```
 
 pass 会把目标执行置为 `verified`；fail 置为 `failed` 并创建缺陷。验证命令在未通过时退出码为 2。
@@ -238,8 +246,7 @@ python3 -m project_memory defect update --repo . --id DEF-1b77a3e93a52 \
 python3 -m project_memory verify --repo . \
   --target-run run-fix-1 --verifier-run run-verify-2 \
   --standard '重新验证凭据处理' --verdict pass --evidence-level locally_observed \
-  --test-command 'python -m unittest tests.test_auth' --test-exit 0 \
-  --test-log artifacts/tests-reverify.log \
+  --test-receipt .project-memory/receipts/EXE-<id>.json \
   --resolves-defect DEF-1b77a3e93a52
 ```
 

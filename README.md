@@ -54,14 +54,43 @@ python3 -m project_memory run start --repo . --goal G-AUTH --task 325 \
   --run-id run-verify-1 --agent qoder --model-provider qoder-cn --model-id qfmodel \
   --role verifier --base-sha <40位SHA>
 
+python3 -m project_memory test-run --repo . --agent qoder \
+  --command 'python -m unittest' --trusted
+# 输出 .project-memory/receipts/EXE-*.json
+
 python3 -m project_memory verify --repo . \
   --target-run run-dev-1 --verifier-run run-verify-1 \
   --standard '认证与凭据审查' --verdict pass --evidence-level locally_observed \
-  --test-command 'python -m unittest' --test-exit 0 --test-log verify.log \
+  --test-receipt .project-memory/receipts/EXE-<id>.json \
   --expected-sha <被验证执行的head SHA>
 ```
 
-`agent_claimed` 不能产生 pass；本地测试需要命令、整数退出码和存在的非空证据日志；外部 CI 需要 URL 和 passed 状态，但 CLI 不联网抓取；人工批准需要 review URL 和 approved 状态，但 CLI 不认证审批人。验证绑定提交 SHA，代码变化后旧验证只作为历史证据，且不能跨 Goal 复用。
+`agent_claimed` 不能产生 pass；`locally_observed` 需要 `test-run` 生成的执行收据，手写日志不再算执行证据；外部 CI 需要 URL 和 passed 状态，但 CLI 不联网抓取；人工批准需要 review URL 和 approved 状态，但 CLI 不认证审批人。验证绑定提交 SHA，代码变化后旧验证只作为历史证据，且不能跨 Goal 复用。
+
+### 执行收据与隔离
+
+`test-run` 把提交导出到不可变快照后执行命令，并记录退出码、日志哈希和快照摘要：
+
+```bash
+# 本地模式：普通子进程，没有操作系统隔离；收据标记为 local_untrusted
+python3 -m project_memory test-run --repo . --command 'python -m unittest' --agent qoder
+
+# 可信模式：WSL2 user/mount/PID/network namespace，预检失败即 BLOCKED，不回退
+python3 -m project_memory test-run --repo . --command 'python3 -m unittest' \
+  --agent qoder --trusted --timeout 900
+```
+
+可信模式会屏蔽 Windows 盘符、宿主 home、`/root`、`/var`、`/tmp` 和 `/etc/ssh` 等路径，只保留快照副本和显式环境变量 allowlist；命令在 `env -i` 下运行，无默认路由。收据的完整性可以重算，但收据本身位于仓库内、没有外部签名，所以只标为 `isolated_local_attestation`，不等于可信来源。
+
+### 验证记录不会自证权威
+
+本地 CLI 写出的验证记录最多是 `MANUAL_REVIEW_REQUIRED`，`verified` 恒为 `false`：JSON 里的 `status: VERIFIED` 或 `authority.status: trusted` 都不被接受。只有仓库外受保护信任锚对记录做分离签名，`goal evidence` 才可能把它当作达成依据：
+
+```bash
+export PROJECT_MEMORY_TRUST_ANCHOR=/path/outside/repo/trust-anchor.json
+```
+
+未配置信任锚时，`goal evaluate` 会停在 `needs_review` / `MANUAL_REVIEW_REQUIRED`，这是 fail-closed 的预期结果，不是可以绕过的错误。
 
 把验证记录挂到目标标准，再评估和对账：
 
@@ -72,7 +101,7 @@ python3 -m project_memory goal evaluate --repo . --id G-AUTH
 python3 -m project_memory reconcile --repo . --fail-on high
 ```
 
-`goal evaluate` 满足时退出 0，未满足时退出 2；`verify` 未通过时退出 2；`run resume` 在 `needs_handoff`、`needs_human` 或 `stale_base` 时退出 2。`reconcile` 只报告，不自动改 canonical 文档，也不关闭任务。
+`goal evaluate` 满足时退出 0，未满足时退出 2（没有可信授权来源时始终属于未满足）；`verify` 未通过时退出 2；`run resume` 在 `needs_handoff`、`needs_human` 或 `stale_base` 时退出 2。`reconcile` 只报告，不自动改 canonical 文档，也不关闭任务。
 
 ## 两种审计范围
 
@@ -109,7 +138,8 @@ python3 -m project_memory init --repo /path/to/workspace --install none --profil
 | 定义与评估目标 | `goal create/show/list/evaluate/evidence/transition` | 写 `.project-memory/goals/` |
 | 登记执行 | `run start/checkpoint/finish/show/list` | 写 `.project-memory/runs/` 和 handoff |
 | 恢复执行 | `run resume --task 325 [--run-id run-1]` | 否 |
-| 独立验证 | `verify --target-run A --verifier-run B --standard '...' --verdict pass --evidence-level locally_observed ...` | 写验证和缺陷记录 |
+| 独立验证 | `verify --target-run A --verifier-run B --standard '...' --verdict pass --evidence-level locally_observed --test-receipt .project-memory/receipts/EXE-*.json ...` | 写验证和缺陷记录 |
+| 快照执行 | `test-run --command '...' [--trusted] [--wsl-distro Ubuntu]` | 写快照、日志和收据 |
 | 缺陷跟踪 | `defect list/show/update` | 更新缺陷状态 |
 | 知识对账 | `reconcile [--format markdown] [--fail-on high]` | 否，或写指定报告 |
 | 取任务上下文 | `start --issue 325 --slug ORG/REPO` 或 `start --task-file task.json` | 否 |
@@ -128,7 +158,7 @@ python3 -m project_memory init --repo /path/to/workspace --install none --profil
 
 只有 `start` 和 `finish` 会访问 GitHub API，而且只调只读接口。凭据从环境变量 `GITHUB_TOKEN` 读取，不放在命令行参数里。建议使用 GitHub App 安装令牌，或限制到具体仓库的 fine-grained token。
 
-`decision`、`goal`、`run`、`verify`、`defect`、`reconcile`、`handoff` 和 `init` 只写本地文件，不推送、不合并、不审批、不关闭 Issue、不部署。`--reviewed-by` 和 `--test-evidence` 是声明，不是独立验证；真正的权限仍由 GitHub 规则和 CI 决定。
+`decision`、`goal`、`run`、`verify`、`test-run`、`defect`、`reconcile`、`handoff` 和 `init` 只写本地文件，不推送、不合并、不审批、不关闭 Issue、不部署。`--reviewed-by` 和 `--test-evidence` 是声明，不是独立验证；真正的权限仍由 GitHub 规则和 CI 决定。`test-run --trusted` 只在 WSL2 可用时执行，隔离预检失败会返回 BLOCKED，不会退回普通子进程。
 
 ## 语义检索的限制
 
