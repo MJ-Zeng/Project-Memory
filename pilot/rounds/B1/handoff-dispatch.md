@@ -7,7 +7,7 @@ goal_id: G-B1
 round: 1
 from_role: PM-01
 to_role: PM-02
-base_sha: <SCAFFOLD_SHA>
+base_sha: 6420702a2a5aefa05ba7359894e8895fa538e870
 candidate_sha: null
 branch: fix/b1-openssl-verifier
 pr: null

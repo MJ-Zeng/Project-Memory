@@ -10,7 +10,7 @@
 | 冻结基线 | `0d08a1ad85144d11a46d6a361a2a3ce4eadbbed4` | 2026-10-27 | `git rev-parse` |
 | 开发主线 | `dev/v1.0`（默认 HEAD，指向 `0d08a1a`） | 2026-10-27 | `git ls-remote --symref origin HEAD` |
 | `frozen/rc3-0d08a1a` | 存在，指向 `0d08a1a` | 2026-10-27 | `git ls-remote` |
-| 脚手架分支 | `pilot/bootstrap`（本地，未推送） | 2026-10-27 | `git status --short --branch` |
+| 脚手架分支 | `pilot/bootstrap`（本地，未推送）；HEAD `6420702a2a5aefa05ba7359894e8895fa538e870` | 2026-10-27 | `git rev-parse HEAD` |
 | B1 Issue | 未创建 | 2026-10-27 | 人工核对 |
 | B1 状态 | `draft`，未派发 | 2026-10-27 | 本文件 |
 
