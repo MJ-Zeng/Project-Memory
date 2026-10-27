@@ -277,6 +277,10 @@ def parser():
     s.add_argument('--commit', help='要快照的完整 SHA；默认 HEAD')
     s.add_argument('--agent', default='unknown-agent', help='执行者标识')
     s.add_argument('--timeout', type=int, default=900, help='超时秒数')
+    s.add_argument('--trusted', action='store_true',
+                   help='在 WSL2 user/mount/PID/network namespace 中执行；预检失败即停止，不回退')
+    s.add_argument('--wsl-distro', help='指定 WSL2 发行版；默认使用系统默认发行版')
+    s.add_argument('--subject', help='可选：被验证对象标识（写入收据）')
     s.add_argument('--output', type=Path)
 
     s = base('defect', '缺陷记录与修复状态')
@@ -478,8 +482,22 @@ def run(args):
         emit(result)
         return 0 if result.get('verified') else 2
     elif args.command == 'test-run':
-        emit(run_command(repo, args.exec_command, args.commit, executed_by=args.agent,
-                         timeout=args.timeout), args.output)
+        mode = 'trusted' if args.trusted else 'local'
+        if mode == 'local':
+            print('警告：本地执行没有操作系统隔离，收据标记为 local_untrusted；'
+                  '需要隔离时请使用 --trusted。', file=sys.stderr)
+        try:
+            result = run_command(repo, args.exec_command, args.commit, executed_by=args.agent,
+                                 timeout=args.timeout, mode=mode,
+                                 wsl_distro=args.wsl_distro, subject=args.subject)
+        except PMError as exc:
+            if mode != 'trusted':
+                raise
+            emit({'schema_version': '1.2', 'kind': 'test_run_result',
+                  'status': 'BLOCKED', 'mode': mode, 'error': str(exc),
+                  'receipt': None}, args.output)
+            return 3
+        emit(result, args.output)
         return 0
     elif args.command == 'defect':
         if args.defect_command == 'list':
