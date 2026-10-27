@@ -337,6 +337,8 @@ class SecurityRc3Test(unittest.TestCase):
         try:
             before = set((self.repo / '.project-memory/receipts').glob('*.json')) \
                 if (self.repo / '.project-memory/receipts').is_dir() else set()
+            snapshots_before = set((self.repo / '.project-memory/snapshots').iterdir()) \
+                if (self.repo / '.project-memory/snapshots').is_dir() else set()
             with self.assertRaises(PMError) as ctx:
                 run_command(self.repo, ['python3', '-c', 'print(1)'], self.base,
                             mode='trusted')
@@ -344,6 +346,9 @@ class SecurityRc3Test(unittest.TestCase):
             after = set((self.repo / '.project-memory/receipts').glob('*.json')) \
                 if (self.repo / '.project-memory/receipts').is_dir() else set()
             self.assertEqual(before, after)
+            snapshots_after = set((self.repo / '.project-memory/snapshots').iterdir()) \
+                if (self.repo / '.project-memory/snapshots').is_dir() else set()
+            self.assertEqual(snapshots_before, snapshots_after)
         finally:
             if previous is None:
                 os.environ.pop(DISABLE_ENV, None)

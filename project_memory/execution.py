@@ -452,6 +452,12 @@ def run_command(repo: Path, command, commit_sha: str | None = None, *,
         raise PMError('timeout 必须是正整数秒')
     if mode == 'trusted' and extra_env:
         raise PMError('可信执行不接受 extra_env：环境变量只能来自启动器 allowlist')
+    if mode == 'trusted':
+        # Check the launcher before writing anything: a blocked run must not
+        # leave snapshots or logs behind that look like partial evidence.
+        available, reason = trusted_exec.wsl_available(wsl_distro)
+        if not available:
+            raise PMError(f'可信执行不可用（fail-closed，不回退普通子进程）：{reason}')
     commit, tree = resolve_commit(repo, commit_sha)
     snapshot = create_snapshot(repo, commit)
     tree_dir = _meta(repo, 'snapshots') / snapshot['snapshot_id'] / 'tree'
