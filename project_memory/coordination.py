@@ -696,11 +696,13 @@ def _evidence_result(repo: Path, evidence: dict, goal_id: str = '',
         problem = _approval_problem(ref)
         if problem:
             return False, problem, 'invalid', False, 'invalid'
-        # R-1 Fix: manual evidence is structurally valid but cannot auto-satisfy;
-        # it requires a verification record with criterion mapping to prove coverage
-        return (True, f'人工批准（{approved_by}）需要配合 verification 记录与 criterion mapping；'
-                      f'manual 证据本身不能单独证明标准达成',
-                'human_approved', False, 'human_review_required')
+        # R-1: an email-shaped approved_by plus an approval ref is still only a
+        # caller claim. There is no trusted approval event source in this build,
+        # so the best possible state is UNVERIFIED_APPROVAL; it never satisfies
+        # a criterion and never grants human_approved trust.
+        return (True, f'人工批准声明（{approved_by}，引用 {ref}）尚未由可信组件核验；'
+                      '不能单独证明标准达成',
+                'unverified_approval', False, 'UNVERIFIED_APPROVAL')
     return False, f'未知证据类型：{kind}', 'invalid', False, 'invalid'
 
 
@@ -719,10 +721,11 @@ def evaluate_goal(repo: Path, goal_id: str) -> dict:
                                  'reason': reason, 'trust': trust, 'state': state})
             if satisfies:
                 satisfied = True
-            # R-1 Fix: human_review_required state means manual evidence exists but needs
-            # verification record with criterion mapping to prove standard coverage
+            # R-1: manual evidence is reviewable but never auto-satisfying; an
+            # UNVERIFIED_APPROVAL must be reviewed by a human before it counts.
             if valid and state in ('executed_not_matched', 'evidence_matched',
-                                   'human_review_required', 'human_approved', 'externally_verified'):
+                                   'human_review_required', 'UNVERIFIED_APPROVAL',
+                                   'human_approved', 'externally_verified'):
                 reviewable = True
         if satisfied:
             status = 'satisfied'

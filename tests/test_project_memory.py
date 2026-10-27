@@ -1217,8 +1217,8 @@ class CoordinationTest(unittest.TestCase):
         # R-1 Fix: manual evidence is structurally valid but does NOT satisfy on its own
         self.assertTrue(manual['ok'])
         self.assertFalse(manual['satisfies'])
-        self.assertEqual(manual['trust'], 'human_approved')
-        self.assertEqual(manual['state'], 'human_review_required')
+        self.assertEqual(manual['trust'], 'unverified_approval')
+        self.assertEqual(manual['state'], 'UNVERIFIED_APPROVAL')
 
     def test_duplicate_and_concurrent_runs(self):
         self.make_goal()
@@ -1920,6 +1920,52 @@ class CoordinationTest(unittest.TestCase):
         self.assertEqual(entries[-1]['outcome'], 'rejected')
         self.assertFalse(entries[-1]['verified'])
         self.assertEqual(list(iter_verifications(self.repo)), [])
+
+
+    def test_r1_manual_email_is_unverified_trust(self):
+        """R-1: email + approval ref is still a claim, never human_approved trust."""
+        self.make_goal()
+        add_goal_evidence(self.repo, 'G-1', 'C1', 'manual',
+                          'https://example.invalid/review/1',
+                          approved_by='reviewer@example.com')
+        evaluation = evaluate_goal(self.repo, 'G-1')
+        evidence = evaluation['criteria'][0]['evidence'][0]
+        self.assertEqual(evidence['trust'], 'unverified_approval')
+        self.assertFalse(evidence['satisfies'])
+        self.assertEqual(evidence['state'], 'UNVERIFIED_APPROVAL')
+
+    def test_r1_shared_independence_is_rejected(self):
+        """R-1: the verifier must not reuse the executor's agent/model/session."""
+        self.make_goal()
+        (self.repo / 'test.log').write_text('1 passed\n', encoding='utf-8')
+        self.start(run_id='run-target', agent='same-agent', model='same-model')
+        finish_run(self.repo, '325', 'run-target', ['implemented'], ['verify'],
+                   head_sha=self.base,
+                   tests=[{'command': 'pytest', 'exit_code': 0, 'log': 'test.log'}])
+        self.start(run_id='run-verifier', agent='same-agent', model='same-model',
+                   role='verifier')
+        with self.assertRaises(PMError) as ctx:
+            verify_run(self.repo, 'run-target', 'run-verifier', 'acceptance',
+                       'pass', 'locally_observed',
+                       test_command='pytest', test_exit=0, test_log='test.log',
+                       criterion_evidence=self.criterion_mapping(verifier='same-agent'))
+        self.assertIn('相同的 agent/model/session', str(ctx.exception))
+
+    def test_r1_separate_model_restores_independence(self):
+        """R-1: using a different model is an independence basis (records only)."""
+        self.make_goal()
+        (self.repo / 'test.log').write_text('1 passed\n', encoding='utf-8')
+        self.start(run_id='run-target', agent='same-agent', model='model-a')
+        finish_run(self.repo, '325', 'run-target', ['implemented'], ['verify'],
+                   head_sha=self.base,
+                   tests=[{'command': 'pytest', 'exit_code': 0, 'log': 'test.log'}])
+        self.start(run_id='run-verifier', agent='same-agent', model='model-b',
+                   role='verifier')
+        result = verify_run(self.repo, 'run-target', 'run-verifier', 'acceptance',
+                            'pass', 'locally_observed',
+                            test_command='pytest', test_exit=0, test_log='test.log',
+                            criterion_evidence=self.criterion_mapping(verifier='same-agent'))
+        self.assertIn('model', result['verification']['independence']['basis'])
 
 
 if __name__ == '__main__':
