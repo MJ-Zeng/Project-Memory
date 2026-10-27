@@ -1871,6 +1871,56 @@ class CoordinationTest(unittest.TestCase):
         self.assertEqual(entry['observed_level'], 'agent_claimed')
         self.assertFalse(entry['evidence_matched'])
 
+    # ---- line A T-03/T-04/T-05 protections, re-verified on the unified tree ----
+
+    def test_t03_log_content_hash_is_bound(self):
+        self.make_goal()
+        args = self.prepare_passable()
+        result = verify_run(self.repo, criterion_evidence=self.criterion_mapping(), **args)
+        tests_info = result['verification']['checks']['tests']
+        self.assertEqual(len(tests_info.get('log_content_sha256') or ''), 64)
+        self.assertEqual(tests_info['tracked_changes_at_verification'], '')
+
+    def test_t03_log_tamper_invalidates_verification(self):
+        self.make_goal()
+        args = self.prepare_passable()
+        result = verify_run(self.repo, criterion_evidence=self.criterion_mapping(), **args)
+        (self.repo / 'test.log').write_text('1 failed\n', encoding='utf-8')
+        from project_memory.coordination import _verification_current
+        self.assertFalse(_verification_current(self.repo, result['verification']))
+
+    def test_t04_tracked_change_invalidates_verification(self):
+        self.make_goal()
+        args = self.prepare_passable()
+        result = verify_run(self.repo, criterion_evidence=self.criterion_mapping(), **args)
+        from project_memory.coordination import _verification_current
+        self.assertTrue(_verification_current(self.repo, result['verification']))
+        (self.repo / 'README.md').write_text('changed', encoding='utf-8')
+        self.assertFalse(_verification_current(self.repo, result['verification']))
+
+    def test_t05_standard_is_part_of_identity(self):
+        self.make_goal()
+        args = self.prepare_passable()
+        first = verify_run(self.repo, criterion_evidence=self.criterion_mapping(), **args)
+        second = verify_run(self.repo, criterion_evidence=self.criterion_mapping(),
+                            **{**args, 'standard': 'different standard'})
+        self.assertNotEqual(first['verification']['verification_id'],
+                            second['verification']['verification_id'])
+
+    def test_t05_rejected_attempt_is_audited_but_not_recorded(self):
+        self.make_goal()
+        args = self.prepare_passable()
+        mapping = self.criterion_mapping(coverage='unconfirmed')
+        result = verify_run(self.repo, criterion_evidence=mapping, **args)
+        self.assertFalse(result['verified'])
+        self.assertIsNone(result['verification'])
+        audit_path = self.repo / '.project-memory' / 'audit' / 'verification_attempts.jsonl'
+        self.assertTrue(audit_path.is_file())
+        entries = [json.loads(line) for line in audit_path.read_text(encoding='utf-8').splitlines()]
+        self.assertEqual(entries[-1]['outcome'], 'rejected')
+        self.assertFalse(entries[-1]['verified'])
+        self.assertEqual(list(iter_verifications(self.repo)), [])
+
 
 if __name__ == '__main__':
     unittest.main()

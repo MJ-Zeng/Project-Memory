@@ -302,6 +302,16 @@ def _log_problem(repo: Path, ref: str | None) -> str | None:
     return log_problem(repo, ref)
 
 
+def _audit_attempt(repo: Path, **fields) -> None:
+    """T-05: persist every verification attempt, including rejected ones."""
+    entry = {'schema_version': '1.2', 'kind': 'verification_attempt',
+             'timestamp': utc_now(), **fields}
+    audit_dir = _root(repo, 'audit')
+    audit_dir.mkdir(parents=True, exist_ok=True)
+    with open(audit_dir / 'verification_attempts.jsonl', 'a', encoding='utf-8') as handle:
+        handle.write(json.dumps(entry, ensure_ascii=False) + '\n')
+
+
 def _approval_problem(ref: str | None) -> str | None:
     value = str(ref or '').strip()
     if not value:
@@ -593,6 +603,28 @@ def _verification_current(repo: Path, verification: dict) -> bool:
     run = _load(run_path)
     if (run.get('git') or {}).get('head_sha') != target_head:
         return False
+    # T-04 (fixed): compare tracked-file state against the state recorded at
+    # verification time. Untracked files (including .project-memory receipts and
+    # test logs) are excluded, so recording a log no longer makes every attempt
+    # look dirty; a later edit to tracked code does invalidate the record.
+    checks = verification.get('checks', {})
+    tests_info = checks.get('tests', {})
+    recorded_status = tests_info.get('tracked_changes_at_verification')
+    code, out = _git(repo, 'status', '--porcelain', '--untracked-files=no')
+    current_status = out.strip()
+    if recorded_status is not None and current_status != recorded_status:
+        return False
+    # T-03: log content hash binding.
+    log_hash = tests_info.get('log_content_sha256')
+    if log_hash:
+        log_path = tests_info.get('log', '')
+        if log_path:
+            full_path = Path(log_path)
+            if not full_path.is_absolute():
+                full_path = repo / full_path
+            from .common import sha256_file
+            if not full_path.is_file() or sha256_file(full_path) != log_hash:
+                return False
     return run.get('status') == 'verified'
 
 
@@ -1318,6 +1350,20 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
         problem = _log_problem(repo, test_log)
         if problem:
             raise PMError(problem)
+    # T-03: bind log content hash so later edits invalidate the record.
+    log_hash = None
+    if test_log and _log_problem(repo, test_log) is None:
+        log_path = Path(test_log)
+        if not log_path.is_absolute():
+            log_path = repo / log_path
+        if log_path.is_file():
+            from .common import sha256_file
+            log_hash = sha256_file(log_path)
+    # T-04 (fixed): record tracked-file state only. Untracked receipts/logs must not
+    # make a clean verification look dirty.
+    _wt_code, _wt_out = _git(repo, 'status', '--porcelain', '--untracked-files=no')
+    tracked_status = _wt_out.strip()
+    worktree_dirty = bool(tracked_status)
     criterion_entries, mapping = [], {'status': 'missing', 'required': [],
                                       'covered': [], 'partial': [], 'missing': [],
                                       'unexpected': [], 'problems': []}
@@ -1329,6 +1375,13 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
         blocking_defects = [d for d in _open_high_defects(repo, goal['id'])
                             if d.get('defect_id') not in resolved_ids]
         if blocking_defects:
+            _audit_attempt(repo, outcome='rejected', reason='blocking_high_defects',
+                           target_run=target_run, verifier_run=verifier_run,
+                           standard=standard, verdict=verdict,
+                           evidence_level=evidence_level,
+                           blocking_defects=[d['defect_id'] for d in blocking_defects],
+                           verified=False, worktree_dirty=worktree_dirty,
+                           tracked_changes=tracked_status, log_content_sha256=log_hash)
             return {'schema_version': '1.2', 'kind': 'verify_result',
                     'status': 'BLOCKED_BY_DEFECT', 'verified': False,
                     'verification': None,
@@ -1340,6 +1393,12 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
         mapping = _mapping_summary(criterion_entries, goal)
         if mapping['status'] != 'complete':
             status = _mapping_outcome(criterion_entries, mapping)
+            _audit_attempt(repo, outcome='rejected', reason='incomplete_mapping',
+                           target_run=target_run, verifier_run=verifier_run,
+                           standard=standard, verdict=verdict,
+                           evidence_level=evidence_level, mapping_status=status,
+                           verified=False, worktree_dirty=worktree_dirty,
+                           tracked_changes=tracked_status, log_content_sha256=log_hash)
             return {'schema_version': '1.2', 'kind': 'verify_result',
                     'status': status, 'verified': False, 'verification': None,
                     'reason': ('PASS 需要覆盖全部必达标准的 criterion evidence mapping；'
@@ -1349,7 +1408,10 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
                     'mapping': mapping, 'criterion_evidence': criterion_entries,
                     'dry_run': dry_run}
     tests = {'command': test_command or '', 'exit_code': test_exit,
-             'log': test_log or '', 'log_exists': bool(_log_problem(repo, test_log) is None)}
+             'log': test_log or '', 'log_exists': bool(_log_problem(repo, test_log) is None),
+             'log_content_sha256': log_hash,
+             'worktree_dirty_at_verification': worktree_dirty,
+             'tracked_changes_at_verification': tracked_status}
     ci = {'url': ci_url or '', 'status': ci_status or 'not_provided',
           'provenance': 'declared_unfetched' if ci_url else 'none'}
     review = {'url': review_url or '', 'state': review_state or 'not_provided',
@@ -1468,6 +1530,14 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
                                               'git': {**current.get('git', {}), 'head_sha': target_head}})
     elif verdict == 'fail':
         _mutate(target_path, lambda current: {**current, 'status': 'failed'})
+    _audit_attempt(repo, outcome='recorded', reason='verification_recorded',
+                   verification_id=record['verification_id'],
+                   target_run=target_run, verifier_run=verifier_run,
+                   standard=standard, verdict=verdict,
+                   evidence_level=evidence_level, trust_level=trust_level,
+                   status=record['status'], mapping_status=mapping['status'],
+                   verified=verified, stale=stale, worktree_dirty=worktree_dirty,
+                   tracked_changes=tracked_status, log_content_sha256=log_hash)
     result['defects'] = written_defects
     result['verification'] = record
     return result
