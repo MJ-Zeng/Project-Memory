@@ -13,6 +13,7 @@ from .knowledge import (audit, iter_docs, load_config, load_doc, log_problem,
                         valid_http_url)
 from .workflows import handoff as write_handoff
 from .workflows import task_id_of
+from .authority import canonical_digest, untrusted_envelope, verification_authority
 from .execution import verify_receipt
 
 GOAL_STATUSES = {'proposed', 'approved', 'active', 'evaluating', 'achieved', 'cancelled', 'blocked'}
@@ -79,6 +80,22 @@ def _task_key(task: str) -> str:
 
 def _root(repo: Path, name: str) -> Path:
     return repo / '.project-memory' / name
+
+
+def _tracked_diff_sha256(repo: Path) -> str | None:
+    """Hash the tracked worktree diff (content, not just status letters)."""
+    result = subprocess.run(
+        ['git', '-C', str(repo), 'diff', '--binary', '--no-color', 'HEAD', '--'],
+        capture_output=True)
+    if result.returncode != 0:
+        return None
+    return hashlib.sha256(result.stdout).hexdigest()
+
+
+def _record_verified(repo: Path, record: dict) -> bool:
+    """A record counts only when it claims verified *and* a trust anchor signs it."""
+    return bool(record.get('verified')
+                and verification_authority(repo, record).get('trusted'))
 
 
 def _goal_path(repo: Path, goal_id: str) -> Path:
@@ -538,7 +555,13 @@ def _criterion_evidence_entries(value, repo: Path, goal: dict, target: dict,
             'verification_result': result,
             'description_match': description_match,
             'observed_level': observed,
-            'execution_verified': observed == 'locally_observed',
+            # A valid receipt proves content integrity only.  No receipt in this
+            # build carries an authenticated, external provenance, so execution
+            # is never upgraded to "verified by a trusted source" here.
+            'receipt_integrity_valid': bool(receipt_info and receipt_info['valid']),
+            'receipt_provenance': (receipt_info or {}).get('provenance'),
+            'execution_trust': receipt.get('trust'),
+            'execution_verified': False,
             'semantic_coverage_verified': False,
             'evidence_state': state,
             'coverage_confirmed': coverage_confirmed,
@@ -562,7 +585,7 @@ def _mapping_summary(entries: list[dict], goal: dict) -> dict:
             partial.append(cid)
             for entry in items:
                 problems.extend(f'{cid}: {problem}' for problem in entry['problems'])
-            executed = all(entry.get('execution_verified') and entry.get('description_match')
+            executed = all(entry.get('receipt_integrity_valid') and entry.get('description_match')
                            and entry.get('execution_status') == 'passed'
                            and entry.get('verification_result') == 'pass'
                            for entry in items)
@@ -643,17 +666,47 @@ def _verification_current(repo: Path, verification: dict) -> bool:
     run = _load(run_path)
     if (run.get('git') or {}).get('head_sha') != target_head:
         return False
+    # Bind the immutable inputs used by the verification.  A later edit to the
+    # run record, verifier record or Goal criteria must invalidate the record
+    # even when the commit SHA and tracked status letters are unchanged.
+    recorded_run_digest = verification.get('target_run_sha256')
+    if recorded_run_digest and canonical_digest(run) != recorded_run_digest:
+        return False
+    recorded_verifier_digest = verification.get('verifier_run_sha256')
+    if recorded_verifier_digest:
+        verifier_path = _find_run_by_id(repo, verification.get('verifier_run'))
+        if verifier_path is None or canonical_digest(_load(verifier_path)) != recorded_verifier_digest:
+            return False
+    recorded_goal_digest = verification.get('goal_criteria_sha256')
+    if recorded_goal_digest:
+        try:
+            goal = load_goal(repo, verification.get('goal_id'))
+        except PMError:
+            return False
+        if canonical_digest(goal.get('success_criteria', [])) != recorded_goal_digest:
+            return False
     # T-04 (fixed): compare tracked-file state against the state recorded at
     # verification time. Untracked files (including .project-memory receipts and
     # test logs) are excluded, so recording a log no longer makes every attempt
     # look dirty; a later edit to tracked code does invalidate the record.
-    checks = verification.get('checks', {})
-    tests_info = checks.get('tests', {})
+    checks = verification.get('checks') or {}
+    tests_info = checks.get('tests') or {}
+    if not isinstance(tests_info, dict):
+        return False
     recorded_status = tests_info.get('tracked_changes_at_verification')
     code, out = _git(repo, 'status', '--porcelain', '--untracked-files=no')
+    if code != 0:
+        return False
     current_status = out.strip()
     if recorded_status is not None and current_status != recorded_status:
         return False
+    # Status letters alone cannot distinguish "M" from a different "M".  Bind
+    # the actual tracked diff bytes as well.
+    recorded_diff = tests_info.get('tracked_diff_sha256')
+    if recorded_diff is not None:
+        current_diff = _tracked_diff_sha256(repo)
+        if current_diff is None or current_diff != recorded_diff:
+            return False
     # T-03: log content hash binding.
     log_hash = tests_info.get('log_content_sha256')
     if log_hash:
@@ -665,13 +718,33 @@ def _verification_current(repo: Path, verification: dict) -> bool:
             from .common import sha256_file
             if not full_path.is_file() or sha256_file(full_path) != log_hash:
                 return False
-    # R-2: the execution receipt, snapshot and log must still verify.
+    # R-2: the execution receipt, snapshot and log must still verify, and the
+    # receipt must be the exact one recorded (not merely another valid receipt
+    # for the same commit).
     receipt_ref = tests_info.get('receipt')
     if receipt_ref:
         checked = verify_receipt(repo, receipt_ref,
                                  expected={'commit_sha': target_head})
         if not checked['valid']:
             return False
+        receipt = checked['receipt'] or {}
+        field_map = {'receipt_id': 'receipt_id', 'receipt_sha256': 'content_sha256',
+                     'snapshot_id': 'snapshot_id', 'snapshot_sha256': 'snapshot_sha256'}
+        for recorded_key, receipt_key in field_map.items():
+            recorded = tests_info.get(recorded_key)
+            if recorded is not None and receipt.get(receipt_key) != recorded:
+                return False
+        if receipt.get('command') != tests_info.get('command'):
+            return False
+        if receipt.get('exit_code') != tests_info.get('exit_code'):
+            return False
+        if _norm_text(receipt.get('log_path')) != _norm_text(tests_info.get('log')):
+            return False
+        if receipt.get('commit_sha') != target_head:
+            return False
+    elif verification.get('status') == 'VERIFIED':
+        # A record claiming authoritative success without any receipt is invalid.
+        return False
     # "Current" describes whether the recorded evidence still matches the current
     # commit, tracked worktree, log and snapshot. Whether a run was upgraded to
     # verified is a separate question (see _verification_ok / resume filters).
@@ -689,8 +762,21 @@ def _verification_ok(repo: Path, evidence: dict, goal_id: str,
     verification = _load(path)
     if verification.get('goal_id') != goal_id:
         return False, f'{ref} 属于其他目标：{verification.get("goal_id")}', 'invalid'
-    if verification.get('verdict') != 'pass' or not verification.get('verified'):
+    if verification.get('verdict') != 'pass' or verification.get('status') != 'VERIFIED':
         return False, f'{ref} 不是已通过的验证', 'invalid'
+    # A locally written JSON with verdict=pass/status=VERIFIED is still only a
+    # claim.  Only a record counter-signed by the protected trust anchor may
+    # satisfy a criterion.  Without an anchor this always fails closed.
+    authority = verification_authority(repo, verification)
+    if not authority.get('trusted'):
+        return (False, f'{ref} 没有可信授权来源（{authority.get("status")}）：'
+                       f'{authority.get("reason")}', 'untrusted')
+    checks = verification.get('checks')
+    tests_info = (checks or {}).get('tests') if isinstance(checks, dict) else None
+    if not isinstance(checks, dict) or not checks or not isinstance(tests_info, dict):
+        return False, f'{ref} 缺少执行检查记录', 'invalid'
+    if not tests_info.get('receipt_integrity_valid'):
+        return False, f'{ref} 的执行收据没有通过完整性校验', 'invalid'
     if not criterion_id:
         return False, f'{ref} 缺少 criterion id，无法确认覆盖', 'unconfirmed'
     entries = [entry for entry in (verification.get('criterion_evidence') or [])
@@ -810,6 +896,9 @@ def evaluate_goal(repo: Path, goal_id: str) -> dict:
     return {
         'schema_version': '1.2', 'kind': 'goal_evaluation', 'goal_id': goal_id,
         'goal_status': goal['status'], 'satisfied': satisfied,
+        'recorded_status': goal['status'],
+        'recorded_status_consistent': goal['status'] != 'achieved' or satisfied,
+        'status_authority': 'local_untrusted',
         'evaluation_status': state, 'criteria': criteria_out,
         'blocking': blocking, 'partial': partial,
         'open_high_defects': [d['defect_id'] for d in open_high],
@@ -828,8 +917,13 @@ def add_goal_evidence(repo: Path, goal_id: str, criterion_id: str, kind: str, re
         evidence['approved_by'] = approved_by
     if exit_code is not None:
         evidence['exit_code'] = exit_code
-    valid, reason, _, _, _ = _evidence_result(repo, evidence, goal_id, criterion_id)
+    valid, reason, trust, _, state = _evidence_result(repo, evidence, goal_id, criterion_id)
     if not valid:
+        _audit_attempt(repo, outcome='rejected', reason='goal_evidence_invalid',
+                       goal_id=goal_id, criterion_id=criterion_id,
+                       evidence_kind=kind, evidence_ref=evidence.get('ref'),
+                       evidence_trust=trust, evidence_state=state,
+                       verified=False, detail=reason)
         raise PMError(f'证据无效：{reason}')
     if not any(criterion.get('id') == criterion_id for criterion in goal.get('success_criteria', [])):
         raise PMError(f'Goal {goal_id} 没有 criterion {criterion_id}')
@@ -874,6 +968,10 @@ def transition_goal(repo: Path, goal_id: str, target: str, approved_by: str | No
         evaluation = evaluate_goal(repo, goal_id)
         if not evaluation['satisfied']:
             detail = '、'.join(evaluation['blocking']) or '无'
+            _audit_attempt(repo, outcome='rejected', reason='goal_achieved_unsatisfied',
+                           goal_id=goal_id, evaluation_status=evaluation['evaluation_status'],
+                           blocking=evaluation['blocking'], verified=False,
+                           detail='local Goal status cannot be authoritative without signed evidence')
             raise PMError(f'Goal 的成功标准尚未满足（{evaluation["evaluation_status"]}）：{detail}；'
                           '不能仅凭 Issue 关闭或 Agent 声明标记 achieved')
 
@@ -882,7 +980,8 @@ def transition_goal(repo: Path, goal_id: str, target: str, approved_by: str | No
         if approved_by:
             goal['approved_by'] = approved_by
             goal.setdefault('approvals', []).append({'at': utc_now(), 'by': approved_by,
-                                                     'from': source, 'to': target, 'reason': reason})
+                                                     'from': source, 'to': target, 'reason': reason,
+                                                     'approval_authority': 'claimed_unverified'})
         goal.setdefault('history', []).append({'at': utc_now(), 'from': source, 'to': target,
                                                'by': approved_by or goal.get('owner'), 'reason': reason})
         return goal
@@ -900,17 +999,24 @@ def goal_show(repo: Path, goal_id: str) -> dict:
     for run in runs:
         run_counts[run['status']] = run_counts.get(run['status'], 0) + 1
     open_defects = [d for d in defects if d.get('status') in ('open', 'fixed')]
+    evaluation = evaluate_goal(repo, goal_id)
+    trusted_verified = [v for v in verifications if _record_verified(repo, v)]
+    claimed_verified = [v for v in verifications
+                        if v.get('verified') and not _record_verified(repo, v)]
     return {
         'schema_version': '1.2', 'kind': 'goal_show_result', 'goal': goal,
         'progress': {
             'runs': run_counts,
             'tasks': sorted({str(r.get('task')) for r in runs}),
             'verifications': len(verifications),
-            'verified_verifications': sum(1 for v in verifications if v.get('verified')),
+            'verified_verifications': len(trusted_verified),
+            'claimed_verified_verifications': len(claimed_verified),
             'defects': len(defects),
             'open_defects': len(open_defects),
         },
-        'evaluation': evaluate_goal(repo, goal_id),
+        'status_authority': 'local_untrusted',
+        'status_consistent': evaluation['recorded_status_consistent'],
+        'evaluation': evaluation,
         'runs': runs,
         'verifications': verifications,
         'defects': defects,
@@ -1178,7 +1284,7 @@ def resume_run(repo: Path, task, run_id: str | None = None, goal_id: str | None 
     latest_checkpoint = checkpoints[-1] if checkpoints else None
     verifications = [v for v in iter_verifications(repo, task=task, target_run=selected['run_id'])]
     current_verifications = [v for v in verifications
-                             if v.get('verified') and _verification_current(repo, v)]
+                             if _record_verified(repo, v) and _verification_current(repo, v)]
     defects = [d for d in iter_defects(repo, task=task) if d.get('target_run') == selected['run_id']]
     current_head = git_sha_optional(repo)
     base = (selected.get('git') or {}).get('base_sha')
@@ -1388,6 +1494,7 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
     if target.get('status') not in ('submitted', 'verified', 'failed'):
         raise PMError(f'被验证执行状态为 {target.get("status")}，需要先 run finish')
     independence = _independence(target, verifier)
+    goal = load_goal(repo, target.get('goal_id'))
     standard = _single_line(standard, 'verification standard')
     target_head = (target.get('git') or {}).get('head_sha')
     current_head = git_sha_optional(repo)
@@ -1438,13 +1545,13 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
     _wt_code, _wt_out = _git(repo, 'status', '--porcelain', '--untracked-files=no')
     tracked_status = _wt_out.strip()
     worktree_dirty = bool(tracked_status)
+    tracked_diff_sha256 = _tracked_diff_sha256(repo)
     criterion_entries, mapping = [], {'status': 'missing', 'required': [],
                                       'covered': [], 'partial': [], 'missing': [],
                                       'unexpected': [], 'problems': []}
     if verdict == 'pass':
         if not target_head:
             raise PMError('PASS 需要被验证执行绑定完整 head SHA')
-        goal = load_goal(repo, target.get('goal_id'))
         resolved_ids = set(resolves_defects or [])
         blocking_defects = [d for d in _open_high_defects(repo, goal['id'])
                             if d.get('defect_id') not in resolved_ids]
@@ -1487,12 +1594,15 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
              'log_content_sha256': log_hash,
              'worktree_dirty_at_verification': worktree_dirty,
              'tracked_changes_at_verification': tracked_status,
+             'tracked_diff_sha256': tracked_diff_sha256,
              'receipt': (receipt_info or {}).get('path'),
              'receipt_id': (receipt_info or {}).get('receipt', {}).get('receipt_id'),
              'receipt_sha256': (receipt_info or {}).get('receipt', {}).get('content_sha256'),
              'snapshot_id': (receipt_info or {}).get('receipt', {}).get('snapshot_id'),
              'snapshot_sha256': (receipt_info or {}).get('receipt', {}).get('snapshot_sha256'),
-             'execution_trust': (receipt_info or {}).get('receipt', {}).get('trust')}
+             'receipt_integrity_valid': bool(receipt_info and receipt_info['valid']),
+             'execution_trust': (receipt_info or {}).get('receipt', {}).get('trust'),
+             'execution_provenance': (receipt_info or {}).get('provenance')}
     ci = {'url': ci_url or '', 'status': ci_status or 'not_provided',
           'provenance': 'declared_unfetched' if ci_url else 'none'}
     review = {'url': review_url or '', 'state': review_state or 'not_provided',
@@ -1509,26 +1619,34 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
     # satisfy a goal.
     all_criteria_matched = (verdict == 'pass' and criterion_entries
                            and all(entry.get('evidence_matched') for entry in criterion_entries))
-    verified = (verdict == 'pass' and evidence_level == 'locally_observed'
-                and receipt_info is not None and receipt_info['valid']
-                and not stale and mapping['status'] == 'complete'
-                and all_criteria_matched
-                and not any(f['severity'] == 'high' for f in finding_list))
-    if verified:
-        status = 'VERIFIED'
-    elif verdict == 'fail':
+    structural_verified = (verdict == 'pass' and evidence_level == 'locally_observed'
+                           and receipt_info is not None and receipt_info['valid']
+                           and not stale and mapping['status'] == 'complete'
+                           and all_criteria_matched
+                           and not any(f['severity'] == 'high' for f in finding_list))
+    # A record written by this local CLI has no detached signature from a
+    # protected anchor.  Even a structurally complete record stays
+    # MANUAL_REVIEW_REQUIRED until an external signer counter-signs it; this
+    # build intentionally configures no signer, so it can never self-certify.
+    if verdict == 'fail':
         status = 'FAILED'
     elif verdict == 'pass' and mapping['status'] == 'review_required':
         status = 'MANUAL_REVIEW_REQUIRED'
+    elif structural_verified:
+        status = 'MANUAL_REVIEW_REQUIRED'
     else:
         status = 'INCONCLUSIVE'
-    _check_run_transition(target, 'verified' if verified else ('failed' if verdict == 'fail' else target.get('status')))
+    verified = False
+    _check_run_transition(target, 'failed' if verdict == 'fail' else target.get('status'))
     record = {
         'schema_version': '1.2', 'kind': 'verification_record',
         'verification_id': verification_id or _now_id('VER', target_run, target_head, verifier_run,
                                                        verdict, standard, json.dumps(finding_list, sort_keys=True)),
         'task': target.get('task'), 'goal_id': target.get('goal_id'),
         'target_run': target_run, 'verifier_run': verifier_run,
+        'target_run_sha256': canonical_digest(target),
+        'verifier_run_sha256': canonical_digest(verifier),
+        'goal_criteria_sha256': canonical_digest(goal.get('success_criteria', [])),
         'verifier': {'agent': verifier.get('agent'), 'model': verifier.get('model'),
                      'tool': verifier.get('tool'), 'session_id': verifier.get('session_id')},
         'independence': independence,
@@ -1542,7 +1660,10 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
         'missing_criteria': mapping.get('missing', []),
         'verified': verified, 'checks': {'tests': tests, 'ci': ci, 'review': review},
         'findings': [], 'created_at': utc_now(), 'revision': 1,
+        'authority': untrusted_envelope(
+            '记录由本地 CLI 写出；没有受保护信任锚的分离签名，不能自证权威'),
     }
+    record['authority_evaluation'] = verification_authority(repo, record)
     if verification_id:
         validate_identifier(verification_id, 'verification id')
     # Build defect records before writing the verification so dry-run is complete.
@@ -1567,7 +1688,8 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
     # R-1 Fix: Include 'standard' in identity to detect same verification_id with different standards
     identity = ('verification_id', 'target_run', 'verifier_run', 'target_head_sha',
                 'verdict', 'evidence_level', 'trust_level', 'status', 'mapping_status',
-                'criterion_evidence', 'findings', 'verified', 'standard')
+                'criterion_evidence', 'findings', 'verified', 'standard',
+                'target_run_sha256', 'verifier_run_sha256', 'goal_criteria_sha256', 'authority')
     resolved = []
     if verdict == 'pass':
         for defect_id in resolves_defects or []:
@@ -1586,11 +1708,11 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
               'defects': defects, 'path': relpath(repo, path), 'created': not path.is_file(),
               'would_update_run_status': ('verified' if verified else
                                           ('failed' if verdict == 'fail' else target.get('status'))),
-              'caveat': ('R-1 整改：CLI 不再接受 externally_verified 或 human_approved 作为声明的 '
-                         'evidence level。CI/review 证据在 criterion mapping 中只获得 agent_claimed '
-                         '信任。人工批准（manual 证据）必须配合 verification 记录与 criterion mapping '
-                         '才能证明标准达成。测试日志必须在仓库内。PASS 要求每个必达标准都有绑定提交、'
-                         '独立复核 coverage 的证据映射，且所有映射的 evidence_matched 为 true。'),
+              'caveat': ('本地 CLI 写出的验证记录没有受保护信任锚的分离签名，因此 status 最多是 '
+                         'MANUAL_REVIEW_REQUIRED，verified 恒为 false。CLI 不再接受 externally_verified '
+                         '或 human_approved 作为声明的 evidence level。CI/review 证据只获得 '
+                         'agent_claimed 信任。测试收据只证明内容完整性，不证明来源；'
+                         'PASS 仍要求每个必达标准都有绑定提交、独立复核 coverage 的证据映射。'),
               'dry_run': dry_run}
     if dry_run:
         if path.is_file():
@@ -1630,9 +1752,12 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
                    target_run=target_run, verifier_run=verifier_run,
                    standard=standard, verdict=verdict,
                    evidence_level=evidence_level, trust_level=trust_level,
+                   authority_status=record['authority_evaluation'].get('status'),
+                   authority_trusted=record['authority_evaluation'].get('trusted'),
                    status=record['status'], mapping_status=mapping['status'],
                    verified=verified, stale=stale, worktree_dirty=worktree_dirty,
-                   tracked_changes=tracked_status, log_content_sha256=log_hash)
+                   tracked_changes=tracked_status,
+                   tracked_diff_sha256=tracked_diff_sha256, log_content_sha256=log_hash)
     result['defects'] = written_defects
     result['verification'] = record
     return result
@@ -1727,10 +1852,10 @@ def reconcile(repo: Path, config: dict | None = None, format: str = 'json') -> d
                     [d['defect_id'] for d in open_high], '修复并重新独立验证')
         if linked_verifications:
             latest = linked_verifications[-1]
-            if latest.get('verdict') == 'pass' and not latest.get('verified'):
+            if latest.get('verdict') == 'pass' and not _record_verified(repo, latest):
                 add('high', 'goal_pass_not_verified',
-                    f'Goal {gid} 的验证结论是 pass，但证据级别不足', [latest['verification_id']],
-                    '补充本地执行证据、外部 CI 或人工批准')
+                    f'Goal {gid} 的验证结论是 pass，但没有可信授权来源', [latest['verification_id']],
+                    '由受保护信任锚签名，或降级为人工复核')
 
     for run in runs:
         rid = run.get('run_id')
@@ -1739,15 +1864,17 @@ def reconcile(repo: Path, config: dict | None = None, format: str = 'json') -> d
                 [rid], '修正关联或创建 Goal')
         is_verifier = run.get('role', 'executor') == 'verifier'
         if run.get('status') == 'submitted' and not is_verifier:
-            passed = [v for v in verifications if v.get('target_run') == rid and v.get('verified')]
+            passed = [v for v in verifications
+                      if v.get('target_run') == rid and _record_verified(repo, v)]
             if not passed:
                 add('medium', 'unverified_submission', f'执行 {rid} 已提交但没有通过的独立验证', [rid],
                     '运行 verify 并绑定当前 head SHA')
         if run.get('status') == 'verified' and not is_verifier:
-            passed = [v for v in verifications if v.get('target_run') == rid and v.get('verified')]
+            passed = [v for v in verifications
+                      if v.get('target_run') == rid and _record_verified(repo, v)]
             if not passed:
-                add('high', 'verified_without_record', f'执行 {rid} 标记 verified，但没有验证记录', [rid],
-                    '补验证记录或回退执行状态')
+                add('high', 'verified_without_record', f'执行 {rid} 标记 verified，但没有可信验证记录', [rid],
+                    '补签名验证记录或回退执行状态')
         handoff_path = _handoff_path(repo, run.get('task'), rid)
         if run.get('status') in ('submitted', 'verified', 'failed') and not handoff_path.is_file():
             add('medium', 'run_missing_handoff', f'执行 {rid} 已结束但没有 handoff', [rid],
@@ -1782,10 +1909,15 @@ def reconcile(repo: Path, config: dict | None = None, format: str = 'json') -> d
             add('high', 'verification_stale_head', f'验证 {vid} 绑定的提交与执行 head 不一致', [vid],
                 '对最新提交重新验证')
         elif current_head and target_head and current_head != target_head and (
-                verification.get('verified') or verification.get('verdict') == 'pass'):
+                _record_verified(repo, verification) or verification.get('verdict') == 'pass'):
             # A failed verification of an older commit is historical evidence, not current knowledge.
             add('medium', 'verification_behind_head', f'验证 {vid} 针对旧提交 {target_head[:8]}',
                 [vid, target['run_id']], '代码变化后重新验证')
+        if verification.get('verified') and not _record_verified(repo, verification):
+            authority = verification_authority(repo, verification)
+            add('high', 'claimed_verified_untrusted',
+                f'验证 {vid} 自称 verified，但没有可信授权来源（{authority.get("status")}）',
+                [vid], '由受保护信任锚签名，或把 verified 设为 false')
         if verification.get('verdict') == 'pass' and verification.get('evidence_level') == 'agent_claimed':
             add('high', 'pass_from_agent_claim', f'验证 {vid} 把 Agent 自报当成 pass', [vid],
                 '改为 fail/inconclusive，补充独立证据')
@@ -1803,7 +1935,7 @@ def reconcile(repo: Path, config: dict | None = None, format: str = 'json') -> d
                     add('medium', 'criterion_description_mismatch',
                         f'验证 {vid} 的证据描述与标准 {entry.get("criterion_id")} 不一致',
                         [vid, entry.get('criterion_id')], '重新核对标准与测试覆盖范围')
-        if verification.get('verdict') == 'pass' and not verification.get('verified'):
+        if verification.get('verdict') == 'pass' and not _record_verified(repo, verification):
             add('medium', 'unverified_pass', f'验证 {vid} 结论为 pass 但可信级别不足', [vid],
                 '补充证据或降级结论')
 
@@ -1829,7 +1961,7 @@ def reconcile(repo: Path, config: dict | None = None, format: str = 'json') -> d
             record = verification_by_id.get(vid) if vid else None
             covers_fix = (record is not None and defect.get('fixed_in_sha')
                           and record.get('target_head_sha') == defect.get('fixed_in_sha'))
-            valid = (record is not None and record.get('verified')
+            valid = (record is not None and _record_verified(repo, record)
                      and record.get('verdict') == 'pass'
                      and record.get('task') == defect.get('task')
                      and (record.get('target_run') == defect.get('target_run') or covers_fix))

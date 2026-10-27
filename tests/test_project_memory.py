@@ -966,7 +966,11 @@ class CoordinationTest(unittest.TestCase):
         self.assertEqual(result['status'], 'MANUAL_REVIEW_REQUIRED')
         entry = result['verification']['criterion_evidence'][0]
         self.assertFalse(entry['evidence_matched'])
-        self.assertTrue(entry['execution_verified'])
+        # A valid receipt proves content integrity; it does not authenticate the
+        # launcher against an agent that can write the working copy, so local
+        # execution is never upgraded to "verified".
+        self.assertTrue(entry['receipt_integrity_valid'])
+        self.assertFalse(entry['execution_verified'])
         self.assertFalse(entry['semantic_coverage_verified'])
         self.assertEqual(entry['observed_level'], 'locally_observed')
         self.assertEqual(entry['evidence_state'], 'MANUAL_REVIEW_REQUIRED')
@@ -1143,6 +1147,9 @@ class CoordinationTest(unittest.TestCase):
 
     def test_ghost_verification_record_cannot_satisfy(self):
         self.make_goal()
+        # Real target/verifier runs exist, so the ghost record cannot fail merely
+        # because the run is missing; it must fail because it has no authority.
+        self.prepare_passable()
         record = {
             'schema_version': '1.2', 'kind': 'verification_record',
             'verification_id': 'VER-ghost', 'task': '325', 'goal_id': 'G-1',
@@ -1151,8 +1158,8 @@ class CoordinationTest(unittest.TestCase):
             'independence': {'distinct': True, 'basis': ['agent']},
             'target_head_sha': self.base, 'current_head_sha': self.base, 'stale': False,
             'standard': 'ghost', 'verdict': 'pass', 'evidence_level': 'locally_observed',
-            'verified': True, 'checks': {}, 'findings': [], 'created_at': '2026-01-01T00:00:00Z',
-            'revision': 1,
+            'status': 'VERIFIED', 'verified': True, 'checks': {}, 'findings': [],
+            'created_at': '2026-01-01T00:00:00Z', 'revision': 1,
             'criterion_evidence': [{'criterion_id': 'C1', 'goal_id': 'G-1',
                                     'target_commit_sha': self.base,
                                     'evidence_id': 'EV-ghost',
@@ -1165,7 +1172,8 @@ class CoordinationTest(unittest.TestCase):
         path.write_text(json.dumps(record, ensure_ascii=False), encoding='utf-8')
         with self.assertRaises(PMError) as ctx:
             add_goal_evidence(self.repo, 'G-1', 'C1', 'verification', 'VER-ghost')
-        self.assertIn('当前提交', str(ctx.exception))
+        self.assertIn('可信授权来源', str(ctx.exception))
+        self.assertFalse(evaluate_goal(self.repo, 'G-1')['satisfied'])
 
     def test_goal_requires_criteria_and_approval(self):
         with self.assertRaises(PMError):
