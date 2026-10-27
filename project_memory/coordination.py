@@ -13,6 +13,7 @@ from .knowledge import (audit, iter_docs, load_config, load_doc, log_problem,
                         valid_http_url)
 from .workflows import handoff as write_handoff
 from .workflows import task_id_of
+from .execution import verify_receipt
 
 GOAL_STATUSES = {'proposed', 'approved', 'active', 'evaluating', 'achieved', 'cancelled', 'blocked'}
 GOAL_TRANSITIONS = {
@@ -47,10 +48,10 @@ EVIDENCE_LEVELS = {'agent_claimed', 'locally_observed', 'externally_verified', '
 EVIDENCE_TRUST = {'agent_claimed': 0, 'locally_observed': 1, 'externally_verified': 2, 'human_approved': 3}
 CRITERION_SOURCES = {'test', 'check', 'command', 'ci', 'review'}
 EXECUTION_STATUSES = {'passed', 'failed', 'error', 'not_run', 'unknown'}
-COVERAGE_REVIEW_STATUSES = {'confirmed', 'unconfirmed', 'rejected', 'not_reviewed'}
-MAPPING_STATUSES = {'complete', 'partial', 'missing', 'invalid'}
-VERIFY_STATUSES = {'VERIFIED', 'INSUFFICIENT_EVIDENCE', 'PARTIAL_COVERAGE',
-                   'BLOCKED_BY_DEFECT', 'FAILED', 'INCONCLUSIVE'}
+COVERAGE_REVIEW_STATUSES = {'confirmed', 'human_confirmed', 'unconfirmed', 'rejected', 'not_reviewed'}
+MAPPING_STATUSES = {'complete', 'review_required', 'partial', 'missing', 'invalid'}
+VERIFY_STATUSES = {'VERIFIED', 'MANUAL_REVIEW_REQUIRED', 'INSUFFICIENT_EVIDENCE',
+                   'PARTIAL_COVERAGE', 'BLOCKED_BY_DEFECT', 'FAILED', 'INCONCLUSIVE'}
 SEVERITIES = ('high', 'medium', 'low')
 ACTIVE_RUN_STATUSES = {'queued', 'running', 'paused'}
 RUN_ROLES = {'executor', 'verifier'}
@@ -436,14 +437,28 @@ def _criterion_evidence_entries(value, repo: Path, goal: dict, target: dict,
                               'verification_result')
         if result not in ('pass', 'fail', 'inconclusive'):
             raise PMError('verification_result 必须是 pass、fail 或 inconclusive')
+        receipt_info = None
         if local:
             if not isinstance(exit_code, int):
                 raise PMError('本地执行证据必须提供整数 evidence_exit_code')
+            receipt_ref = _single_line(str(item.get('evidence_receipt') or ''),
+                                       'evidence_receipt', required=True)
+            receipt_info = verify_receipt(
+                repo, receipt_ref,
+                expected={'commit_sha': sha, 'command': command, 'exit_code': exit_code})
+            if not receipt_info['valid']:
+                raise PMError('criterion evidence 的执行收据无效：'
+                              + '；'.join(receipt_info['problems']))
             problem = _log_problem(repo, log)
             if problem:
                 raise PMError(f'evidence_log 无效：{problem}')
+            receipt_log = receipt_info['receipt'].get('log_path')
+            if _norm_text(log) != _norm_text(receipt_log):
+                raise PMError('evidence_log 与执行收据记录的日志不一致')
             if status == 'passed' and exit_code != 0:
                 raise PMError('execution_status=passed 与 evidence_exit_code 非 0 矛盾')
+            if status == 'passed' and result == 'pass' and exit_code != 0:
+                raise PMError('执行收据退出码非 0，不能声明 pass')
         ci_url = _single_line(str(item.get('evidence_ci_url') or ''), 'evidence_ci_url',
                               required=source == 'ci')
         ci_status = _single_line(str(item.get('evidence_ci_status') or ''), 'evidence_ci_status',
@@ -458,42 +473,46 @@ def _criterion_evidence_entries(value, repo: Path, goal: dict, target: dict,
             raise PMError('evidence_review_url 必须是 http(s) 地址')
         description_match = _norm_text(description) == _norm_text(criteria[cid]['statement'])
         if source in ('test', 'check', 'command'):
-            observed = 'locally_observed' if status == 'passed' and exit_code == 0 else 'agent_claimed'
+            # R-2: only a receipt-backed execution counts as locally observed.
+            observed = ('locally_observed'
+                        if receipt_info and receipt_info['valid'] and status == 'passed'
+                        and exit_code == 0 else 'agent_claimed')
         elif source == 'ci':
-            # R-1 Fix: declared_unfetched CI cannot get externally_verified trust
-            # Only locally_observed at most, since we don't actually fetch the URL
+            # R-1: declared_unfetched CI cannot get externally_verified trust.
             observed = 'agent_claimed'
         elif source == 'review':
-            # R-1 Fix: declared_unfetched review cannot get human_approved trust
+            # R-1: declared_unfetched review cannot get human_approved trust.
             observed = 'agent_claimed'
         else:
             observed = 'agent_claimed'
-        coverage_confirmed = (review_status == 'confirmed'
-                              and independent == verifier.get('agent')
-                              and description_match)
-        evidence_matched = (observed != 'agent_claimed' and coverage_confirmed
-                            and status == 'passed' and result == 'pass')
+        # R-2: an independent verifier's JSON "confirmed" is still an agent claim.
+        # Only a trusted human approval event (not available in this build) may
+        # confirm semantic coverage, so no machine mapping can auto-verify.
+        human_review_claimed = (review_status == 'human_confirmed'
+                                and bool(str(item.get('coverage_review_ref') or '').strip()))
+        coverage_confirmed = False
+        evidence_matched = False
         problems = []
         if not description_match:
             problems.append('criterion_description 与 Goal 标准不一致')
-        if review_status != 'confirmed':
-            problems.append('coverage_review_status 不是 confirmed')
+        if review_status != 'human_confirmed':
+            problems.append('语义覆盖未由可信人工来源确认（不是 VERIFIED）')
+        elif human_review_claimed:
+            problems.append('人工覆盖确认仍是调用者声明，缺少可信审批来源')
         if status != 'passed':
             problems.append('execution_status 不是 passed')
         if result != 'pass':
             problems.append('verification_result 不是 pass')
         if observed == 'agent_claimed':
-            problems.append('没有可观察的执行证据')
-        if coverage_confirmed:
-            state = 'evidence_matched'
-        elif observed == 'externally_verified':
-            state = 'externally_verified'
-        elif observed == 'human_approved':
-            state = 'human_approved'
+            problems.append('没有可观察的执行证据（缺少有效执行收据）')
+        structural_ok = (description_match and status == 'passed' and result == 'pass')
+        if observed == 'locally_observed' and structural_ok:
+            state = 'MANUAL_REVIEW_REQUIRED'
         elif observed == 'locally_observed':
             state = 'executed'
         else:
             state = 'agent_claimed'
+        receipt = (receipt_info or {}).get('receipt') or {}
         entries.append({
             'criterion_id': cid,
             'goal_id': goal_id,
@@ -506,13 +525,21 @@ def _criterion_evidence_entries(value, repo: Path, goal: dict, target: dict,
             'evidence_command': command,
             'evidence_log': log,
             'evidence_exit_code': exit_code,
+            'evidence_receipt': str(item.get('evidence_receipt') or ''),
+            'receipt_id': receipt.get('receipt_id'),
+            'receipt_sha256': receipt.get('content_sha256'),
+            'snapshot_id': receipt.get('snapshot_id'),
+            'snapshot_sha256': receipt.get('snapshot_sha256'),
             'execution_status': status,
             'coverage_claim': coverage_claim,
             'coverage_review_status': review_status,
+            'human_review_claimed': human_review_claimed,
             'independent_verifier': independent,
             'verification_result': result,
             'description_match': description_match,
             'observed_level': observed,
+            'execution_verified': observed == 'locally_observed',
+            'semantic_coverage_verified': False,
             'evidence_state': state,
             'coverage_confirmed': coverage_confirmed,
             'evidence_matched': evidence_matched,
@@ -526,7 +553,7 @@ def _mapping_summary(entries: list[dict], goal: dict) -> dict:
     by_criterion = {}
     for entry in entries:
         by_criterion.setdefault(entry['criterion_id'], []).append(entry)
-    covered, partial, problems = [], [], []
+    covered, execution_covered, partial, review_required, problems = [], [], [], [], []
     for cid in required:
         items = by_criterion.get(cid, [])
         if items and all(entry['evidence_matched'] for entry in items):
@@ -535,15 +562,26 @@ def _mapping_summary(entries: list[dict], goal: dict) -> dict:
             partial.append(cid)
             for entry in items:
                 problems.extend(f'{cid}: {problem}' for problem in entry['problems'])
+            executed = all(entry.get('execution_verified') and entry.get('description_match')
+                           and entry.get('execution_status') == 'passed'
+                           and entry.get('verification_result') == 'pass'
+                           for entry in items)
+            if executed:
+                execution_covered.append(cid)
+                review_required.append(cid)
     missing = [cid for cid in required if cid not in by_criterion]
     unexpected = sorted(cid for cid in by_criterion if cid not in required)
     if not entries:
         status = 'missing'
-    elif missing or partial or unexpected:
+    elif missing or unexpected or set(execution_covered) != set(required):
         status = 'partial'
+    elif review_required:
+        status = 'review_required'
     else:
         status = 'complete'
     return {'status': status, 'required': required, 'covered': covered,
+            'execution_covered': execution_covered,
+            'review_required': review_required,
             'partial': partial, 'missing': missing, 'unexpected': unexpected,
             'problems': problems}
 
@@ -551,8 +589,10 @@ def _mapping_summary(entries: list[dict], goal: dict) -> dict:
 def _mapping_outcome(entries: list[dict], mapping: dict) -> str:
     if not entries:
         return 'INSUFFICIENT_EVIDENCE'
-    if mapping['missing'] or mapping['unexpected']:
+    if mapping['missing'] or mapping['unexpected'] or mapping['partial'] and not mapping['review_required']:
         return 'PARTIAL_COVERAGE'
+    if mapping['status'] == 'review_required':
+        return 'MANUAL_REVIEW_REQUIRED'
     return 'INSUFFICIENT_EVIDENCE'
 
 
@@ -625,7 +665,17 @@ def _verification_current(repo: Path, verification: dict) -> bool:
             from .common import sha256_file
             if not full_path.is_file() or sha256_file(full_path) != log_hash:
                 return False
-    return run.get('status') == 'verified'
+    # R-2: the execution receipt, snapshot and log must still verify.
+    receipt_ref = tests_info.get('receipt')
+    if receipt_ref:
+        checked = verify_receipt(repo, receipt_ref,
+                                 expected={'commit_sha': target_head})
+        if not checked['valid']:
+            return False
+    # "Current" describes whether the recorded evidence still matches the current
+    # commit, tracked worktree, log and snapshot. Whether a run was upgraded to
+    # verified is a separate question (see _verification_ok / resume filters).
+    return True
 
 
 def _verification_ok(repo: Path, evidence: dict, goal_id: str,
@@ -1127,7 +1177,8 @@ def resume_run(repo: Path, task, run_id: str | None = None, goal_id: str | None 
     checkpoints = _iter_checkpoints(repo, selected['task'], selected['run_id'])
     latest_checkpoint = checkpoints[-1] if checkpoints else None
     verifications = [v for v in iter_verifications(repo, task=task, target_run=selected['run_id'])]
-    current_verifications = [v for v in verifications if _verification_current(repo, v)]
+    current_verifications = [v for v in verifications
+                             if v.get('verified') and _verification_current(repo, v)]
     defects = [d for d in iter_defects(repo, task=task) if d.get('target_run') == selected['run_id']]
     current_head = git_sha_optional(repo)
     base = (selected.get('git') or {}).get('base_sha')
@@ -1275,7 +1326,8 @@ def _findings(value) -> list[dict]:
 
 
 def _verification_inputs(test_command, test_exit, test_log, ci_url, ci_status,
-                         review_url, review_state, evidence_level, verdict):
+                         review_url, review_state, evidence_level, verdict,
+                         test_receipt=None):
     if verdict not in ('pass', 'fail', 'inconclusive'):
         raise PMError('verdict 必须是 pass、fail 或 inconclusive')
     if evidence_level not in EVIDENCE_LEVELS:
@@ -1296,8 +1348,11 @@ def _verification_inputs(test_command, test_exit, test_log, ci_url, ci_status,
             # Resolved by caller against the repo; kept as text in the record.
             pass
     if evidence_level == 'locally_observed':
-        if not test_command or not isinstance(test_exit, int) or not test_log:
-            raise PMError('locally_observed 需要 test command、整数 test exit 和 test log')
+        if not test_receipt:
+            raise PMError('locally_observed 需要可信执行收据（test-run 生成）；'
+                          'Agent 手写的 test log 不构成执行证据')
+        if not test_command or not isinstance(test_exit, int):
+            raise PMError('locally_observed 需要 test command 和整数 test exit')
     if ci_url and not _valid_http_url(ci_url):
         raise PMError('CI URL 必须是 http(s) 地址')
     if review_url and not _valid_http_url(review_url):
@@ -1314,7 +1369,8 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
                review_url: str | None = None, review_state: str | None = None,
                findings=None, verification_id: str | None = None,
                resolves_defects=None, expected_sha: str | None = None,
-               criterion_evidence=None, dry_run: bool = False) -> dict:
+               criterion_evidence=None, test_receipt: str | None = None,
+               dry_run: bool = False) -> dict:
     target_path = _find_run_by_id(repo, target_run)
     verifier_path = _find_run_by_id(repo, verifier_run)
     if target_path is None:
@@ -1333,8 +1389,6 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
         raise PMError(f'被验证执行状态为 {target.get("status")}，需要先 run finish')
     independence = _independence(target, verifier)
     standard = _single_line(standard, 'verification standard')
-    _verification_inputs(test_command, test_exit, test_log, ci_url, ci_status,
-                         review_url, review_state, evidence_level, verdict)
     target_head = (target.get('git') or {}).get('head_sha')
     current_head = git_sha_optional(repo)
     if expected_sha and expected_sha != target_head:
@@ -1343,6 +1397,23 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
         raise PMError('被验证执行的 head_sha 不是完整 SHA')
     if target_head and not _commit_exists(repo, target_head):
         raise PMError(f'被验证提交不存在：{target_head}')
+    receipt_info = None
+    if test_receipt:
+        receipt_info = verify_receipt(repo, test_receipt,
+                                      expected={'commit_sha': target_head})
+        if not receipt_info['valid']:
+            raise PMError('执行收据无效：' + '；'.join(receipt_info['problems']))
+        receipt = receipt_info['receipt']
+        if test_command and test_command != receipt['command']:
+            raise PMError('test command 与执行收据记录的命令不一致')
+        if test_exit is not None and test_exit != receipt['exit_code']:
+            raise PMError('test exit 与执行收据记录的退出码不一致')
+        test_command = receipt['command']
+        test_exit = receipt['exit_code']
+        test_log = receipt['log_path']
+    _verification_inputs(test_command, test_exit, test_log, ci_url, ci_status,
+                         review_url, review_state, evidence_level, verdict,
+                         test_receipt=test_receipt)
     stale = bool(current_head and target_head and current_head != target_head)
     finding_list = _findings(findings or [])
     if verdict == 'pass' and any(f['severity'] == 'high' for f in finding_list):
@@ -1394,14 +1465,15 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
         criterion_entries = _criterion_evidence_entries(
             criterion_evidence, repo, goal, target, verifier, target_head)
         mapping = _mapping_summary(criterion_entries, goal)
-        if mapping['status'] != 'complete':
+        if mapping['status'] not in ('complete', 'review_required'):
             status = _mapping_outcome(criterion_entries, mapping)
             _audit_attempt(repo, outcome='rejected', reason='incomplete_mapping',
                            target_run=target_run, verifier_run=verifier_run,
                            standard=standard, verdict=verdict,
                            evidence_level=evidence_level, mapping_status=status,
                            verified=False, worktree_dirty=worktree_dirty,
-                           tracked_changes=tracked_status, log_content_sha256=log_hash)
+                           tracked_changes=tracked_status, log_content_sha256=log_hash,
+                           receipt_id=(receipt_info or {}).get('receipt', {}).get('receipt_id'))
             return {'schema_version': '1.2', 'kind': 'verify_result',
                     'status': status, 'verified': False, 'verification': None,
                     'reason': ('PASS 需要覆盖全部必达标准的 criterion evidence mapping；'
@@ -1414,7 +1486,13 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
              'log': test_log or '', 'log_exists': bool(_log_problem(repo, test_log) is None),
              'log_content_sha256': log_hash,
              'worktree_dirty_at_verification': worktree_dirty,
-             'tracked_changes_at_verification': tracked_status}
+             'tracked_changes_at_verification': tracked_status,
+             'receipt': (receipt_info or {}).get('path'),
+             'receipt_id': (receipt_info or {}).get('receipt', {}).get('receipt_id'),
+             'receipt_sha256': (receipt_info or {}).get('receipt', {}).get('content_sha256'),
+             'snapshot_id': (receipt_info or {}).get('receipt', {}).get('snapshot_id'),
+             'snapshot_sha256': (receipt_info or {}).get('receipt', {}).get('snapshot_sha256'),
+             'execution_trust': (receipt_info or {}).get('receipt', {}).get('trust')}
     ci = {'url': ci_url or '', 'status': ci_status or 'not_provided',
           'provenance': 'declared_unfetched' if ci_url else 'none'}
     review = {'url': review_url or '', 'state': review_state or 'not_provided',
@@ -1425,14 +1503,25 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
         observed_rank = EVIDENCE_TRUST[evidence_level]
     trust_rank = min(EVIDENCE_TRUST[evidence_level], observed_rank)
     trust_level = next(level for level, rank in EVIDENCE_TRUST.items() if rank == trust_rank)
-    # R-1 Fix: verified requires locally_observed evidence AND complete criterion mapping
-    # with all entries having evidence_matched=True (coverage confirmed by independent verifier)
+    # R-2: a machine can only establish an execution fact. Semantic coverage
+    # remains unverified until a trusted human/external source confirms it, so
+    # review_required records are written as MANUAL_REVIEW_REQUIRED and never
+    # satisfy a goal.
     all_criteria_matched = (verdict == 'pass' and criterion_entries
                            and all(entry.get('evidence_matched') for entry in criterion_entries))
     verified = (verdict == 'pass' and evidence_level == 'locally_observed'
+                and receipt_info is not None and receipt_info['valid']
                 and not stale and mapping['status'] == 'complete'
                 and all_criteria_matched
                 and not any(f['severity'] == 'high' for f in finding_list))
+    if verified:
+        status = 'VERIFIED'
+    elif verdict == 'fail':
+        status = 'FAILED'
+    elif verdict == 'pass' and mapping['status'] == 'review_required':
+        status = 'MANUAL_REVIEW_REQUIRED'
+    else:
+        status = 'INCONCLUSIVE'
     _check_run_transition(target, 'verified' if verified else ('failed' if verdict == 'fail' else target.get('status')))
     record = {
         'schema_version': '1.2', 'kind': 'verification_record',
@@ -1446,7 +1535,7 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
         'target_head_sha': target_head, 'current_head_sha': current_head, 'stale': stale,
         'standard': standard, 'verdict': verdict, 'evidence_level': evidence_level,
         'trust_level': trust_level,
-        'status': ('VERIFIED' if verified else ('FAILED' if verdict == 'fail' else 'INCONCLUSIVE')),
+        'status': status,
         'mapping_status': mapping['status'],
         'criterion_evidence': criterion_entries,
         'covered_criteria': mapping.get('covered', []),
@@ -1524,7 +1613,10 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
             if _diff(existing, defect, ('defect_id', 'summary', 'severity', 'location', 'target_run')):
                 raise PMError(f'缺陷记录冲突：{dpath}')
             written_defects.append(existing)
-    for defect, dpath in resolved:
+    # R-2: resolving a defect is only allowed when the verification itself is
+    # VERIFIED. A MANUAL_REVIEW_REQUIRED record may reference the fix, but it must
+    # never upgrade the defect to verified.
+    for defect, dpath in (resolved if verified else []):
         _mutate(dpath, lambda current: {**current, 'status': 'verified',
                                         'verified_by': record['verification_id'],
                                         'fixed_in_sha': current.get('fixed_in_sha') or target_head})

@@ -8,6 +8,7 @@ from .bootstrap import init, sync_tooling
 from .knowledge import create_adr, create_document, audit, load_config, load_reference_manifest
 from .graph import build_graph, lexical_search, semantic_search
 from .workflows import context, handoff, finish
+from .execution import run_command
 from .coordination import (create_goal, goal_list, goal_show, evaluate_goal, add_goal_evidence,
                            transition_goal, start_run, checkpoint_run, resume_run, finish_run,
                            run_show, iter_runs, verify_run, defect_list, defect_show,
@@ -266,7 +267,17 @@ def parser():
     s.add_argument('--expected-sha')
     s.add_argument('--criterion-evidence', type=Path,
                    help='JSON：每个必达标准到证据的映射（criterion evidence mapping）')
+    s.add_argument('--test-receipt',
+                   help='test-run 生成的执行收据；locally_observed 必须提供')
     s.add_argument('--dry-run', action='store_true')
+
+    s = base('test-run', '在不可变提交快照中执行命令并生成执行收据')
+    s.add_argument('--command', dest='exec_command', required=True,
+                   help='在快照内执行的命令')
+    s.add_argument('--commit', help='要快照的完整 SHA；默认 HEAD')
+    s.add_argument('--agent', default='unknown-agent', help='执行者标识')
+    s.add_argument('--timeout', type=int, default=900, help='超时秒数')
+    s.add_argument('--output', type=Path)
 
     s = base('defect', '缺陷记录与修复状态')
     g = s.add_subparsers(dest='defect_command', required=True)
@@ -462,9 +473,14 @@ def run(args):
                             args.verdict, args.evidence_level, args.test_command, args.test_exit,
                             args.test_log, args.ci_url, args.ci_status, args.review_url,
                             args.review_state, findings, args.verification_id,
-                            args.resolves_defect, args.expected_sha, mapping, args.dry_run)
+                            args.resolves_defect, args.expected_sha, mapping,
+                            test_receipt=args.test_receipt, dry_run=args.dry_run)
         emit(result)
         return 0 if result.get('verified') else 2
+    elif args.command == 'test-run':
+        emit(run_command(repo, args.exec_command, args.commit, executed_by=args.agent,
+                         timeout=args.timeout), args.output)
+        return 0
     elif args.command == 'defect':
         if args.defect_command == 'list':
             emit(defect_list(repo, args.task, args.status))

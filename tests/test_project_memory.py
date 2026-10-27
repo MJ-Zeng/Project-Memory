@@ -18,6 +18,7 @@ from project_memory.coordination import (add_goal_evidence, checkpoint_run, crea
                                          defect_list, evaluate_goal, finish_run, iter_runs,
                                          iter_verifications, reconcile, resume_run, start_run,
                                          transition_goal, update_defect, verify_run)
+from project_memory.execution import run_command
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -883,11 +884,24 @@ class CoordinationTest(unittest.TestCase):
         return start_run(self.repo, goal, task, run_id, agent, 'qodercn', model,
                          base_sha=base or git_sha(self.repo), role=role)
 
+    def receipt(self, exit_code=0, commit=None, remember=True):
+        """Run a deterministic command through the trusted launcher and keep its receipt."""
+        exit_code = int(exit_code)
+        command = [sys.executable, '-c',
+                   f"import sys; print('1 passed'); sys.exit({exit_code})"]
+        out = run_command(self.repo, command, commit or self.base,
+                          executed_by='test-harness')
+        if remember:
+            self.last_receipt = out
+        return out
+
     def criterion_mapping(self, goal='G-1', criterion='C1', statement='模块通过测试',
-                          task='325', log='test.log', command='pytest tests/test_auth.py -q',
+                          task='325', log=None, command=None,
                           coverage='confirmed', evidence_id='EV-1', description=None,
-                          sha=None, source='test', status='passed', exit_code=0,
-                          verifier='verifier-agent', result='pass'):
+                          sha=None, source='test', status='passed', exit_code=None,
+                          verifier='verifier-agent', result='pass', receipt=None):
+        out = receipt or getattr(self, 'last_receipt', None) or self.receipt()
+        payload = out['receipt']
         return {'criteria': [{
             'criterion_id': criterion,
             'goal_id': goal,
@@ -897,9 +911,10 @@ class CoordinationTest(unittest.TestCase):
             'target_commit_sha': sha or self.base,
             'evidence_id': evidence_id,
             'evidence_source': source,
-            'evidence_command': command,
-            'evidence_log': log,
-            'evidence_exit_code': exit_code,
+            'evidence_command': payload['command'] if command is None else command,
+            'evidence_log': out['log'] if log is None else log,
+            'evidence_exit_code': payload['exit_code'] if exit_code is None else exit_code,
+            'evidence_receipt': out['path'],
             'execution_status': status,
             'coverage_claim': '该检查覆盖对应成功标准',
             'coverage_review_status': coverage,
@@ -908,63 +923,71 @@ class CoordinationTest(unittest.TestCase):
         }]}
 
     def prepare_passable(self, goal='G-1', run_id='run-target', task='325',
-                         log='test.log', command='pytest tests/test_auth.py -q',
-                         verifier_run='run-verifier'):
-        (self.repo / log).write_text('1 passed\n', encoding='utf-8')
+                         receipt=None, verifier_run='run-verifier'):
+        out = receipt or self.receipt()
         self.start(goal=goal, run_id=run_id, task=task)
         finish_run(self.repo, task, run_id, ['implemented'], ['verify'],
                    head_sha=self.base,
-                   tests=[{'command': command, 'exit_code': 0, 'log': log}])
+                   tests=[{'command': out['receipt']['command'], 'exit_code': 0,
+                           'log': out['log']}])
         self.start(goal=goal, run_id=verifier_run, task=task,
                    agent='verifier-agent', role='verifier')
         return dict(target_run=run_id, verifier_run=verifier_run,
                     standard='acceptance check', verdict='pass',
-                    evidence_level='locally_observed', test_command=command,
-                    test_exit=0, test_log=log)
+                    evidence_level='locally_observed', test_receipt=out['path'])
 
     def test_unrelated_smoke_log_without_mapping_is_insufficient(self):
         (self.repo / 'smoke.log').write_text('smoke passed\n', encoding='utf-8')
+        out = self.receipt()
         self.make_goal(criterion='auth 模块拒绝缺少 token 的请求')
         self.start(run_id='run-target')
         finish_run(self.repo, '325', 'run-target', ['implemented'], ['verify'],
                    head_sha=self.base,
-                   tests=[{'command': 'pytest tests/test_smoke.py', 'exit_code': 0,
-                           'log': 'smoke.log'}])
+                   tests=[{'command': out['receipt']['command'], 'exit_code': 0,
+                           'log': out['log']}])
         self.start(run_id='run-verifier', agent='verifier-agent', role='verifier')
         result = verify_run(self.repo, 'run-target', 'run-verifier', 'acceptance', 'pass',
-                            'locally_observed', test_command='pytest tests/test_smoke.py',
-                            test_exit=0, test_log='smoke.log')
+                            'locally_observed', test_receipt=out['path'])
         self.assertFalse(result['verified'])
         self.assertEqual(result['status'], 'INSUFFICIENT_EVIDENCE')
         self.assertIsNone(result['verification'])
         self.assertEqual(iter_verifications(self.repo), [])
         self.assertFalse(evaluate_goal(self.repo, 'G-1')['satisfied'])
 
-    def test_confirmed_mapping_makes_pass_verified(self):
+    def test_confirmed_mapping_still_requires_manual_review(self):
         self.make_goal()
         common = self.prepare_passable()
         result = verify_run(self.repo, **common,
                             criterion_evidence=self.criterion_mapping())
-        self.assertTrue(result['verified'])
-        self.assertEqual(result['status'], 'VERIFIED')
+        # R-2: a machine can prove the command ran; it cannot prove the test
+        # semantically covers the criterion. VERIFIED stays unreachable without a
+        # trusted human/external coverage source.
+        self.assertFalse(result['verified'])
+        self.assertEqual(result['status'], 'MANUAL_REVIEW_REQUIRED')
         entry = result['verification']['criterion_evidence'][0]
-        self.assertTrue(entry['evidence_matched'])
+        self.assertFalse(entry['evidence_matched'])
+        self.assertTrue(entry['execution_verified'])
+        self.assertFalse(entry['semantic_coverage_verified'])
         self.assertEqual(entry['observed_level'], 'locally_observed')
-        add_goal_evidence(self.repo, 'G-1', 'C1', 'verification',
-                          result['verification']['verification_id'])
+        self.assertEqual(entry['evidence_state'], 'MANUAL_REVIEW_REQUIRED')
+        self.assertEqual(result['verification']['mapping_status'], 'review_required')
+        with self.assertRaises(PMError):
+            add_goal_evidence(self.repo, 'G-1', 'C1', 'verification',
+                              result['verification']['verification_id'])
         evaluation = evaluate_goal(self.repo, 'G-1')
-        self.assertTrue(evaluation['satisfied'])
-        self.assertEqual(evaluation['evaluation_status'], 'satisfied')
+        self.assertFalse(evaluation['satisfied'])
+        self.assertEqual(evaluation['evaluation_status'], 'insufficient_evidence')
 
-    def test_unconfirmed_coverage_is_insufficient(self):
+    def test_unconfirmed_coverage_requires_manual_review(self):
         self.make_goal()
         common = self.prepare_passable()
         result = verify_run(self.repo, **common,
                             criterion_evidence=self.criterion_mapping(coverage='unconfirmed'))
         self.assertFalse(result['verified'])
-        self.assertEqual(result['status'], 'INSUFFICIENT_EVIDENCE')
-        self.assertIsNone(result['verification'])
+        self.assertEqual(result['status'], 'MANUAL_REVIEW_REQUIRED')
+        self.assertIsNotNone(result['verification'])
         self.assertTrue(result['mapping']['partial'])
+        self.assertFalse(evaluate_goal(self.repo, 'G-1')['satisfied'])
 
     def test_partial_criteria_is_partial_coverage(self):
         create_goal(self.repo, 'G-TWO', 'two criteria', 'background', 'outcome', 'owner',
@@ -1006,14 +1029,14 @@ class CoordinationTest(unittest.TestCase):
             verify_run(self.repo, **common,
                        criterion_evidence=self.criterion_mapping(sha='0' * 40))
 
-    def test_wrong_criterion_description_is_insufficient(self):
+    def test_wrong_criterion_description_is_not_verified(self):
         self.make_goal()
         common = self.prepare_passable()
         result = verify_run(self.repo, **common,
                             criterion_evidence=self.criterion_mapping(
                                 description='完全不同的标准'))
         self.assertFalse(result['verified'])
-        self.assertEqual(result['status'], 'INSUFFICIENT_EVIDENCE')
+        self.assertEqual(result['status'], 'PARTIAL_COVERAGE')
         self.assertFalse(result['criterion_evidence'][0]['description_match'])
 
     def test_self_claimed_independence_is_rejected(self):
@@ -1028,25 +1051,26 @@ class CoordinationTest(unittest.TestCase):
         common = self.prepare_passable()
         first = verify_run(self.repo, **common,
                            criterion_evidence=self.criterion_mapping(evidence_id='EV-SHARED'))
-        self.assertTrue(first['verified'])
+        self.assertIsNotNone(first['verification'])
+        self.assertFalse(first['verified'])
         create_goal(self.repo, 'G-2', 'other goal', 'background', 'outcome', 'owner', ['其他标准'])
         second = self.prepare_passable(goal='G-2', run_id='run-target-2', task='900',
-                                       log='other.log', verifier_run='run-verifier-2')
+                                       verifier_run='run-verifier-2')
         with self.assertRaises(PMError) as ctx:
             verify_run(self.repo, **second,
                        criterion_evidence=self.criterion_mapping(
-                           goal='G-2', task='900', log='other.log', statement='其他标准',
+                           goal='G-2', task='900', statement='其他标准',
                            evidence_id='EV-SHARED'))
         self.assertIn('其他 Goal', str(ctx.exception))
 
     def test_open_high_defect_blocks_pass(self):
         self.make_goal()
         common = self.prepare_passable()
+        bad = self.receipt(exit_code=1, remember=False)
         self.start(goal='G-1', run_id='run-failer', task='325',
                    agent='fail-agent', role='verifier')
         failed = verify_run(self.repo, 'run-target', 'run-failer', 'security review',
-                            'fail', 'locally_observed', test_command='pytest',
-                            test_exit=1, test_log='test.log',
+                            'fail', 'locally_observed', test_receipt=bad['path'],
                             findings=[{'severity': 'high', 'file': 'src/auth.py',
                                        'summary': '权限检查缺失'}])
         self.assertTrue(failed['defects'])
@@ -1110,10 +1134,12 @@ class CoordinationTest(unittest.TestCase):
         common = self.prepare_passable()
         result = verify_run(self.repo, **common,
                             criterion_evidence=self.criterion_mapping())
-        add_goal_evidence(self.repo, 'G-1', 'C1', 'verification',
-                          result['verification']['verification_id'])
         self.assertEqual(len(iter_verifications(self.repo)), 1)
-        self.assertEqual(result['verification']['mapping_status'], 'complete')
+        self.assertEqual(result['verification']['mapping_status'], 'review_required')
+        self.assertFalse(result['verified'])
+        with self.assertRaises(PMError):
+            add_goal_evidence(self.repo, 'G-1', 'C1', 'verification',
+                              result['verification']['verification_id'])
 
     def test_ghost_verification_record_cannot_satisfy(self):
         self.make_goal()
@@ -1180,25 +1206,31 @@ class CoordinationTest(unittest.TestCase):
         # it needs a verification record with criterion mapping
         self.assertFalse(evaluate_goal(self.repo, 'G-1')['satisfied'])
         self.assertEqual(evaluate_goal(self.repo, 'G-1')['evaluation_status'], 'needs_review')
-        # To actually satisfy the goal, we need a verification record with criterion mapping
+        # Even with a valid execution receipt the goal cannot be satisfied: the
+        # machine cannot confirm semantic coverage of the criterion.
         self.start(run_id='run-target')
+        out = self.receipt()
         finish_run(self.repo, '325', 'run-target', ['implemented'], ['verify'], head_sha=self.base,
-                   tests=[{'command': 'pytest', 'exit_code': 0, 'log': 'test.log'}])
+                   tests=[{'command': out['receipt']['command'], 'exit_code': 0,
+                           'log': out['log']}])
         self.start(run_id='run-verifier', agent='verifier-agent', role='verifier')
         result = verify_run(self.repo,
                             target_run='run-target', verifier_run='run-verifier',
                             standard='acceptance check', verdict='pass',
                             evidence_level='locally_observed',
-                            test_command='pytest', test_exit=0, test_log='test.log',
-                            criterion_evidence=self.criterion_mapping())
-        add_goal_evidence(self.repo, 'G-1', 'C1', 'verification',
-                          result['verification']['verification_id'])
-        self.assertTrue(evaluate_goal(self.repo, 'G-1')['satisfied'])
+                            test_receipt=out['path'],
+                            criterion_evidence=self.criterion_mapping(receipt=out))
+        self.assertEqual(result['status'], 'MANUAL_REVIEW_REQUIRED')
+        self.assertFalse(result['verified'])
+        with self.assertRaises(PMError):
+            add_goal_evidence(self.repo, 'G-1', 'C1', 'verification',
+                              result['verification']['verification_id'])
+        self.assertFalse(evaluate_goal(self.repo, 'G-1')['satisfied'])
         transition_goal(self.repo, 'G-1', 'approved', approved_by='human-lead@example.com')
         transition_goal(self.repo, 'G-1', 'active')
         transition_goal(self.repo, 'G-1', 'evaluating')
-        done = transition_goal(self.repo, 'G-1', 'achieved', approved_by='human-lead@example.com')
-        self.assertEqual(done['goal']['status'], 'achieved')
+        with self.assertRaises(PMError):
+            transition_goal(self.repo, 'G-1', 'achieved', approved_by='human-lead@example.com')
 
     def test_manual_goal_evidence_requires_traceable_approval(self):
         self.make_goal()
@@ -1308,17 +1340,18 @@ class CoordinationTest(unittest.TestCase):
 
     def test_verification_requires_independent_evidence_and_current_sha(self):
         self.make_goal()
-        (self.repo / 'test.log').write_text('ok\n', encoding='utf-8')
+        out = self.receipt()
         self.start(run_id='run-target')
         finish_run(self.repo, '325', 'run-target', ['implemented'], ['verify'], head_sha=self.base,
-                   tests=[{'command': 'pytest', 'exit_code': 0, 'log': 'test.log'}])
+                   tests=[{'command': out['receipt']['command'], 'exit_code': 0,
+                           'log': out['log']}])
         self.start(run_id='run-verifier', agent='verifier-agent', role='verifier')
         common = dict(target_run='run-target', verifier_run='run-verifier',
-                      standard='acceptance check', verdict='pass')
+                      standard='acceptance check', verdict='pass',
+                      test_receipt=out['path'])
         with self.assertRaises(PMError):
             verify_run(self.repo, **dict(common, verifier_run='run-target',
-                                         evidence_level='locally_observed',
-                                         test_command='pytest', test_exit=0, test_log='test.log'))
+                                         evidence_level='locally_observed'))
         with self.assertRaises(PMError):
             verify_run(self.repo, **dict(common, evidence_level='agent_claimed'))
         with self.assertRaises(PMError):
@@ -1327,37 +1360,38 @@ class CoordinationTest(unittest.TestCase):
             verify_run(self.repo, **dict(common, evidence_level='human_approved'))
         with self.assertRaises(PMError):
             verify_run(self.repo, **dict(common, evidence_level='locally_observed',
-                                         test_command='pytest', test_exit=0, test_log='test.log',
                                          expected_sha='0' * 40))
-        passed = verify_run(self.repo, **dict(common, evidence_level='locally_observed',
-                                              test_command='pytest', test_exit=0, test_log='test.log'),
-                            criterion_evidence=self.criterion_mapping(command='pytest'))
-        self.assertTrue(passed['verification']['verified'])
+        passed = verify_run(self.repo, **dict(common, evidence_level='locally_observed'),
+                            criterion_evidence=self.criterion_mapping(receipt=out))
+        # R-2: execution evidence is valid but semantic coverage is unconfirmed.
+        self.assertFalse(passed['verification']['verified'])
+        self.assertEqual(passed['verification']['status'], 'MANUAL_REVIEW_REQUIRED')
         target = next(r for r in iter_runs(self.repo) if r['run_id'] == 'run-target')
-        self.assertEqual(target['status'], 'verified')
+        self.assertEqual(target['status'], 'submitted')
         finish_run(self.repo, '325', 'run-verifier', ['verification delivered'], ['none'],
                    head_sha=self.base)
         report = reconcile(self.repo)
-        self.assertNotIn('unverified_submission', {i['code'] for i in report['items']})
+        codes = {i['code'] for i in report['items']}
+        self.assertIn('unverified_submission', codes)
+        self.assertIn('pass_with_partial_coverage', codes)
         next_commit = self.commit('later.txt')
         self.assertNotEqual(next_commit, self.base)
         with self.assertRaises(PMError):
-            verify_run(self.repo, **dict(common, evidence_level='locally_observed',
-                                         test_command='pytest', test_exit=0, test_log='test.log'))
+            verify_run(self.repo, **dict(common, evidence_level='locally_observed'))
         report = reconcile(self.repo)
         self.assertIn('verification_behind_head', {i['code'] for i in report['items']})
 
     def test_defect_lifecycle_and_reverification(self):
         self.make_goal()
-        (self.repo / 'test.log').write_text('failed\n', encoding='utf-8')
         self.start(run_id='run-target')
         finish_run(self.repo, '325', 'run-target', ['implemented'], ['verify'], head_sha=self.base)
         self.start(run_id='run-verifier', agent='verifier-agent', role='verifier')
+        bad = self.receipt(exit_code=1)
         findings = [{'severity': 'high', 'file': 'src/auth.py', 'line': 10,
                      'summary': '权限检查缺失', 'repro': 'call without token'}]
         failed = verify_run(self.repo, 'run-target', 'run-verifier', 'security review',
-                            'fail', 'locally_observed', test_command='pytest', test_exit=1,
-                            test_log='test.log', findings=findings)
+                            'fail', 'locally_observed', test_receipt=bad['path'],
+                            findings=findings)
         defect_id = failed['defects'][0]['defect_id']
         self.assertEqual(failed['defects'][0]['status'], 'open')
         report = reconcile(self.repo)
@@ -1370,17 +1404,24 @@ class CoordinationTest(unittest.TestCase):
         self.assertEqual(preview['defect']['status'], 'fixed')
         self.assertEqual(defect_list(self.repo)['defects'][0]['status'], 'open')
         update_defect(self.repo, defect_id, 'fixed', fixed_in_sha=self.base)
+        good = self.receipt()
         passed = verify_run(self.repo, 'run-target', 'run-verifier', 'security review',
-                            'pass', 'locally_observed', test_command='pytest', test_exit=0,
-                            test_log='test.log', resolves_defects=[defect_id],
-                            criterion_evidence=self.criterion_mapping(command='pytest'))
-        self.assertTrue(passed['verification']['verified'])
-        defect = defect_list(self.repo)[ 'defects'][0]
-        self.assertEqual(defect['status'], 'verified')
-        self.assertEqual(defect['verified_by'], passed['verification']['verification_id'])
+                            'pass', 'locally_observed', test_receipt=good['path'],
+                            resolves_defects=[defect_id],
+                            criterion_evidence=self.criterion_mapping(receipt=good))
+        # R-2: the fix is executed but coverage is unconfirmed, so the defect must
+        # not be silently upgraded to verified.
+        self.assertFalse(passed['verification']['verified'])
+        self.assertEqual(passed['verification']['status'], 'MANUAL_REVIEW_REQUIRED')
+        defect = defect_list(self.repo)['defects'][0]
+        self.assertEqual(defect['status'], 'fixed')
+        self.assertIsNone(defect['verified_by'])
         report = reconcile(self.repo)
-        self.assertNotIn('open_high_defect', {i['code'] for i in report['items']})
-        self.assertNotIn('defect_verified_without_record', {i['code'] for i in report['items']})
+        codes = {i['code'] for i in report['items']}
+        # A fixed-but-unverified high defect still blocks: R-2 forbids silently
+        # clearing it through an unconfirmed coverage mapping.
+        self.assertIn('open_high_defect', codes)
+        self.assertNotIn('defect_verified_without_record', codes)
 
     def test_reconcile_detects_tampering_orphans_and_unverified_submission(self):
         self.make_goal()
@@ -1414,38 +1455,36 @@ class CoordinationTest(unittest.TestCase):
 
     def test_verifier_role_and_independence_are_enforced(self):
         self.make_goal()
-        (self.repo / 'test.log').write_text('ok\n', encoding='utf-8')
         self.start(run_id='run-target', agent='same-agent', model='auto')
         finish_run(self.repo, '325', 'run-target', ['implemented'], ['verify'], head_sha=self.base)
         self.start(run_id='run-same', agent='same-agent', model='auto', role='verifier')
         with self.assertRaises(PMError) as ctx:
             verify_run(self.repo, 'run-target', 'run-same', 'acceptance', 'pass',
-                       'locally_observed', test_command='pytest', test_exit=0, test_log='test.log')
+                       'locally_observed')
         self.assertIn('独立', str(ctx.exception))
         self.start(run_id='run-exec2', agent='other-agent', role='executor')
         with self.assertRaises(PMError) as ctx:
             verify_run(self.repo, 'run-target', 'run-exec2', 'acceptance', 'pass',
-                       'locally_observed', test_command='pytest', test_exit=0, test_log='test.log')
+                       'locally_observed')
         self.assertIn('verifier', str(ctx.exception))
         self.start(run_id='run-other-model', agent='same-agent', model='qwen3.8-flash', role='verifier')
+        out = self.receipt()
         passed = verify_run(self.repo, 'run-target', 'run-other-model', 'acceptance', 'pass',
-                            'locally_observed', test_command='pytest', test_exit=0,
-                            test_log='test.log',
+                            'locally_observed', test_receipt=out['path'],
                             criterion_evidence=self.criterion_mapping(
-                                command='pytest', verifier='same-agent'))
+                                receipt=out, verifier='same-agent'))
         self.assertEqual(passed['verification']['independence']['basis'], ['model'])
 
     def test_verification_evidence_cannot_cross_goal(self):
         self.make_goal('G-1')
         self.make_goal('G-2', '另一个目标')
-        (self.repo / 'test.log').write_text('ok\n', encoding='utf-8')
         self.start(goal='G-1', run_id='run-a', task='100')
         finish_run(self.repo, '100', 'run-a', ['implemented'], ['verify'], head_sha=self.base)
         self.start(goal='G-1', run_id='run-v', task='100', agent='verifier-agent', role='verifier')
+        out = self.receipt()
         passed = verify_run(self.repo, 'run-a', 'run-v', 'acceptance', 'pass',
-                            'locally_observed', test_command='pytest', test_exit=0,
-                            test_log='test.log',
-                            criterion_evidence=self.criterion_mapping(task='100', command='pytest'))
+                            'locally_observed', test_receipt=out['path'],
+                            criterion_evidence=self.criterion_mapping(task='100', receipt=out))
         vid = passed['verification']['verification_id']
         with self.assertRaises(PMError) as ctx:
             add_goal_evidence(self.repo, 'G-2', 'C1', 'verification', vid)
@@ -1494,18 +1533,17 @@ class CoordinationTest(unittest.TestCase):
 
     def test_stale_verification_stops_goal_and_resume(self):
         self.make_goal()
-        (self.repo / 'test.log').write_text('ok\n', encoding='utf-8')
         self.start(run_id='run-target')
         finish_run(self.repo, '325', 'run-target', ['implemented'], ['verify'], head_sha=self.base)
         self.start(run_id='run-verifier', agent='verifier-agent', role='verifier')
+        out = self.receipt()
         passed = verify_run(self.repo, 'run-target', 'run-verifier', 'acceptance', 'pass',
-                            'locally_observed', test_command='pytest', test_exit=0,
-                            test_log='test.log',
-                            criterion_evidence=self.criterion_mapping(command='pytest'))
-        vid = passed['verification']['verification_id']
-        add_goal_evidence(self.repo, 'G-1', 'C1', 'verification', vid)
-        self.assertTrue(evaluate_goal(self.repo, 'G-1')['satisfied'])
-        self.assertEqual(resume_run(self.repo, '325')['status'], 'verified')
+                            'locally_observed', test_receipt=out['path'],
+                            criterion_evidence=self.criterion_mapping(receipt=out))
+        self.assertEqual(passed['verification']['status'], 'MANUAL_REVIEW_REQUIRED')
+        self.assertFalse(passed['verification']['verified'])
+        self.assertNotEqual(resume_run(self.repo, '325')['status'], 'verified')
+        self.assertFalse(evaluate_goal(self.repo, 'G-1')['satisfied'])
         self.commit('after-verification.txt')
         evaluation = evaluate_goal(self.repo, 'G-1')
         self.assertFalse(evaluation['satisfied'])
@@ -1517,47 +1555,49 @@ class CoordinationTest(unittest.TestCase):
 
     def test_failed_resolves_defect_leaves_no_pass_record(self):
         self.make_goal()
-        (self.repo / 'test.log').write_text('failed\n', encoding='utf-8')
         self.start(run_id='run-target')
         finish_run(self.repo, '325', 'run-target', ['implemented'], ['verify'], head_sha=self.base)
         self.start(run_id='run-verifier', agent='verifier-agent', role='verifier')
+        bad = self.receipt(exit_code=1)
         findings = [{'severity': 'high', 'file': 'src/auth.py', 'line': 10,
                      'summary': '权限检查缺失', 'repro': 'call without token'}]
         failed = verify_run(self.repo, 'run-target', 'run-verifier', 'security review',
-                            'fail', 'locally_observed', test_command='pytest', test_exit=1,
-                            test_log='test.log', findings=findings)
+                            'fail', 'locally_observed', test_receipt=bad['path'],
+                            findings=findings)
         defect_id = failed['defects'][0]['defect_id']
         update_defect(self.repo, defect_id, 'fixed', fixed_in_sha=self.base)
+        good = self.receipt()
         with self.assertRaises(PMError):
             verify_run(self.repo, 'run-target', 'run-verifier', 'security review',
-                       'pass', 'locally_observed', test_command='pytest', test_exit=0,
-                       test_log='test.log', resolves_defects=[defect_id, 'DEF-missing'],
-                       criterion_evidence=self.criterion_mapping(command='pytest'))
+                       'pass', 'locally_observed', test_receipt=good['path'],
+                       resolves_defects=[defect_id, 'DEF-missing'],
+                       criterion_evidence=self.criterion_mapping(receipt=good))
         self.assertEqual(len(iter_verifications(self.repo)), 1)
         self.assertEqual(defect_list(self.repo)['defects'][0]['status'], 'fixed')
 
     def test_resolves_defect_requires_fix_in_verified_history(self):
         self.make_goal()
-        (self.repo / 'test.log').write_text('failed\n', encoding='utf-8')
         self.start(run_id='run-target')
         finish_run(self.repo, '325', 'run-target', ['implemented'], ['verify'], head_sha=self.base)
         self.start(run_id='run-verifier', agent='verifier-agent', role='verifier')
+        bad = self.receipt(exit_code=1)
         findings = [{'severity': 'high', 'file': 'src/auth.py', 'line': 10,
                      'summary': '权限检查缺失', 'repro': 'call without token'}]
         failed = verify_run(self.repo, 'run-target', 'run-verifier', 'security review',
-                            'fail', 'locally_observed', test_command='pytest', test_exit=1,
-                            test_log='test.log', findings=findings)
+                            'fail', 'locally_observed', test_receipt=bad['path'],
+                            findings=findings)
         defect_id = failed['defects'][0]['defect_id']
         origin = self.git('branch', '--show-current').stdout.strip()
         self.git('checkout', '-q', '-b', 'unmerged-fix')
         side = self.commit('unmerged.txt')
         self.git('checkout', '-q', origin)
         update_defect(self.repo, defect_id, 'fixed', fixed_in_sha=side)
+        good = self.receipt()
         with self.assertRaises(PMError) as ctx:
             verify_run(self.repo, 'run-target', 'run-verifier', 'security review',
-                       'pass', 'locally_observed', test_command='pytest', test_exit=0,
-                       test_log='test.log', resolves_defects=[defect_id],
-                       criterion_evidence=self.criterion_mapping(command='pytest'))
+                       'pass', 'locally_observed', test_receipt=good['path'],
+                       resolves_defects=[defect_id],
+                       criterion_evidence=self.criterion_mapping(receipt=good))
         self.assertIn('修复提交', str(ctx.exception))
         self.assertEqual(len(iter_verifications(self.repo)), 1)
 
@@ -1626,15 +1666,15 @@ class CoordinationTest(unittest.TestCase):
 
     def test_reconcile_flags_verified_defect_without_record(self):
         self.make_goal()
-        (self.repo / 'test.log').write_text('failed\n', encoding='utf-8')
         self.start(run_id='run-target')
         finish_run(self.repo, '325', 'run-target', ['implemented'], ['verify'], head_sha=self.base)
         self.start(run_id='run-verifier', agent='verifier-agent', role='verifier')
+        bad = self.receipt(exit_code=1)
         findings = [{'severity': 'high', 'file': 'src/auth.py', 'line': 10,
                      'summary': '权限检查缺失', 'repro': 'call without token'}]
         failed = verify_run(self.repo, 'run-target', 'run-verifier', 'security review',
-                            'fail', 'locally_observed', test_command='pytest', test_exit=1,
-                            test_log='test.log', findings=findings)
+                            'fail', 'locally_observed', test_receipt=bad['path'],
+                            findings=findings)
         defect_id = failed['defects'][0]['defect_id']
         path = self.repo / '.project-memory/defects/325' / f'{defect_id}.json'
         defect = json.loads(path.read_text(encoding='utf-8'))
@@ -1702,6 +1742,10 @@ class CoordinationTest(unittest.TestCase):
         self.cli('run', 'start', '--goal', 'G-CLI', '--task', '325', '--run-id', 'run-verifier',
                  '--agent', 'verifier-agent', '--model-provider', 'qodercn',
                  '--model-id', 'qwen3.8-flash', '--role', 'verifier', '--base-sha', self.base)
+        command = f'"{sys.executable}" -c "import sys; print(\'1 passed\'); sys.exit(0)"'
+        run_out = self.cli('test-run', '--command', command, '--commit', self.base,
+                           '--agent', 'verifier-agent')
+        receipt = run_out['receipt']
         mapping = {'criteria': [{
             'criterion_id': 'C1', 'goal_id': 'G-CLI', 'task_id': '325',
             'criterion_description': 'CLI 流程可验证',
@@ -1709,9 +1753,10 @@ class CoordinationTest(unittest.TestCase):
             'target_commit_sha': self.base,
             'evidence_id': 'EV-CLI',
             'evidence_source': 'test',
-            'evidence_command': 'pytest',
-            'evidence_log': 'test.log',
+            'evidence_command': receipt['command'],
+            'evidence_log': run_out['log'],
             'evidence_exit_code': 0,
+            'evidence_receipt': run_out['path'],
             'execution_status': 'passed',
             'coverage_claim': 'CLI test covers the criterion',
             'coverage_review_status': 'confirmed',
@@ -1723,19 +1768,28 @@ class CoordinationTest(unittest.TestCase):
         verified = self.cli('verify', '--target-run', 'run-target', '--verifier-run', 'run-verifier',
                             '--standard', 'CLI acceptance', '--verdict', 'pass',
                             '--evidence-level', 'locally_observed',
-                            '--test-command', 'pytest', '--test-exit', '0', '--test-log', 'test.log',
-                            '--criterion-evidence', str(mapping_path))
+                            '--test-receipt', run_out['path'],
+                            '--criterion-evidence', str(mapping_path), expect=2)
+        # R-2: the launcher observed the execution, but semantic coverage is still a
+        # human judgement, so the CLI must not report VERIFIED.
+        self.assertFalse(verified['verified'])
+        self.assertEqual(verified['status'], 'MANUAL_REVIEW_REQUIRED')
         verification_id = verified['verification']['verification_id']
         self.cli('goal', 'evidence', '--id', 'G-CLI', '--criterion', 'C1', '--kind', 'verification',
-                 '--ref', verification_id)
-        evaluation = self.cli('goal', 'evaluate', '--id', 'G-CLI')
-        self.assertTrue(evaluation['satisfied'])
+                 '--ref', verification_id, expect=1)
+        evaluation = self.cli('goal', 'evaluate', '--id', 'G-CLI', expect=2)
+        self.assertFalse(evaluation['satisfied'])
+        self.assertEqual(evaluation['evaluation_status'], 'insufficient_evidence')
         self.cli('goal', 'transition', '--id', 'G-CLI', '--to', 'evaluating')
-        self.cli('goal', 'transition', '--id', 'G-CLI', '--to', 'achieved', '--approved-by', 'human@example.com')
-        report = self.cli('reconcile', '--fail-on', 'high')
-        self.assertEqual(report['state'], 'clean', report['items'])
+        self.cli('goal', 'transition', '--id', 'G-CLI', '--to', 'achieved',
+                 '--approved-by', 'human@example.com', expect=1)
+        report = self.cli('reconcile', '--fail-on', 'high', expect=2)
+        codes = {item['code'] for item in report['items']}
+        self.assertIn('pass_with_partial_coverage', codes)
+        self.assertIn('unverified_submission', codes)
         resumed = self.cli('run', 'resume', '--task', '325', '--run-id', 'run-target')
-        self.assertEqual(resumed['status'], 'verified')
+        self.assertEqual(resumed['status'], 'resume_ready')
+        self.assertNotEqual(resumed['status'], 'verified')
 
 
     # ---------------------------------------------------------------- R-1 counterexamples
@@ -1810,19 +1864,11 @@ class CoordinationTest(unittest.TestCase):
         outside.write(b'PASS all tests\n')
         outside.close()
         try:
-            (self.repo / 'test.log').write_text('ok\n', encoding='utf-8')
-            self.start(run_id='run-target')
-            finish_run(self.repo, '325', 'run-target', ['implemented'], ['verify'], head_sha=self.base,
-                       tests=[{'command': 'pytest', 'exit_code': 0, 'log': 'test.log'}])
-            self.start(run_id='run-verifier', agent='verifier-agent', role='verifier')
+            args = self.prepare_passable()
             with self.assertRaises(PMError) as ctx:
                 verify_run(self.repo,
-                           target_run='run-target', verifier_run='run-verifier',
-                           standard='check', verdict='pass',
-                           evidence_level='locally_observed',
-                           test_command='pytest', test_exit=0,
-                           test_log=outside.name,
-                           criterion_evidence=self.criterion_mapping())
+                           criterion_evidence=self.criterion_mapping(log=outside.name),
+                           **args)
             self.assertIn('仓库内', str(ctx.exception))
         finally:
             os.unlink(outside.name)
@@ -1837,11 +1883,7 @@ class CoordinationTest(unittest.TestCase):
     def test_r1_ci_source_gets_agent_claimed_not_externally_verified(self):
         """R-1 Fix: CI source in criterion mapping gets agent_claimed, not externally_verified."""
         self.make_goal()
-        (self.repo / 'test.log').write_text('ok\n', encoding='utf-8')
-        self.start(run_id='run-target')
-        finish_run(self.repo, '325', 'run-target', ['implemented'], ['verify'], head_sha=self.base,
-                   tests=[{'command': 'pytest', 'exit_code': 0, 'log': 'test.log'}])
-        self.start(run_id='run-verifier', agent='verifier-agent', role='verifier')
+        args = self.prepare_passable()
         mapping = [{
             'criterion_id': 'C1',
             'goal_id': 'G-1',
@@ -1860,12 +1902,7 @@ class CoordinationTest(unittest.TestCase):
             'independent_verifier': 'verifier-agent',
             'verification_result': 'pass',
         }]
-        result = verify_run(self.repo,
-                            target_run='run-target', verifier_run='run-verifier',
-                            standard='check', verdict='pass',
-                            evidence_level='locally_observed',
-                            test_command='pytest', test_exit=0, test_log='test.log',
-                            criterion_evidence=mapping)
+        result = verify_run(self.repo, criterion_evidence=mapping, **args)
         # CI source should get agent_claimed, not externally_verified
         entry = result['criterion_evidence'][0]
         self.assertEqual(entry['observed_level'], 'agent_claimed')
@@ -1885,7 +1922,8 @@ class CoordinationTest(unittest.TestCase):
         self.make_goal()
         args = self.prepare_passable()
         result = verify_run(self.repo, criterion_evidence=self.criterion_mapping(), **args)
-        (self.repo / 'test.log').write_text('1 failed\n', encoding='utf-8')
+        log_rel = result['verification']['checks']['tests']['log']
+        (self.repo / log_rel).write_text('1 failed\n', encoding='utf-8')
         from project_memory.coordination import _verification_current
         self.assertFalse(_verification_current(self.repo, result['verification']))
 
@@ -1910,9 +1948,10 @@ class CoordinationTest(unittest.TestCase):
     def test_t05_rejected_attempt_is_audited_but_not_recorded(self):
         self.make_goal()
         args = self.prepare_passable()
-        mapping = self.criterion_mapping(coverage='unconfirmed')
+        mapping = self.criterion_mapping(description='完全不同的标准')
         result = verify_run(self.repo, criterion_evidence=mapping, **args)
         self.assertFalse(result['verified'])
+        self.assertEqual(result['status'], 'PARTIAL_COVERAGE')
         self.assertIsNone(result['verification'])
         audit_path = self.repo / '.project-memory' / 'audit' / 'verification_attempts.jsonl'
         self.assertTrue(audit_path.is_file())
@@ -1937,34 +1976,30 @@ class CoordinationTest(unittest.TestCase):
     def test_r1_shared_independence_is_rejected(self):
         """R-1: the verifier must not reuse the executor's agent/model/session."""
         self.make_goal()
-        (self.repo / 'test.log').write_text('1 passed\n', encoding='utf-8')
         self.start(run_id='run-target', agent='same-agent', model='same-model')
         finish_run(self.repo, '325', 'run-target', ['implemented'], ['verify'],
-                   head_sha=self.base,
-                   tests=[{'command': 'pytest', 'exit_code': 0, 'log': 'test.log'}])
+                   head_sha=self.base)
         self.start(run_id='run-verifier', agent='same-agent', model='same-model',
                    role='verifier')
         with self.assertRaises(PMError) as ctx:
             verify_run(self.repo, 'run-target', 'run-verifier', 'acceptance',
                        'pass', 'locally_observed',
-                       test_command='pytest', test_exit=0, test_log='test.log',
                        criterion_evidence=self.criterion_mapping(verifier='same-agent'))
         self.assertIn('相同的 agent/model/session', str(ctx.exception))
 
     def test_r1_separate_model_restores_independence(self):
         """R-1: using a different model is an independence basis (records only)."""
         self.make_goal()
-        (self.repo / 'test.log').write_text('1 passed\n', encoding='utf-8')
         self.start(run_id='run-target', agent='same-agent', model='model-a')
         finish_run(self.repo, '325', 'run-target', ['implemented'], ['verify'],
-                   head_sha=self.base,
-                   tests=[{'command': 'pytest', 'exit_code': 0, 'log': 'test.log'}])
+                   head_sha=self.base)
         self.start(run_id='run-verifier', agent='same-agent', model='model-b',
                    role='verifier')
+        out = self.receipt()
         result = verify_run(self.repo, 'run-target', 'run-verifier', 'acceptance',
-                            'pass', 'locally_observed',
-                            test_command='pytest', test_exit=0, test_log='test.log',
-                            criterion_evidence=self.criterion_mapping(verifier='same-agent'))
+                            'pass', 'locally_observed', test_receipt=out['path'],
+                            criterion_evidence=self.criterion_mapping(
+                                receipt=out, verifier='same-agent'))
         self.assertIn('model', result['verification']['independence']['basis'])
 
 
