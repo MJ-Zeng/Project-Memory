@@ -1,0 +1,44 @@
+{
+  "agent": "PM-01",
+  "base_sha": "0d08a1ad85144d11a46d6a361a2a3ce4eadbbed4",
+  "blockers": [
+    "B1 issue not created"
+  ],
+  "completed": [
+    "dispatch handoff draft"
+  ],
+  "criteria_sha256": "3379825dc61451680b361c0c7ec68098883601366080a2363a7082c195e870ec",
+  "evidence": [],
+  "from_role": "PM-01",
+  "generated_at": "2026-10-27T13:37:02+00:00",
+  "goal_id": "G-B1",
+  "handoff_id": "HO-B1-R1-SUP",
+  "kind": "agent_handoff",
+  "model": {
+    "id": "deepseek-flash",
+    "provider": "dsh"
+  },
+  "next_actions": [
+    "PM-02 reads task card and dispatch handoff",
+    "PM-02 performs cold-start recovery",
+    "PM-02 reports BLOCKED if Issue or criteria hash is missing"
+  ],
+  "open_questions": [
+    "Which verifier path is pinned and how is its integrity checked?",
+    "What happens when the pinned binary is missing or tampered?",
+    "How is the positive signature proven without breaking tests?",
+    "Which residual risks must be recorded in the ADR?"
+  ],
+  "remaining": [
+    "create B1 issue",
+    "freeze task card sha256",
+    "generate positive fixture"
+  ],
+  "run_id": "dispatch-b1-r1",
+  "schema_version": "1.1",
+  "session_id": "pm01-pilot-01",
+  "status": "reported_unverified",
+  "task": "B1",
+  "to_role": "PM-02",
+  "vcs": "git"
+}
