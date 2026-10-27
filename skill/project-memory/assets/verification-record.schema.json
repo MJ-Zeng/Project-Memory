@@ -106,6 +106,67 @@
     "verified": {
       "type": "boolean"
     },
+    "status": {
+      "enum": [
+        "VERIFIED",
+        "INSUFFICIENT_EVIDENCE",
+        "PARTIAL_COVERAGE",
+        "BLOCKED_BY_DEFECT",
+        "FAILED",
+        "INCONCLUSIVE"
+      ]
+    },
+    "trust_level": {
+      "enum": [
+        "agent_claimed",
+        "locally_observed",
+        "externally_verified",
+        "human_approved"
+      ]
+    },
+    "mapping_status": {
+      "enum": [
+        "missing",
+        "partial",
+        "complete",
+        "invalid"
+      ]
+    },
+    "criterion_evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "criterion_id",
+          "goal_id",
+          "target_commit_sha",
+          "evidence_id",
+          "evidence_matched",
+          "coverage_review_status"
+        ],
+        "properties": {
+          "criterion_id": {"type": "string", "minLength": 1},
+          "goal_id": {"type": "string", "minLength": 1},
+          "target_commit_sha": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+          "evidence_id": {"type": "string", "minLength": 1},
+          "coverage_review_status": {
+            "enum": ["confirmed", "unconfirmed", "rejected", "not_reviewed"]
+          },
+          "evidence_matched": {"type": "boolean"},
+          "observed_level": {"type": "string"},
+          "evidence_state": {"type": "string"}
+        },
+        "additionalProperties": true
+      }
+    },
+    "covered_criteria": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "missing_criteria": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
     "checks": {
       "type": "object",
       "properties": {

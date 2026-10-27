@@ -4,7 +4,7 @@ import re
 from pathlib import Path
 from .common import PMError, git_sha_optional, json_text, path_component, safe_json, utc_now, validate_identifier, write_new
 from .graph import build_graph, lexical_search, visible
-from .knowledge import audit, load_config
+from .knowledge import audit, load_config, log_problem
 
 TASK_ID = re.compile(r'[A-Za-z0-9\u3400-\u9fff][A-Za-z0-9_.:\-\u3400-\u9fff]{0,100}')
 
@@ -118,15 +118,6 @@ def handoff(repo: Path, task: str | int, agent: str, run_id: str, completed: lis
     return record
 
 
-def _readable_log(repo: Path, value: str | None) -> bool:
-    if not value or re.match(r'https?://', value):
-        return False
-    path = Path(value)
-    if not path.is_absolute():
-        path = repo / path
-    return path.is_file() and path.stat().st_size > 0
-
-
 def finish(repo: Path, task: dict, pr: dict | None, test_evidence: str | None, docs_impact: str, docs_justification: str, reviewed_by: str | None, config: dict | None = None, test_command: str | None = None, test_exit: int | None = None, test_log: str | None = None, ci_url: str | None = None, ci_status: str | None = None, review_url: str | None = None, review_state: str | None = None) -> dict:
     """只检查证据是否齐全，不声称已经完成独立验证。
 
@@ -145,8 +136,10 @@ def finish(repo: Path, task: dict, pr: dict | None, test_evidence: str | None, d
     elif not pr.get('merged_at'):
         add('pr_merge_evidence', 'fail', 'PR 没有 merged_at 时间戳')
     elif pr.get('_provenance') == 'github_api':
-        levels['pr_merge'] = 'externally_verified'
-        add('pr_merge_evidence', 'pass', f'合并时间来自实时 GitHub API：{pr["merged_at"]}')
+        # R-1 Fix: Use locally_observed instead of externally_verified since CLI
+        # doesn't independently verify the API response signature
+        levels['pr_merge'] = 'locally_observed'
+        add('pr_merge_evidence', 'pass', f'合并时间来自实时 GitHub API：{pr["merged_at"]}；信任等级 locally_observed')
     else:
         levels['pr_merge'] = 'agent_claimed'
         add('pr_merge_evidence', 'unknown', '快照声称已合并，但没有实时 GitHub API 来源；不能作为完成证据')
@@ -155,7 +148,7 @@ def finish(repo: Path, task: dict, pr: dict | None, test_evidence: str | None, d
     if structured and test_exit != 0:
         levels['tests'] = 'locally_observed'
         add('test_evidence_present', 'fail', f'测试命令退出码为 {test_exit}，不能视为通过')
-    elif structured and _readable_log(repo, test_log):
+    elif structured and log_problem(repo, test_log, config) is None:
         levels['tests'] = 'locally_observed'
         add('test_evidence_present', 'pass', f'已观察命令退出码 0，日志可读取：{test_log}')
     elif structured:
@@ -198,8 +191,10 @@ def finish(repo: Path, task: dict, pr: dict | None, test_evidence: str | None, d
         add('docs_impact', 'unknown', '尚未评估文档影响')
 
     if review_url and review_state == 'approved':
-        levels['review'] = 'human_approved'
-        add('review_attestation', 'pass', f'人工批准记录：{review_url}；CLI 没有独立取回该审查状态')
+        # R-1 Fix: Use locally_observed instead of human_approved since CLI
+        # doesn't independently verify the review URL
+        levels['review'] = 'locally_observed'
+        add('review_attestation', 'pass', f'人工批准记录：{review_url}；信任等级 locally_observed，CLI 未独立取回该审查状态')
     elif reviewed_by:
         levels['review'] = 'agent_claimed'
         add('review_attestation', 'unknown', '只有未经核验的人工审查声明：' + reviewed_by)

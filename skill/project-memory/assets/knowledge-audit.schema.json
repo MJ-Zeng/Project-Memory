@@ -12,7 +12,7 @@
   ],
   "properties": {
     "schema_version": {
-      "const": "1.1"
+      "const": "1.2"
     },
     "kind": {
       "const": "knowledge_audit"
@@ -83,6 +83,117 @@
     "max_verified_age_days": {
       "type": "integer",
       "minimum": 1
+    },
+    "path_source": {
+      "enum": [
+        "filesystem",
+        "manifest",
+        "metadata-only",
+        "shadow"
+      ],
+      "description": "路径证据来源；shadow 只能用于模拟，不能作为真实文件证据。"
+    },
+    "repository_version": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "本次审计对应的 Git HEAD；清单审计时来自清单。"
+    },
+    "manifest": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "project": {"type": ["string", "null"]},
+        "manifest_id": {"type": ["string", "null"]},
+        "git_head": {"type": ["string", "null"]},
+        "complete": {"type": "boolean"},
+        "file_count": {"type": "integer", "minimum": 0},
+        "source": {"type": ["string", "null"]}
+      }
+    },
+    "reference_audit": {
+      "type": "object",
+      "required": ["entries", "summary"],
+      "properties": {
+        "entries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["document", "line", "raw", "target", "status", "confirmed"],
+            "properties": {
+              "document": {"type": "string"},
+              "line": {"type": "integer", "minimum": 1},
+              "raw": {"type": "string"},
+              "target": {"type": "string"},
+              "ref_type": {"type": "string"},
+              "status": {
+                "enum": [
+                  "resolved",
+                  "resolved_case_mismatch",
+                  "relocated_reference",
+                  "ambiguous_reference",
+                  "broken_reference",
+                  "out_of_scope",
+                  "outside",
+                  "external",
+                  "dynamic_artifact",
+                  "unknown",
+                  "unsupported",
+                  "authority_mismatch",
+                  "shadow_present",
+                  "shadow_missing"
+                ]
+              },
+              "base_status": {"type": ["string", "null"]},
+              "resolved_path": {"type": ["string", "null"]},
+              "candidates": {"type": "array", "items": {"type": "string"}},
+              "candidate_regions": {"type": "array", "items": {"type": "string"}},
+              "region": {"type": ["string", "null"]},
+              "doc_authority": {"type": "string"},
+              "repository_version": {"type": ["string", "null"]},
+              "data_source": {"type": "string"},
+              "manifest_complete": {"type": "boolean"},
+              "confirmed": {"type": "boolean"},
+              "case_mismatch": {"type": "boolean"},
+              "authority_mismatch": {"type": "boolean"},
+              "out_of_scope_reason": {"type": ["string", "null"]},
+              "uncertainty_reason": {"type": ["string", "null"]},
+              "suggested_action": {"type": ["string", "null"]}
+            }
+          }
+        },
+        "summary": {
+          "type": "object",
+          "properties": {
+            "by_status": {"type": "object"},
+            "by_region": {"type": "object"},
+            "authority_mismatch": {"type": "integer", "minimum": 0},
+            "confirmed": {"type": "integer", "minimum": 0},
+            "unconfirmed": {"type": "integer", "minimum": 0}
+          }
+        }
+      }
+    },
+    "metadata_contract": {
+      "type": "object",
+      "required": ["required", "recommended", "documents"],
+      "properties": {
+        "required": {"type": "array", "items": {"type": "string"}},
+        "recommended": {"type": "array", "items": {"type": "string"}},
+        "documents": {"type": "array", "items": {"type": "object"}}
+      }
+    },
+    "navigation": {
+      "type": "object",
+      "properties": {
+        "entry_doc": {"type": ["string", "null"]},
+        "entry_links": {"type": "integer", "minimum": 0},
+        "reachable": {"type": "array", "items": {"type": "string"}},
+        "unreachable": {"type": "array", "items": {"type": "string"}}
+      }
     }
   },
   "additionalProperties": true

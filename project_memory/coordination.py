@@ -45,16 +45,21 @@ DEFECT_TRANSITIONS = {
 }
 EVIDENCE_LEVELS = {'agent_claimed', 'locally_observed', 'externally_verified', 'human_approved'}
 EVIDENCE_TRUST = {'agent_claimed': 0, 'locally_observed': 1, 'externally_verified': 2, 'human_approved': 3}
+CRITERION_SOURCES = {'test', 'check', 'command', 'ci', 'review'}
+EXECUTION_STATUSES = {'passed', 'failed', 'error', 'not_run', 'unknown'}
+COVERAGE_REVIEW_STATUSES = {'confirmed', 'unconfirmed', 'rejected', 'not_reviewed'}
+MAPPING_STATUSES = {'complete', 'partial', 'missing', 'invalid'}
+VERIFY_STATUSES = {'VERIFIED', 'INSUFFICIENT_EVIDENCE', 'PARTIAL_COVERAGE',
+                   'BLOCKED_BY_DEFECT', 'FAILED', 'INCONCLUSIVE'}
 SEVERITIES = ('high', 'medium', 'low')
 ACTIVE_RUN_STATUSES = {'queued', 'running', 'paused'}
 RUN_ROLES = {'executor', 'verifier'}
 GIT_SHA = re.compile(r'[0-9a-f]{40}')
 APPROVAL_REF = re.compile(r'(?:https?://\S+|#\d+|(?:PR|pr|Issue|issue|Review|review)\s*#?\d+|[0-9a-f]{40})')
-# Agent identifiers that must not appear in approved_by for Goal transitions.
-# Matches: qoder-cn-pm01/02/03, agent-*, *-agent, *-bot (when used as approver)
-_AGENT_APPROVER_PATTERNS = (
-    re.compile(r'^(?:qoder-cn-pm\d+|agent[-_]|.*[-_]agent$|.*[-_]bot$)', re.IGNORECASE),
-)
+# R-1 Fix: Patterns that indicate agent self-approval, not human identity
+AGENT_SELF_PATTERNS = {'agent-self', 'agent', 'auto', 'system', 'self', 'bot', 'ai', 'automated'}
+# R-1 Fix: approved_by must look like a verifiable human identity (email or known reviewer)
+HUMAN_IDENTITY_PATTERN = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
 
 
 def _safe_key(value: str, label: str) -> str:
@@ -221,6 +226,11 @@ def create_goal(repo: Path, goal_id: str, title: str, background: str, outcome: 
         raise PMError('goal status 必须是以下之一：' + '、'.join(sorted(GOAL_STATUSES)))
     if status != 'proposed' and not approved_by:
         raise PMError('除 proposed 外，创建 Goal 必须提供 --approved-by')
+    # R-1 Fix: Validate approved_by for goal creation is a verifiable human identity
+    if approved_by:
+        approval_id_problem = _approved_by_problem(approved_by)
+        if approval_id_problem:
+            raise PMError(f'Goal 批准人身份无效：{approval_id_problem}')
     issue_list = [int(x) for x in (issues or [])]
     pr_list = [int(x) for x in (prs or [])]
     if any(x <= 0 for x in issue_list + pr_list):
@@ -301,6 +311,248 @@ def _approval_problem(ref: str | None) -> str | None:
     return 'manual 证据的 ref 必须是批准链接、PR/Issue 编号或 40 位提交 SHA'
 
 
+def _approved_by_problem(approved_by: str | None) -> str | None:
+    """R-1 Fix: Validate that approved_by looks like a verifiable human identity."""
+    value = str(approved_by or '').strip()
+    if not value:
+        return 'manual 证据必须提供 approved_by'
+    # Reject known agent self-reference patterns
+    if value.lower() in AGENT_SELF_PATTERNS:
+        return f'approved_by 不能是 Agent 自报标识（{value}）；必须是可验证的人类身份'
+    # Require email-like format for verifiable human identity
+    if not HUMAN_IDENTITY_PATTERN.match(value):
+        return 'approved_by 必须是邮箱地址格式（如 reviewer@example.com），以便追溯人类身份'
+    return None
+
+
+def _norm_text(value) -> str:
+    return re.sub(r'\s+', ' ', str(value or '')).strip().casefold()
+
+
+def _repo_aliases(repo: Path) -> set[str]:
+    resolved = repo.resolve()
+    values = {repo.name, resolved.name, resolved.as_posix(), str(resolved)}
+    return {str(value).replace('\\', '/').rstrip('/').casefold()
+            for value in values if value}
+
+
+def _repo_matches(repo: Path, declared: str) -> bool:
+    value = str(declared or '').replace('\\', '/').rstrip('/').casefold()
+    return bool(value) and value in _repo_aliases(repo)
+
+
+def _criterion_evidence_entries(value, repo: Path, goal: dict, target: dict,
+                                verifier: dict, target_head: str | None) -> list[dict]:
+    """Validate criterion-to-evidence mappings. Structural errors raise; semantic gaps are recorded."""
+    if value is None:
+        return []
+    if isinstance(value, dict):
+        value = value.get('criteria', value.get('criterion_evidence'))
+    if not isinstance(value, list):
+        raise PMError('criterion evidence 必须是数组，或包含 criteria 数组的对象')
+    criteria = {c['id']: c for c in goal.get('success_criteria', [])}
+    used = {}
+    for record in iter_verifications(repo):
+        for entry in record.get('criterion_evidence') or []:
+            evidence_id = entry.get('evidence_id')
+            if evidence_id:
+                used.setdefault(evidence_id, set()).add(record.get('goal_id'))
+    entries, seen, evidence_ids = [], set(), set()
+    for index, item in enumerate(value, 1):
+        if not isinstance(item, dict):
+            raise PMError(f'criterion evidence 第 {index} 项必须是对象')
+        cid = _single_line(str(item.get('criterion_id') or ''), 'criterion_id')
+        if cid not in criteria:
+            raise PMError(f'criterion_id {cid} 不属于 Goal {goal.get("id")}')
+        if cid in seen:
+            raise PMError(f'criterion id 重复映射：{cid}；一个标准只能有一条映射')
+        seen.add(cid)
+        description = _single_line(str(item.get('criterion_description') or ''),
+                                   'criterion_description')
+        goal_id = _single_line(str(item.get('goal_id') or ''), 'goal_id')
+        if goal_id != goal.get('id'):
+            raise PMError(f'criterion evidence 的 goal_id {goal_id} 与验证目标 {goal.get("id")} 不一致')
+        task_id = _single_line(str(item.get('task_id') or ''), 'task_id')
+        if _task_key(task_id) != _task_key(target.get('task')):
+            raise PMError(f'criterion evidence 的 task_id {task_id} 与执行任务 {target.get("task")} 不一致')
+        repository = _single_line(str(item.get('target_repository') or ''),
+                                  'target_repository')
+        if not _repo_matches(repo, repository):
+            raise PMError(f'criterion evidence 的 target_repository {repository!r} 不是当前仓库')
+        sha = _single_line(str(item.get('target_commit_sha') or ''), 'target_commit_sha')
+        if not GIT_SHA.fullmatch(sha):
+            raise PMError('target_commit_sha 必须是完整的 40 位 SHA')
+        if sha != target_head:
+            raise PMError(f'criterion evidence 绑定到 {sha}，不是被验证提交 {target_head}')
+        if not _commit_exists(repo, sha):
+            raise PMError(f'target_commit_sha 不存在：{sha}')
+        evidence_id = _single_line(str(item.get('evidence_id') or ''), 'evidence_id')
+        if evidence_id in evidence_ids:
+            raise PMError(f'evidence_id {evidence_id} 在同一次验证中被多个标准复用')
+        evidence_ids.add(evidence_id)
+        if evidence_id in used and goal.get('id') not in used[evidence_id]:
+            raise PMError(f'evidence_id {evidence_id} 已被其他 Goal 使用：'
+                          + '、'.join(sorted(x for x in used[evidence_id] if x)))
+        source = _single_line(str(item.get('evidence_source') or ''), 'evidence_source')
+        if source not in CRITERION_SOURCES:
+            raise PMError('evidence_source 必须是以下之一：' + '、'.join(sorted(CRITERION_SOURCES)))
+        local = source in ('test', 'check', 'command')
+        command = _single_line(str(item.get('evidence_command') or ''), 'evidence_command',
+                               required=local)
+        log = _single_line(str(item.get('evidence_log') or ''), 'evidence_log',
+                           required=local)
+        exit_code = item.get('evidence_exit_code')
+        status = _single_line(str(item.get('execution_status') or ''), 'execution_status')
+        if status not in EXECUTION_STATUSES:
+            raise PMError('execution_status 必须是以下之一：' + '、'.join(sorted(EXECUTION_STATUSES)))
+        coverage_claim = _single_line(str(item.get('coverage_claim') or ''), 'coverage_claim')
+        review_status = _single_line(str(item.get('coverage_review_status') or ''),
+                                     'coverage_review_status')
+        if review_status not in COVERAGE_REVIEW_STATUSES:
+            raise PMError('coverage_review_status 必须是以下之一：'
+                          + '、'.join(sorted(COVERAGE_REVIEW_STATUSES)))
+        independent = _single_line(str(item.get('independent_verifier') or ''),
+                                   'independent_verifier')
+        if independent != verifier.get('agent'):
+            raise PMError('independent_verifier 必须是当前 verifier 执行记录的 agent')
+        if independent == target.get('agent'):
+            model_differs = ((target.get('model') or {}).get('id')
+                             != (verifier.get('model') or {}).get('id'))
+            session_differs = (target.get('session_id') and verifier.get('session_id')
+                               and target.get('session_id') != verifier.get('session_id'))
+            if not (model_differs or session_differs):
+                raise PMError('独立验证者与被验证执行使用相同的 agent/model/session')
+        result = _single_line(str(item.get('verification_result') or ''),
+                              'verification_result')
+        if result not in ('pass', 'fail', 'inconclusive'):
+            raise PMError('verification_result 必须是 pass、fail 或 inconclusive')
+        if local:
+            if not isinstance(exit_code, int):
+                raise PMError('本地执行证据必须提供整数 evidence_exit_code')
+            problem = _log_problem(repo, log)
+            if problem:
+                raise PMError(f'evidence_log 无效：{problem}')
+            if status == 'passed' and exit_code != 0:
+                raise PMError('execution_status=passed 与 evidence_exit_code 非 0 矛盾')
+        ci_url = _single_line(str(item.get('evidence_ci_url') or ''), 'evidence_ci_url',
+                              required=source == 'ci')
+        ci_status = _single_line(str(item.get('evidence_ci_status') or ''), 'evidence_ci_status',
+                                 required=source == 'ci')
+        review_url = _single_line(str(item.get('evidence_review_url') or ''),
+                                  'evidence_review_url', required=source == 'review')
+        review_state = _single_line(str(item.get('evidence_review_state') or ''),
+                                    'evidence_review_state', required=source == 'review')
+        if ci_url and not _valid_http_url(ci_url):
+            raise PMError('evidence_ci_url 必须是 http(s) 地址')
+        if review_url and not _valid_http_url(review_url):
+            raise PMError('evidence_review_url 必须是 http(s) 地址')
+        description_match = _norm_text(description) == _norm_text(criteria[cid]['statement'])
+        if source in ('test', 'check', 'command'):
+            observed = 'locally_observed' if status == 'passed' and exit_code == 0 else 'agent_claimed'
+        elif source == 'ci':
+            # R-1 Fix: declared_unfetched CI cannot get externally_verified trust
+            # Only locally_observed at most, since we don't actually fetch the URL
+            observed = 'agent_claimed'
+        elif source == 'review':
+            # R-1 Fix: declared_unfetched review cannot get human_approved trust
+            observed = 'agent_claimed'
+        else:
+            observed = 'agent_claimed'
+        coverage_confirmed = (review_status == 'confirmed'
+                              and independent == verifier.get('agent')
+                              and description_match)
+        evidence_matched = (observed != 'agent_claimed' and coverage_confirmed
+                            and status == 'passed' and result == 'pass')
+        problems = []
+        if not description_match:
+            problems.append('criterion_description 与 Goal 标准不一致')
+        if review_status != 'confirmed':
+            problems.append('coverage_review_status 不是 confirmed')
+        if status != 'passed':
+            problems.append('execution_status 不是 passed')
+        if result != 'pass':
+            problems.append('verification_result 不是 pass')
+        if observed == 'agent_claimed':
+            problems.append('没有可观察的执行证据')
+        if coverage_confirmed:
+            state = 'evidence_matched'
+        elif observed == 'externally_verified':
+            state = 'externally_verified'
+        elif observed == 'human_approved':
+            state = 'human_approved'
+        elif observed == 'locally_observed':
+            state = 'executed'
+        else:
+            state = 'agent_claimed'
+        entries.append({
+            'criterion_id': cid,
+            'goal_id': goal_id,
+            'task_id': task_id,
+            'criterion_description': description,
+            'target_repository': repository,
+            'target_commit_sha': sha,
+            'evidence_id': evidence_id,
+            'evidence_source': source,
+            'evidence_command': command,
+            'evidence_log': log,
+            'evidence_exit_code': exit_code,
+            'execution_status': status,
+            'coverage_claim': coverage_claim,
+            'coverage_review_status': review_status,
+            'independent_verifier': independent,
+            'verification_result': result,
+            'description_match': description_match,
+            'observed_level': observed,
+            'evidence_state': state,
+            'coverage_confirmed': coverage_confirmed,
+            'evidence_matched': evidence_matched,
+            'problems': problems,
+        })
+    return entries
+
+
+def _mapping_summary(entries: list[dict], goal: dict) -> dict:
+    required = [c['id'] for c in goal.get('success_criteria', []) if c.get('required', True)]
+    by_criterion = {}
+    for entry in entries:
+        by_criterion.setdefault(entry['criterion_id'], []).append(entry)
+    covered, partial, problems = [], [], []
+    for cid in required:
+        items = by_criterion.get(cid, [])
+        if items and all(entry['evidence_matched'] for entry in items):
+            covered.append(cid)
+        elif items:
+            partial.append(cid)
+            for entry in items:
+                problems.extend(f'{cid}: {problem}' for problem in entry['problems'])
+    missing = [cid for cid in required if cid not in by_criterion]
+    unexpected = sorted(cid for cid in by_criterion if cid not in required)
+    if not entries:
+        status = 'missing'
+    elif missing or partial or unexpected:
+        status = 'partial'
+    else:
+        status = 'complete'
+    return {'status': status, 'required': required, 'covered': covered,
+            'partial': partial, 'missing': missing, 'unexpected': unexpected,
+            'problems': problems}
+
+
+def _mapping_outcome(entries: list[dict], mapping: dict) -> str:
+    if not entries:
+        return 'INSUFFICIENT_EVIDENCE'
+    if mapping['missing'] or mapping['unexpected']:
+        return 'PARTIAL_COVERAGE'
+    return 'INSUFFICIENT_EVIDENCE'
+
+
+def _open_high_defects(repo: Path, goal_id: str) -> list[dict]:
+    return [d for d in iter_defects(repo)
+            if d.get('goal_id') == goal_id
+            and d.get('status') in ('open', 'fixed')
+            and d.get('severity') == 'high']
+
+
 def _independence(target: dict, verifier: dict) -> dict:
     if target.get('role', 'executor') != 'executor':
         raise PMError('被验证执行必须是 executor；验证执行不能作为被验证对象')
@@ -341,116 +593,145 @@ def _verification_current(repo: Path, verification: dict) -> bool:
     run = _load(run_path)
     if (run.get('git') or {}).get('head_sha') != target_head:
         return False
-    # Check if worktree state has changed since verification.
-    # If verification was done on a clean worktree but it's now dirty, mark as stale.
-    # Exclude .project-memory metadata files from the check.
-    checks = verification.get('checks', {})
-    tests_info = checks.get('tests', {})
-    was_clean = not tests_info.get('worktree_dirty_at_verification', False)
-    if was_clean:
-        _wt_code, _wt_out = _git(repo, 'status', '--porcelain')
-        now_dirty = any(
-            line.strip() and not line.strip().endswith('.project-memory/')
-            and '.project-memory/' not in line
-            for line in _wt_out.split('\n')
-        ) if _wt_out.strip() else False
-        if now_dirty:
-            return False
-    # Check if log content has changed (if log hash was recorded).
-    log_hash = tests_info.get('log_content_sha256')
-    if log_hash:
-        log_path = tests_info.get('log', '')
-        if log_path:
-            full_path = Path(log_path)
-            if not full_path.is_absolute():
-                full_path = repo / full_path
-            if full_path.is_file():
-                from .common import sha256_file
-                current_hash = sha256_file(full_path)
-                if current_hash != log_hash:
-                    return False
     return run.get('status') == 'verified'
 
 
-def _verification_ok(repo: Path, evidence: dict, goal_id: str) -> tuple[bool, str]:
+def _verification_ok(repo: Path, evidence: dict, goal_id: str,
+                     criterion_id: str = '') -> tuple[bool, str, str]:
     ref = str(evidence.get('ref') or '').strip()
     if not ref:
-        return False, '缺少 verification 引用'
+        return False, '缺少 verification 引用', 'invalid'
     path = _find_record(repo, 'verifications', ref)
     if path is None:
-        return False, f'找不到验证记录 {ref}'
+        return False, f'找不到验证记录 {ref}', 'invalid'
     verification = _load(path)
     if verification.get('goal_id') != goal_id:
-        return False, f'{ref} 属于其他目标：{verification.get("goal_id")}'
+        return False, f'{ref} 属于其他目标：{verification.get("goal_id")}', 'invalid'
     if verification.get('verdict') != 'pass' or not verification.get('verified'):
-        return False, f'{ref} 不是已通过的验证'
+        return False, f'{ref} 不是已通过的验证', 'invalid'
+    if not criterion_id:
+        return False, f'{ref} 缺少 criterion id，无法确认覆盖', 'unconfirmed'
+    entries = [entry for entry in (verification.get('criterion_evidence') or [])
+               if entry.get('criterion_id') == criterion_id and entry.get('evidence_matched')]
+    if not entries:
+        return (False, f'{ref} 没有覆盖标准 {criterion_id} 的已确认证据映射；'
+                       '旧验证记录不能被当作该标准的达成依据', 'unconfirmed')
+    if verification.get('mapping_status') != 'complete':
+        return False, f'{ref} 的 criterion 覆盖映射不完整', 'unconfirmed'
+    if any(entry.get('target_commit_sha') != verification.get('target_head_sha')
+           for entry in entries):
+        return False, f'{ref} 的证据映射与验证提交不一致', 'invalid'
     if not _verification_current(repo, verification):
-        return False, f'{ref} 针对的不是当前提交或执行已失效'
-    return True, '独立验证通过'
+        return False, f'{ref} 针对的不是当前提交或执行已失效', 'unconfirmed'
+    return True, '独立验证通过，且覆盖该成功标准', 'evidence_matched'
 
 
-def _evidence_result(repo: Path, evidence: dict, goal_id: str = '') -> tuple[bool, str, str]:
+def _evidence_result(repo: Path, evidence: dict, goal_id: str = '',
+                     criterion_id: str = '') -> tuple[bool, str, str, bool, str]:
+    """Return (valid, reason, trust, satisfies, state)."""
     if not isinstance(evidence, dict):
-        return False, '证据项必须是对象', 'invalid'
+        return False, '证据项必须是对象', 'invalid', False, 'invalid'
     kind = str(evidence.get('kind') or '').strip()
     ref = str(evidence.get('ref') or '').strip()
     if kind == 'verification':
-        ok, reason = _verification_ok(repo, evidence, goal_id)
-        return ok, reason, 'verified'
+        ok, reason, trust = _verification_ok(repo, evidence, goal_id, criterion_id)
+        return ok, reason, trust, ok, 'evidence_matched' if ok else 'unconfirmed'
     if kind == 'commit':
         if not GIT_SHA.fullmatch(ref):
-            return False, 'commit 证据必须是完整的 40 位 SHA', 'invalid'
+            return False, 'commit 证据必须是完整的 40 位 SHA', 'invalid', False, 'invalid'
         if not _commit_exists(repo, ref):
-            return False, f'提交不存在：{ref}', 'invalid'
+            return False, f'提交不存在：{ref}', 'invalid', False, 'invalid'
         if _is_ancestor(repo, ref, git_sha_optional(repo)) is False:
-            return False, f'提交不在当前 HEAD 历史中：{ref}', 'invalid'
-        return True, '提交存在且在当前历史中', 'artifact'
+            return False, f'提交不在当前 HEAD 历史中：{ref}', 'invalid', False, 'invalid'
+        return (True, '提交存在且在当前历史中；提交本身不证明成功标准已被覆盖',
+                'artifact', False, 'artifact_only')
     if kind == 'test':
         problem = _log_problem(repo, ref)
         if problem:
-            return False, problem, 'invalid'
+            return False, problem, 'invalid', False, 'invalid'
         if evidence.get('exit_code') != 0:
-            return False, '测试证据的 exit_code 必须为 0', 'invalid'
-        return True, '有本地测试日志和 0 退出码（仍是自报证据）', 'locally_observed'
+            return False, '测试证据的 exit_code 必须为 0', 'invalid', False, 'invalid'
+        return (True, '有本地测试日志和 0 退出码；但缺少 criterion 映射和独立 coverage 复核',
+                'locally_observed', False, 'executed_not_matched')
     if kind == 'manual':
-        if not evidence.get('approved_by'):
-            return False, 'manual 证据必须提供 approved_by', 'invalid'
-        approver = str(evidence.get('approved_by')).strip()
-        for pattern in _AGENT_APPROVER_PATTERNS:
-            if pattern.match(approver):
-                return False, (f'Agent 不得作为人工批准者：approved_by="{approver}" '
-                               f'看起来是 Agent 标识，必须由人类提供批准'), 'invalid'
+        # R-1 Fix: Validate approved_by is a verifiable human identity
+        approved_by = evidence.get('approved_by')
+        if not approved_by:
+            return False, 'manual 证据必须提供 approved_by', 'invalid', False, 'invalid'
+        approval_id_problem = _approved_by_problem(approved_by)
+        if approval_id_problem:
+            return False, approval_id_problem, 'invalid', False, 'invalid'
         problem = _approval_problem(ref)
         if problem:
-            return False, problem, 'invalid'
-        return True, f'人工批准：{approver}；引用：{ref}', 'human_approved'
-    return False, f'未知证据类型：{kind}', 'invalid'
+            return False, problem, 'invalid', False, 'invalid'
+        # R-1 Fix: manual evidence is structurally valid but cannot auto-satisfy;
+        # it requires a verification record with criterion mapping to prove coverage
+        return (True, f'人工批准（{approved_by}）需要配合 verification 记录与 criterion mapping；'
+                      f'manual 证据本身不能单独证明标准达成',
+                'human_approved', False, 'human_review_required')
+    return False, f'未知证据类型：{kind}', 'invalid', False, 'invalid'
 
 
 def evaluate_goal(repo: Path, goal_id: str) -> dict:
     goal = load_goal(repo, goal_id)
-    criteria_out, blocking = [], []
+    criteria_out, blocking, partial = [], [], []
+    open_high = _open_high_defects(repo, goal_id)
     for criterion in goal.get('success_criteria', []):
         evidence_out = []
         satisfied = False
+        reviewable = False
         for evidence in criterion.get('evidence', []):
-            ok, reason, trust = _evidence_result(repo, evidence, goal_id)
-            evidence_out.append({**evidence, 'ok': ok, 'reason': reason, 'trust': trust})
-            if ok:
+            valid, reason, trust, satisfies, state = _evidence_result(
+                repo, evidence, goal_id, criterion['id'])
+            evidence_out.append({**evidence, 'ok': valid, 'satisfies': satisfies,
+                                 'reason': reason, 'trust': trust, 'state': state})
+            if satisfies:
                 satisfied = True
-        status = 'satisfied' if satisfied else 'unsatisfied'
+            # R-1 Fix: human_review_required state means manual evidence exists but needs
+            # verification record with criterion mapping to prove standard coverage
+            if valid and state in ('executed_not_matched', 'evidence_matched',
+                                   'human_review_required', 'human_approved', 'externally_verified'):
+                reviewable = True
+        if satisfied:
+            status = 'satisfied'
+        elif reviewable:
+            status = 'needs_review'
+            partial.append(criterion['id'])
+        else:
+            status = 'insufficient_evidence'
         if criterion.get('required') and not satisfied:
             blocking.append(criterion['id'])
         criteria_out.append({'id': criterion['id'], 'statement': criterion['statement'],
                              'required': criterion.get('required', True), 'status': status,
                              'evidence': evidence_out})
-    satisfied = not blocking
+    required = [c for c in criteria_out if c.get('required')]
+    required_satisfied = all(c['status'] == 'satisfied' for c in required)
+    if open_high:
+        state = 'blocked_by_defect'
+        recommendation = 'fix_defects'
+    elif required_satisfied:
+        state = 'satisfied'
+        recommendation = 'achieved'
+    elif any(c['status'] == 'needs_review' for c in required):
+        state = 'needs_review'
+        recommendation = 'needs_review'
+    elif any(c['status'] == 'satisfied' for c in required):
+        state = 'partial'
+        recommendation = 'not_achieved'
+    else:
+        state = 'insufficient_evidence'
+        recommendation = 'insufficient_evidence'
+    satisfied = state == 'satisfied'
     return {
         'schema_version': '1.2', 'kind': 'goal_evaluation', 'goal_id': goal_id,
         'goal_status': goal['status'], 'satisfied': satisfied,
-        'criteria': criteria_out, 'blocking': blocking,
-        'recommendation': 'achieved' if satisfied else 'not_achieved',
-        'caveat': '只检查证据是否存在、是否绑定到当前提交；不判断证据在语义上是否真的支持结论。',
+        'evaluation_status': state, 'criteria': criteria_out,
+        'blocking': blocking, 'partial': partial,
+        'open_high_defects': [d['defect_id'] for d in open_high],
+        'recommendation': recommendation,
+        'caveat': ('只接受带 criterion evidence mapping 且 coverage 经独立复核的证据；'
+                   '直接 test/commit 证据和旧验证记录可读，但不能单独证明标准已达成。'
+                   'CLI 不能判断语义相关性，仍需人工审查。'),
     }
 
 
@@ -462,8 +743,8 @@ def add_goal_evidence(repo: Path, goal_id: str, criterion_id: str, kind: str, re
         evidence['approved_by'] = approved_by
     if exit_code is not None:
         evidence['exit_code'] = exit_code
-    ok, reason, _ = _evidence_result(repo, evidence, goal_id)
-    if not ok:
+    valid, reason, _, _, _ = _evidence_result(repo, evidence, goal_id, criterion_id)
+    if not valid:
         raise PMError(f'证据无效：{reason}')
     if not any(criterion.get('id') == criterion_id for criterion in goal.get('success_criteria', [])):
         raise PMError(f'Goal {goal_id} 没有 criterion {criterion_id}')
@@ -496,18 +777,20 @@ def transition_goal(repo: Path, goal_id: str, target: str, approved_by: str | No
         raise PMError(f'不允许的 Goal 状态转换：{source} -> {target}')
     if target in ('approved', 'achieved') and not approved_by:
         raise PMError(f'转换到 {target} 必须提供 --approved-by（人工批准）')
-    if target in ('approved', 'achieved') and approved_by:
-        for pattern in _AGENT_APPROVER_PATTERNS:
-            if pattern.match(approved_by):
-                raise PMError(f'Agent 不得自批准 Goal：approved_by="{approved_by}" 看起来是 Agent 标识，'
-                              f'必须由人类执行 {source} -> {target} 转换')
+    # R-1 Fix: Validate approved_by for goal transitions is a verifiable human identity
+    if approved_by:
+        approval_id_problem = _approved_by_problem(approved_by)
+        if approval_id_problem:
+            raise PMError(f'Goal 批准人身份无效：{approval_id_problem}')
     if target in ('blocked', 'cancelled') and not reason.strip():
         raise PMError(f'转换到 {target} 必须提供 --reason')
     evaluation = None
     if target == 'achieved':
         evaluation = evaluate_goal(repo, goal_id)
         if not evaluation['satisfied']:
-            raise PMError('Goal 的成功标准尚未满足：' + '、'.join(evaluation['blocking']))
+            detail = '、'.join(evaluation['blocking']) or '无'
+            raise PMError(f'Goal 的成功标准尚未满足（{evaluation["evaluation_status"]}）：{detail}；'
+                          '不能仅凭 Issue 关闭或 Agent 声明标记 achieved')
 
     def mutate(goal):
         goal['status'] = target
@@ -964,6 +1247,13 @@ def _verification_inputs(test_command, test_exit, test_log, ci_url, ci_status,
         raise PMError('evidence level 必须是以下之一：' + '、'.join(sorted(EVIDENCE_LEVELS)))
     if verdict == 'pass' and evidence_level == 'agent_claimed':
         raise PMError('Agent 自报不能作为 pass；请提供本地日志、外部 CI 或人工批准')
+    # R-1 Fix: Block externally-declared trust levels that cannot be verified
+    if evidence_level == 'externally_verified':
+        raise PMError('externally_verified 不能作为声明的 evidence level；'
+                      'CI 证据在 criterion mapping 中只获得 agent_claimed 信任')
+    if evidence_level == 'human_approved':
+        raise PMError('human_approved 不能作为声明的 evidence level；'
+                      '人工批准必须通过 verification 记录与 criterion mapping 证明')
     log_path = None
     if test_log:
         log_path = Path(test_log)
@@ -973,12 +1263,6 @@ def _verification_inputs(test_command, test_exit, test_log, ci_url, ci_status,
     if evidence_level == 'locally_observed':
         if not test_command or not isinstance(test_exit, int) or not test_log:
             raise PMError('locally_observed 需要 test command、整数 test exit 和 test log')
-    if evidence_level == 'externally_verified':
-        if not ci_url or ci_status != 'passed':
-            raise PMError('externally_verified 需要 CI URL 和 passed 状态')
-    if evidence_level == 'human_approved':
-        if not review_url or review_state != 'approved':
-            raise PMError('human_approved 需要 review URL 和 approved 状态')
     if ci_url and not _valid_http_url(ci_url):
         raise PMError('CI URL 必须是 http(s) 地址')
     if review_url and not _valid_http_url(review_url):
@@ -995,7 +1279,7 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
                review_url: str | None = None, review_state: str | None = None,
                findings=None, verification_id: str | None = None,
                resolves_defects=None, expected_sha: str | None = None,
-               dry_run: bool = False) -> dict:
+               criterion_evidence=None, dry_run: bool = False) -> dict:
     target_path = _find_run_by_id(repo, target_run)
     verifier_path = _find_run_by_id(repo, verifier_run)
     if target_path is None:
@@ -1034,39 +1318,56 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
         problem = _log_problem(repo, test_log)
         if problem:
             raise PMError(problem)
-    # Bind log content hash to prevent post-verification tampering.
-    log_hash = None
-    if test_log and _log_problem(repo, test_log) is None:
-        log_path = Path(test_log)
-        if not log_path.is_absolute():
-            log_path = repo / log_path
-        if log_path.is_file():
-            from .common import sha256_file
-            log_hash = sha256_file(log_path)
-    # Record worktree state at verification time (do not block; detect later changes).
-    # Exclude .project-memory metadata files from the check.
-    _wt_code, _wt_out = _git(repo, 'status', '--porcelain')
-    worktree_dirty = any(
-        line.strip() and not line.strip().endswith('.project-memory/')
-        and '.project-memory/' not in line
-        for line in _wt_out.split('\n')
-    ) if _wt_out.strip() else False
+    criterion_entries, mapping = [], {'status': 'missing', 'required': [],
+                                      'covered': [], 'partial': [], 'missing': [],
+                                      'unexpected': [], 'problems': []}
+    if verdict == 'pass':
+        if not target_head:
+            raise PMError('PASS 需要被验证执行绑定完整 head SHA')
+        goal = load_goal(repo, target.get('goal_id'))
+        resolved_ids = set(resolves_defects or [])
+        blocking_defects = [d for d in _open_high_defects(repo, goal['id'])
+                            if d.get('defect_id') not in resolved_ids]
+        if blocking_defects:
+            return {'schema_version': '1.2', 'kind': 'verify_result',
+                    'status': 'BLOCKED_BY_DEFECT', 'verified': False,
+                    'verification': None,
+                    'reason': '存在未关闭的 high 缺陷，不能给出 PASS',
+                    'blocking_defects': [d['defect_id'] for d in blocking_defects],
+                    'dry_run': dry_run}
+        criterion_entries = _criterion_evidence_entries(
+            criterion_evidence, repo, goal, target, verifier, target_head)
+        mapping = _mapping_summary(criterion_entries, goal)
+        if mapping['status'] != 'complete':
+            status = _mapping_outcome(criterion_entries, mapping)
+            return {'schema_version': '1.2', 'kind': 'verify_result',
+                    'status': status, 'verified': False, 'verification': None,
+                    'reason': ('PASS 需要覆盖全部必达标准的 criterion evidence mapping；'
+                               '只有日志和退出码不足以证明覆盖'
+                               if not criterion_entries else
+                               'criterion evidence 未满足完整、已确认的覆盖要求'),
+                    'mapping': mapping, 'criterion_evidence': criterion_entries,
+                    'dry_run': dry_run}
     tests = {'command': test_command or '', 'exit_code': test_exit,
-             'log': test_log or '', 'log_exists': bool(_log_problem(repo, test_log) is None),
-             'log_content_sha256': log_hash, 'worktree_dirty_at_verification': worktree_dirty}
+             'log': test_log or '', 'log_exists': bool(_log_problem(repo, test_log) is None)}
     ci = {'url': ci_url or '', 'status': ci_status or 'not_provided',
           'provenance': 'declared_unfetched' if ci_url else 'none'}
     review = {'url': review_url or '', 'state': review_state or 'not_provided',
               'provenance': 'declared_unfetched' if review_url else 'none'}
-    # declared_unfetched CI/review cannot grant verified status; the CLI does not
-    # fetch or validate external URLs, so any caller-supplied URL is self-reported.
-    ci_unfetched = bool(ci_url) and ci.get('provenance') == 'declared_unfetched'
-    review_unfetched = bool(review_url) and review.get('provenance') == 'declared_unfetched'
-    if evidence_level in ('externally_verified', 'human_approved') and (ci_unfetched or review_unfetched):
-        verified = False
-    verified = (verdict == 'pass' and evidence_level in ('locally_observed', 'externally_verified', 'human_approved')
-                and not stale and not any(f['severity'] == 'high' for f in finding_list)
-                and not (ci_unfetched or review_unfetched))
+    observed_rank = max([EVIDENCE_TRUST.get(entry['observed_level'], 0)
+                         for entry in criterion_entries] or [0])
+    if verdict != 'pass':
+        observed_rank = EVIDENCE_TRUST[evidence_level]
+    trust_rank = min(EVIDENCE_TRUST[evidence_level], observed_rank)
+    trust_level = next(level for level, rank in EVIDENCE_TRUST.items() if rank == trust_rank)
+    # R-1 Fix: verified requires locally_observed evidence AND complete criterion mapping
+    # with all entries having evidence_matched=True (coverage confirmed by independent verifier)
+    all_criteria_matched = (verdict == 'pass' and criterion_entries
+                           and all(entry.get('evidence_matched') for entry in criterion_entries))
+    verified = (verdict == 'pass' and evidence_level == 'locally_observed'
+                and not stale and mapping['status'] == 'complete'
+                and all_criteria_matched
+                and not any(f['severity'] == 'high' for f in finding_list))
     _check_run_transition(target, 'verified' if verified else ('failed' if verdict == 'fail' else target.get('status')))
     record = {
         'schema_version': '1.2', 'kind': 'verification_record',
@@ -1079,6 +1380,12 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
         'independence': independence,
         'target_head_sha': target_head, 'current_head_sha': current_head, 'stale': stale,
         'standard': standard, 'verdict': verdict, 'evidence_level': evidence_level,
+        'trust_level': trust_level,
+        'status': ('VERIFIED' if verified else ('FAILED' if verdict == 'fail' else 'INCONCLUSIVE')),
+        'mapping_status': mapping['status'],
+        'criterion_evidence': criterion_entries,
+        'covered_criteria': mapping.get('covered', []),
+        'missing_criteria': mapping.get('missing', []),
         'verified': verified, 'checks': {'tests': tests, 'ci': ci, 'review': review},
         'findings': [], 'created_at': utc_now(), 'revision': 1,
     }
@@ -1103,8 +1410,10 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
         defect_paths.append(_defect_path(repo, record['task'], defect_id))
     record['findings'] = [d['defect_id'] for d in defects]
     path = _verification_path(repo, record['task'], record['verification_id'])
+    # R-1 Fix: Include 'standard' in identity to detect same verification_id with different standards
     identity = ('verification_id', 'target_run', 'verifier_run', 'target_head_sha',
-                'verdict', 'evidence_level', 'standard', 'findings', 'verified')
+                'verdict', 'evidence_level', 'trust_level', 'status', 'mapping_status',
+                'criterion_evidence', 'findings', 'verified', 'standard')
     resolved = []
     if verdict == 'pass':
         for defect_id in resolves_defects or []:
@@ -1117,13 +1426,17 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
             if fixed_sha and target_head and _is_ancestor(repo, fixed_sha, target_head) is False:
                 raise PMError(f'缺陷 {defect_id} 的修复提交不在被验证提交历史中')
             resolved.append((defect, dpath))
-    result = {'schema_version': '1.2', 'kind': 'verify_result', 'verification': record,
+    result = {'schema_version': '1.2', 'kind': 'verify_result',
+              'status': record['status'], 'verified': verified,
+              'verification': record, 'mapping': mapping,
               'defects': defects, 'path': relpath(repo, path), 'created': not path.is_file(),
               'would_update_run_status': ('verified' if verified else
                                           ('failed' if verdict == 'fail' else target.get('status'))),
-              'caveat': 'CLI 不联网核对 CI 或 review 状态；declared_unfetched 的 CI/review 不能获得 verified；'
-                        'manual 证据的 approved_by 不得为 Agent 标识；日志必须在仓库内且绑定内容哈希；'
-                        '工作树 dirty 时不能给出 pass。',
+              'caveat': ('R-1 整改：CLI 不再接受 externally_verified 或 human_approved 作为声明的 '
+                         'evidence level。CI/review 证据在 criterion mapping 中只获得 agent_claimed '
+                         '信任。人工批准（manual 证据）必须配合 verification 记录与 criterion mapping '
+                         '才能证明标准达成。测试日志必须在仓库内。PASS 要求每个必达标准都有绑定提交、'
+                         '独立复核 coverage 的证据映射，且所有映射的 evidence_matched 为 true。'),
               'dry_run': dry_run}
     if dry_run:
         if path.is_file():
@@ -1155,19 +1468,6 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
                                               'git': {**current.get('git', {}), 'head_sha': target_head}})
     elif verdict == 'fail':
         _mutate(target_path, lambda current: {**current, 'status': 'failed'})
-    # Audit log: persist every verification attempt including rejected ones.
-    audit_entry = {
-        'timestamp': utc_now(), 'verification_id': record['verification_id'],
-        'target_run': target_run, 'verifier_run': verifier_run,
-        'standard': standard, 'verdict': verdict,
-        'evidence_level': evidence_level, 'verified': verified,
-        'stale': stale, 'worktree_dirty': worktree_dirty,
-        'log_content_sha256': log_hash,
-    }
-    audit_dir = _root(repo, 'audit')
-    audit_dir.mkdir(parents=True, exist_ok=True)
-    with open(audit_dir / 'verification_attempts.jsonl', 'a', encoding='utf-8') as f:
-        f.write(json.dumps(audit_entry, ensure_ascii=False) + '\n')
     result['defects'] = written_defects
     result['verification'] = record
     return result
@@ -1245,6 +1545,12 @@ def reconcile(repo: Path, config: dict | None = None, format: str = 'json') -> d
         if goal.get('status') == 'achieved' and not evaluation['satisfied']:
             add('high', 'achieved_goal_unsatisfied', f'Goal {gid} 已标记 achieved，但成功标准未满足',
                 [gid, *evaluation['blocking']], '重新评估或降级 Goal 状态')
+        if (evaluation['evaluation_status'] in ('needs_review', 'partial', 'insufficient_evidence')
+                and goal.get('status') in ('active', 'evaluating')):
+            add('medium', 'goal_evidence_needs_review',
+                f'Goal {gid} 的证据状态是 {evaluation["evaluation_status"]}',
+                [gid, *evaluation['blocking']],
+                '为每个必达标准补充带 criterion 映射和独立 coverage 复核的验证证据')
         if goal.get('status') in ('approved', 'active') and not linked_runs:
             add('medium', 'goal_without_runs', f'Goal {gid} 没有关联执行记录', [gid],
                 '拆分任务并 run start，或说明为何尚未开始')
@@ -1318,9 +1624,36 @@ def reconcile(repo: Path, config: dict | None = None, format: str = 'json') -> d
         if verification.get('verdict') == 'pass' and verification.get('evidence_level') == 'agent_claimed':
             add('high', 'pass_from_agent_claim', f'验证 {vid} 把 Agent 自报当成 pass', [vid],
                 '改为 fail/inconclusive，补充独立证据')
+        if verification.get('verdict') == 'pass':
+            if not verification.get('criterion_evidence'):
+                add('medium', 'pass_without_criterion_mapping',
+                    f'验证 {vid} 是 pass，但没有 criterion evidence mapping', [vid],
+                    '对每个必达标准记录 evidence id、提交、日志和独立 coverage 复核')
+            elif verification.get('mapping_status') != 'complete':
+                add('high', 'pass_with_partial_coverage',
+                    f'验证 {vid} 是 pass，但 criterion 覆盖不完整', [vid],
+                    '补齐未覆盖标准，或把结论降级为 partial/inconclusive')
+            for entry in verification.get('criterion_evidence') or []:
+                if entry.get('description_match') is False:
+                    add('medium', 'criterion_description_mismatch',
+                        f'验证 {vid} 的证据描述与标准 {entry.get("criterion_id")} 不一致',
+                        [vid, entry.get('criterion_id')], '重新核对标准与测试覆盖范围')
         if verification.get('verdict') == 'pass' and not verification.get('verified'):
             add('medium', 'unverified_pass', f'验证 {vid} 结论为 pass 但可信级别不足', [vid],
                 '补充证据或降级结论')
+
+    evidence_goals = {}
+    for verification in verifications:
+        for entry in verification.get('criterion_evidence') or []:
+            evidence_id = entry.get('evidence_id')
+            if evidence_id:
+                evidence_goals.setdefault(evidence_id, set()).add(verification.get('goal_id'))
+    for evidence_id, goal_ids in evidence_goals.items():
+        if len(goal_ids) > 1:
+            add('high', 'criterion_evidence_reused',
+                f'证据 {evidence_id} 被多个 Goal 复用：' + '、'.join(sorted(goal_ids)),
+                [evidence_id, *sorted(goal_ids)],
+                '为每个 Goal 使用独立证据，并重新核对覆盖范围')
 
     for defect in defects:
         if defect.get('status') in ('open', 'fixed') and defect.get('severity') == 'high':

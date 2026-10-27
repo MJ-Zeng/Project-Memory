@@ -40,6 +40,22 @@
         "minLength": 1
       }
     },
+    "frozen_roots": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "冻结快照根目录；其中文件不能作为当前知识，引用候选需标记 authority_mismatch。"
+    },
+    "evidence_roots": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "证据材料根目录；只作为可审计证据，不作为当前知识。"
+    },
     "mirror_policy": {
       "enum": [
         "active",

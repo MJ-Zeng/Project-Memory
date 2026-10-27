@@ -80,8 +80,8 @@ overlay 不写 GitHub 模板，也不写 INDEX、CURRENT_STATE 和架构占位�
 2. 运行 `goal create`。必须提供 `--outcome`、`--owner` 和至少一个必达 `--criterion`；标准要能用证据判断，不要写“体验更好”这类无法核验的话。
 3. 默认状态是 `proposed`。转 `approved` 必须由授权人提供 `--approved-by`；再转 `active` 才开始执行。Agent 不要代填批准人。
 4. 已批准目标和成功标准只能由授权人通过可审查的变更修改。不要直接改 `.project-memory/goals/*.json` 绕过审批。
-5. 用 `goal evidence` 为具体 criterion 添加证据。`test` 需要本地日志和 0 退出码，`manual` 需要 `--approved-by`，`commit` 需要当前历史中的完整 SHA，`verification` 需要已通过且绑定当前 head 的验证记录。
-6. `goal evaluate` 只检查证据是否存在、是否绑定当前提交，不判断证据在语义上是否支持结论。Issue 全部关闭不等于目标达成。
+5. 用 `goal evidence` 为具体 criterion 添加补充材料。`test` 需要本地日志和 0 退出码，`commit` 需要当前历史中的完整 SHA，`manual` 需要 `--approved-by` 和可追溯的 `--ref`（批准链接、PR/Issue 编号或 40 位提交 SHA）。直接 `test`/`commit` 证据只说明“执行过”或“提交存在”，不能单独证明标准已达成；正式达成依据应来自带 criterion evidence mapping 的 `verification`。
+6. `goal evaluate` 只接受已确认覆盖的 criterion 映射或人工批准。它会区分 `satisfied`、`needs_review`、`partial`、`insufficient_evidence` 和 `blocked_by_defect`；Issue 全部关闭不等于目标达成，无关的 smoke 日志也不算覆盖。
 7. 转 `achieved` 需要标准全部满足，并由授权人提供 `--approved-by`。评估建议本身不是批准。
 
 ## 流程：run start / checkpoint / finish
@@ -89,30 +89,33 @@ overlay 不写 GitHub 模板，也不写 INDEX、CURRENT_STATE 和架构占位�
 1. 开始前确认 Goal 已 `active`、任务 ID、实际使用的模型提供方和模型 ID、Agent 工具、会话 ID、分支和 base SHA。不知道就留空并说明，不要猜。
 2. `run start` 登记执行。独立验证者用 `--role verifier`，并在另一个会话或人中执行。并行执行同一任务会触发警告；GitHub 上的任务认领只是约定，不是分布式锁。
 3. 有实质进展、换阶段或预计中断时写 `run checkpoint`。检查点不可改写；相同内容重试返回原记录。
-4. `run finish` 写 1.2 交接记录和完成/剩余/阻塞/测试/下一步，把执行置为 `submitted`、`failed` 或 `cancelled`。它不做独立验证。同一 run 已有 1.1 handoff 时不能原地升级，改用新的 run ID。
+4. `run finish` 写 1.2 交接记录和完成/剩余/阻塞/测试/下一步，把执行置为 `submitted`、`failed` 或 `cancelled`。每条测试证据都需要命令、整数退出码和可读取的证据日志；提交必须真实存在。它不做独立验证。同一 run 已有 1.1 handoff 时不能原地升级，改用新的 run ID。
 5. 换模型、换工具或换会话时使用新的 run ID，用新 run 的 `base_sha` 指向前一个 head，并引用旧 run。不要覆盖旧记录。
 6. 相同 run ID 和相同内容重试是幂等的；内容不同会失败。状态变了就换新的 run ID。
 
 ## 流程：run resume
 
 1. 运行 `run resume --task TASK [--run-id RUN]` 或 `--goal GOAL`。看返回的 `status`：`resume_ready`、`needs_handoff`、`needs_human`、`stale_base`、`verified` 或 `no_run`。
-2. `resume_ready` 只表示记录齐全。继续之前逐项核对 `base_is_ancestor`、`head_matches_current`、handoff 中的提交和测试，以及未关闭的缺陷。
+2. `resume_ready` 只表示记录齐全。继续之前逐项核对 `base_is_ancestor`、`head_matches_current`、handoff 中的提交和测试，以及未关闭的缺陷。新 run 没有自己的 handoff 时，恢复包会继承同一任务前一个已结束 executor 的 handoff，并在 `handoff_inherited_from` 和 warnings 中标明；它仍然只是记录，不证明前一个 Agent 的声明为真。
 3. `stale_base` 时停下来，请人决定如何对齐分支。`needs_human` 常见原因是同一任务有多个活跃 executor，或标记 verified 的提交已不是当前 HEAD。
 4. 默认只选择 executor；没有 handoff 时可以用最近的检查点恢复。1.1 旧 handoff 仍可读，但缺模型、head、测试和下一步，必须降级使用并明确说明。
 5. 恢复包不证明前一个 Agent 的声明为真。
 
 ## 流程：verify
 
-1. 被验证执行必须已 `run finish`，状态为 `submitted`、`verified` 或 `failed`。验证者必须使用另一个 run ID，并登记为 `--role verifier`；agent、model、session 三项都与被验证执行相同会被拒绝。
+1. 被验证执行必须已 `run finish`，状态为 `submitted`、`verified` 或 `failed`。验证者必须使用另一个 run ID，并登记为 `--role verifier`；验证执行必须与被验证执行属于同一 Goal 和任务，且 agent、model、session 三项都与被验证执行相同会被拒绝。
 2. 选择证据级别：
    - `agent_claimed`：只能记录声明，不能给出 pass。
    - `locally_observed`：需要 `--test-command`、整数 `--test-exit` 和存在的非空本地证据日志；日志不能是 canonical 文档。
    - `externally_verified`：需要 `--ci-url` 和 `--ci-status passed`。CLI 不联网抓取，记录为 `declared_unfetched`。
    - `human_approved`：需要 `--review-url` 和 `--review-state approved`。CLI 不认证审批人，仍属调用方声明。
+   证据级别是声明，不是通行证；最终可信度取声明级别与实际可观察证据的较小值。
 3. 用 `--expected-sha` 固定被验证提交。当前 HEAD 已经变化时，不能对旧提交给出 pass，必须先对齐并复验。
-4. 用 `--findings-file` 提交发现，每项包含 `severity`、`summary`、`file`、可选的 `line` 和 `repro`。有 high 级发现时不能 pass。
-5. pass 会把目标执行置为 `verified`；fail 置为 `failed`，并创建缺陷记录。验证记录绑定 `target_head_sha`，事后改代码不会自动让旧验证继续有效。
-6. 同一模型的另一个会话可以算独立验证（会话必须可区分），但要在报告里写明“同模型独立验证”，不要暗示跨模型。验证记录不能跨 Goal 复用；事后改代码会让旧验证失效。
+4. pass 必须提供 `--criterion-evidence` JSON，为每个必达标准记录：`criterion_id`、`goal_id`、`task_id`、`criterion_description`、`target_repository`、`target_commit_sha`、`evidence_id`、`evidence_source`、`evidence_command`、`evidence_log`、`evidence_exit_code`、`execution_status`、`coverage_claim`、`coverage_review_status`、`independent_verifier`、`verification_result`。映射必须覆盖全部必达标准，绑定同一个 `target_commit_sha`，coverage 由独立 verifier 复核为 `confirmed`。字段模板见 `assets/criterion-evidence.schema.json`。
+5. 只有日志和 0 退出码、但没有 criterion 映射或 coverage 未确认时，返回 `INSUFFICIENT_EVIDENCE`，不写 pass 记录。只覆盖部分标准时返回 `PARTIAL_COVERAGE`。存在未关闭 high 缺陷时返回 `BLOCKED_BY_DEFECT`。
+6. 用 `--findings-file` 提交发现，每项包含 `severity`、`summary`、`file`、可选的 `line` 和 `repro`。有 high 级发现时不能 pass。
+7. 只有 `status=VERIFIED` 才把目标执行置为 `verified`；fail 置为 `failed`，并创建缺陷记录。验证记录绑定 `target_head_sha`，事后改代码不会自动让旧验证继续有效。
+8. 同一模型的另一个会话可以算独立验证（会话必须可区分），但要在报告里写明“同模型独立验证”，不要暗示跨模型。验证记录不能跨 Goal 复用；同一 `evidence_id` 复用会被拒绝。缺少 criterion 映射的旧 pass 记录可读，但不能作为 Goal 达成依据。
 
 ## 流程：缺陷
 
@@ -124,7 +127,7 @@ overlay 不写 GitHub 模板，也不写 INDEX、CURRENT_STATE 和架构占位�
 ## 流程：evaluate 与 reconcile
 
 1. `goal evaluate` 返回每个标准的 satisfied/unsatisfied、阻塞项和建议。CLI 在未满足时返回 2。
-2. `reconcile --format markdown` 生成可读对账报告，`--fail-on high` 可用于门禁。它检查：已达成的目标是否仍有未满足标准、有目标但没有执行、高等级缺陷、pass 没有验证记录、孤立执行、未验证提交、验证记录缺失、handoff 缺失、基准不是祖先、多个活跃 executor、旧提交验证、Agent 自报 pass、缺陷标为 verified 却没有有效记录、修复提交不在历史中、文档审计发现、accepted ADR 未关联。verifier run 不计入未验证提交或并发冲突。
+2. `reconcile --format markdown` 生成可读对账报告，`--fail-on high` 可用于门禁。它检查：已达成的目标是否仍有未满足标准、有目标但没有执行、高等级缺陷、pass 没有验证记录、pass 没有 criterion 映射、pass 覆盖不完整、同一 evidence id 跨 Goal 复用、criterion 描述与标准不一致、孤立执行、未验证提交、验证记录缺失、handoff 缺失、基准不是祖先、多个活跃 executor、旧提交验证、Agent 自报 pass、缺陷标为 verified 却没有有效记录、修复提交不在历史中、文档审计发现、accepted ADR 未关联。verifier run 不计入未验证提交或并发冲突。
 3. 对账只报告，不自动改 canonical 文档、不合并、不关闭任务。发现要转成 Issue 或受审查的变更。
 4. 对账报告和知识图谱可以随时重建，不要把它们当第二份权威存储。
 
@@ -164,6 +167,9 @@ overlay 不写 GitHub 模板，也不写 INDEX、CURRENT_STATE 和架构占位�
 - 存在互相冲突的 accepted 决策；
 - 缺少必需批准，或有人要求 Agent 代填 `approved_by`；
 - 要求执行者验证自己，或直接填写 `verified: true`；
+- 用无关 smoke 日志、退出码 0 或“PASS”字样代替 criterion 覆盖证据；
+- 手工填写 `evidence_level` 试图抬高可信度，或把 coverage 未确认的测试当成 pass；
+- 把缺少 criterion 映射的旧 pass 记录当作当前标准达成依据；
 - Goal 标准未满足却要求转 `achieved`，或要求修改已批准的标准；
 - 存在 high 级缺陷却要求 pass；
 - 分支或来源已经变化，基准提交不再是祖先；

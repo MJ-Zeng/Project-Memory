@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 from .common import PMError, atomic_replace, ensure_utf8_stdio, json_text, require_repo, safe_json
 from .bootstrap import init, sync_tooling
-from .knowledge import create_adr, create_document, audit, load_config
+from .knowledge import create_adr, create_document, audit, load_config, load_reference_manifest
 from .graph import build_graph, lexical_search, semantic_search
 from .workflows import context, handoff, finish
 from .coordination import (create_goal, goal_list, goal_show, evaluate_goal, add_goal_evidence,
@@ -49,6 +49,8 @@ def _add_roots(s):
     s.add_argument('--docs-root', action='append', help='规范文档根目录，相对仓库路径（可重复）')
     s.add_argument('--mirror-root', action='append', help='只读镜像根目录，用于检查与规范文档的分歧')
     s.add_argument('--legacy-root', action='append', help='标记为历史材料的根目录')
+    s.add_argument('--frozen-root', action='append', help='冻结快照根目录；其中的候选不得当作当前知识')
+    s.add_argument('--evidence-root', action='append', help='证据材料根目录；只作为证据，不作为当前知识')
 
 
 def _leaf(sub, name, desc):
@@ -134,6 +136,8 @@ def parser():
     s.add_argument('--fail-on', choices=['high', 'medium', 'low', 'none'], default='none')
     s.add_argument('--scope', choices=['all', 'current'], default='all', help='current 只审规范根目录中 current/draft/in-flight/未分类的文档和所有 ADR，不包含 mirror、legacy、evidence 和历史文档')
     s.add_argument('--allow-empty', action='store_true', help='没有规范文档时不报错')
+    s.add_argument('--repo-manifest', type=Path, help='只读仓库清单 JSON；只含路径元数据，不读取文件内容')
+    s.add_argument('--path-source', choices=['manifest', 'filesystem', 'shadow'], help='显式声明路径证据来源')
     s.add_argument('--output', type=Path)
     _add_roots(s)
     s = base('graph', '用本地文档和快照构建证据图')
@@ -245,7 +249,10 @@ def parser():
     s.add_argument('--standard', required=True)
     s.add_argument('--verdict', required=True, choices=['pass', 'fail', 'inconclusive'])
     s.add_argument('--evidence-level', required=True,
-                   choices=['agent_claimed', 'locally_observed', 'externally_verified', 'human_approved'])
+                   # R-1 Fix: Only locally_observed and agent_claimed are accepted.
+                   # externally_verified and human_approved are blocked because the CLI
+                   # cannot actually fetch CI/review URLs to verify them.
+                   choices=['agent_claimed', 'locally_observed'])
     s.add_argument('--test-command')
     s.add_argument('--test-exit', type=int)
     s.add_argument('--test-log')
@@ -257,6 +264,8 @@ def parser():
     s.add_argument('--verification-id')
     s.add_argument('--resolves-defect', action='append', default=[])
     s.add_argument('--expected-sha')
+    s.add_argument('--criterion-evidence', type=Path,
+                   help='JSON：每个必达标准到证据的映射（criterion evidence mapping）')
     s.add_argument('--dry-run', action='store_true')
 
     s = base('defect', '缺陷记录与修复状态')
@@ -289,6 +298,10 @@ def _config(args, repo):
         cfg['mirror_roots'] = args.mirror_root
     if getattr(args, 'legacy_root', None):
         cfg['legacy_roots'] = args.legacy_root
+    if getattr(args, 'frozen_root', None):
+        cfg['frozen_roots'] = args.frozen_root
+    if getattr(args, 'evidence_root', None):
+        cfg['evidence_roots'] = args.evidence_root
     return cfg
 
 
@@ -354,7 +367,16 @@ def run(args):
     elif args.command == 'new-doc':
         emit(create_document(repo, args.id, args.title, args.kind, args.status, args.owner, args.path, args.issue, _config(args, repo)))
     elif args.command == 'audit':
-        report = audit(repo, _config(args, repo), args.allow_empty, args.scope)
+        manifest = None
+        if args.repo_manifest:
+            manifest = load_reference_manifest(args.repo_manifest, repo)
+            declared = manifest.get('source', 'manifest')
+            if declared in ('manifest', 'metadata-only'):
+                declared = 'manifest'
+            if args.path_source and args.path_source != declared:
+                raise PMError('--path-source 与清单声明的来源不一致')
+        report = audit(repo, _config(args, repo), args.allow_empty, args.scope,
+                       manifest=manifest, path_source=args.path_source)
         emit(report, args.output)
         levels = {'high': {'high'}, 'medium': {'medium', 'high'}, 'low': {'low', 'medium', 'high'}, 'none': set()}
         if any(x['severity'] in levels[args.fail_on] for x in report['findings']):
@@ -435,13 +457,14 @@ def run(args):
                   'runs': iter_runs(repo, task=args.task, goal=args.goal)})
     elif args.command == 'verify':
         findings = safe_json(args.findings_file) if args.findings_file else []
+        mapping = safe_json(args.criterion_evidence) if args.criterion_evidence else None
         result = verify_run(repo, args.target_run, args.verifier_run, args.standard,
                             args.verdict, args.evidence_level, args.test_command, args.test_exit,
                             args.test_log, args.ci_url, args.ci_status, args.review_url,
                             args.review_state, findings, args.verification_id,
-                            args.resolves_defect, args.expected_sha, args.dry_run)
+                            args.resolves_defect, args.expected_sha, mapping, args.dry_run)
         emit(result)
-        return 0 if result['verification'].get('verified') else 2
+        return 0 if result.get('verified') else 2
     elif args.command == 'defect':
         if args.defect_command == 'list':
             emit(defect_list(repo, args.task, args.status))

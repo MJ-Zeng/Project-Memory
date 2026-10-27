@@ -53,14 +53,39 @@
 
 ### Goal 证据
 
-| kind | 通过条件 | 可信级别 |
-|---|---|---|
-| `verification` | 验证记录 verdict=pass、`verified=true`、未 stale，且 `target_head_sha` 等于被验证执行当前 head | externally_verified 或 human_approved，取决于验证记录 |
-| `commit` | 完整 40 位 SHA，提交存在且在当前 HEAD 历史中 | artifact |
-| `test` | 本地日志存在，`exit_code` 为 0 | locally_observed，仍是自报 |
-| `manual` | 提供 `approved_by` | human_approved |
+| kind | 通过条件 | 能否单独满足标准 | 可信级别 |
+|---|---|---|---|
+| `verification` | 验证记录 `status=VERIFIED`、`mapping_status=complete`，且该 criterion 有 `evidence_matched` 映射 | 能 | evidence_matched；若顶层声明更高，取实际可观察级别 |
+| `commit` | 完整 40 位 SHA，提交存在且在当前 HEAD 历史中 | 不能，只证明提交存在 | artifact |
+| `test` | 本地日志存在，`exit_code` 为 0 | 不能，只证明执行过；需要 criterion 映射和 coverage 复核 | locally_observed |
+| `manual` | 提供 `approved_by`，且 `ref` 是可追溯的批准链接、PR/Issue 编号或 40 位提交 SHA | 能 | human_approved |
 
-`goal evaluate` 只判断证据是否存在、是否绑定当前提交，不判断证据在语义上是否真的支持标准。
+`goal evaluate` 只接受已确认覆盖的 criterion 映射或人工批准。直接 `test`/`commit` 证据会被记录为补充材料，但不会让标准变成 satisfied。评估状态分为 `satisfied`、`needs_review`、`partial`、`insufficient_evidence` 和 `blocked_by_defect`；Issue 全部关闭不等于目标达成。
+
+### Criterion Evidence Mapping
+
+pass 验证必须提供 `--criterion-evidence` JSON（模板见 `assets/criterion-evidence.schema.json`）。每个必达标准一条：
+
+| 字段 | 说明 |
+|---|---|
+| `criterion_id` | Goal 中的标准 ID，必须存在 |
+| `goal_id` / `task_id` | 必须与验证目标和执行任务一致 |
+| `criterion_description` | 必须与 Goal 标准文本一致；不一致不能确认覆盖 |
+| `target_repository` | 必须是当前仓库名或路径 |
+| `target_commit_sha` | 完整 40 位 SHA，必须等于被验证执行的 head |
+| `evidence_id` | 稳定的证据 ID；跨 Goal 复用会被拒绝 |
+| `evidence_source` | `test`、`check`、`command`、`ci` 或 `review` |
+| `evidence_command` / `evidence_log` | 本地执行证据必须有命令和可读取的非空日志 |
+| `evidence_exit_code` | 本地执行证据必须有整数退出码；`passed` 时必须是 0 |
+| `execution_status` | `passed`、`failed`、`error`、`not_run` 或 `unknown` |
+| `coverage_claim` | 说明该检查覆盖标准的哪一部分；只是声明，不是证明 |
+| `coverage_review_status` | `confirmed` 才能用于 pass；由独立 verifier 复核 |
+| `independent_verifier` | 必须等于 verifier run 的 agent；与被验证执行的 agent 相同且 model/session 也相同时拒绝 |
+| `verification_result` | `pass`、`fail` 或 `inconclusive`；pass 验证中必须是 `pass` |
+
+映射必须覆盖全部必达标准并绑定同一个 `target_commit_sha`。字段齐全但 coverage 未确认时返回 `INSUFFICIENT_EVIDENCE`；只覆盖部分标准时返回 `PARTIAL_COVERAGE`；存在未关闭 high 缺陷时返回 `BLOCKED_BY_DEFECT`。这些状态都不会写 pass 记录，也不会把执行置为 `verified`。
+
+CLI 不能判断测试与标准的语义相关性；`coverage_claim` 中的关键词相似度不算覆盖证据。确认覆盖必须由独立 verifier 明确写出 `coverage_review_status=confirmed`，并接受人工复核。
 
 ### Goal 状态
 
@@ -160,9 +185,13 @@ queued -> running -> submitted -> verified
 
 ## 验证记录
 
-必填：`verification_id`、`task`、`goal_id`、`target_run`、`verifier_run`、`verifier`、`target_head_sha`、`standard`、`verdict`、`evidence_level`、`verified`、`checks`、`findings`、`created_at`、`revision`。可选：`current_head_sha`、`stale`。
+必填：`verification_id`、`task`、`goal_id`、`target_run`、`verifier_run`、`verifier`、`target_head_sha`、`standard`、`verdict`、`evidence_level`、`trust_level`、`verified`、`checks`、`findings`、`created_at`、`revision`。可选：`current_head_sha`、`stale`、`status`、`mapping_status`、`criterion_evidence`、`covered_criteria`、`missing_criteria`。
 
 `verdict`：`pass`、`fail`、`inconclusive`。
+
+`status`：`VERIFIED`、`INSUFFICIENT_EVIDENCE`、`PARTIAL_COVERAGE`、`BLOCKED_BY_DEFECT`、`FAILED`、`INCONCLUSIVE`。只有 `VERIFIED` 会把目标执行置为 `verified`。
+
+`mapping_status`：`missing`、`partial`、`complete`、`invalid`。pass 验证要求 `complete`。
 
 `evidence_level` 与可信级别：
 
@@ -173,9 +202,11 @@ queued -> running -> submitted -> verified
 | `externally_verified` | 2 | CI URL、`ci_status=passed`；记录标记 `provenance: declared_unfetched` |
 | `human_approved` | 3 | review URL、`review_state=approved`；记录标记 `provenance: declared_unfetched` |
 
+`evidence_level` 是调用方声明。`trust_level` 取声明级别与实际可观察证据级别的较小值；手工提高声明不会提高 `trust_level`。
+
 规则：
 
-- `target_run` 和 `verifier_run` 必须不同。
+- `target_run` 和 `verifier_run` 必须不同，且属于同一 Goal 和任务。
 - verifier run 的 `role` 必须是 `verifier`；被验证 run 的 `role` 必须是 `executor`。
 - 验证者必须在 agent、model 或 session 上与被验证执行不同。三项都相同就拒绝；只有记录层面的独立性，不代表结论正确。
 - 被验证执行必须是 `submitted`、`verified` 或 `failed`。
@@ -183,9 +214,13 @@ queued -> running -> submitted -> verified
 - `current_head_sha` 与 `target_head_sha` 不同时 `stale=true`，不能给出 pass。
 - `--expected-sha` 必须等于被验证执行的 head。
 - 有 high 级 finding 时不能 pass。
-- `verified = (verdict == pass) and (evidence_level != agent_claimed) and not stale and no high findings`。
-- pass 把目标执行置为 `verified`；fail 置为 `failed`。
+- pass 必须提供 `criterion_evidence`，覆盖全部必达标准，且每条映射 `evidence_matched=true`、`coverage_review_status=confirmed`、`target_commit_sha=target_head_sha`、`criterion_description` 与 Goal 标准一致。
+- 存在未关闭 high 缺陷（且未在本次 `--resolves-defect` 中处理）时返回 `BLOCKED_BY_DEFECT`。
+- 只有日志和退出码、但没有 criterion 映射时返回 `INSUFFICIENT_EVIDENCE`；只覆盖部分标准时返回 `PARTIAL_COVERAGE`。
+- `verified = (verdict == pass) and (evidence_level != agent_claimed) and not stale and mapping_status == complete and no high findings`。
+- pass 且 `status=VERIFIED` 才把目标执行置为 `verified`；fail 置为 `failed`。
 - 验证记录不可变。代码变化后要重新验证，生成新记录。
+- 缺少 criterion 映射的旧 pass 记录可读，但 `goal evidence` 不会接受它作为标准达成依据；`reconcile` 会报告 `pass_without_criterion_mapping`。
 
 `findings` 在验证记录里是缺陷 ID 数组。缺陷记录保留原始位置、复现和严重度。
 
@@ -221,6 +256,11 @@ queued -> running -> submitted -> verified
 - 有 Goal 但没有执行；
 - 高等级缺陷；
 - pass 没有验证记录；
+- pass 没有 criterion 映射；
+- pass 的 criterion 覆盖不完整；
+- 同一 `evidence_id` 跨 Goal 复用；
+- criterion 描述与 Goal 标准不一致；
+- 进行中的 Goal 证据仍是 `needs_review`、`partial` 或 `insufficient_evidence`；
 - 孤立执行；
 - 未验证提交；
 - 验证记录缺失；
@@ -256,6 +296,26 @@ queued -> running -> submitted -> verified
 `last_verified_at` 表示人在这天重新核对过结论；`updated_at` 只记录编辑。审计只报告年龄，不改写，也不提升状态。
 
 入口文档应控制在几分钟内能读完，大约 2k tokens。它是阅读路径，不是文档的第二份副本。
+
+## Current 文档元数据契约
+
+`status=current` 的 canonical 文档建议包含：
+
+- 必填：`status`、`owner`、`last_verified_at`；已有文档还应保留 `id`、`kind`、`title`。
+- 推荐：`evidence`、`verified_commit`、`related_decisions`、`superseded_by`。
+
+审计只按以下语义报告，不自动改写字段：
+
+- 没有声明 `status`：`unknown_document_status`（low），按推断状态处理，不证明内容错误。
+- current 缺少 `owner`：`current_document_missing_owner`（medium）。
+- current 缺少 `last_verified_at`：`current_document_unverified`（low）。
+- `last_verified_at` 超过 `max_verified_age_days`：`stale_current_document`（入口 medium，其他 current low）；表示需要重新核验，不代表结论错误。
+- `verified_commit` 是当前 HEAD 的祖先：`verified_source_changed`（low）；已分叉：`verified_source_diverged`（medium）；不存在或格式错误：`verified_commit_missing` / `invalid_verified_commit`（medium）。
+- `superseded` 缺少 `superseded_by`：medium。
+- legacy/mirror 缺少新字段：`legacy_metadata_warning`（low，按根目录聚合），不逐篇判定旧文档错误。
+- legacy/mirror 声明 `status=current`：`authority_status_conflict`（medium），不能据此当作当前知识。
+
+这套契约为向后兼容而设计：旧文档不会仅因缺少新字段被自动判错，也不会被批量改写。`evidence`、`verified_commit`、`related_decisions`、`superseded_by` 是推荐字段；缺失只进入 `metadata_contract` 诊断，不单独产生 high/medium finding。
 
 ## 可信级别
 
