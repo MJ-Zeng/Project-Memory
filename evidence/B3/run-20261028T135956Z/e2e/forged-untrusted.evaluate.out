@@ -1,0 +1,27 @@
+{
+  "blocking": [
+    "C1"
+  ],
+  "caveat": "只接受带 criterion evidence mapping 且 coverage 经独立复核的证据；直接 test/commit 证据和旧验证记录可读，但不能单独证明标准已达成。CLI 不能判断语义相关性，仍需人工审查。",
+  "criteria": [
+    {
+      "evidence": [],
+      "id": "C1",
+      "required": true,
+      "statement": "模块通过测试",
+      "status": "insufficient_evidence"
+    }
+  ],
+  "evaluation_status": "insufficient_evidence",
+  "goal_id": "G-B2",
+  "goal_status": "proposed",
+  "kind": "goal_evaluation",
+  "open_high_defects": [],
+  "partial": [],
+  "recommendation": "insufficient_evidence",
+  "recorded_status": "proposed",
+  "recorded_status_consistent": true,
+  "satisfied": false,
+  "schema_version": "1.2",
+  "status_authority": "local_untrusted"
+}

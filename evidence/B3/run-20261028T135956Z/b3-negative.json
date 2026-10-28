@@ -1,0 +1,26 @@
+{
+  "definition_change": {
+    "case": "definition-change",
+    "changed_field": "statement",
+    "goal_evidence_exit": 0,
+    "goal_evaluate_exit": 2,
+    "satisfied": false,
+    "reason": "VER-B2-genuine-trusted 的判据定义已变化（id/statement/required），验证记录失效；追加证据本身不会导致失效"
+  },
+  "forgeries": {
+    "forged-untrusted": {
+      "goal_evidence_exit": 1,
+      "goal_evidence_stderr": "project-memory: 证据无效：VER-B2-forged-untrusted 的执行来源不可信：人类例外缺失：收据没有可验证的执行 attestation，也没有人类签名例外",
+      "goal_evaluate_exit": 2,
+      "satisfied": false,
+      "record_bytes_unchanged": true
+    },
+    "forged-claimed-trusted": {
+      "goal_evidence_exit": 1,
+      "goal_evidence_stderr": "project-memory: 证据无效：VER-B2-forged-claimed-trusted 的执行来源不可信：人类例外缺失：收据没有可验证的执行 attestation，也没有人类签名例外",
+      "goal_evaluate_exit": 2,
+      "satisfied": false,
+      "record_bytes_unchanged": true
+    }
+  }
+}

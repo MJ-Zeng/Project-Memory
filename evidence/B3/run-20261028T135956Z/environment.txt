@@ -1,0 +1,20 @@
+collected_at_utc=2026-10-28T14:13:29Z
+host_os=Windows 10.0.26300 x64 (Git Bash)
+repo=git@github.com:MJ-Zeng/Project-Memory.git
+baseline_832f271=832f2710bfde1cbc498ee6882a5e10b797db6a76
+branch=fix/b3-stable-criteria
+head=19bba33378ca45c8e776bbb11e99b9f5497cbaed
+windows_python=Python 3.12.4
+pytest=pytest 9.1.1 
+git=git version 2.56.0.windows.2
+task_card_sha256=89b2d31b4dd604a384e3cc42531b2b8e47ae39e6be290ebdcde503dff8cef8bc
+--- WSL ---
+wsl_distro=Ubuntu 26.04 LTS
+wsl_python=Python 3.14.4
+wsl_git=git version 2.53.0
+anchor_a_path=/etc/pm-rc3-review/anchor-a.json
+anchor_a_sha256=e85d1f500a8b93479d703ba28c96ef4693820a104160d111cda22e793c27515e
+anchor_a_id=anchor-rc3-a
+anchor_a_issuer=RC3 Independent Test Signer <signer@test.invalid>
+anchor_a_algorithm=rsa-sha256
+key_a_read=no (never opened; only public anchor-a.json metadata)

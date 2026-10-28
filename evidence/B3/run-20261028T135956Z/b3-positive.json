@@ -1,0 +1,49 @@
+{
+  "anchor": "anchor-rc3-a for legacy/evidence-change; ephemeral test anchor for new record",
+  "new_record": {
+    "anchor": "ephemeral-test-anchor (NOT anchor-a)",
+    "verification_id": "VER-c9982231cd1f",
+    "goal_criteria_sha256": "c13c299ac09f49001c728ac847dfc223eec5344c4d50ad0114c9847c6cb6f514",
+    "goal_criteria_legacy_sha256": "b17a716f397aba14c865cc834f38fb5f0c1976531199393d2b186271781e4127",
+    "definition_digest_is_not_legacy": true,
+    "record_sha256_before_evidence": "83f7addb415efa1cd05d65ad82e43b694960632f3b1d6c0258c7755b9c403985",
+    "record_sha256_after_evidence": "83f7addb415efa1cd05d65ad82e43b694960632f3b1d6c0258c7755b9c403985",
+    "record_bytes_unchanged": true,
+    "evidence_cli_exit": 1,
+    "evidence_cli_stderr": "project-memory: 证据无效：VER-c9982231cd1f 没有可信授权来源（unconfigured）：信任锚对当前进程可写；必须由仓库外受保护主体持有",
+    "evaluate_cli_exit": 2,
+    "evaluate_satisfied": false,
+    "evaluate_status": "insufficient_evidence",
+    "evaluate_recommendation": "insufficient_evidence",
+    "library_evaluate_satisfied": false,
+    "caution": "ephemeral anchor under /tmp is rejected by anchor_is_protected (fail closed); new-record anchor-a E2E awaits the PM-01 fixtures/b3/new-stable fixture",
+    "unit_test_evidence": {
+      "file": "tests/test_security_b3.py",
+      "command": "python -m pytest tests/test_security_b3.py -q",
+      "exit": 0,
+      "passed": 10
+    }
+  },
+  "evidence_change": {
+    "case": "evidence-change",
+    "goal_evidence_verification_exit": 0,
+    "goal_evidence_commit_exit": 0,
+    "goal_evaluate_exit": 0,
+    "satisfied": true,
+    "evidence_outputs": [
+      [
+        "verification",
+        true,
+        true
+      ],
+      [
+        "commit",
+        true,
+        false
+      ]
+    ],
+    "record_sha256_before": "e1a607f10a3b9b3ef573398e415050f5614c6f57824a4df7f7d7b72904ed5000",
+    "record_sha256_after": "e1a607f10a3b9b3ef573398e415050f5614c6f57824a4df7f7d7b72904ed5000",
+    "record_bytes_unchanged": true
+  }
+}

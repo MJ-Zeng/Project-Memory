@@ -1,0 +1,27 @@
+{
+  "anchor": "anchor-rc3-a",
+  "cases": [
+    {
+      "case": "genuine-trusted",
+      "goal_evidence_exit": 0,
+      "goal_evidence_stderr": "",
+      "goal_evaluate_exit": 0,
+      "satisfied": true,
+      "evaluation_status": "satisfied",
+      "record_sha256_before": "e1a607f10a3b9b3ef573398e415050f5614c6f57824a4df7f7d7b72904ed5000",
+      "record_sha256_after": "e1a607f10a3b9b3ef573398e415050f5614c6f57824a4df7f7d7b72904ed5000",
+      "record_bytes_unchanged": true
+    },
+    {
+      "case": "exception",
+      "goal_evidence_exit": 0,
+      "goal_evidence_stderr": "",
+      "goal_evaluate_exit": 0,
+      "satisfied": true,
+      "evaluation_status": "satisfied",
+      "record_sha256_before": "af51da4663adcfaff689c70c62e123a0f8ad3131aaaeb5f16c93367d5d0b06e4",
+      "record_sha256_after": "af51da4663adcfaff689c70c62e123a0f8ad3131aaaeb5f16c93367d5d0b06e4",
+      "record_bytes_unchanged": true
+    }
+  ]
+}

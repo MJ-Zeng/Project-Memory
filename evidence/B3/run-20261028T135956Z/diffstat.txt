@@ -1,0 +1,21 @@
+baseline=832f2710bfde1cbc498ee6882a5e10b797db6a76
+code_commit=19bba33
+
+== git diff --stat 832f271..19bba33 ==
+ docs/decisions/ADR-0004-criteria-digest.md | 133 +++++++++++
+ project_memory/coordination.py             |  54 ++++-
+ tasks/B3-context-recovery.md               |  36 +++
+ tests/test_security_b3.py                  | 346 +++++++++++++++++++++++++++++
+ 4 files changed, 566 insertions(+), 3 deletions(-)
+
+== git show --stat --oneline 19bba33 ==
+19bba33 fix(b3): bind verification to criteria definitions, not evidence
+ docs/decisions/ADR-0004-criteria-digest.md | 133 +++++++++++
+ project_memory/coordination.py             |  54 ++++-
+ tasks/B3-context-recovery.md               |  36 +++
+ tests/test_security_b3.py                  | 346 +++++++++++++++++++++++++++++
+ 4 files changed, 566 insertions(+), 3 deletions(-)
+
+== git status before evidence commit ==
+## fix/b3-stable-criteria
+?? evidence/
