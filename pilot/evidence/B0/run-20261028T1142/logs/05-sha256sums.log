@@ -1,0 +1,15 @@
+hashing files:
+commands.jsonl
+diffstat.txt
+environment.txt
+logs/01-remediation-probe.log
+logs/02-pytest.log
+logs/03-environment.log
+logs/04-diffstat.log
+README.md
+remediation.json
+scripts/diffstat.py
+scripts/environment.py
+scripts/finalize.py
+scripts/record.py
+scripts/remediation_probe.py
