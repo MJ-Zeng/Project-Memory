@@ -32,8 +32,9 @@
 
 ## 当前轮次
 
-- 轮次：**B1**（尚未派发）
-- 基线：`dev/v1.0` 的脚手架提交；冻结参照 `0d08a1a`
+- 轮次：**B1**（`ready_to_dispatch`，尚未派发）
+- 基线：`a70ad1900b8ee8825766364976edb5345cba1000`（PR #5 merge commit，B0 合并）；冻结参照 `0d08a1a`
+- 上一轮：B0 已合并（`a70ad19`），B0.1 复审 PASS（`review/b0-8506dd4` 的 `pilot/review/B0/REVIEW-B0.1.md`）
 - 状态：见 `STATUS.md`
 
 ## 目录
@@ -44,6 +45,8 @@ pilot/
   ROLES.md                  角色、输入输出、禁止项、远端写矩阵
   ROUND_PROTOCOL.md         状态机、门禁、Handoff/PR 模板、决定记录
   STATUS.md                 当前状态（带 as_of / verified_by）
+  rounds/B0/task.md         B0 任务卡（已完成、已合并）
+  rounds/B0/handoff-*.md    B0 Handoff
   rounds/B1/task.md         B1 任务卡与验收标准
   rounds/B1/handoff-dispatch.md  PM-01 → PM-02 派发交接
   reference/RC3_B1_B3.md    B1–B3 的脱敏摘要与复现要点
