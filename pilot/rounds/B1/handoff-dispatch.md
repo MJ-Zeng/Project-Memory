@@ -7,11 +7,11 @@ goal_id: G-B1
 round: 1
 from_role: PM-01
 to_role: PM-02
-base_sha: 6420702a2a5aefa05ba7359894e8895fa538e870
+base_sha: <BASE_SHA_FROM_ISSUE>
 candidate_sha: null
 branch: fix/b1-openssl-verifier
 pr: null
-criteria_sha256: 3379825dc61451680b361c0c7ec68098883601366080a2363a7082c195e870ec
+criteria_sha256: 74b1773c97764caaceb7f3841615a9b073e2adeec162b31043de9f399dacf4f0
 agent_label: "PM-01 Supervisor <pm01@pilot.invalid>"   # 自述，不是认证
 session_id: <PM-01 会话标识>
 model: <provider/id>
