@@ -2,12 +2,12 @@
 handoff_id: HO-B1-R1-SUP
 schema: pilot-handoff/v1
 task_id: B1
-issue: see dispatch Issue
+issue: https://github.com/MJ-Zeng/Project-Memory/issues/1
 goal_id: G-B1
 round: 1
 from_role: PM-01
 to_role: PM-02
-base_sha: see dispatch Issue
+base_sha: see Issue #1（B1 派发准备 PR 的 merge commit，含 pilot/kit/b1/positive）
 candidate_sha: null
 branch: fix/b1-openssl-verifier
 pr: null
@@ -16,7 +16,7 @@ agent_label: "PM-01 Supervisor <pm01@pilot.invalid>"   # 自述，不是认证
 session_id: pm01-setup-20261028
 model: dsh/deepseek-flash
 created_at: 2026-10-28T09:10:00+08:00
-status: draft
+status: ready
 ---
 
 # PM-01 → PM-02 派发交接（B1）
@@ -29,6 +29,7 @@ status: draft
 - 目标：阻断 `PATH` / `PROJECT_MEMORY_OPENSSL` 替换验签器，同时保持有效签名可用。
 - 允许修改：见任务卡 §3。
 - 非目标：B2/B3/B4/B5、Release、自动合并。
+- 正向 fixture：`pilot/kit/b1/positive/`（已签名，PR #7 / `f116269`）；用法见该目录 `GENERATION.md`。
 
 ## 2. 阅读顺序
 
@@ -43,7 +44,7 @@ status: draft
 
 ## 3. 不得假设
 
-- 不存在 `main` 分支；基线是 `dev/v1.0` 的脚手架提交。
+- 不存在 `main` 分支；基线见 Issue #1（B1 派发准备 PR 的 merge commit，含 fixture）。
 - 不能读 `/etc/pm-rc3-review/key-a.pem`，不能自行签名。
 - 不能修改任务卡、判据、探针、评测器。
 - PM-01 不会通过聊天补充设计；需要的信息必须在工件里，缺失就记 `BLOCKED`/`NEEDS_INFO`。
@@ -71,3 +72,5 @@ status: draft
 - PM-02 先做冷启动恢复，写 `context-recovery-pm02.md`。
 - 若 Issue/任务卡/hash 未就绪：`BLOCKED`，不要自行补建。
 - 若环境/工具包缺失：`BLOCKED`，不要用替代路径静默绕过。
+- AC-1 正向检查：解包 `pilot/kit/b1/positive/template-repo.tar.gz`，在副本中运行 `goal evidence`（见 `GENERATION.md`），记录 exit、stdout、stderr 与记录哈希。
+- 推送已授权：只推 `fix/b1-openssl-verifier`，开 PR 到 `dev/v1.0`，不合并、不 Approve。

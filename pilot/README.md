@@ -32,8 +32,8 @@
 
 ## 当前轮次
 
-- 轮次：**B1**（`ready_to_dispatch`，尚未派发）
-- 基线：`a70ad1900b8ee8825766364976edb5345cba1000`（PR #5 merge commit，B0 合并）；冻结参照 `0d08a1a`
+- 轮次：**B1**（`dispatched_pending_pm02_start`）
+- 基线：B1 派发准备提交（含 `pilot/kit/b1/positive/`）；精确 SHA 见 Issue #1；冻结参照 `0d08a1a`
 - 上一轮：B0 已合并（`a70ad19`），B0.1 复审 PASS（`review/b0-8506dd4` 的 `pilot/review/B0/REVIEW-B0.1.md`）
 - 状态：见 `STATUS.md`
 
