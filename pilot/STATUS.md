@@ -35,7 +35,7 @@
 | Block force pushes | 开 |
 | Restrict deletions | 开 |
 | Restrict updates | 关 |
-| Conversation resolution | 关 |
+| Conversation resolution | 开 |
 
 **限制**：同账号下分支保护只能防误操作，不能强制“只有人类能合并”。人类批准记录在 PR 评论 + `rounds/B1/decision.md`，不是 GitHub 强制。
 
