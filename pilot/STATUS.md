@@ -21,6 +21,8 @@
 | B0 任务卡 SHA-256 | `81e20cf8c16a30c904e925e195d7748bce5a11f24a62f5c16a3ec15b895061c0` | 2026-10-28 | `sha256sum`；复审复核一致 |
 | B0 状态 | `merged`（PR #5，Merge commit `a70ad19`） | 2026-10-28 | GitHub API `merged=true` |
 | B0.1 复审 | **PASS（程序性独立复核）**；报告 `review/b0-8506dd4` @ `b1e977c` | 2026-10-28 | 该分支的 `pilot/review/B0/REVIEW-B0.1.md` |
+| B2 任务卡 SHA-256 | `3617dab01ca01c05ba2cb9ec87b38eae2622a6b69b480b2e7abb1c0881a7900e` | 2026-10-28 | `Get-FileHash` |
+| B2 状态 | `dispatch_pending_merge`；PR 待建 | 2026-10-28 | 本文件 |
 
 ## 工作区
 
@@ -80,3 +82,4 @@
 - 2026-10-28：B1 正向签名 fixture 生成并合并（PR #7，`f116269`）；`goal evidence` exit 0、记录哈希不变。B1 基线改为含 fixture 的派发准备提交；人类授权派发并允许 PM-02 推送 `fix/b1-openssl-verifier`。
 - 2026-10-28：B1 候选 `1c7ad94` 交付（分支头 `216f154`）；PM-03 独立复审 PASS（`review/b1-1c7ad94`）；D-B1-R1-01 整改后干净检出 18/18 OK。
 - 2026-10-28：人类批准合并；PR #9 以 Merge commit 合并（`15f4b3c`），Issue #1 随 `Closes #1` 关闭；合并后回归 190 passed / 2 skipped。Goal `G-B1` 仍为 `proposed`。
+- 2026-10-28：启动 B2 派发准备（任务卡 `3617dab0…`；分支 `pilot/b2-dispatch`；B2 Issue/PR 待创建/合并）。

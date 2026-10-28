@@ -1,0 +1,69 @@
+{
+  "adrs": [],
+  "approved_by": null,
+  "background": "RC3 B2：_verification_ok 只查 receipt_integrity_valid，不查可验证执行来源；手写收据+有效签名可使 Goal achieved。",
+  "constraints": [
+    "不修改 B1/B3–B5 行为",
+    "不删除/跳过既有测试",
+    "不放宽 authority/签名/execution_provenance.trusted"
+  ],
+  "created_at": "2026-10-28T10:48:41+00:00",
+  "history": [
+    {
+      "at": "2026-10-28T10:48:41+00:00",
+      "by": "PM-01",
+      "from": null,
+      "reason": "created",
+      "to": "proposed"
+    }
+  ],
+  "id": "G-B2",
+  "issues": [],
+  "kind": "goal",
+  "outcome": "内容完整性与执行真实性分开；手写/自报 trusted 收据被拒；真实可信执行仍可用；无新绕过。",
+  "owner": "PM-01",
+  "prs": [],
+  "revision": 1,
+  "schema_version": "1.2",
+  "status": "proposed",
+  "success_criteria": [
+    {
+      "evidence": [],
+      "id": "C1",
+      "required": true,
+      "statement": "手写收据（trusted=false）+有效签名被拒"
+    },
+    {
+      "evidence": [],
+      "id": "C2",
+      "required": true,
+      "statement": "手写收据谎报 trusted=true（无 attestation）+有效签名被拒"
+    },
+    {
+      "evidence": [],
+      "id": "C3",
+      "required": true,
+      "statement": "真实可信执行（可验证 attestation）+有效签名被接受"
+    },
+    {
+      "evidence": [],
+      "id": "C4",
+      "required": true,
+      "statement": "本地未受信收据默认拒绝，或仅显式人类例外"
+    },
+    {
+      "evidence": [],
+      "id": "C5",
+      "required": true,
+      "statement": "换收据/改 provenance/换 commit/重算哈希均失效"
+    },
+    {
+      "evidence": [],
+      "id": "C6",
+      "required": true,
+      "statement": "既有 190 项与新增负向测试全绿"
+    }
+  ],
+  "title": "B2 有效签名不得包裹伪造执行收据",
+  "updated_at": "2026-10-28T10:48:41+00:00"
+}
