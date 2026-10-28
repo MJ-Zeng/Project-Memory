@@ -1,0 +1,61 @@
+{
+  "code": "/mnt/c/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-03/.pilot/b1-candidate",
+  "manifest": {
+    "ok": 7,
+    "total": 7,
+    "rows": [
+      {
+        "file": "GENERATION.md",
+        "expected": "d9a148675a5010a048626be18cd9fffcccbae9841dcfb976289ced546d172432",
+        "actual": "d9a148675a5010a048626be18cd9fffcccbae9841dcfb976289ced546d172432",
+        "ok": true
+      },
+      {
+        "file": "PREPARE.md",
+        "expected": "3660cf5ba172d1e14a7f3d8eb3f3312d7ac4d8d81bdc4db9c0edc21157f29d45",
+        "actual": "3660cf5ba172d1e14a7f3d8eb3f3312d7ac4d8d81bdc4db9c0edc21157f29d45",
+        "ok": true
+      },
+      {
+        "file": "VER-positive.json",
+        "expected": "d6f30d6faebfd3c8fefb18fef78ecf38e680f9bd248f1351b2e87bc1a201f362",
+        "actual": "d6f30d6faebfd3c8fefb18fef78ecf38e680f9bd248f1351b2e87bc1a201f362",
+        "ok": true
+      },
+      {
+        "file": "anchor-a.json",
+        "expected": "e85d1f500a8b93479d703ba28c96ef4693820a104160d111cda22e793c27515e",
+        "actual": "e85d1f500a8b93479d703ba28c96ef4693820a104160d111cda22e793c27515e",
+        "ok": true
+      },
+      {
+        "file": "goal-evidence-result.json",
+        "expected": "61d5c46aa10e7cf704adf1423a9616757ef4bc948df61bc78e212e84c0acaa4b",
+        "actual": "61d5c46aa10e7cf704adf1423a9616757ef4bc948df61bc78e212e84c0acaa4b",
+        "ok": true
+      },
+      {
+        "file": "pub-a.pem",
+        "expected": "25aaf069c14051bc65d33c9a71b2463ba067cbba1051eeea36a663c54869fe76",
+        "actual": "25aaf069c14051bc65d33c9a71b2463ba067cbba1051eeea36a663c54869fe76",
+        "ok": true
+      },
+      {
+        "file": "template-repo.tar.gz",
+        "expected": "a95cde67febf7cf0adf3351206b38ff53439336dd0003f5b53bf939762eecb42",
+        "actual": "a95cde67febf7cf0adf3351206b38ff53439336dd0003f5b53bf939762eecb42",
+        "ok": true
+      }
+    ]
+  },
+  "record_sha256_before": "d6f30d6faebfd3c8fefb18fef78ecf38e680f9bd248f1351b2e87bc1a201f362",
+  "record_sha256_after": "d6f30d6faebfd3c8fefb18fef78ecf38e680f9bd248f1351b2e87bc1a201f362",
+  "record_unchanged": true,
+  "goal_evidence_exit": 0,
+  "stderr_bytes": 0,
+  "stderr": "",
+  "stdout_tail": "{\n  \"criterion\": \"C1\",\n  \"evidence\": {\n    \"kind\": \"verification\",\n    \"note\": \"\",\n    \"ref\": \"VER-positive\"\n  },\n  \"goal\": {\n    \"adrs\": [],\n    \"approved_by\": null,\n    \"background\": \"B1 AC-1\",\n    \"constraints\": [],\n    \"created_at\": \"2026-10-28T05:25:30+00:00\",\n    \"history\": [\n      {\n        \"at\": \"2026-10-28T05:25:30+00:00\",\n        \"by\": \"PM-01\",\n        \"from\": null,\n        \"reason\": \"created\",\n        \"to\": \"proposed\"\n      }\n    ],\n    \"id\": \"G-B1\",\n    \"issues\": [],\n    \"kind\": \"goal\",\n    \"outcome\": \"valid signature accepted\",\n    \"owner\": \"PM-01\",\n    \"prs\": [],\n    \"revision\": 2,\n    \"schema_version\": \"1.2\",\n    \"status\": \"proposed\",\n    \"success_criteria\": [\n      {\n        \"evidence\": [\n          {\n            \"kind\": \"verification\",\n            \"note\": \"\",\n            \"ref\": \"VER-positive\"\n          }\n        ],\n        \"id\": \"C1\",\n        \"required\": true,\n        \"statement\": \"有效的真实签名仍可被验证\"\n      }\n    ],\n    \"title\": \"B1 signed verifier\",\n    \"updated_at\": \"2026-10-28T10:07:47+00:00\"\n  },\n  \"goal_id\": \"G-B1\",\n  \"kind\": \"goal_evidence_result\",\n  \"schema_version\": \"1.2\"\n}\n",
+  "matches_goal_evidence_result": false,
+  "expected_authority_status": "VER-positive",
+  "workdir": "/tmp/pm03-positive-errn4ib4"
+}

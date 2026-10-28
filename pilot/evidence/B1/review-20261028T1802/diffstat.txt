@@ -1,0 +1,83 @@
+# git diff 25a919d..1c7ad94
+## --stat
+ .../ADR-0002-inprocess-signature-verifier.md       |  136 +++
+ pilot/evidence/B1/run-20261028T1344/README.md      |  175 ++++
+ .../evidence/B1/run-20261028T1344/chain-after.json |  297 ++++++
+ .../B1/run-20261028T1344/chain-before.json         |  297 ++++++
+ pilot/evidence/B1/run-20261028T1344/commands.jsonl |   32 +
+ pilot/evidence/B1/run-20261028T1344/diffstat.txt   |   19 +
+ .../evidence/B1/run-20261028T1344/environment.txt  |   38 +
+ .../logs/01-preflight-git-status.log               |   10 +
+ .../logs/02-preflight-baseline-resolves.log        |    7 +
+ .../logs/03-preflight-ancestor-of-dev.log          |    6 +
+ .../logs/04-preflight-task-card-sha.log            |    8 +
+ .../logs/05-preflight-windows-python.log           |    7 +
+ .../logs/06-preflight-pytest-version.log           |    7 +
+ .../logs/07-preflight-wsl-python.log               |  Bin 0 -> 357 bytes
+ .../logs/08-baseline-collect-only.log              |  174 ++++
+ .../run-20261028T1344/logs/09-baseline-pytest.log  |   10 +
+ .../run-20261028T1344/logs/10-archive-baseline.log |   19 +
+ .../run-20261028T1344/logs/11-probe-sha-check.log  |   12 +
+ .../B1/run-20261028T1344/logs/12-probe-before.log  |   13 +
+ .../B1/run-20261028T1344/logs/13-probe-before.log  |   26 +
+ .../run-20261028T1344/logs/14-positive-before.log  |   11 +
+ .../logs/15-tests-authority-verifier.log           |    8 +
+ .../logs/16-full-suite-after-fix.log               |   10 +
+ .../logs/17-archive-candidate.log                  |    7 +
+ .../logs/18-archive-candidate.log                  |   20 +
+ .../B1/run-20261028T1344/logs/19-probe-after.log   |   23 +
+ .../run-20261028T1344/logs/20-positive-after.log   |   11 +
+ .../logs/21-tests-verifier-candidate.log           |    8 +
+ .../logs/22-full-suite-candidate.log               |   10 +
+ .../logs/23-finalize-evidence.log                  |    8 +
+ .../logs/24-finalize-evidence-corrected.log        |    8 +
+ .../logs/25-package-eol-and-manifest.log           |   45 +
+ .../logs/26-package-eol-pass2.log                  |   10 +
+ .../B1/run-20261028T1344/logs/27-package-final.log |    8 +
+ .../B1/run-20261028T1344/logs/28-chain-after.log   |   11 +
+ .../B1/run-20261028T1344/logs/29-chain-before.log  |   11 +
+ .../run-20261028T1344/logs/30-finalize-refresh.log |    8 +
+ .../logs/31-package-final-manifest.log             |   15 +
+ .../logs/32-package-final-manifest.log             |    8 +
+ .../B1/run-20261028T1344/positive-after.json       |   69 ++
+ .../B1/run-20261028T1344/positive-before.json      |   69 ++
+ pilot/evidence/B1/run-20261028T1344/positive.json  |  142 +++
+ .../evidence/B1/run-20261028T1344/probe-after.json |  966 ++++++++++++++++++
+ .../B1/run-20261028T1344/probe-before.json         | 1056 ++++++++++++++++++++
+ pilot/evidence/B1/run-20261028T1344/pytest.log     |   10 +
+ .../B1/run-20261028T1344/scripts/chain_probe.py    |   90 ++
+ .../B1/run-20261028T1344/scripts/finalize.py       |  124 +++
+ .../B1/run-20261028T1344/scripts/make_vectors.py   |  134 +++
+ .../B1/run-20261028T1344/scripts/package.py        |  117 +++
+ .../B1/run-20261028T1344/scripts/positive_probe.py |  122 +++
+ .../B1/run-20261028T1344/scripts/record.py         |   91 ++
+ .../B1/run-20261028T1344/scripts/run_chain.py      |   57 ++
+ .../B1/run-20261028T1344/scripts/run_positive.py   |   49 +
+ .../B1/run-20261028T1344/scripts/run_probe.py      |   67 ++
+ pilot/evidence/B1/run-20261028T1344/sha256sums.txt |   63 ++
+ .../work/capture-after/probe-argv.txt              |    9 +
+ .../work/capture-after/probe-stderr.txt            |    1 +
+ .../work/capture-after/probe-stdout.txt            |   12 +
+ .../work/capture-after/probe-wsl-exit.txt          |    1 +
+ .../work/capture-before/probe-argv.txt             |    9 +
+ .../work/capture-before/probe-stderr.txt           |    1 +
+ .../work/capture-before/probe-stdout.txt           |   15 +
+ .../work/capture-before/probe-wsl-exit.txt         |    1 +
+ .../B1/run-20261028T1344/work/positive-after.json  |   69 ++
+ .../B1/run-20261028T1344/work/positive-before.json |   69 ++
+ pilot/rounds/B1/context-recovery-pm02.md           |   39 +
+ project_memory/authority.py                        |  373 ++++++-
+ tests/test_authority_verifier.py                   |  279 ++++++
+ 68 files changed, 5589 insertions(+), 48 deletions(-)
+
+## --name-status (code/tests/docs only)
+A	docs/decisions/ADR-0002-inprocess-signature-verifier.md
+M	project_memory/authority.py
+A	tests/test_authority_verifier.py
+
+## prohibited-path check (expect empty)
+(none)
+
+## candidate..branch_head (expect only two handoff files)
+A	.project-memory/handoffs/B1/run-20261028T1344.json
+A	pilot/rounds/B1/handoff-run-20261028T1344.md

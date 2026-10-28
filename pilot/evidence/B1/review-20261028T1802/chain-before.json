@@ -1,0 +1,296 @@
+{
+  "summary": {
+    "code": "/mnt/c/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-03/.pilot/b1-base",
+    "goal_evidence_exit": 0,
+    "goal_evidence_accept": true,
+    "goal_evidence_stderr": "",
+    "goal_evaluate_exit": 0,
+    "goal_evaluate_satisfied": true,
+    "transition_approved_exit": 0,
+    "transition_active_exit": 0,
+    "transition_evaluating_exit": 0,
+    "transition_achieved_exit": 0,
+    "final_goal_status": "achieved",
+    "final_evidence_count": 1,
+    "achieved": true
+  },
+  "steps": [
+    {
+      "label": "goal_create",
+      "argv": [
+        "project-memory",
+        "goal",
+        "create",
+        "--repo",
+        ".",
+        "--id",
+        "G-CHAIN",
+        "--title",
+        "chain",
+        "--outcome",
+        "ship",
+        "--owner",
+        "owner",
+        "--criterion",
+        "criterion passes"
+      ],
+      "exit_code": 0,
+      "stdout": "{\n  \"created\": true,\n  \"dry_run\": false,\n  \"goal\": {\n    \"adrs\": [],\n    \"approved_by\": null,\n    \"background\": \"\",\n    \"constraints\": [],\n    \"created_at\": \"2026-10-28T10:06:07+00:00\",\n    \"history\": [\n      {\n        \"at\": \"2026-10-28T10:06:07+00:00\",\n        \"by\": \"owner\",\n        \"from\": null,\n        \"reason\": \"created\",\n        \"to\": \"proposed\"\n      }\n    ],\n    \"id\": \"G-CHAIN\",\n    \"issues\": [],\n    \"kind\": \"goal\",\n    \"outcome\": \"ship\",\n    \"owner\": \"owner\",\n    \"prs\": [],\n    \"revision\": 1,\n    \"schema_version\": \"1.2\",\n    \"status\": \"proposed\",\n    \"success_criteria\": [\n      {\n        \"evidence\": [],\n        \"id\": \"C1\",\n        \"required\": true,\n        \"statement\": \"criterion passes\"\n      }\n    ],\n    \"title\": \"chain\",\n    \"updated_at\": \"2026-10-28T10:06:07+00:00\"\n  },\n  \"kind\": \"goal_create_result\",\n  \"path\": \".project-memory/goals/G-CHAIN.json\",\n  \"schema_version\": \"1.2\"\n}\n",
+      "stderr": ""
+    },
+    {
+      "label": "run_start",
+      "argv": [
+        "project-memory",
+        "run",
+        "start",
+        "--repo",
+        ".",
+        "--goal",
+        "G-CHAIN",
+        "--task",
+        "325",
+        "--run-id",
+        "run-target",
+        "--agent",
+        "dev",
+        "--model-provider",
+        "qodercn",
+        "--model-id",
+        "auto",
+        "--base-sha",
+        "014315f86153396cf9f0cf470efc9553218474be"
+      ],
+      "exit_code": 0,
+      "stdout": "{\n  \"created\": true,\n  \"dry_run\": false,\n  \"kind\": \"run_start_result\",\n  \"path\": \".project-memory/runs/325/run-target.json\",\n  \"run\": {\n    \"agent\": \"dev\",\n    \"artifacts\": [],\n    \"authorization\": \"\",\n    \"blockers\": [],\n    \"created_at\": \"2026-10-28T10:06:08+00:00\",\n    \"ended_at\": null,\n    \"evidence\": [],\n    \"git\": {\n      \"base_sha\": \"014315f86153396cf9f0cf470efc9553218474be\",\n      \"branch\": \"master\",\n      \"head_sha\": \"014315f86153396cf9f0cf470efc9553218474be\"\n    },\n    \"goal_id\": \"G-CHAIN\",\n    \"handoff\": null,\n    \"kind\": \"agent_run\",\n    \"model\": {\n      \"id\": \"auto\",\n      \"provider\": \"qodercn\"\n    },\n    \"revision\": 1,\n    \"role\": \"executor\",\n    \"run_id\": \"run-target\",\n    \"schema_version\": \"1.2\",\n    \"session_id\": \"\",\n    \"started_at\": \"2026-10-28T10:06:08+00:00\",\n    \"status\": \"running\",\n    \"task\": \"325\",\n    \"tool\": \"\",\n    \"updated_at\": \"2026-10-28T10:06:08+00:00\"\n  },\n  \"schema_version\": \"1.2\",\n  \"warnings\": []\n}\n",
+      "stderr": ""
+    },
+    {
+      "label": "run_finish",
+      "argv": [
+        "project-memory",
+        "run",
+        "finish",
+        "--repo",
+        ".",
+        "--task",
+        "325",
+        "--run-id",
+        "run-target",
+        "--completed",
+        "x",
+        "--remaining",
+        "y",
+        "--head-sha",
+        "014315f86153396cf9f0cf470efc9553218474be"
+      ],
+      "exit_code": 0,
+      "stdout": "{\n  \"handoff\": {\n    \"agent\": \"dev\",\n    \"base_sha\": \"014315f86153396cf9f0cf470efc9553218474be\",\n    \"blockers\": [],\n    \"changed_files\": [],\n    \"commits\": [],\n    \"completed\": [\n      \"x\"\n    ],\n    \"docs_changed\": [],\n    \"evidence\": [],\n    \"from_run\": \"run-target\",\n    \"generated_at\": \"2026-10-28T10:06:08+00:00\",\n    \"goal_id\": \"G-CHAIN\",\n    \"head_sha\": \"014315f86153396cf9f0cf470efc9553218474be\",\n    \"kind\": \"agent_handoff\",\n    \"model\": {\n      \"id\": \"auto\",\n      \"provider\": \"qodercn\"\n    },\n    \"next_actions\": [],\n    \"open_questions\": [],\n    \"remaining\": [\n      \"y\"\n    ],\n    \"run_id\": \"run-target\",\n    \"schema_version\": \"1.2\",\n    \"session_id\": \"\",\n    \"status\": \"reported_unverified\",\n    \"stored_at\": \".project-memory/handoffs/325/run-target.json\",\n    \"task\": \"325\",\n    \"tests\": [],\n    \"vcs\": \"git\"\n  },\n  \"handoff_path\": \".project-memory/handoffs/325/run-target.json\",\n  \"kind\": \"run_finish_result\",\n  \"run\": {\n    \"agent\": \"dev\",\n    \"artifacts\": [],\n    \"authorization\": \"\",\n    \"blockers\": [],\n    \"created_at\": \"2026-10-28T10:06:08+00:00\",\n    \"ended_at\": \"2026-10-28T10:06:08+00:00\",\n    \"evidence\": [],\n    \"git\": {\n      \"base_sha\": \"014315f86153396cf9f0cf470efc9553218474be\",\n      \"branch\": \"master\",\n      \"head_sha\": \"014315f86153396cf9f0cf470efc9553218474be\"\n    },\n    \"goal_id\": \"G-CHAIN\",\n    \"handoff\": \".project-memory/handoffs/325/run-target.json\",\n    \"kind\": \"agent_run\",\n    \"model\": {\n      \"id\": \"auto\",\n      \"provider\": \"qodercn\"\n    },\n    \"revision\": 2,\n    \"role\": \"executor\",\n    \"run_id\": \"run-target\",\n    \"schema_version\": \"1.2\",\n    \"session_id\": \"\",\n    \"started_at\": \"2026-10-28T10:06:08+00:00\",\n    \"status\": \"submitted\",\n    \"task\": \"325\",\n    \"tool\": \"\",\n    \"updated_at\": \"2026-10-28T10:06:08+00:00\"\n  },\n  \"schema_version\": \"1.2\"\n}\n",
+      "stderr": ""
+    },
+    {
+      "label": "ver_start",
+      "argv": [
+        "project-memory",
+        "run",
+        "start",
+        "--repo",
+        ".",
+        "--goal",
+        "G-CHAIN",
+        "--task",
+        "325",
+        "--run-id",
+        "run-verifier",
+        "--agent",
+        "verifier",
+        "--model-provider",
+        "qodercn",
+        "--model-id",
+        "verifier-model",
+        "--base-sha",
+        "014315f86153396cf9f0cf470efc9553218474be",
+        "--role",
+        "verifier"
+      ],
+      "exit_code": 0,
+      "stdout": "{\n  \"created\": true,\n  \"dry_run\": false,\n  \"kind\": \"run_start_result\",\n  \"path\": \".project-memory/runs/325/run-verifier.json\",\n  \"run\": {\n    \"agent\": \"verifier\",\n    \"artifacts\": [],\n    \"authorization\": \"\",\n    \"blockers\": [],\n    \"created_at\": \"2026-10-28T10:06:08+00:00\",\n    \"ended_at\": null,\n    \"evidence\": [],\n    \"git\": {\n      \"base_sha\": \"014315f86153396cf9f0cf470efc9553218474be\",\n      \"branch\": \"master\",\n      \"head_sha\": \"014315f86153396cf9f0cf470efc9553218474be\"\n    },\n    \"goal_id\": \"G-CHAIN\",\n    \"handoff\": null,\n    \"kind\": \"agent_run\",\n    \"model\": {\n      \"id\": \"verifier-model\",\n      \"provider\": \"qodercn\"\n    },\n    \"revision\": 1,\n    \"role\": \"verifier\",\n    \"run_id\": \"run-verifier\",\n    \"schema_version\": \"1.2\",\n    \"session_id\": \"\",\n    \"started_at\": \"2026-10-28T10:06:08+00:00\",\n    \"status\": \"running\",\n    \"task\": \"325\",\n    \"tool\": \"\",\n    \"updated_at\": \"2026-10-28T10:06:08+00:00\"\n  },\n  \"schema_version\": \"1.2\",\n  \"warnings\": []\n}\n",
+      "stderr": ""
+    },
+    {
+      "label": "ver_finish",
+      "argv": [
+        "project-memory",
+        "run",
+        "finish",
+        "--repo",
+        ".",
+        "--task",
+        "325",
+        "--run-id",
+        "run-verifier",
+        "--completed",
+        "x",
+        "--remaining",
+        "y",
+        "--head-sha",
+        "014315f86153396cf9f0cf470efc9553218474be"
+      ],
+      "exit_code": 0,
+      "stdout": "{\n  \"handoff\": {\n    \"agent\": \"verifier\",\n    \"base_sha\": \"014315f86153396cf9f0cf470efc9553218474be\",\n    \"blockers\": [],\n    \"changed_files\": [],\n    \"commits\": [],\n    \"completed\": [\n      \"x\"\n    ],\n    \"docs_changed\": [],\n    \"evidence\": [],\n    \"from_run\": \"run-verifier\",\n    \"generated_at\": \"2026-10-28T10:06:09+00:00\",\n    \"goal_id\": \"G-CHAIN\",\n    \"head_sha\": \"014315f86153396cf9f0cf470efc9553218474be\",\n    \"kind\": \"agent_handoff\",\n    \"model\": {\n      \"id\": \"verifier-model\",\n      \"provider\": \"qodercn\"\n    },\n    \"next_actions\": [],\n    \"open_questions\": [],\n    \"remaining\": [\n      \"y\"\n    ],\n    \"run_id\": \"run-verifier\",\n    \"schema_version\": \"1.2\",\n    \"session_id\": \"\",\n    \"status\": \"reported_unverified\",\n    \"stored_at\": \".project-memory/handoffs/325/run-verifier.json\",\n    \"task\": \"325\",\n    \"tests\": [],\n    \"vcs\": \"git\"\n  },\n  \"handoff_path\": \".project-memory/handoffs/325/run-verifier.json\",\n  \"kind\": \"run_finish_result\",\n  \"run\": {\n    \"agent\": \"verifier\",\n    \"artifacts\": [],\n    \"authorization\": \"\",\n    \"blockers\": [],\n    \"created_at\": \"2026-10-28T10:06:08+00:00\",\n    \"ended_at\": \"2026-10-28T10:06:09+00:00\",\n    \"evidence\": [],\n    \"git\": {\n      \"base_sha\": \"014315f86153396cf9f0cf470efc9553218474be\",\n      \"branch\": \"master\",\n      \"head_sha\": \"014315f86153396cf9f0cf470efc9553218474be\"\n    },\n    \"goal_id\": \"G-CHAIN\",\n    \"handoff\": \".project-memory/handoffs/325/run-verifier.json\",\n    \"kind\": \"agent_run\",\n    \"model\": {\n      \"id\": \"verifier-model\",\n      \"provider\": \"qodercn\"\n    },\n    \"revision\": 2,\n    \"role\": \"verifier\",\n    \"run_id\": \"run-verifier\",\n    \"schema_version\": \"1.2\",\n    \"session_id\": \"\",\n    \"started_at\": \"2026-10-28T10:06:08+00:00\",\n    \"status\": \"submitted\",\n    \"task\": \"325\",\n    \"tool\": \"\",\n    \"updated_at\": \"2026-10-28T10:06:09+00:00\"\n  },\n  \"schema_version\": \"1.2\"\n}\n",
+      "stderr": ""
+    },
+    {
+      "label": "test_run",
+      "argv": [
+        "project-memory",
+        "test-run",
+        "--repo",
+        ".",
+        "--commit",
+        "014315f86153396cf9f0cf470efc9553218474be",
+        "--command",
+        "python3 tests/check.py",
+        "--agent",
+        "verifier"
+      ],
+      "exit_code": 0,
+      "stdout": "{\n  \"attestation\": null,\n  \"isolation\": {\n    \"mode\": \"none\",\n    \"os_isolation\": false,\n    \"sandbox\": \"plain-child-process\",\n    \"workspace\": \"immutable-snapshot\"\n  },\n  \"log\": \".project-memory/logs/EXE-2a725515d3acd54e2370.log\",\n  \"mode\": \"local\",\n  \"path\": \".project-memory/receipts/EXE-2a725515d3acd54e2370.json\",\n  \"receipt\": {\n    \"caveat\": \"收据只证明该命令在这个快照内以该退出码执行过；不证明测试语义覆盖了任何业务标准，也不证明来源可信。\",\n    \"command\": \"python3 tests/check.py\",\n    \"commit_sha\": \"014315f86153396cf9f0cf470efc9553218474be\",\n    \"content_sha256\": \"384dee018375b645968dafed0817b40171cc175589c7d6074be71b19544c8252\",\n    \"executed_by\": \"verifier\",\n    \"execution_provenance\": {\n      \"attested\": false,\n      \"kind\": \"local_untrusted\",\n      \"launcher\": \"project_memory.execution\",\n      \"reason\": \"普通子进程；宿主文件系统与网络可见，收据只能证明内容未被后续修改\",\n      \"trusted\": false\n    },\n    \"executor\": {\n      \"mode\": \"local\",\n      \"name\": \"project-memory\",\n      \"platform\": \"Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.43\",\n      \"python\": \"3.14.4\"\n    },\n    \"exit_code\": 0,\n    \"finished_at\": \"2026-10-28T10:06:10+00:00\",\n    \"isolation\": {\n      \"mode\": \"none\",\n      \"os_isolation\": false,\n      \"sandbox\": \"plain-child-process\",\n      \"workspace\": \"immutable-snapshot\"\n    },\n    \"kind\": \"execution_receipt\",\n    \"log_bytes\": 337,\n    \"log_path\": \".project-memory/logs/EXE-2a725515d3acd54e2370.log\",\n    \"log_sha256\": \"86def186ebf878a2fcdaa9b38e57a68bf9a390568b1953fc95224fc0196d518b\",\n    \"receipt_id\": \"EXE-2a725515d3acd54e2370\",\n    \"repo_id\": \"6f1ee82238e610adf915f6fea25918926aee88d922e12a9228af6ce7c483ef19\",\n    \"repo_identity\": {\n      \"kind\": \"root-only\",\n      \"remote\": null,\n      \"root_commits\": [\n        \"014315f86153396cf9f0cf470efc9553218474be\"\n      ],\n      \"schema\": \"1.1\"\n    },\n    \"schema_version\": \"1.1\",\n    \"snapshot_id\": \"SNP-4db9e222a562934d\",\n    \"snapshot_sha256\": \"a0b972fae0f85c658ff3ba0eefa9b830b9c941d475a4df4666d39619c699fd5c\",\n    \"started_at\": \"2026-10-28T10:06:10+00:00\",\n    \"subject\": \"\",\n    \"tree_sha\": \"047d7da5578e5fd7d87f2d52e8cdfb42d19d1d8d\",\n    \"trust\": \"local_untrusted\"\n  },\n  \"snapshot\": {\n    \"commit_sha\": \"014315f86153396cf9f0cf470efc9553218474be\",\n    \"created_at\": \"2026-10-28T10:06:10+00:00\",\n    \"file_count\": 2,\n    \"files\": {\n      \"README.md\": \"5891b5b522d5df086d0ff0b110fbd9d21bb4fc7163af34d08286a2e846f6be03\",\n      \"tests/check.py\": \"1922ae5c389c302c4aeaa09204d71699b7e4750782cd160de49ee2c9fbf3ff15\"\n    },\n    \"kind\": \"execution_snapshot\",\n    \"schema_version\": \"1.1\",\n    \"snapshot_id\": \"SNP-4db9e222a562934d\",\n    \"snapshot_sha256\": \"a0b972fae0f85c658ff3ba0eefa9b830b9c941d475a4df4666d39619c699fd5c\",\n    \"tree_sha\": \"047d7da5578e5fd7d87f2d52e8cdfb42d19d1d8d\"\n  }\n}\n",
+      "stderr": "警告：本地执行没有操作系统隔离，收据标记为 local_untrusted；需要隔离时请使用 --trusted。\n"
+    },
+    {
+      "label": "verify",
+      "argv": [
+        "project-memory",
+        "verify",
+        "--repo",
+        ".",
+        "--target-run",
+        "run-target",
+        "--verifier-run",
+        "run-verifier",
+        "--standard",
+        "criterion passes",
+        "--verdict",
+        "pass",
+        "--evidence-level",
+        "locally_observed",
+        "--test-receipt",
+        ".project-memory/receipts/EXE-2a725515d3acd54e2370.json",
+        "--criterion-evidence",
+        "/mnt/c/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-03/pilot/evidence/B1/review-20261028T1802/chain-work-before/pm03-chain-gt0qk8ny/mapping.json"
+      ],
+      "exit_code": 2,
+      "stdout": "a68bf9a390568b1953fc95224fc0196d518b\",\n        \"log_exists\": true,\n        \"receipt\": \".project-memory/receipts/EXE-2a725515d3acd54e2370.json\",\n        \"receipt_id\": \"EXE-2a725515d3acd54e2370\",\n        \"receipt_integrity_valid\": true,\n        \"receipt_sha256\": \"384dee018375b645968dafed0817b40171cc175589c7d6074be71b19544c8252\",\n        \"snapshot_id\": \"SNP-4db9e222a562934d\",\n        \"snapshot_sha256\": \"a0b972fae0f85c658ff3ba0eefa9b830b9c941d475a4df4666d39619c699fd5c\",\n        \"tracked_changes_at_verification\": \"\",\n        \"tracked_diff_sha256\": \"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\n        \"worktree_dirty_at_verification\": false\n      }\n    },\n    \"covered_criteria\": [],\n    \"created_at\": \"2026-10-28T10:06:11+00:00\",\n    \"criterion_evidence\": [\n      {\n        \"coverage_claim\": \"c\",\n        \"coverage_confirmed\": false,\n        \"coverage_review_status\": \"human_confirmed\",\n        \"criterion_description\": \"criterion passes\",\n        \"criterion_id\": \"C1\",\n        \"description_match\": true,\n        \"evidence_command\": \"python3 tests/check.py\",\n        \"evidence_exit_code\": 0,\n        \"evidence_id\": \"EV-1\",\n        \"evidence_log\": \".project-memory/logs/EXE-2a725515d3acd54e2370.log\",\n        \"evidence_matched\": false,\n        \"evidence_receipt\": \".project-memory/receipts/EXE-2a725515d3acd54e2370.json\",\n        \"evidence_source\": \"test\",\n        \"evidence_state\": \"MANUAL_REVIEW_REQUIRED\",\n        \"execution_status\": \"passed\",\n        \"execution_trust\": \"local_untrusted\",\n        \"execution_verified\": false,\n        \"goal_id\": \"G-CHAIN\",\n        \"human_review_claimed\": false,\n        \"independent_verifier\": \"verifier\",\n        \"observed_level\": \"locally_observed\",\n        \"problems\": [],\n        \"receipt_id\": \"EXE-2a725515d3acd54e2370\",\n        \"receipt_integrity_valid\": true,\n        \"receipt_provenance\": {\n          \"kind\": \"local_untrusted\",\n          \"reason\": \"本地启动器；没有操作系统隔离，也没有外部签名来源\",\n          \"trusted\": false\n        },\n        \"receipt_sha256\": \"384dee018375b645968dafed0817b40171cc175589c7d6074be71b19544c8252\",\n        \"semantic_coverage_verified\": false,\n        \"snapshot_id\": \"SNP-4db9e222a562934d\",\n        \"snapshot_sha256\": \"a0b972fae0f85c658ff3ba0eefa9b830b9c941d475a4df4666d39619c699fd5c\",\n        \"target_commit_sha\": \"014315f86153396cf9f0cf470efc9553218474be\",\n        \"target_repository\": \"/mnt/c/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-03/pilot/evidence/B1/review-20261028T1802/chain-work-before/pm03-chain-gt0qk8ny/repo\",\n        \"task_id\": \"325\",\n        \"verification_result\": \"pass\"\n      }\n    ],\n    \"current_head_sha\": \"014315f86153396cf9f0cf470efc9553218474be\",\n    \"evidence_level\": \"locally_observed\",\n    \"findings\": [],\n    \"goal_criteria_sha256\": \"7db965b08852a182a3a947e765f60f9c567c5e6aa524bc6fee39cad6ee1c500a\",\n    \"goal_id\": \"G-CHAIN\",\n    \"independence\": {\n      \"basis\": [\n        \"agent\",\n        \"model\"\n      ],\n      \"distinct\": true,\n      \"note\": \"独立会话或不同模型只证明记录不同，不证明验证结论正确。\"\n    },\n    \"kind\": \"verification_record\",\n    \"mapping_status\": \"review_required\",\n    \"missing_criteria\": [],\n    \"revision\": 1,\n    \"schema_version\": \"1.2\",\n    \"stale\": false,\n    \"standard\": \"criterion passes\",\n    \"status\": \"MANUAL_REVIEW_REQUIRED\",\n    \"target_head_sha\": \"014315f86153396cf9f0cf470efc9553218474be\",\n    \"target_run\": \"run-target\",\n    \"target_run_sha256\": \"aaf751f1ec3112d7e65cd007dd259422a0a188db4daa27af56f6bf5474760a8d\",\n    \"task\": \"325\",\n    \"trust_level\": \"locally_observed\",\n    \"verdict\": \"pass\",\n    \"verification_id\": \"VER-8f12c5aec559\",\n    \"verified\": false,\n    \"verifier\": {\n      \"agent\": \"verifier\",\n      \"model\": {\n        \"id\": \"verifier-model\",\n        \"provider\": \"qodercn\"\n      },\n      \"session_id\": \"\",\n      \"tool\": \"\"\n    },\n    \"verifier_run\": \"run-verifier\",\n    \"verifier_run_sha256\": \"0ddb4c39dce0bd8ed13f11bfa1441c6d15cdc0b4bf35bf50fe91155f3ebb1bd9\"\n  },\n  \"verified\": false,\n  \"would_update_run_status\": \"submitted\"\n}\n",
+      "stderr": ""
+    },
+    {
+      "label": "goal_evidence_forged",
+      "argv": [
+        "project-memory",
+        "goal",
+        "evidence",
+        "--repo",
+        ".",
+        "--id",
+        "G-CHAIN",
+        "--criterion",
+        "C1",
+        "--kind",
+        "verification",
+        "--ref",
+        "VER-forged"
+      ],
+      "exit_code": 0,
+      "stdout": "{\n  \"criterion\": \"C1\",\n  \"evidence\": {\n    \"kind\": \"verification\",\n    \"note\": \"\",\n    \"ref\": \"VER-forged\"\n  },\n  \"goal\": {\n    \"adrs\": [],\n    \"approved_by\": null,\n    \"background\": \"\",\n    \"constraints\": [],\n    \"created_at\": \"2026-10-28T10:06:07+00:00\",\n    \"history\": [\n      {\n        \"at\": \"2026-10-28T10:06:07+00:00\",\n        \"by\": \"owner\",\n        \"from\": null,\n        \"reason\": \"created\",\n        \"to\": \"proposed\"\n      }\n    ],\n    \"id\": \"G-CHAIN\",\n    \"issues\": [],\n    \"kind\": \"goal\",\n    \"outcome\": \"ship\",\n    \"owner\": \"owner\",\n    \"prs\": [],\n    \"revision\": 2,\n    \"schema_version\": \"1.2\",\n    \"status\": \"proposed\",\n    \"success_criteria\": [\n      {\n        \"evidence\": [\n          {\n            \"kind\": \"verification\",\n            \"note\": \"\",\n            \"ref\": \"VER-forged\"\n          }\n        ],\n        \"id\": \"C1\",\n        \"required\": true,\n        \"statement\": \"criterion passes\"\n      }\n    ],\n    \"title\": \"chain\",\n    \"updated_at\": \"2026-10-28T10:06:11+00:00\"\n  },\n  \"goal_id\": \"G-CHAIN\",\n  \"kind\": \"goal_evidence_result\",\n  \"schema_version\": \"1.2\"\n}\n",
+      "stderr": ""
+    },
+    {
+      "label": "goal_evaluate",
+      "argv": [
+        "project-memory",
+        "goal",
+        "evaluate",
+        "--repo",
+        ".",
+        "--id",
+        "G-CHAIN"
+      ],
+      "exit_code": 0,
+      "stdout": "{\n  \"blocking\": [],\n  \"caveat\": \"只接受带 criterion evidence mapping 且 coverage 经独立复核的证据；直接 test/commit 证据和旧验证记录可读，但不能单独证明标准已达成。CLI 不能判断语义相关性，仍需人工审查。\",\n  \"criteria\": [\n    {\n      \"evidence\": [\n        {\n          \"kind\": \"verification\",\n          \"note\": \"\",\n          \"ok\": true,\n          \"reason\": \"独立验证通过，且覆盖该成功标准\",\n          \"ref\": \"VER-forged\",\n          \"satisfies\": true,\n          \"state\": \"evidence_matched\",\n          \"trust\": \"evidence_matched\"\n        }\n      ],\n      \"id\": \"C1\",\n      \"required\": true,\n      \"statement\": \"criterion passes\",\n      \"status\": \"satisfied\"\n    }\n  ],\n  \"evaluation_status\": \"satisfied\",\n  \"goal_id\": \"G-CHAIN\",\n  \"goal_status\": \"proposed\",\n  \"kind\": \"goal_evaluation\",\n  \"open_high_defects\": [],\n  \"partial\": [],\n  \"recommendation\": \"achieved\",\n  \"recorded_status\": \"proposed\",\n  \"recorded_status_consistent\": true,\n  \"satisfied\": true,\n  \"schema_version\": \"1.2\",\n  \"status_authority\": \"local_untrusted\"\n}\n",
+      "stderr": ""
+    },
+    {
+      "label": "transition_approved",
+      "argv": [
+        "project-memory",
+        "goal",
+        "transition",
+        "--repo",
+        ".",
+        "--id",
+        "G-CHAIN",
+        "--to",
+        "approved",
+        "--approved-by",
+        "agent@example.invalid"
+      ],
+      "exit_code": 0,
+      "stdout": "{\n  \"changed\": true,\n  \"dry_run\": false,\n  \"evaluation\": null,\n  \"goal\": {\n    \"adrs\": [],\n    \"approvals\": [\n      {\n        \"approval_authority\": \"claimed_unverified\",\n        \"at\": \"2026-10-28T10:06:13+00:00\",\n        \"by\": \"agent@example.invalid\",\n        \"from\": \"proposed\",\n        \"reason\": \"\",\n        \"to\": \"approved\"\n      }\n    ],\n    \"approved_by\": \"agent@example.invalid\",\n    \"background\": \"\",\n    \"constraints\": [],\n    \"created_at\": \"2026-10-28T10:06:07+00:00\",\n    \"history\": [\n      {\n        \"at\": \"2026-10-28T10:06:07+00:00\",\n        \"by\": \"owner\",\n        \"from\": null,\n        \"reason\": \"created\",\n        \"to\": \"proposed\"\n      },\n      {\n        \"at\": \"2026-10-28T10:06:13+00:00\",\n        \"by\": \"agent@example.invalid\",\n        \"from\": \"proposed\",\n        \"reason\": \"\",\n        \"to\": \"approved\"\n      }\n    ],\n    \"id\": \"G-CHAIN\",\n    \"issues\": [],\n    \"kind\": \"goal\",\n    \"outcome\": \"ship\",\n    \"owner\": \"owner\",\n    \"prs\": [],\n    \"revision\": 3,\n    \"schema_version\": \"1.2\",\n    \"status\": \"approved\",\n    \"success_criteria\": [\n      {\n        \"evidence\": [\n          {\n            \"kind\": \"verification\",\n            \"note\": \"\",\n            \"ref\": \"VER-forged\"\n          }\n        ],\n        \"id\": \"C1\",\n        \"required\": true,\n        \"statement\": \"criterion passes\"\n      }\n    ],\n    \"title\": \"chain\",\n    \"updated_at\": \"2026-10-28T10:06:13+00:00\"\n  },\n  \"kind\": \"goal_transition_result\",\n  \"schema_version\": \"1.2\"\n}\n",
+      "stderr": ""
+    },
+    {
+      "label": "transition_active",
+      "argv": [
+        "project-memory",
+        "goal",
+        "transition",
+        "--repo",
+        ".",
+        "--id",
+        "G-CHAIN",
+        "--to",
+        "active"
+      ],
+      "exit_code": 0,
+      "stdout": "{\n  \"changed\": true,\n  \"dry_run\": false,\n  \"evaluation\": null,\n  \"goal\": {\n    \"adrs\": [],\n    \"approvals\": [\n      {\n        \"approval_authority\": \"claimed_unverified\",\n        \"at\": \"2026-10-28T10:06:13+00:00\",\n        \"by\": \"agent@example.invalid\",\n        \"from\": \"proposed\",\n        \"reason\": \"\",\n        \"to\": \"approved\"\n      }\n    ],\n    \"approved_by\": \"agent@example.invalid\",\n    \"background\": \"\",\n    \"constraints\": [],\n    \"created_at\": \"2026-10-28T10:06:07+00:00\",\n    \"history\": [\n      {\n        \"at\": \"2026-10-28T10:06:07+00:00\",\n        \"by\": \"owner\",\n        \"from\": null,\n        \"reason\": \"created\",\n        \"to\": \"proposed\"\n      },\n      {\n        \"at\": \"2026-10-28T10:06:13+00:00\",\n        \"by\": \"agent@example.invalid\",\n        \"from\": \"proposed\",\n        \"reason\": \"\",\n        \"to\": \"approved\"\n      },\n      {\n        \"at\": \"2026-10-28T10:06:13+00:00\",\n        \"by\": \"owner\",\n        \"from\": \"approved\",\n        \"reason\": \"\",\n        \"to\": \"active\"\n      }\n    ],\n    \"id\": \"G-CHAIN\",\n    \"issues\": [],\n    \"kind\": \"goal\",\n    \"outcome\": \"ship\",\n    \"owner\": \"owner\",\n    \"prs\": [],\n    \"revision\": 4,\n    \"schema_version\": \"1.2\",\n    \"status\": \"active\",\n    \"success_criteria\": [\n      {\n        \"evidence\": [\n          {\n            \"kind\": \"verification\",\n            \"note\": \"\",\n            \"ref\": \"VER-forged\"\n          }\n        ],\n        \"id\": \"C1\",\n        \"required\": true,\n        \"statement\": \"criterion passes\"\n      }\n    ],\n    \"title\": \"chain\",\n    \"updated_at\": \"2026-10-28T10:06:13+00:00\"\n  },\n  \"kind\": \"goal_transition_result\",\n  \"schema_version\": \"1.2\"\n}\n",
+      "stderr": ""
+    },
+    {
+      "label": "transition_evaluating",
+      "argv": [
+        "project-memory",
+        "goal",
+        "transition",
+        "--repo",
+        ".",
+        "--id",
+        "G-CHAIN",
+        "--to",
+        "evaluating"
+      ],
+      "exit_code": 0,
+      "stdout": "{\n  \"changed\": true,\n  \"dry_run\": false,\n  \"evaluation\": null,\n  \"goal\": {\n    \"adrs\": [],\n    \"approvals\": [\n      {\n        \"approval_authority\": \"claimed_unverified\",\n        \"at\": \"2026-10-28T10:06:13+00:00\",\n        \"by\": \"agent@example.invalid\",\n        \"from\": \"proposed\",\n        \"reason\": \"\",\n        \"to\": \"approved\"\n      }\n    ],\n    \"approved_by\": \"agent@example.invalid\",\n    \"background\": \"\",\n    \"constraints\": [],\n    \"created_at\": \"2026-10-28T10:06:07+00:00\",\n    \"history\": [\n      {\n        \"at\": \"2026-10-28T10:06:07+00:00\",\n        \"by\": \"owner\",\n        \"from\": null,\n        \"reason\": \"created\",\n        \"to\": \"proposed\"\n      },\n      {\n        \"at\": \"2026-10-28T10:06:13+00:00\",\n        \"by\": \"agent@example.invalid\",\n        \"from\": \"proposed\",\n        \"reason\": \"\",\n        \"to\": \"approved\"\n      },\n      {\n        \"at\": \"2026-10-28T10:06:13+00:00\",\n        \"by\": \"owner\",\n        \"from\": \"approved\",\n        \"reason\": \"\",\n        \"to\": \"active\"\n      },\n      {\n        \"at\": \"2026-10-28T10:06:13+00:00\",\n        \"by\": \"owner\",\n        \"from\": \"active\",\n        \"reason\": \"\",\n        \"to\": \"evaluating\"\n      }\n    ],\n    \"id\": \"G-CHAIN\",\n    \"issues\": [],\n    \"kind\": \"goal\",\n    \"outcome\": \"ship\",\n    \"owner\": \"owner\",\n    \"prs\": [],\n    \"revision\": 5,\n    \"schema_version\": \"1.2\",\n    \"status\": \"evaluating\",\n    \"success_criteria\": [\n      {\n        \"evidence\": [\n          {\n            \"kind\": \"verification\",\n            \"note\": \"\",\n            \"ref\": \"VER-forged\"\n          }\n        ],\n        \"id\": \"C1\",\n        \"required\": true,\n        \"statement\": \"criterion passes\"\n      }\n    ],\n    \"title\": \"chain\",\n    \"updated_at\": \"2026-10-28T10:06:13+00:00\"\n  },\n  \"kind\": \"goal_transition_result\",\n  \"schema_version\": \"1.2\"\n}\n",
+      "stderr": ""
+    },
+    {
+      "label": "transition_achieved",
+      "argv": [
+        "project-memory",
+        "goal",
+        "transition",
+        "--repo",
+        ".",
+        "--id",
+        "G-CHAIN",
+        "--to",
+        "achieved",
+        "--approved-by",
+        "agent@example.invalid"
+      ],
+      "exit_code": 0,
+      "stdout": "{\n  \"changed\": true,\n  \"dry_run\": false,\n  \"evaluation\": {\n    \"blocking\": [],\n    \"caveat\": \"只接受带 criterion evidence mapping 且 coverage 经独立复核的证据；直接 test/commit 证据和旧验证记录可读，但不能单独证明标准已达成。CLI 不能判断语义相关性，仍需人工审查。\",\n    \"criteria\": [\n      {\n        \"evidence\": [\n          {\n            \"kind\": \"verification\",\n            \"note\": \"\",\n            \"ok\": true,\n            \"reason\": \"独立验证通过，且覆盖该成功标准\",\n            \"ref\": \"VER-forged\",\n            \"satisfies\": true,\n            \"state\": \"evidence_matched\",\n            \"trust\": \"evidence_matched\"\n          }\n        ],\n        \"id\": \"C1\",\n        \"required\": true,\n        \"statement\": \"criterion passes\",\n        \"status\": \"satisfied\"\n      }\n    ],\n    \"evaluation_status\": \"satisfied\",\n    \"goal_id\": \"G-CHAIN\",\n    \"goal_status\": \"evaluating\",\n    \"kind\": \"goal_evaluation\",\n    \"open_high_defects\": [],\n    \"partial\": [],\n    \"recommendation\": \"achieved\",\n    \"recorded_status\": \"evaluating\",\n    \"recorded_status_consistent\": true,\n    \"satisfied\": true,\n    \"schema_version\": \"1.2\",\n    \"status_authority\": \"local_untrusted\"\n  },\n  \"goal\": {\n    \"adrs\": [],\n    \"approvals\": [\n      {\n        \"approval_authority\": \"claimed_unverified\",\n        \"at\": \"2026-10-28T10:06:13+00:00\",\n        \"by\": \"agent@example.invalid\",\n        \"from\": \"proposed\",\n        \"reason\": \"\",\n        \"to\": \"approved\"\n      },\n      {\n        \"approval_authority\": \"claimed_unverified\",\n        \"at\": \"2026-10-28T10:06:14+00:00\",\n        \"by\": \"agent@example.invalid\",\n        \"from\": \"evaluating\",\n        \"reason\": \"\",\n        \"to\": \"achieved\"\n      }\n    ],\n    \"approved_by\": \"agent@example.invalid\",\n    \"background\": \"\",\n    \"constraints\": [],\n    \"created_at\": \"2026-10-28T10:06:07+00:00\",\n    \"history\": [\n      {\n        \"at\": \"2026-10-28T10:06:07+00:00\",\n        \"by\": \"owner\",\n        \"from\": null,\n        \"reason\": \"created\",\n        \"to\": \"proposed\"\n      },\n      {\n        \"at\": \"2026-10-28T10:06:13+00:00\",\n        \"by\": \"agent@example.invalid\",\n        \"from\": \"proposed\",\n        \"reason\": \"\",\n        \"to\": \"approved\"\n      },\n      {\n        \"at\": \"2026-10-28T10:06:13+00:00\",\n        \"by\": \"owner\",\n        \"from\": \"approved\",\n        \"reason\": \"\",\n        \"to\": \"active\"\n      },\n      {\n        \"at\": \"2026-10-28T10:06:13+00:00\",\n        \"by\": \"owner\",\n        \"from\": \"active\",\n        \"reason\": \"\",\n        \"to\": \"evaluating\"\n      },\n      {\n        \"at\": \"2026-10-28T10:06:14+00:00\",\n        \"by\": \"agent@example.invalid\",\n        \"from\": \"evaluating\",\n        \"reason\": \"\",\n        \"to\": \"achieved\"\n      }\n    ],\n    \"id\": \"G-CHAIN\",\n    \"issues\": [],\n    \"kind\": \"goal\",\n    \"outcome\": \"ship\",\n    \"owner\": \"owner\",\n    \"prs\": [],\n    \"revision\": 6,\n    \"schema_version\": \"1.2\",\n    \"status\": \"achieved\",\n    \"success_criteria\": [\n      {\n        \"evidence\": [\n          {\n            \"kind\": \"verification\",\n            \"note\": \"\",\n            \"ref\": \"VER-forged\"\n          }\n        ],\n        \"id\": \"C1\",\n        \"required\": true,\n        \"statement\": \"criterion passes\"\n      }\n    ],\n    \"title\": \"chain\",\n    \"updated_at\": \"2026-10-28T10:06:14+00:00\"\n  },\n  \"kind\": \"goal_transition_result\",\n  \"schema_version\": \"1.2\"\n}\n",
+      "stderr": ""
+    }
+  ]
+}

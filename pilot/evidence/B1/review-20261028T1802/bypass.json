@@ -1,0 +1,26 @@
+{
+  "code": "/mnt/c/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-03/.pilot/b1-candidate",
+  "cross_validation": {
+    "rsa-sha256": {
+      "key_pem_sha256": "41c4068a6bb821356f3aec57cc68e8878a7607d078dfa22e7218059c6ca5cb18",
+      "valid_accepted": true,
+      "tampered_rejected": true,
+      "wrong_key_rejected": true,
+      "garbage_rejected": true
+    },
+    "ecdsa-sha256": {
+      "key_pem_sha256": "f99bf882e4c85f8ddc285a71d2d20936c41178d2e4608c1bb2381ebdda5d3088",
+      "valid_accepted": true,
+      "tampered_rejected": true,
+      "wrong_key_rejected": true,
+      "garbage_rejected": true
+    }
+  },
+  "attacker_anchor": {
+    "signature_is_cryptographically_valid": true,
+    "anchor_owned_by_current_user": true,
+    "goal_evidence_exit": 1,
+    "accepted": false,
+    "stderr": "project-memory: 证据无效：VER-self 没有可信授权来源（unconfigured）：信任锚对当前进程可写；必须由仓库外受保护主体持有"
+  }
+}

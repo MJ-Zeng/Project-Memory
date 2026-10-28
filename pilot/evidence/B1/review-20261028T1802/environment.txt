@@ -1,0 +1,27 @@
+# B1 PM-03 review environment
+date: 2026-10-28T18:14:04+0800
+host_os: MINGW64_NT-10.0-26300
+review_workspace: pm-pilot-03
+git_remote: git@github.com:MJ-Zeng/Project-Memory.git
+review_branch: review/b1-1c7ad94
+
+## SHAs
+baseline: 25a919d63c7181fd4083e0fc1af33734d74c5515
+candidate: 1c7ad94f8c3beb369f4a86a33accda6910213105
+branch_head: 216f154da797a2e5c295e01f11429978796aa7c7
+frozen_ref: 0d08a1ad85144d11a46d6a361a2a3ce4eadbbed4
+
+## Hashes
+task_card: 0fdc9469456b81bae26a3c29385f1745222e16b19211e27d4d04a418ef3be08d
+baseline_probe: 827ad0c29d50cd15ce345485d24e5a75edf069522c89b048236c08ba9e617c73
+baseline_authority: 4805b06b45e208013013a872cce0e6b5f5e2c67794f8ea237eb1e07ff384a88d
+candidate_authority: 163a08ad4585d3d488ca628c9c30554029767b5a45784fe6f7e2bcc6537518ea
+
+## Tooling
+windows_python: Python 3.12.4
+windows_pytest: pytest 9.1.1
+wsl_kernel: 6.18.33.2-microsoft-standard-WSL2
+wsl_python: Python 3.14.4
+wsl_git: git version 2.53.0
+wsl_openssl: OpenSSL 3.5.5 27 Jan 2026 (Library: OpenSSL 3.5.5 27 Jan 2026)
+anchor_dir: /etc/pm-rc3-review (anchor-a.json anchor_id=anchor-rc3-a, algorithm=rsa-sha256)

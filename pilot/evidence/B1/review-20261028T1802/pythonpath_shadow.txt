@@ -1,0 +1,8 @@
+--- neutral cwd, shadow first on PYTHONPATH ---
+SHADOW-MAIN-REACHED ['goal', 'evidence', '--repo', '.', '--id', 'X']
+EXIT=0
+--- which module wins (neutral cwd) ---
+/tmp/pm03-shadow2-542/project_memory/__init__.py
+--- cwd contains project_memory/ (no PYTHONPATH shadow) ---
+CWD-SHADOW-REACHED ['goal', 'evidence', '--repo', '.', '--id', 'X']
+EXIT=0
