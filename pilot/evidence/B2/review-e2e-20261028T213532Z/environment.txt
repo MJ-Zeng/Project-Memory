@@ -1,0 +1,18 @@
+run_id=20261028T213532Z
+captured_at=2026-10-28T21:37:27+08:00
+uid=1000 user=zmj
+python=Python 3.14.4
+git=git version 2.53.0
+host=Linux 6.18.33.2-microsoft-standard-WSL2 x86_64
+anchor=/etc/pm-rc3-review/anchor-a.json mode=0o644 owner=0:0 writable_by_runner=False
+anchor_id=anchor-rc3-a load_anchor=ok
+candidate_commit=004a35bd7c6b6584a9054d7b61eca88b44ec25e6
+candidate_module=/mnt/c/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-03/.pilot/candidate/project_memory/__init__.py
+fixture_root=/mnt/c/Documents/02_Research/Code/project-memory-verification-lab/fixtures/b2
+fixture_head[forged-untrusted]=6f7a5ddb798e34e8b3b645de3db2227fd4c13d0a
+fixture_head[forged-claimed-trusted]=3111dbd4a670ca5f4dde2f03c83da1f92be1ae32
+fixture_head[genuine-trusted]=f8ddf427fdc28528b82e6cced9431a19eaee7b5e
+fixture_head[exception]=b8c4d2809c0e136c33da93d425b35b41f4035a71
+candidate_blob_sha256[project_memory/authority.py]=b2b8844435a4555abb8ead9152a31c577721d52b84848e02440670bec98790bc
+candidate_blob_sha256[project_memory/coordination.py]=53066b81a2eb001d7f251af4c3075534c9de4b761b94ff49ad9f2d2ea90fb3d5
+candidate_blob_sha256[project_memory/execution.py]=796de0fc928b05b4c5af9132c9f4a77daacb6fa6eadd8fda00c4aa4c5ba3f21b

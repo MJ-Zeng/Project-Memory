@@ -1,0 +1,68 @@
+{
+  "run_id": "20261028T213532Z",
+  "reviewer": "PM-03",
+  "candidate": "004a35bd7c6b6584a9054d7b61eca88b44ec25e6",
+  "anchor": "/etc/pm-rc3-review/anchor-a.json",
+  "anchor_id": "anchor-rc3-a",
+  "uid": 1000,
+  "cases": [
+    {
+      "case": "forged-untrusted",
+      "expected": "reject",
+      "head": "6f7a5ddb798e34e8b3b645de3db2227fd4c13d0a",
+      "expected_head": "6f7a5ddb798e34e8b3b645de3db2227fd4c13d0a",
+      "head_match": true,
+      "exit": 1,
+      "expected_exit": 1,
+      "exit_match": true,
+      "stderr": "project-memory: 证据无效：VER-B2-forged-untrusted 的执行来源不可信：人类例外缺失：收据没有可验证的执行 attestation，也没有人类签名例外\n",
+      "gate_message": true,
+      "stdout_has_goal_evidence_result": false,
+      "case_ok": true
+    },
+    {
+      "case": "forged-claimed-trusted",
+      "expected": "reject",
+      "head": "3111dbd4a670ca5f4dde2f03c83da1f92be1ae32",
+      "expected_head": "3111dbd4a670ca5f4dde2f03c83da1f92be1ae32",
+      "head_match": true,
+      "exit": 1,
+      "expected_exit": 1,
+      "exit_match": true,
+      "stderr": "project-memory: 证据无效：VER-B2-forged-claimed-trusted 的执行来源不可信：人类例外缺失：收据没有可验证的执行 attestation，也没有人类签名例外\n",
+      "gate_message": true,
+      "stdout_has_goal_evidence_result": false,
+      "case_ok": true
+    },
+    {
+      "case": "genuine-trusted",
+      "expected": "accept",
+      "head": "f8ddf427fdc28528b82e6cced9431a19eaee7b5e",
+      "expected_head": "f8ddf427fdc28528b82e6cced9431a19eaee7b5e",
+      "head_match": true,
+      "exit": 0,
+      "expected_exit": 0,
+      "exit_match": true,
+      "stderr": "",
+      "gate_message": false,
+      "stdout_has_goal_evidence_result": true,
+      "case_ok": true
+    },
+    {
+      "case": "exception",
+      "expected": "accept",
+      "head": "b8c4d2809c0e136c33da93d425b35b41f4035a71",
+      "expected_head": "b8c4d2809c0e136c33da93d425b35b41f4035a71",
+      "head_match": true,
+      "exit": 0,
+      "expected_exit": 0,
+      "exit_match": true,
+      "stderr": "",
+      "gate_message": false,
+      "stdout_has_goal_evidence_result": true,
+      "case_ok": true
+    }
+  ],
+  "all_match": true,
+  "verdict": "PASS"
+}
