@@ -1,0 +1,65 @@
+B3 independent review environment (PM-03 reviewer)
+==================================================
+run_id: review-20261028T143901Z
+reviewed_at: 2026-10-28T22:39:01+08:00 (14:39:01Z)
+
+Repository
+----------
+workspace: C:/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-03
+main worktree base branch: dev/v1.0 (clean at start, HEAD 832f271)
+review branch: review/b3-19bba33 (created from candidate)
+base commit: 832f2710bfde1cbc498ee6882a5e10b797db6a76
+candidate commit: 19bba33378ca45c8e776bbb11e99b9f5497cbaed
+candidate is descendant of base: yes (git merge-base --is-ancestor)
+worktrees: .pilot/b3-base @ 832f2710, .pilot/b3-candidate @ 19bba33
+task card: tasks/B3.md sha256 89b2d31b4dd604a384e3cc42531b2b8e47ae39e6be290ebdcde503dff8cef8bc (matches dispatch)
+
+Diff under review (832f2710..19bba33)
+-------------------------------------
+A docs/decisions/ADR-0004-criteria-digest.md
+M project_memory/coordination.py
+A tasks/B3-context-recovery.md
+A tests/test_security_b3.py
+project_memory/common.py: not modified
+project_memory/authority.py, execution.py, bootstrap.py: not modified
+existing tests: not modified, none deleted
+
+Execution environment
+---------------------
+host: Windows 10.0.26300 x64 (Git Bash 2.53.0.windows.1)
+WSL: Ubuntu (WSL2), uid 1000 (zmj), Python 3.14.4, git 2.53.0
+Windows regression interpreter: C:\SoftWare\Anconda\python.exe 3.12.4, pytest 9.1.1
+trust anchor: /etc/pm-rc3-review/anchor-a.json (WSL), sha256 e85d1f500a8b93479d703ba28c96ef4693820a104160d111cda22e793c27515e, root:root 644
+key-a.pem: NOT read, NOT copied, NOT hashed
+
+Fixtures (read-only inputs, copied to /tmp per case)
+----------------------------------------------------
+C:/Documents/02_Research/Code/project-memory-verification-lab/fixtures/b2/new-stable/repo
+C:/Documents/02_Research/Code/project-memory-verification-lab/fixtures/b2/definition-change/repo
+C:/Documents/02_Research/Code/project-memory-verification-lab/fixtures/b2/genuine-trusted/repo
+C:/Documents/02_Research/Code/project-memory-verification-lab/fixtures/b2/forged-untrusted/repo
+C:/Documents/02_Research/Code/project-memory-verification-lab/fixtures/b2/forged-claimed-trusted/repo
+C:/Documents/02_Research/Code/project-memory-verification-lab/fixtures/b2/exception/repo
+note: B3 cases are physically under fixtures/b2/ (not fixtures/b3/ as documented); content matched expectations.
+
+Regression
+----------
+command (candidate worktree): C:\SoftWare\Anconda\python.exe -m pytest -q -p no:cacheprovider
+result: 213 passed, 2 skipped in 112.91s
+B3+B2 files: 23 passed (tests/test_security_b3.py 10, tests/test_security_b2.py 13)
+baseline comparison (legacy fixture on .pilot/b3-base): goal evaluate satisfied=false, exit 2
+
+Artifacts in this directory
+---------------------------
+matrix.json          full raw matrix (commands, exits, stdout/stderr)
+run_matrix.py        driver executed in WSL
+assemble.py          evidence-pack assembler
+commands.jsonl       flattened command/exit records
+new-record.json      AC-1/AC-2 case
+legacy-b2.json       AC-3 candidate vs baseline
+negative.json        AC-4/AC-5 + legacy negative + required baseline parity
+b2-regression.json   forged cases, exception positive, tamper cases
+pytest.log           full-suite regression output
+pytest-b3-b2.log     B3+B2 focused run
+diffstat.txt         git diff --stat / --name-status
+sha256sums.txt       hashes of evidence files and fixture inputs

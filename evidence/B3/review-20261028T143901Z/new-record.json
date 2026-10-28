@@ -1,0 +1,55 @@
+{
+  "description": "AC-1/AC-2: new stable-digest record, evidence then evaluate",
+  "case": {
+    "evaluate_before_evidence": {
+      "command": "python3 -m project_memory goal evaluate --repo . --id G-B3",
+      "cwd": "/tmp/b3-review-20261028T143901Z/new-stable",
+      "pythonpath": "/mnt/c/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-03/.pilot/b3-candidate",
+      "exit": 2,
+      "stdout": "{\n  \"blocking\": [\n    \"C1\"\n  ],\n  \"caveat\": \"只接受带 criterion evidence mapping 且 coverage 经独立复核的证据；直接 test/commit 证据和旧验证记录可读，但不能单独证明标准已达成。CLI 不能判断语义相关性，仍需人工审查。\",\n  \"criteria\": [\n    {\n      \"evidence\": [],\n      \"id\": \"C1\",\n      \"required\": true,\n      \"statement\": \"模块通过测试\",\n      \"status\": \"insufficient_evidence\"\n    }\n  ],\n  \"evaluation_status\": \"insufficient_evidence\",\n  \"goal_id\": \"G-B3\",\n  \"goal_status\": \"proposed\",\n  \"kind\": \"goal_evaluation\",\n  \"open_high_defects\": [],\n  \"partial\": [],\n  \"recommendation\": \"insufficient_evidence\",\n  \"recorded_status\": \"proposed\",\n  \"recorded_status_consistent\": true,\n  \"satisfied\": false,\n  \"schema_version\": \"1.2\",\n  \"status_authority\": \"local_untrusted\"\n}\n",
+      "stderr": "",
+      "satisfied": false,
+      "evaluation_status": "insufficient_evidence",
+      "recommendation": "insufficient_evidence",
+      "blocking": [
+        "C1"
+      ]
+    },
+    "record_path": ".project-memory/verifications/325/VER-B3-new-stable.json",
+    "record_sha_before": "063c51bf6258dce16b9300968681c3036066121ec30c0585a8e284b729570b0b",
+    "record_sha_after": "063c51bf6258dce16b9300968681c3036066121ec30c0585a8e284b729570b0b",
+    "record_bytes_unchanged": true,
+    "evidence": {
+      "command": "python3 -m project_memory goal evidence --repo . --id G-B3 --criterion C1 --kind verification --ref VER-B3-new-stable",
+      "cwd": "/tmp/b3-review-20261028T143901Z/new-stable",
+      "pythonpath": "/mnt/c/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-03/.pilot/b3-candidate",
+      "exit": 0,
+      "stdout": "{\n  \"criterion\": \"C1\",\n  \"evidence\": {\n    \"kind\": \"verification\",\n    \"note\": \"\",\n    \"ref\": \"VER-B3-new-stable\"\n  },\n  \"goal\": {\n    \"adrs\": [],\n    \"approved_by\": null,\n    \"background\": \"bg\",\n    \"constraints\": [],\n    \"created_at\": \"2026-10-28T14:35:03+00:00\",\n    \"history\": [\n      {\n        \"at\": \"2026-10-28T14:35:03+00:00\",\n        \"by\": \"owner\",\n        \"from\": null,\n        \"reason\": \"created\",\n        \"to\": \"proposed\"\n      }\n    ],\n    \"id\": \"G-B3\",\n    \"issues\": [],\n    \"kind\": \"goal\",\n    \"outcome\": \"outcome\",\n    \"owner\": \"owner\",\n    \"prs\": [],\n    \"revision\": 2,\n    \"schema_version\": \"1.2\",\n    \"status\": \"proposed\",\n    \"success_criteria\": [\n      {\n        \"evidence\": [\n          {\n            \"kind\": \"verification\",\n            \"note\": \"\",\n            \"ref\": \"VER-B3-new-stable\"\n          }\n        ],\n        \"id\": \"C1\",\n        \"required\": true,\n        \"statement\": \"模块通过测试\"\n      }\n    ],\n    \"title\": \"B3 fixture\",\n    \"updated_at\": \"2026-10-28T14:40:54+00:00\"\n  },\n  \"goal_id\": \"G-B3\",\n  \"kind\": \"goal_evidence_result\",\n  \"schema_version\": \"1.2\"\n}\n",
+      "stderr": ""
+    },
+    "evaluate": {
+      "command": "python3 -m project_memory goal evaluate --repo . --id G-B3",
+      "cwd": "/tmp/b3-review-20261028T143901Z/new-stable",
+      "pythonpath": "/mnt/c/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-03/.pilot/b3-candidate",
+      "exit": 0,
+      "stdout": "{\n  \"blocking\": [],\n  \"caveat\": \"只接受带 criterion evidence mapping 且 coverage 经独立复核的证据；直接 test/commit 证据和旧验证记录可读，但不能单独证明标准已达成。CLI 不能判断语义相关性，仍需人工审查。\",\n  \"criteria\": [\n    {\n      \"evidence\": [\n        {\n          \"kind\": \"verification\",\n          \"note\": \"\",\n          \"ok\": true,\n          \"reason\": \"独立验证通过，且覆盖该成功标准\",\n          \"ref\": \"VER-B3-new-stable\",\n          \"satisfies\": true,\n          \"state\": \"evidence_matched\",\n          \"trust\": \"evidence_matched\"\n        }\n      ],\n      \"id\": \"C1\",\n      \"required\": true,\n      \"statement\": \"模块通过测试\",\n      \"status\": \"satisfied\"\n    }\n  ],\n  \"evaluation_status\": \"satisfied\",\n  \"goal_id\": \"G-B3\",\n  \"goal_status\": \"proposed\",\n  \"kind\": \"goal_evaluation\",\n  \"open_high_defects\": [],\n  \"partial\": [],\n  \"recommendation\": \"achieved\",\n  \"recorded_status\": \"proposed\",\n  \"recorded_status_consistent\": true,\n  \"satisfied\": true,\n  \"schema_version\": \"1.2\",\n  \"status_authority\": \"local_untrusted\"\n}\n",
+      "stderr": "",
+      "satisfied": true,
+      "evaluation_status": "satisfied",
+      "recommendation": "achieved",
+      "blocking": []
+    },
+    "probe_after": {
+      "exit": 0,
+      "stdout": "{\"record\": \".project-memory/verifications/325/VER-B3-new-stable.json\", \"current\": true, \"authority_trusted\": true, \"goal_criteria_sha256\": \"c13c299ac09f49001c728ac847dfc223eec5344c4d50ad0114c9847c6cb6f514\", \"goal_criteria_legacy_sha256\": \"b17a716f397aba14c865cc834f38fb5f0c1976531199393d2b186271781e4127\"}\n",
+      "stderr": "",
+      "payload": {
+        "record": ".project-memory/verifications/325/VER-B3-new-stable.json",
+        "current": true,
+        "authority_trusted": true,
+        "goal_criteria_sha256": "c13c299ac09f49001c728ac847dfc223eec5344c4d50ad0114c9847c6cb6f514",
+        "goal_criteria_legacy_sha256": "b17a716f397aba14c865cc834f38fb5f0c1976531199393d2b186271781e4127"
+      }
+    }
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "forged_and_positive": {
+    "forged-untrusted": {
+      "evidence": {
+        "command": "python3 -m project_memory goal evidence --repo . --id G-B2 --criterion C1 --kind verification --ref VER-B2-forged-untrusted",
+        "cwd": "/tmp/b3-review-20261028T143901Z/forged-untrusted",
+        "pythonpath": "/mnt/c/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-03/.pilot/b3-candidate",
+        "exit": 1,
+        "stdout": "",
+        "stderr": "project-memory: 证据无效：VER-B2-forged-untrusted 的执行来源不可信：人类例外缺失：收据没有可验证的执行 attestation，也没有人类签名例外\n"
+      },
+      "evaluate": {
+        "command": "python3 -m project_memory goal evaluate --repo . --id G-B2",
+        "cwd": "/tmp/b3-review-20261028T143901Z/forged-untrusted",
+        "pythonpath": "/mnt/c/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-03/.pilot/b3-candidate",
+        "exit": 2,
+        "stdout": "{\n  \"blocking\": [\n    \"C1\"\n  ],\n  \"caveat\": \"只接受带 criterion evidence mapping 且 coverage 经独立复核的证据；直接 test/commit 证据和旧验证记录可读，但不能单独证明标准已达成。CLI 不能判断语义相关性，仍需人工审查。\",\n  \"criteria\": [\n    {\n      \"evidence\": [],\n      \"id\": \"C1\",\n      \"required\": true,\n      \"statement\": \"模块通过测试\",\n      \"status\": \"insufficient_evidence\"\n    }\n  ],\n  \"evaluation_status\": \"insufficient_evidence\",\n  \"goal_id\": \"G-B2\",\n  \"goal_status\": \"proposed\",\n  \"kind\": \"goal_evaluation\",\n  \"open_high_defects\": [],\n  \"partial\": [],\n  \"recommendation\": \"insufficient_evidence\",\n  \"recorded_status\": \"proposed\",\n  \"recorded_status_consistent\": true,\n  \"satisfied\": false,\n  \"schema_version\": \"1.2\",\n  \"status_authority\": \"local_untrusted\"\n}\n",
+        "stderr": "",
+        "satisfied": false,
+        "evaluation_status": "insufficient_evidence",
+        "recommendation": "insufficient_evidence",
+        "blocking": [
+          "C1"
+        ]
+      }
+    },
+    "forged-claimed-trusted": {
+      "evidence": {
+        "command": "python3 -m project_memory goal evidence --repo . --id G-B2 --criterion C1 --kind verification --ref VER-B2-forged-claimed-trusted",
+        "cwd": "/tmp/b3-review-20261028T143901Z/forged-claimed-trusted",
+        "pythonpath": "/mnt/c/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-03/.pilot/b3-candidate",
+        "exit": 1,
+        "stdout": "",
+        "stderr": "project-memory: 证据无效：VER-B2-forged-claimed-trusted 的执行来源不可信：人类例外缺失：收据没有可验证的执行 attestation，也没有人类签名例外\n"
+      },
+      "evaluate": {
+        "command": "python3 -m project_memory goal evaluate --repo . --id G-B2",
+        "cwd": "/tmp/b3-review-20261028T143901Z/forged-claimed-trusted",
+        "pythonpath": "/mnt/c/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-03/.pilot/b3-candidate",
+        "exit": 2,
+        "stdout": "{\n  \"blocking\": [\n    \"C1\"\n  ],\n  \"caveat\": \"只接受带 criterion evidence mapping 且 coverage 经独立复核的证据；直接 test/commit 证据和旧验证记录可读，但不能单独证明标准已达成。CLI 不能判断语义相关性，仍需人工审查。\",\n  \"criteria\": [\n    {\n      \"evidence\": [],\n      \"id\": \"C1\",\n      \"required\": true,\n      \"statement\": \"模块通过测试\",\n      \"status\": \"insufficient_evidence\"\n    }\n  ],\n  \"evaluation_status\": \"insufficient_evidence\",\n  \"goal_id\": \"G-B2\",\n  \"goal_status\": \"proposed\",\n  \"kind\": \"goal_evaluation\",\n  \"open_high_defects\": [],\n  \"partial\": [],\n  \"recommendation\": \"insufficient_evidence\",\n  \"recorded_status\": \"proposed\",\n  \"recorded_status_consistent\": true,\n  \"satisfied\": false,\n  \"schema_version\": \"1.2\",\n  \"status_authority\": \"local_untrusted\"\n}\n",
+        "stderr": "",
+        "satisfied": false,
+        "evaluation_status": "insufficient_evidence",
+        "recommendation": "insufficient_evidence",
+        "blocking": [
+          "C1"
+        ]
+      }
+    },
+    "exception_positive": {
+      "evidence": {
+        "command": "python3 -m project_memory goal evidence --repo . --id G-B2 --criterion C1 --kind verification --ref VER-B2-exception",
+        "cwd": "/tmp/b3-review-20261028T143901Z/exception",
+        "pythonpath": "/mnt/c/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-03/.pilot/b3-candidate",
+        "exit": 0,
+        "stdout": "{\n  \"criterion\": \"C1\",\n  \"evidence\": {\n    \"kind\": \"verification\",\n    \"note\": \"\",\n    \"ref\": \"VER-B2-exception\"\n  },\n  \"goal\": {\n    \"adrs\": [],\n    \"approved_by\": null,\n    \"background\": \"bg\",\n    \"constraints\": [],\n    \"created_at\": \"2026-10-28T13:33:21+00:00\",\n    \"history\": [\n      {\n        \"at\": \"2026-10-28T13:33:21+00:00\",\n        \"by\": \"owner\",\n        \"from\": null,\n        \"reason\": \"created\",\n        \"to\": \"proposed\"\n      }\n    ],\n    \"id\": \"G-B2\",\n    \"issues\": [],\n    \"kind\": \"goal\",\n    \"outcome\": \"outcome\",\n    \"owner\": \"owner\",\n    \"prs\": [],\n    \"revision\": 2,\n    \"schema_version\": \"1.2\",\n    \"status\": \"proposed\",\n    \"success_criteria\": [\n      {\n        \"evidence\": [\n          {\n            \"kind\": \"verification\",\n            \"note\": \"\",\n            \"ref\": \"VER-B2-exception\"\n          }\n        ],\n        \"id\": \"C1\",\n        \"required\": true,\n        \"statement\": \"模块通过测试\"\n      }\n    ],\n    \"title\": \"B2 fixture\",\n    \"updated_at\": \"2026-10-28T14:41:14+00:00\"\n  },\n  \"goal_id\": \"G-B2\",\n  \"kind\": \"goal_evidence_result\",\n  \"schema_version\": \"1.2\"\n}\n",
+        "stderr": ""
+      }
+    }
+  },
+  "binding_tamper": {
+    "tamper_receipt": {
+      "command": "python3 -m project_memory goal evidence --repo . --id G-B2 --criterion C1 --kind verification --ref VER-B2-genuine-trusted",
+      "cwd": "/tmp/b3-review-20261028T143901Z/tamper-receipt",
+      "pythonpath": "/mnt/c/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-03/.pilot/b3-candidate",
+      "exit": 1,
+      "stdout": "",
+      "stderr": "project-memory: 证据无效：VER-B2-genuine-trusted 的执行收据内容不完整：收据内容哈希不一致（收据被修改）\n"
+    },
+    "tamper_record": {
+      "command": "python3 -m project_memory goal evidence --repo . --id G-B2 --criterion C1 --kind verification --ref VER-B2-genuine-trusted",
+      "cwd": "/tmp/b3-review-20261028T143901Z/tamper-record",
+      "pythonpath": "/mnt/c/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-03/.pilot/b3-candidate",
+      "exit": 1,
+      "stdout": "",
+      "stderr": "project-memory: 证据无效：VER-B2-genuine-trusted 没有可信授权来源（untrusted）：authority.signed_payload_sha256 与记录内容不一致\n"
+    }
+  }
+}

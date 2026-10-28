@@ -1,0 +1,11 @@
+ docs/decisions/ADR-0004-criteria-digest.md | 133 +++++++++++
+ project_memory/coordination.py             |  54 ++++-
+ tasks/B3-context-recovery.md               |  36 +++
+ tests/test_security_b3.py                  | 346 +++++++++++++++++++++++++++++
+ 4 files changed, 566 insertions(+), 3 deletions(-)
+
+--name-status--
+A	docs/decisions/ADR-0004-criteria-digest.md
+M	project_memory/coordination.py
+A	tasks/B3-context-recovery.md
+A	tests/test_security_b3.py

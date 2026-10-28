@@ -1,0 +1,21 @@
+3965f83ac5f64fc79b85de092971cf956901c471c9f5771ede1e21c2207f8794  evidence/B3/review-20261028T143901Z/assemble.py
+a16be11e158c968a3c6d2a9d61227e72120a109e2681f33875bb753ab01c1e12  evidence/B3/review-20261028T143901Z/b2-regression.json
+daad4a9005b5022b4cc7df4fbabb61c99988fb036ea1c503f37ea0eb13f69d53  evidence/B3/review-20261028T143901Z/commands.jsonl
+4b4479282609ad768adcc837d83203fe6bde7a1d2cc85ca4578fdd15aa9ff9e0  evidence/B3/review-20261028T143901Z/diffstat.txt
+493072cc89c210ad44098dd6ba7745ad3de8ea731a88dc48de0359c1b69f46a6  evidence/B3/review-20261028T143901Z/environment.txt
+ce7ac16bbee3c33a5a25cf779bd836c9c99c822b2540f272534a832c47faae0e  evidence/B3/review-20261028T143901Z/legacy-b2.json
+7d70a5d4e87f22ceeabecc87669bd05a372b077695540ccaced9de904dcfc4b4  evidence/B3/review-20261028T143901Z/matrix.json
+ed3e586afc1b5ee992ebe63950cd4e778a6eeca0f5a8c25eef3a838598c9a773  evidence/B3/review-20261028T143901Z/negative.json
+54aca692bbb4df0778deb90b08e9c1280b7f14f6841533eff930a600d5eba8ed  evidence/B3/review-20261028T143901Z/new-record.json
+2f778933daa63599211b8d36cb8d2baf96f5eb9195b184565b36e2ec1bf3cdc1  evidence/B3/review-20261028T143901Z/pytest-b3-b2.log
+a41a50ba921eb0b1198c391ea39c9dac259471b2caeca1a42b1e848cf015296f  evidence/B3/review-20261028T143901Z/pytest.log
+9120797483eff5ab079dbd2ca759c8c9db40aad7a5c9d1d84fca021657e4cf07  evidence/B3/review-20261028T143901Z/README.md
+834155f491bb9fce38acfe760217df4218bf610a9db546e26f5f9d514baae0f2  evidence/B3/review-20261028T143901Z/run_matrix.py
+
+# fixture source files (read-only inputs)
+063c51bf6258dce16b9300968681c3036066121ec30c0585a8e284b729570b0b  fixtures/b2/new-stable/repo/.project-memory/verifications/325/VER-B3-new-stable.json
+2343ff5bc71fc510f9ec3beb7861baa13ec815c3e5f4d5e19698334887ed92e4  fixtures/b2/definition-change/repo/.project-memory/verifications/325/VER-B3-definition-change.json
+e1a607f10a3b9b3ef573398e415050f5614c6f57824a4df7f7d7b72904ed5000  fixtures/b2/genuine-trusted/repo/.project-memory/verifications/325/VER-B2-genuine-trusted.json
+0290eadfa11281f186110417347216eba4e1bee59924e343b0a73f7c7bd8a519  fixtures/b2/genuine-trusted/repo/.project-memory/goals/G-B2.json
+b2993a6042a57c4804824b695f669646d7d9f18ffa7e5eb8a865db465baaaa99  fixtures/b2/new-stable/repo/.project-memory/goals/G-B3.json
+80c4fbbea60808788562afbf5358be6f779f423ccf52dc294e3a93f427ee4922  fixtures/b2/definition-change/repo/.project-memory/goals/G-B3.json
