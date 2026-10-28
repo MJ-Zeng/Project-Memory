@@ -143,6 +143,12 @@ python3 -m project_memory goal evidence \
 
 范围：`git diff --name-status 73be8e3..8506dd4` 的代码/测试仅 `project_memory/coordination.py`、`project_memory/execution.py`、`tests/test_repo_identity.py`；文档为 ADR-0001 与 `pilot/` 证据/Handoff；`.project-memory/handoffs/` 仅 Handoff 记录。无 B1–B5 行为文件、无任务卡/判据/探针/评测器改动。
 
+### 证据清单与校验
+
+`pilot/evidence/B0/review-20261028T130230/` 共 31 个受校验文件：驱动与脚本（`driver_b01.py`、`match_control.py`、`assemble.py`、`review_state.py`、`ac1b_run.sh`）、F-2/F-3 结果（`f2_cross_path.json`、`f2_binding_matrix.json`、`f2_negative.json`、`f3_identity.json`、`prior_acs.json`、`control_prev.json`、`control_candidate.json`、`prev_control.json`、`summary.json`）、AC-1(b)（`ac1b_goal_evidence.json`、`ac1b_compare.json`、`ac1b_environment.txt`、`ac1b_exit_code.txt`、`ac1b_stderr.txt`、`ac1b_record_hash_before.txt`、`ac1b_record_hashes_after.txt`、`ac1b_git_status_before.txt`、`ac1b_git_status_after.txt`）、日志（`pytest.log`、`pytest-identity.log`、`pytest-security.log`、`driver.log`、`verify_sha256sums.log`）、`environment.txt`、`diffstat.txt`、`commands.jsonl`、`sha256sums.txt`。
+
+哈希取自提交后的 LF blob（`.gitattributes` 强制 `pilot/**` LF），在新检出 worktree 中 `sha256sum -c sha256sums.txt`：**31 OK / 0 FAILED**（exit 0）。
+
 ## 5. 新发现
 
 | ID | 严重度 | 内容 | 影响 |
