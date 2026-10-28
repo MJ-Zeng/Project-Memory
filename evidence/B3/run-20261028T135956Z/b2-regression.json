@@ -1,0 +1,30 @@
+{
+  "forgeries": {
+    "forged-untrusted": {
+      "goal_evidence_exit": 1,
+      "goal_evidence_stderr": "project-memory: 证据无效：VER-B2-forged-untrusted 的执行来源不可信：人类例外缺失：收据没有可验证的执行 attestation，也没有人类签名例外",
+      "goal_evaluate_exit": 2,
+      "satisfied": false,
+      "record_bytes_unchanged": true
+    },
+    "forged-claimed-trusted": {
+      "goal_evidence_exit": 1,
+      "goal_evidence_stderr": "project-memory: 证据无效：VER-B2-forged-claimed-trusted 的执行来源不可信：人类例外缺失：收据没有可验证的执行 attestation，也没有人类签名例外",
+      "goal_evaluate_exit": 2,
+      "satisfied": false,
+      "record_bytes_unchanged": true
+    }
+  },
+  "full_suite": {
+    "command": "python -m pytest -q",
+    "exit": 0,
+    "passed": 213,
+    "skipped": 2,
+    "log": "pytest.log"
+  },
+  "b2_suite": {
+    "command": "python -m pytest tests/test_security_b2.py -q",
+    "exit": 0,
+    "passed": 13
+  }
+}
