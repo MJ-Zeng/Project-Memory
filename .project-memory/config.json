@@ -1,0 +1,18 @@
+{
+  "adr_dir": "docs/decisions",
+  "agent_policy": "review_required",
+  "canonical_root": "docs",
+  "doc_roots": [
+    "docs"
+  ],
+  "entry_doc": null,
+  "legacy_roots": [],
+  "max_search_results": 6,
+  "max_verified_age_days": 90,
+  "mirror_policy": "active",
+  "mirror_roots": [],
+  "repo_kind": "git",
+  "schema_version": "1.1",
+  "semantic_model_path": null,
+  "task_source": "github_issues_or_local_files"
+}
