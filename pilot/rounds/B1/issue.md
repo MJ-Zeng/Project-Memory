@@ -1,6 +1,7 @@
 # [B1] 固定签名验证器，阻断 PATH/环境变量替换
 
 > 这是 Issue 正文草稿。派发时由 PM-01 复制到 GitHub，并填入实际 URL 与合并后的 base SHA。
+> **B1 已合并（PR #9，`15f4b3c`）**；实际 Issue 状态、决定与收口记录见 `decision.md` / `handoff-close.md`；正文中的“147”实为 164。
 
 ## 任务
 
