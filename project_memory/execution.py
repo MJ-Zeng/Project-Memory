@@ -6,6 +6,12 @@ exit code, log hash and snapshot digest. Verification code re-computes all of
 those values and refuses agent-supplied "passed" logs that have no matching
 receipt.
 
+Receipts also record a path-independent repository identity (canonical network
+remote plus root commits), so the same repository in another checkout can verify
+them.  Schema 1.0 receipts stored the hash of the absolute checkout path; they
+remain readable at their original path but are labelled ``legacy_path_bound``
+and are never accepted across paths.
+
 Two execution modes exist, and neither is silently substituted for the other:
 
 ``local``
@@ -31,6 +37,7 @@ import hashlib
 import json
 import os
 import platform
+import re
 import secrets
 import shlex
 import subprocess
@@ -44,7 +51,9 @@ from pathlib import Path
 from . import trusted_exec
 from .common import PMError, validate_identifier
 
-RECEIPT_SCHEMA = '1.0'
+RECEIPT_SCHEMA = '1.1'
+SNAPSHOT_SCHEMA = '1.1'
+LEGACY_RECEIPT_SCHEMA = '1.0'
 RECEIPT_KIND = 'execution_receipt'
 META_ROOT = '.project-memory'
 
@@ -65,8 +74,85 @@ def _meta(repo: Path, name: str) -> Path:
     return repo / META_ROOT / name
 
 
+def _canonical_remote(url: str) -> str | None:
+    """Normalise a network remote URL to a path-free ``host/path`` identity.
+
+    Returns ``None`` for empty URLs and for local-path remotes: a local path
+    remote is machine-local and must not smuggle an absolute path back into the
+    identity.  No equivalence beyond scheme/user/``.git``/trailing-slash removal
+    is guessed, so distinct hosts and paths stay distinct.
+    """
+    raw = str(url or '').strip()
+    if not raw:
+        return None
+    raw = raw.rstrip('/')
+    if raw.lower().endswith('.git'):
+        raw = raw[:-4]
+    if re.match(r'^[A-Za-z]:($|[\\/])', raw):
+        return None  # Windows drive path (C:\repo or C:/repo)
+    match = re.match(r'^(?P<scheme>[A-Za-z][A-Za-z0-9+.-]*)://(?P<rest>.+)$', raw)
+    if match:
+        if match.group('scheme').lower() == 'file':
+            return None
+        host, _, path = match.group('rest').partition('/')
+        host = host.rsplit('@', 1)[-1].lower()
+        path = path.strip('/')
+        if not host or not path:
+            return None
+        return f'{host}/{path}'
+    match = re.match(r'^(?P<hostpart>[^/\\:]+):(?P<path>.+)$', raw)
+    if match:
+        host = match.group('hostpart').rsplit('@', 1)[-1].lower()
+        path = match.group('path').strip('/')
+        if host and path:
+            return f'{host}/{path}'
+    return None  # relative/local path: no network identity
+
+
+def repo_identity(repo: Path) -> dict:
+    """Return the path-independent identity of the repository at ``repo``.
+
+    ``identity`` is ``sha256`` over the canonical remote URL and the sorted root
+    commits.  Checkout location, branch and HEAD are deliberately excluded, so a
+    copy/clone of the same repository keeps the same identity, while a different
+    history or a different remote yields a different one.  The value is not a
+    signature; it only answers "same repository?", never "who ran this?".
+    """
+    repo = Path(repo)
+    names = [name for name in _git(repo, 'remote').splitlines() if name.strip()]
+    if 'origin' in names:
+        chosen = 'origin'
+    elif names:
+        chosen = sorted(names)[0]
+    else:
+        chosen = None
+    remote = None
+    if chosen:
+        try:
+            remote = _canonical_remote(_git(repo, 'remote', 'get-url', chosen))
+        except PMError:
+            remote = None
+    roots = sorted(line for line in _git(repo, 'rev-list', '--max-parents=0', 'HEAD')
+                   .splitlines() if line.strip())
+    payload = json.dumps({'remote': remote, 'roots': roots}, sort_keys=True,
+                         ensure_ascii=False, separators=(',', ':'))
+    return {
+        'schema': RECEIPT_SCHEMA,
+        'kind': 'remote+root' if remote else 'root-only',
+        'remote': remote,
+        'root_commits': roots,
+        'id': _sha256_bytes(payload.encode('utf-8')),
+    }
+
+
 def repo_id(repo: Path) -> str:
-    return _sha256_bytes(str(repo.resolve()).casefold().encode('utf-8'))
+    """Stable repository identity hash (see :func:`repo_identity`)."""
+    return repo_identity(repo)['id']
+
+
+def _legacy_repo_id(repo: Path) -> str:
+    """The pre-1.1 path-bound identity, kept only to classify old receipts."""
+    return _sha256_bytes(str(Path(repo).resolve()).casefold().encode('utf-8'))
 
 
 def _git(repo: Path, *args: str) -> str:
@@ -175,7 +261,7 @@ def create_snapshot(repo: Path, commit_sha: str) -> dict:
             shutil.rmtree(staging, ignore_errors=True)
         archive.unlink(missing_ok=True)
     manifest = {
-        'schema_version': RECEIPT_SCHEMA, 'kind': 'execution_snapshot',
+        'schema_version': SNAPSHOT_SCHEMA, 'kind': 'execution_snapshot',
         'snapshot_id': snapshot_id, 'commit_sha': commit, 'tree_sha': tree,
         'snapshot_sha256': digest, 'file_count': len(files),
         'files': files, 'created_at': _now(),
@@ -304,8 +390,9 @@ def verify_receipt(repo: Path, ref: str, expected: dict | None = None) -> dict:
                 'provenance': {'kind': 'invalid', 'trusted': False, 'reason': str(exc)}}
     if receipt.get('kind') != RECEIPT_KIND:
         problems.append('kind 不是 execution_receipt')
-    if receipt.get('schema_version') != RECEIPT_SCHEMA:
-        problems.append('schema_version 不匹配')
+    legacy = receipt.get('schema_version') == LEGACY_RECEIPT_SCHEMA
+    if not legacy and receipt.get('schema_version') != RECEIPT_SCHEMA:
+        problems.append('schema_version 不匹配（只接受当前 1.1 与只读兼容的 1.0 旧收据）')
     if receipt.get('content_sha256') != _canonical_receipt_digest(receipt):
         problems.append('收据内容哈希不一致（收据被修改）')
     receipt_id = receipt.get('receipt_id')
@@ -324,8 +411,33 @@ def verify_receipt(repo: Path, ref: str, expected: dict | None = None) -> dict:
                 path.resolve().relative_to((_meta(repo, 'receipts')).resolve())
             except (ValueError, OSError):
                 problems.append('收据不在 .project-memory/receipts 目录内')
-    if receipt.get('repo_id') != repo_id(repo):
-        problems.append('收据属于其他仓库')
+    identity: dict | None = None
+    legacy_path_bound = legacy
+    if legacy:
+        # Old receipts bind the absolute checkout path.  They keep working at
+        # their original path as historical evidence, but are explicitly marked
+        # non-portable so a different checkout cannot pass silently.
+        if receipt.get('repo_id') != _legacy_repo_id(repo):
+            problems.append('收据属于其他仓库（legacy 路径绑定，不能跨路径使用）')
+        identity = {'schema': LEGACY_RECEIPT_SCHEMA, 'kind': 'legacy_path_bound',
+                    'portable': False,
+                    'reason': '旧收据以仓库绝对路径为身份；只在原路径作为历史证据，不能作为跨路径证据'}
+    else:
+        try:
+            current = repo_identity(repo)
+        except PMError as exc:
+            problems.append(f'无法确定当前仓库身份：{exc}')
+        else:
+            if receipt.get('repo_id') != current['id']:
+                problems.append('收据属于其他仓库')
+            declared = receipt.get('repo_identity')
+            if isinstance(declared, dict):
+                for key in ('kind', 'remote', 'root_commits'):
+                    if key in declared and declared.get(key) != current.get(key):
+                        problems.append(f'repo_identity.{key} 与当前仓库不一致（身份字段被改写）')
+            identity = {'schema': current['schema'], 'kind': current['kind'],
+                        'remote': current['remote'], 'root_commits': current['root_commits'],
+                        'portable': True}
     commit, tree = None, None
     try:
         commit, tree = resolve_commit(repo, str(receipt.get('commit_sha') or ''))
@@ -391,6 +503,7 @@ def verify_receipt(repo: Path, ref: str, expected: dict | None = None) -> dict:
     return {'valid': not problems, 'problems': problems, 'receipt': receipt,
             'path': path.relative_to(repo).as_posix(), 'snapshot_ok': snapshot_ok,
             'log_ok': log_ok, 'snapshot_sha256': digest,
+            'identity': identity, 'legacy_path_bound': legacy_path_bound,
             'integrity_valid': not problems, 'provenance': provenance}
 
 
@@ -459,6 +572,7 @@ def run_command(repo: Path, command, commit_sha: str | None = None, *,
         if not available:
             raise PMError(f'可信执行不可用（fail-closed，不回退普通子进程）：{reason}')
     commit, tree = resolve_commit(repo, commit_sha)
+    identity = repo_identity(repo)
     snapshot = create_snapshot(repo, commit)
     tree_dir = _meta(repo, 'snapshots') / snapshot['snapshot_id'] / 'tree'
     receipt_id = 'EXE-' + _sha256_bytes(
@@ -523,7 +637,10 @@ def run_command(repo: Path, command, commit_sha: str | None = None, *,
         trust_label = 'local_untrusted'
     receipt = {
         'schema_version': RECEIPT_SCHEMA, 'kind': RECEIPT_KIND,
-        'receipt_id': receipt_id, 'repo_id': repo_id(repo),
+        'receipt_id': receipt_id, 'repo_id': identity['id'],
+        'repo_identity': {'schema': identity['schema'], 'kind': identity['kind'],
+                          'remote': identity['remote'],
+                          'root_commits': identity['root_commits']},
         'commit_sha': commit, 'tree_sha': tree,
         'snapshot_id': snapshot['snapshot_id'],
         'snapshot_sha256': snapshot['snapshot_sha256'],
