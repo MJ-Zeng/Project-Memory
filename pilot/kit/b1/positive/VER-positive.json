@@ -1,0 +1,135 @@
+{
+ "authority_evaluation": {
+  "anchor_id": null,
+  "issuer": null,
+  "reason": "未配置受保护的信任锚（PROJECT_MEMORY_TRUST_ANCHOR）",
+  "status": "unconfigured",
+  "trusted": false
+ },
+ "checks": {
+  "ci": {
+   "provenance": "none",
+   "status": "not_provided",
+   "url": ""
+  },
+  "review": {
+   "provenance": "none",
+   "state": "not_provided",
+   "url": ""
+  },
+  "tests": {
+   "command": "\"C:\\SoftWare\\Anconda\\python.exe\" -c \"print('1 passed')\"",
+   "execution_provenance": {
+    "kind": "local_untrusted",
+    "reason": "本地启动器；没有操作系统隔离，也没有外部签名来源",
+    "trusted": false
+   },
+   "execution_trust": "local_untrusted",
+   "exit_code": 0,
+   "log": ".project-memory/logs/EXE-d61c42777959ce4a6c28.log",
+   "log_content_sha256": "7da0572f3292928773b456d344920e9fd45d7977db2c6ed7053591799665ebb5",
+   "log_exists": true,
+   "receipt": ".project-memory/receipts/EXE-d61c42777959ce4a6c28.json",
+   "receipt_id": "EXE-d61c42777959ce4a6c28",
+   "receipt_integrity_valid": true,
+   "receipt_sha256": "57d03a0ed33a262ec38fda087078b909251075cb1f3593d4961b2bed4cb8655b",
+   "snapshot_id": "SNP-4a00e9d540a51aac",
+   "snapshot_sha256": "56a80bff0ab39f1035c9e480a8cb7ded1464ec624a7e036b510d51330a800e18",
+   "tracked_changes_at_verification": "",
+   "tracked_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "worktree_dirty_at_verification": false
+  }
+ },
+ "covered_criteria": [],
+ "created_at": "2026-10-28T05:25:32+00:00",
+ "criterion_evidence": [
+  {
+   "coverage_claim": "覆盖对应标准",
+   "coverage_confirmed": false,
+   "coverage_review_status": "confirmed",
+   "criterion_description": "有效的真实签名仍可被验证",
+   "criterion_id": "C1",
+   "description_match": true,
+   "evidence_command": "\"C:\\SoftWare\\Anconda\\python.exe\" -c \"print('1 passed')\"",
+   "evidence_exit_code": 0,
+   "evidence_id": "EV-B1-1",
+   "evidence_log": ".project-memory/logs/EXE-d61c42777959ce4a6c28.log",
+   "evidence_matched": true,
+   "evidence_receipt": ".project-memory/receipts/EXE-d61c42777959ce4a6c28.json",
+   "evidence_source": "test",
+   "evidence_state": "MANUAL_REVIEW_REQUIRED",
+   "execution_status": "passed",
+   "execution_trust": "local_untrusted",
+   "execution_verified": false,
+   "goal_id": "G-B1",
+   "independent_verifier": "verifier-agent",
+   "observed_level": "locally_observed",
+   "problems": [
+    "语义覆盖未由可信人工来源确认（不是 VERIFIED）"
+   ],
+   "receipt_id": "EXE-d61c42777959ce4a6c28",
+   "receipt_integrity_valid": true,
+   "receipt_provenance": {
+    "kind": "local_untrusted",
+    "reason": "本地启动器；没有操作系统隔离，也没有外部签名来源",
+    "trusted": false
+   },
+   "receipt_sha256": "57d03a0ed33a262ec38fda087078b909251075cb1f3593d4961b2bed4cb8655b",
+   "semantic_coverage_verified": false,
+   "snapshot_id": "SNP-4a00e9d540a51aac",
+   "snapshot_sha256": "56a80bff0ab39f1035c9e480a8cb7ded1464ec624a7e036b510d51330a800e18",
+   "target_commit_sha": "3edabebbfb33bb0357be4e7509f9218b7192a8cb",
+   "target_repository": "C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\fixtures\\b1-positive\\repo",
+   "task_id": "4",
+   "verification_result": "pass"
+  }
+ ],
+ "current_head_sha": "3edabebbfb33bb0357be4e7509f9218b7192a8cb",
+ "evidence_level": "locally_observed",
+ "findings": [],
+ "goal_criteria_sha256": "21edea396256934f0c0cfa7749b6fa41c3adcf52525239f2b8b3c9a9d9acce2f",
+ "goal_id": "G-B1",
+ "independence": {
+  "basis": [
+   "agent",
+   "model"
+  ],
+  "distinct": true,
+  "note": "独立会话或不同模型只证明记录不同，不证明验证结论正确。"
+ },
+ "kind": "verification_record",
+ "mapping_status": "complete",
+ "missing_criteria": [],
+ "revision": 1,
+ "schema_version": "1.2",
+ "stale": false,
+ "standard": "acceptance",
+ "status": "VERIFIED",
+ "target_head_sha": "3edabebbfb33bb0357be4e7509f9218b7192a8cb",
+ "target_run": "run-target",
+ "target_run_sha256": "f369a9e1db82c77ff51c87f40c0ff8d8fe7a76af791171d0e699eb274b2c641e",
+ "task": "4",
+ "trust_level": "locally_observed",
+ "verdict": "pass",
+ "verification_id": "VER-positive",
+ "verified": true,
+ "verifier": {
+  "agent": "verifier-agent",
+  "model": {
+   "id": "verifier-model",
+   "provider": "qodercn"
+  },
+  "session_id": "",
+  "tool": ""
+ },
+ "verifier_run": "run-verifier",
+ "verifier_run_sha256": "0d0d7923558716b70299dab20f742a05b9999d9bddddef53eb68c5255ef7ae30",
+ "authority": {
+  "status": "trusted",
+  "issuer": "RC3 Independent Test Signer <signer@test.invalid>",
+  "anchor_id": "anchor-rc3-a",
+  "algorithm": "rsa-sha256",
+  "signed_payload_sha256": "47dc1463dfc08c219ad7a1c11b4116fbbdf45442888fee1679248481eab9476d",
+  "signature_b64": "ABHNxJFSseeXZLFjTJcuF5lRD+YV6OzghD0lW0Pmm6pyLx5GjCRE86Q1mojtUIH7qctnABJw0D6Z4jqvSz4P4RddQ/nh7tCQ716Bi2k+Zm+ijjqV4lttnJc9xhBQLvFG2O5EWzQeEItHey/UDqQqqWNmkJLpvHaNFsznTvl7EoFRQPBR6CJtplwNFWLD1pjDHTC+l3szGgPhpH2KSi/kvSJVz0YQeIyPFFJ/YPJnw8Xd37A7nAlhRKQN98xrQ0FC77l0cQIpHvGhzSf0UAGqKWKd/dYTR7Wig+GgwPRsNY4FAOKPwqrINdJBNdKB6fSN78GgodQW5790ZtSlLt53DA=="
+ }
+}
