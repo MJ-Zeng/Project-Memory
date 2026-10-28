@@ -1,0 +1,203 @@
+{
+  "schema_version": "1.1",
+  "kind": "agent_handoff",
+  "status": "reported_unverified",
+  "pilot_status": "ready_for_review",
+  "handoff_id": "HO-B2-R1-DEV",
+  "schema": "pilot-handoff/v1",
+  "task": "B2",
+  "task_id": "B2",
+  "round": 1,
+  "issue": "https://github.com/MJ-Zeng/Project-Memory/issues/12",
+  "goal_id": "G-B2",
+  "from_role": "PM-02",
+  "to_role": "PM-03",
+  "agent": "PM-02 Developer <pm02@pilot.invalid>",
+  "agent_label": "PM-02 Developer <pm02@pilot.invalid>",
+  "run_id": "run-20261028T110321Z",
+  "from_run": "run-20261028T110321Z",
+  "session_id": "pm02-pilot-02-20261028T1855+0800",
+  "model": {
+    "provider": "qoder",
+    "id": "qoder-desktop-agent"
+  },
+  "vcs": "git",
+  "base_sha": "587ac6a5024db3a6076a863876076d7fc7ecdd98",
+  "frozen_ref": "0d08a1ad85144d11a46d6a361a2a3ce4eadbbed4",
+  "candidate_sha": "004a35bd7c6b6584a9054d7b61eca88b44ec25e6",
+  "head_sha": "004a35bd7c6b6584a9054d7b61eca88b44ec25e6",
+  "head_sha_note": "candidate_sha 004a35b 含代码、测试、ADR、冷启动记录与证据包；本 Handoff 作为其上的最后一个提交（只含 .project-memory/handoffs/B2/ 与 pilot/rounds/B2/handoff-* 两个文件），推分支后分支头 = 该 Handoff 提交，候选字节不再变化。",
+  "branch": "fix/b2-receipt-provenance",
+  "pr": "https://github.com/MJ-Zeng/Project-Memory/pull/14",
+  "criteria_sha256": "3617dab01ca01c05ba2cb9ec87b38eae2622a6b69b480b2e7abb1c0881a7900e",
+  "generated_at": "2026-10-28T11:14:09Z",
+  "created_at": "2026-10-28T19:14:09+08:00",
+  "time_spent_minutes": 19,
+  "context_recovery_minutes": 8,
+  "commits": [
+    "004a35bd7c6b6584a9054d7b61eca88b44ec25e6"
+  ],
+  "commit_roles": {
+    "004a35b": "fix(b2): authority/execution/coordination 门禁 + tests/test_security_b2.py + ADR-0003 + pilot/rounds/B2/context-recovery-pm02.md + pilot/evidence/B2/run-20261028T110321Z/"
+  },
+  "changed_files": [
+    "project_memory/authority.py",
+    "project_memory/coordination.py",
+    "project_memory/execution.py",
+    "tests/test_security_b2.py",
+    "docs/decisions/ADR-0003-execution-provenance.md",
+    "pilot/rounds/B2/context-recovery-pm02.md",
+    "pilot/evidence/B2/run-20261028T110321Z/"
+  ],
+  "changed_files_numstat": [
+    "66\t0\tproject_memory/authority.py",
+    "20\t1\tproject_memory/coordination.py",
+    "154\t1\tproject_memory/execution.py",
+    "391\t0\ttests/test_security_b2.py",
+    "176\t0\tdocs/decisions/ADR-0003-execution-provenance.md",
+    "44\t0\tpilot/rounds/B2/context-recovery-pm02.md"
+  ],
+  "docs_changed": [
+    "docs/decisions/ADR-0003-execution-provenance.md"
+  ],
+  "hashes": {
+    "authority_py_candidate": "37b81f3348b80d7d9a143b0f7c23ae70cbc0d981b205045a78baf73475320c04",
+    "coordination_py_candidate": "0c22efe5a8182e7026af7e307baa356005eefd9a99bb065447935aaa7d63857e",
+    "execution_py_candidate": "a722f31c98083cd7d8f79d809dee66b727722ca429d614a2925d449d7497abe7",
+    "tests_security_b2_candidate": "f8708a6478716e4e061ddaf187605b24e68d53ccd56843ad1ced436172b1456c",
+    "adr_0003_candidate": "61dcd0ba78f0f34d8e1ee542823b726cf97be5059cc7e64999deb6337142c0c8",
+    "task_card": "3617dab01ca01c05ba2cb9ec87b38eae2622a6b69b480b2e7abb1c0881a7900e"
+  },
+  "completed": [
+    "ADR-0003：把内容完整性、执行真实性、记录授权拆成三个正交条件；选择方案 1 + 方案 3，并保留方案 2 的绑定性质；列出被拒方案、残余风险与迁移",
+    "authority.py：新增只读 execution_record_payload/execution_record_digest 与 execution_attestation/execution_exception 信封验签；复用 load_anchor 与进程内 _verify_signature，没有新增密钥或放宽签名路径",
+    "execution.py：新增 verify_execution_provenance；attestation 必须绑定 receipt_id、重算的收据摘要、commit、tree、snapshot、command，并满足 launcher_mode/isolation 最低断言；人类例外必须绑定收据/commit 且覆盖当前 Goal 与 criterion",
+    "coordination.py：_verification_ok 增加独立执行来源门禁；内容完整性失败报 invalid，来源失败报 untrusted，无 attestation/例外时 fail closed；忽略 execution_provenance.trusted 布尔值",
+    "tests/test_security_b2.py：13 项测试覆盖 AC-1..AC-6 的正负向路径；使用测试期临时 RSA 密钥并 patch authority.load_anchor，生产代码不放宽",
+    "基线独立 worktree 587ac6a：190 passed / 2 skipped（exit 0）；候选全量：203 passed / 2 skipped（exit 0）；B2 专项：13 passed（exit 0）",
+    "证据包 pilot/evidence/B2/run-20261028T110321Z：README、environment、commands.jsonl（21 条）、baseline/b2/full 日志、diffstat、exit 文件、sha256sums；已把 pilot/** 文本规范为 LF 后重算哈希",
+    "AC-11：相对 587ac6a 的 diff 只落在允许范围（project_memory/{authority,coordination,execution}.py、tests/、docs/decisions/、pilot/evidence/B2/、pilot/rounds/B2/context-recovery）"
+  ],
+  "remaining": [
+    "PM-03 独立复现：从候选 SHA 导出干净树，重跑全量与 B2 测试，并自行构造负向变体（不能只采信我的测试）",
+    "PM-03 用 anchor-a 生成并复核 pilot/kit/b2/ 的四类 E2E fixture（PM-02 不读私钥、不自行签名）",
+    "PM-03 检查 attestation 的隔离事实只是签名者断言，不能替代对 WSL 命名空间的独立观测",
+    "PM-01 更新 pilot/STATUS.md 并把本轮候选与 PR #14 记入派发链路",
+    "人类决定是否合并；PM-02 不 Approve、不合并、不宣布 Goal achieved 或 PASS"
+  ],
+  "blockers": [],
+  "tests": [
+    {
+      "command": "C:/SoftWare/Anconda/python.exe -m pytest -q -p no:cacheprovider",
+      "exit_code": 0,
+      "log": "pilot/evidence/B2/run-20261028T110321Z/pytest.log",
+      "observed": "candidate 004a35b: 203 passed, 2 skipped"
+    },
+    {
+      "command": "C:/SoftWare/Anconda/python.exe -m pytest -q -p no:cacheprovider tests/test_security_b2.py",
+      "exit_code": 0,
+      "log": "pilot/evidence/B2/run-20261028T110321Z/b2-tests.log",
+      "observed": "candidate 004a35b: 13 passed"
+    },
+    {
+      "command": "git worktree add --detach /tmp/b2-base-wt 587ac6a && (cd /tmp/b2-base-wt && C:/SoftWare/Anconda/python.exe -m pytest -q -p no:cacheprovider)",
+      "exit_code": 0,
+      "log": "pilot/evidence/B2/run-20261028T110321Z/baseline-pytest.log",
+      "observed": "baseline 587ac6a: 190 passed, 2 skipped; worktree removed after the run"
+    }
+  ],
+  "observations": {
+    "statement": "以下仅为我在本机观察到的命令与退出码，不构成 PASS/FAIL 判定。",
+    "full_suite": "203 passed, 2 skipped, exit 0；差值 13 恰为新增 tests/test_security_b2.py，skip 项与基线一致",
+    "ac1_ac2": "_verification_ok 返回 ok=False、trust=untrusted，reason 含“执行来源不可信”与“人类例外缺失”；add_goal_evidence 抛 PMError；evaluate_goal satisfied=false",
+    "ac3": "签名 attestation 绑定实时收据后 _verification_ok 返回 ok=True、trust=evidence_matched；add_goal_evidence 接受；evaluate_goal 在绑定 criterion 后 satisfied=true、recommendation=achieved",
+    "ac4": "签名人类例外允许本地未受信执行通过；未签名例外、范围不覆盖当前 criterion 的例外被拒",
+    "ac5": "换收据触发内容不完整/不一致；改 provenance 并重算内容哈希触发 attestation.receipt_sha256 不一致；改 attestation commit 破坏签名；把 B 的 attestation 移到 A 触发绑定不一致",
+    "scope": "git diff --name-only 587ac6a..004a35b 全部落在允许范围；未修改任务卡/判据/探针/评测器/frozen",
+    "sha_resolution": "git cat-file -t 587ac6a…=commit, 004a35b…=commit"
+  },
+  "evidence": [
+    "pilot/evidence/B2/run-20261028T110321Z/README.md",
+    "pilot/evidence/B2/run-20261028T110321Z/environment.txt",
+    "pilot/evidence/B2/run-20261028T110321Z/commands.jsonl",
+    "pilot/evidence/B2/run-20261028T110321Z/baseline-pytest.log",
+    "pilot/evidence/B2/run-20261028T110321Z/b2-tests.log",
+    "pilot/evidence/B2/run-20261028T110321Z/pytest.log",
+    "pilot/evidence/B2/run-20261028T110321Z/b2-tests.exit",
+    "pilot/evidence/B2/run-20261028T110321Z/pytest.exit",
+    "pilot/evidence/B2/run-20261028T110321Z/diffstat.txt",
+    "pilot/evidence/B2/run-20261028T110321Z/sha256sums.txt",
+    "pilot/rounds/B2/context-recovery-pm02.md",
+    "docs/decisions/ADR-0003-execution-provenance.md",
+    "tests/test_security_b2.py"
+  ],
+  "evidence_sha256": {
+    "README.md": "231a0837b8c49ec35564ac98f5b9c1a74b11da0b1d683b0814226cafc853e5ab",
+    "commands.jsonl": "3014ba361dc8a9a9c364f1e25a0c605fe74374788b98bb1f7010e4d929a012f7",
+    "baseline-pytest.log": "76f9437ade788be25020dc2459d71c9991e65a68b2b9c8d2c97e473de116b116",
+    "b2-tests.log": "96d8b406c293ebc56c3471bbae8f1bc8cc4ec3cb6dc8e814e012a127ff5df8ca",
+    "pytest.log": "7fe47e73c5782eee4ae5b298cd1aac7c9ee5a0ce2e67adfbe29a852853f679c3",
+    "diffstat.txt": "72e05e50490f758d48a549ea4392b165dff43d24fb34c7458444c0cea0df789d",
+    "environment.txt": "50669d645e4ac22cdad487d517cba6c3b1c50af53fcd6be65364bb1b59ce3ef4",
+    "b2-tests.exit": "19eaf43821a7660ec323a87c8457bf74823beb296c39f5e01aa8a683aa50f061",
+    "pytest.exit": "19eaf43821a7660ec323a87c8457bf74823beb296c39f5e01aa8a683aa50f061",
+    "sha256sums.txt": "NOT SELF-HASHED：清单是最后写入的文件，不覆盖自身"
+  },
+  "not_verified": [
+    "未宣布任何 AC 的 PASS/VERIFIED：AC-1..AC-11 的最终判定权在 PM-03 与人类，本节只列出我观察到的退出码",
+    "pilot/kit/b2/ 的四类 anchor-a 签名 E2E fixture 未生成；任务卡 §8 的 forged-untrusted.json、forged-claimed-trusted.json、genuine-trusted.json、local-untrusted.json 均为 NOT VERIFIED",
+    "未在真实 anchor-a 信任锚上跑 goal evidence / goal evaluate 的 CLI 端到端链路；测试 patch 了 authority.load_anchor",
+    "未运行 WSL mode=trusted 的真实启动器；测试 attestation 的 launcher_mode/isolation 是测试期构造并由测试期密钥签名",
+    "attestation 的隔离事实（uid、pid_ns_levels、env_count、network）是签名者的断言，本实现不能从 Windows 侧独立观测 WSL 命名空间",
+    "人类例外的 issued_by 只是签名者填写并在签名载荷内的字符串；除 anchor 签名外，没有独立的人身份核验",
+    "重放同一 attestation 到同一收据/同一提交按设计接受（等价于同一执行事实）；未单独测试该边界",
+    "PM-03 的变体绕过（如自造 anchor 环境、替换模块、直接写 VERIFIED 记录后再改盘）未系统穷举",
+    "AC-10 独立复现未运行；本机未从第二个 Clone/路径复现",
+    "GitHub Issue #12 正文未认证读取（本机无 gh CLI）；仅确认派发 Handoff 的 URL 与任务卡哈希一致",
+    "测试 attestation 使用与 verification 相同的 anchor 算法/密钥，未验证密钥用途分离（签名者责任，见 ADR §5.7）"
+  ],
+  "open_questions": [
+    "attestation 应由受保护执行器直接签名，还是由人类在审阅执行事实后签名？当前实现只验证 anchor 签名，不区分生产者",
+    "收据的可选 execution_attestation_sha256 与 attestation.receipt_sha256 同时存在时会形成摘要循环；当前测试省略该可选字段，是否需要规定二者只取其一",
+    "既有旧记录在门禁升级后会从“可满足”变为“不可满足”，迁移期如何向使用者提示并提供审计视图",
+    "PM-03 生成 anchor-a fixture 时，attestation 的隔离字段应以什么最小集合作为可复核事实",
+    "是否需要在后续轮次把“人类例外”与普通签名在信封层区分（独立密钥/用途标记），以降低同一 anchor 双用途风险"
+  ],
+  "next_actions": [
+    "PM-03：从 004a35b 导出干净树，重跑全量与 B2 测试，核对 203/2 与 13/0",
+    "PM-03：用 anchor-a 生成四类 E2E fixture，分别验证拒绝/接受路径，并自行构造至少一条新变体",
+    "PM-03：检查 diff 范围与任务卡 AC 对应，重点审阅 attestation 隔离断言与例外范围绑定",
+    "PM-01：更新 pilot/STATUS.md 与派发链路，记录 PR #14、候选 004a35b 与 NOT VERIFIED 项",
+    "人类：审阅后决定合并/拒绝/整改；PM-02 不 Approve、不合并、不宣布 Goal G-B2 achieved"
+  ],
+  "contamination": {
+    "human_relay": [],
+    "missing_artifacts": [
+      "GitHub Issue #12 正文：本机无 gh CLI，未认证读取；输入仅为仓库内任务卡、派发 Handoff 与 Goal 工件",
+      "pilot/kit/b2/ 的 anchor-a 签名 fixture：尚未生成，按任务卡预期标 NOT VERIFIED"
+    ],
+    "stale_artifacts": [
+      "pilot/STATUS.md：仍反映派发阶段，未包含本轮候选与 PR #14（由 PM-01 更新）"
+    ],
+    "unauthorized_reads": [],
+    "prohibited_paths_not_touched": [
+      "C:/Documents/02_Research/Code/project-memory-mvp",
+      "pm-import",
+      "PM-01/PM-03 的会话、日志与工作树",
+      "frozen/rc3-0d08a1a（未 checkout、未改写、未 push）",
+      "/etc/pm-rc3-review/key-a.pem（未读取）",
+      "dev/v1.0（未 push、未 force）"
+    ],
+    "time_spent_minutes": 19
+  },
+  "facts": {
+    "base_sha": "587ac6a5024db3a6076a863876076d7fc7ecdd98",
+    "candidate_sha": "004a35bd7c6b6584a9054d7b61eca88b44ec25e6",
+    "branch": "fix/b2-receipt-provenance",
+    "pr": "https://github.com/MJ-Zeng/Project-Memory/pull/14",
+    "criteria_sha256": "3617dab01ca01c05ba2cb9ec87b38eae2622a6b69b480b2e7abb1c0881a7900e",
+    "tests_summary": "C:/SoftWare/Anconda/python.exe -m pytest -q -p no:cacheprovider -> exit 0, 203 passed, 2 skipped (baseline 190 passed / 2 skipped + 13 new)",
+    "verdict_claim": "none — PM-02 不声称 PASS/VERIFIED；观察结果见 observations/tests",
+    "next_action": "PM-03 independent review with anchor-a fixtures; human merge decision"
+  }
+}
