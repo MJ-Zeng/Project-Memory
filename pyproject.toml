@@ -13,7 +13,8 @@ dependencies = []
 semantic = ["sentence-transformers>=3"]
 
 [project.scripts]
-project-memory = "project_memory.cli:main"
+project-memory = "_project_memory_launcher:main"
 
 [tool.setuptools]
 packages = ["project_memory"]
+py-modules = ["_project_memory_launcher"]

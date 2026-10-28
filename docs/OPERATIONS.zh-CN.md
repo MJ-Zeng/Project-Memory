@@ -29,6 +29,18 @@
 11. Goal 标准全部满足后，由授权人转 `achieved`。Agent 的评估建议不等于批准。
 12. 需要了解知识关系时运行 `graph` 和 `search`。索引不是新的事实来源。
 
+## 可信启动入口（B5A）
+
+`project_memory` 是普通 Python 包，cwd 或 `PYTHONPATH` 中的同名包会先于受信包被导入。启动方式按信任等级区分（详见 `docs/decisions/ADR-0005-cli-bootstrap.md`）：
+
+| 入口 | 信任 | 说明 |
+|---|---|---|
+| `project-memory ...`（安装后的 console script） | 受信 | 入口是包外的 `_project_memory_launcher`，先以 `-I -P` 重启受信解释器，再导入包 |
+| `python -I -P -m project_memory ...` | 受信 | 解释器级隔离，忽略 `PYTHONPATH`/用户站点且不前置 cwd |
+| `python -m project_memory ...`（未隔离） | 尽力而为 | 受信包已导入但 `sys.path` 上仍有同名包时 exit 3 拒绝；若同名包已在解析阶段胜出，受信代码不会执行（等价于整进程替换，无法进程内防护） |
+
+`test-run` 子进程固定使用快照树作为 `PYTHONPATH`，并设置 `PYTHONSAFEPATH=1`/`PYTHONNOUSERSITE=1`；收据的 `isolation.python_env` 记录该清理状态。自动化脚本请使用 console script 或带 `-I -P` 的入口。
+
 ## 目标、执行与验证
 
 Goal 至少有一条必达成功标准。标准要能用提交、测试日志、验证记录或人工批准判断：
