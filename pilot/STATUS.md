@@ -10,11 +10,11 @@
 | 冻结基线 | `0d08a1ad85144d11a46d6a361a2a3ce4eadbbed4` | 2026-10-27 | `git rev-parse` |
 | 开发主线 | `dev/v1.0`（默认 HEAD，指向 `0d08a1a`） | 2026-10-27 | `git ls-remote --symref origin HEAD` |
 | `frozen/rc3-0d08a1a` | 存在，指向 `0d08a1a` | 2026-10-27 | `git ls-remote` |
-| 脚手架分支 | `pilot/bootstrap`（本地，未推送）；以 `git log -1` 为准 | 2026-10-27 | `git log --oneline` |
+| 脚手架分支 | `pilot/bootstrap` 已推送；PR #2 | 2026-10-28 | `git ls-remote` / GitHub PR |
 | B1 任务卡 SHA-256 | `0fdc9469456b81bae26a3c29385f1745222e16b19211e27d4d04a418ef3be08d` | 2026-10-28 | `Get-FileHash`；fresh clone 复核一致 |
-| B1 基线 | 脚手架 PR 合并到 `dev/v1.0` 的 merge commit；精确 SHA 在派发 Issue 中记录 | 待合并 | 待记录 |
-| B1 Issue | 未创建 | 2026-10-27 | 人工核对 |
-| B1 状态 | `draft`，未派发 | 2026-10-27 | 本文件 |
+| B1 基线 | 脚手架 PR 合并到 `dev/v1.0` 的 merge commit；合并后写入 Issue #1 | 待合并 | 待记录 |
+| B1 Issue | [#1](https://github.com/MJ-Zeng/Project-Memory/issues/1) | 2026-10-28 | GitHub API |
+| B1 状态 | `dispatched_pending_base`；PM-02 不得开始 | 2026-10-28 | 本文件 |
 
 ## 工作区
 
@@ -44,10 +44,8 @@
 | ID | 阻塞 | 状态 |
 |---|---|---|
 | W11 | 正向签名 fixture 未生成 | 待人类用 `key-a.pem` 生成 |
-| G6 | B1 Issue 未创建 | 待授权 |
-| G8 | 远端写矩阵未逐项批准 | 待授权 |
-| S3 | 工具包/参考包尚未推送 | 脚手架本地完成，待推送 |
-| S4 | 任务卡 SHA-256 未写入 Issue | 待派发 |
+| M1 | Scaffold PR #2 未合并 | 人类在 GitHub 点 Merge（Merge commit） |
+| M2 | B1 base 未写入 Issue #1 | PR 合并后记录 merge commit SHA |
 
 ## 环境
 
