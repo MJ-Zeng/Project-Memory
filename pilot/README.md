@@ -32,9 +32,10 @@
 
 ## 当前轮次
 
-- 轮次：**B1**（`dispatched_pending_pm02_start`）
-- 基线：B1 派发准备提交（含 `pilot/kit/b1/positive/`）；精确 SHA 见 Issue #1；冻结参照 `0d08a1a`
+- 轮次：**B1**（`merged` @ `15f4b3c`，PR #9）
+- 基线：`25a919d63c7181fd4083e0fc1af33734d74c5515`；冻结参照 `0d08a1a`
 - 上一轮：B0 已合并（`a70ad19`），B0.1 复审 PASS（`review/b0-8506dd4` 的 `pilot/review/B0/REVIEW-B0.1.md`）
+- B1 复审：PASS（`review/b1-1c7ad94` @ `09f68d8`）；决定记录：`rounds/B1/decision.md`
 - 状态：见 `STATUS.md`
 
 ## 目录
@@ -49,6 +50,9 @@ pilot/
   rounds/B0/handoff-*.md    B0 Handoff
   rounds/B1/task.md         B1 任务卡与验收标准
   rounds/B1/handoff-dispatch.md  PM-01 → PM-02 派发交接
+  rounds/B1/handoff-run-*.md     PM-02 → PM-03 交付 Handoff
+  rounds/B1/decision.md     人类决定记录（APPROVE_MERGE）
+  rounds/B1/handoff-close.md    收口交接与下一轮风险
   reference/RC3_B1_B3.md    B1–B3 的脱敏摘要与复现要点
   kit/b1/                   B1 原始探针与使用说明
   kit/b1/positive/          正向签名 fixture（由人类生成）
