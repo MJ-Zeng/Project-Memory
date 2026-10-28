@@ -1,0 +1,52 @@
+{
+  "workdir": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b0-baseline-_55l8kig",
+  "head": "9074a80345ada25c42c6fd8b47d3a3f5fa01b3dc",
+  "receipt_path": ".project-memory/receipts/EXE-e48d2abb44590e037455.json",
+  "receipt_schema_from_base": "1.0",
+  "path_hash_a": "9ef1ebd5bcdb11d7456ecb3358a4a7c25172b6a203532aee10859718d84a92c5",
+  "path_hash_b": "8cfb4b56d512d1427be7049d0adbc5931beb0226a63834c232550970e948241a",
+  "base_a": {
+    "exit_code": 0,
+    "valid": true,
+    "problems": [],
+    "repo_id": "9ef1ebd5bcdb11d7456ecb3358a4a7c25172b6a203532aee10859718d84a92c5",
+    "schema": "1.0",
+    "identity": null,
+    "current_repo_id": "9ef1ebd5bcdb11d7456ecb3358a4a7c25172b6a203532aee10859718d84a92c5"
+  },
+  "base_b": {
+    "exit_code": 0,
+    "valid": false,
+    "problems": [
+      "收据属于其他仓库"
+    ],
+    "repo_id": "9ef1ebd5bcdb11d7456ecb3358a4a7c25172b6a203532aee10859718d84a92c5",
+    "schema": "1.0",
+    "identity": null,
+    "current_repo_id": "8cfb4b56d512d1427be7049d0adbc5931beb0226a63834c232550970e948241a"
+  },
+  "candidate_b_on_base_receipt": {
+    "exit_code": 0,
+    "valid": false,
+    "problems": [
+      "收据属于其他仓库（legacy 路径绑定，不能跨路径使用）"
+    ],
+    "repo_id": "9ef1ebd5bcdb11d7456ecb3358a4a7c25172b6a203532aee10859718d84a92c5",
+    "schema": "1.0",
+    "identity": {
+      "schema": "1.0",
+      "kind": "legacy_path_bound",
+      "portable": false,
+      "reason": "旧收据以仓库绝对路径为身份；只在原路径作为历史证据，不能作为跨路径证据"
+    },
+    "current_repo_id": "29464a8fae74fe7c9a4c47e81f62f00b86cc07f55e12bc77669f3c62ac8226dc"
+  },
+  "assertions": {
+    "base_valid_at_original_path": true,
+    "base_invalid_after_copy": true,
+    "base_copy_error_is_repository_identity": true,
+    "base_repo_id_equals_sha256_of_absolute_path": true,
+    "base_current_identity_differs_after_copy": true,
+    "candidate_rejects_legacy_receipt_across_path": true
+  }
+}

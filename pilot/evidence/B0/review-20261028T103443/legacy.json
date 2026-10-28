@@ -1,0 +1,60 @@
+{
+  "base_receipt_schema": "1.0",
+  "base_receipt_repo_id": "fc26869c0d407c7b30271f9dc53ae47951d6f75f0da8ee284715e00dd883aaad",
+  "base_receipt_has_repo_identity": false,
+  "original_path": {
+    "valid": true,
+    "problems": [],
+    "legacy_path_bound": true,
+    "identity_result": {
+      "schema": "1.0",
+      "kind": "legacy_path_bound",
+      "portable": false,
+      "reason": "旧收据以仓库绝对路径为身份；只在原路径作为历史证据，不能作为跨路径证据"
+    },
+    "current_identity": {
+      "schema": "1.1",
+      "kind": "remote+root",
+      "remote": "github.com/pilot-org/portable-a",
+      "root_commits": [
+        "c1c37b56881ff99b024dfcdad6adc918adb49f93"
+      ],
+      "id": "0f494c492044752de8577d571a46bc82ae3e03401d3c553bf49c12fddb24e070"
+    },
+    "receipt_repo_id": "fc26869c0d407c7b30271f9dc53ae47951d6f75f0da8ee284715e00dd883aaad",
+    "receipt_schema": "1.0",
+    "receipt_identity_field": null
+  },
+  "copied_path": {
+    "valid": false,
+    "problems": [
+      "收据属于其他仓库（legacy 路径绑定，不能跨路径使用）"
+    ],
+    "legacy_path_bound": true,
+    "identity_result": {
+      "schema": "1.0",
+      "kind": "legacy_path_bound",
+      "portable": false,
+      "reason": "旧收据以仓库绝对路径为身份；只在原路径作为历史证据，不能作为跨路径证据"
+    },
+    "current_identity": {
+      "schema": "1.1",
+      "kind": "remote+root",
+      "remote": "github.com/pilot-org/portable-a",
+      "root_commits": [
+        "c1c37b56881ff99b024dfcdad6adc918adb49f93"
+      ],
+      "id": "0f494c492044752de8577d571a46bc82ae3e03401d3c553bf49c12fddb24e070"
+    },
+    "receipt_repo_id": "fc26869c0d407c7b30271f9dc53ae47951d6f75f0da8ee284715e00dd883aaad",
+    "receipt_schema": "1.0",
+    "receipt_identity_field": null
+  },
+  "assertions": {
+    "original_valid": true,
+    "original_legacy_flag": true,
+    "original_kind": "legacy_path_bound",
+    "copied_rejected": true,
+    "copied_mentions_legacy": true
+  }
+}

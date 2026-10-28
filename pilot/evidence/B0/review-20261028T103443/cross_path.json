@@ -1,0 +1,107 @@
+{
+  "head": "6f0e4727859ffc42a9b8fc5fccf5a5470af97261",
+  "receipt_id": "EXE-752d343c8ff09c83df27",
+  "verification_id": "VER-aa22605031f2",
+  "workflow_verify_exit": 2,
+  "a": {
+    "receipt": {
+      "valid": true,
+      "problems": [],
+      "legacy_path_bound": false,
+      "identity_result": {
+        "schema": "1.1",
+        "kind": "remote+root",
+        "remote": "github.com/pilot-org/portable-a",
+        "root_commits": [
+          "6f0e4727859ffc42a9b8fc5fccf5a5470af97261"
+        ],
+        "portable": true
+      },
+      "current_identity": {
+        "schema": "1.1",
+        "kind": "remote+root",
+        "remote": "github.com/pilot-org/portable-a",
+        "root_commits": [
+          "6f0e4727859ffc42a9b8fc5fccf5a5470af97261"
+        ],
+        "id": "79b9a69011d31c6c6b5d7bc2afa968d57aed751644f874b4b62ebffc21047839"
+      },
+      "receipt_repo_id": "79b9a69011d31c6c6b5d7bc2afa968d57aed751644f874b4b62ebffc21047839",
+      "receipt_schema": "1.1",
+      "receipt_identity_field": {
+        "schema": "1.1",
+        "kind": "remote+root",
+        "remote": "github.com/pilot-org/portable-a",
+        "root_commits": [
+          "6f0e4727859ffc42a9b8fc5fccf5a5470af97261"
+        ]
+      }
+    },
+    "current": {
+      "found": true,
+      "current": true,
+      "status": "MANUAL_REVIEW_REQUIRED",
+      "verdict": "pass"
+    },
+    "goal_evaluate": {
+      "exit_code": 2,
+      "stdout": "{\n  \"blocking\": [\n    \"C1\"\n  ],\n  \"caveat\": \"只接受带 criterion evidence mapping 且 coverage 经独立复核的证据；直接 test/commit 证据和旧验证记录可读，但不能单独证明标准已达成。CLI 不能判断语义相关性，仍需人工审查。\",\n  \"criteria\": [\n    {\n      \"evidence\": [],\n      \"id\": \"C1\",\n      \"required\": true,\n      \"statement\": \"模块通过测试\",\n      \"status\": \"insufficient_evidence\"\n    }\n  ],\n  \"evaluation_status\": \"insufficient_evidence\",\n  \"goal_id\": \"G-B0\",\n  \"goal_status\": \"proposed\",\n  \"kind\": \"goal_evaluation\",\n  \"open_high_defects\": [],\n  \"partial\": [],\n  \"recommendation\": \"insufficient_evidence\",\n  \"recorded_status\": \"proposed\",\n  \"recorded_status_consistent\": true,\n  \"satisfied\": false,\n  \"schema_version\": \"1.2\",\n  \"status_authority\": \"local_untrusted\"\n}\n",
+      "stderr": ""
+    }
+  },
+  "b": {
+    "receipt": {
+      "valid": true,
+      "problems": [],
+      "legacy_path_bound": false,
+      "identity_result": {
+        "schema": "1.1",
+        "kind": "remote+root",
+        "remote": "github.com/pilot-org/portable-a",
+        "root_commits": [
+          "6f0e4727859ffc42a9b8fc5fccf5a5470af97261"
+        ],
+        "portable": true
+      },
+      "current_identity": {
+        "schema": "1.1",
+        "kind": "remote+root",
+        "remote": "github.com/pilot-org/portable-a",
+        "root_commits": [
+          "6f0e4727859ffc42a9b8fc5fccf5a5470af97261"
+        ],
+        "id": "79b9a69011d31c6c6b5d7bc2afa968d57aed751644f874b4b62ebffc21047839"
+      },
+      "receipt_repo_id": "79b9a69011d31c6c6b5d7bc2afa968d57aed751644f874b4b62ebffc21047839",
+      "receipt_schema": "1.1",
+      "receipt_identity_field": {
+        "schema": "1.1",
+        "kind": "remote+root",
+        "remote": "github.com/pilot-org/portable-a",
+        "root_commits": [
+          "6f0e4727859ffc42a9b8fc5fccf5a5470af97261"
+        ]
+      }
+    },
+    "current": {
+      "found": true,
+      "current": true,
+      "status": "MANUAL_REVIEW_REQUIRED",
+      "verdict": "pass"
+    },
+    "goal_evaluate": {
+      "exit_code": 2,
+      "stdout": "{\n  \"blocking\": [\n    \"C1\"\n  ],\n  \"caveat\": \"只接受带 criterion evidence mapping 且 coverage 经独立复核的证据；直接 test/commit 证据和旧验证记录可读，但不能单独证明标准已达成。CLI 不能判断语义相关性，仍需人工审查。\",\n  \"criteria\": [\n    {\n      \"evidence\": [],\n      \"id\": \"C1\",\n      \"required\": true,\n      \"statement\": \"模块通过测试\",\n      \"status\": \"insufficient_evidence\"\n    }\n  ],\n  \"evaluation_status\": \"insufficient_evidence\",\n  \"goal_id\": \"G-B0\",\n  \"goal_status\": \"proposed\",\n  \"kind\": \"goal_evaluation\",\n  \"open_high_defects\": [],\n  \"partial\": [],\n  \"recommendation\": \"insufficient_evidence\",\n  \"recorded_status\": \"proposed\",\n  \"recorded_status_consistent\": true,\n  \"satisfied\": false,\n  \"schema_version\": \"1.2\",\n  \"status_authority\": \"local_untrusted\"\n}\n",
+      "stderr": ""
+    }
+  },
+  "identity_equal": true,
+  "identity_contains_path": false,
+  "assertions": {
+    "A_valid": true,
+    "B_valid": true,
+    "B_current": true,
+    "identity_equal": true,
+    "no_path_in_identity": true
+  }
+}

@@ -1,0 +1,75 @@
+ .../ADR-0001-portable-repository-identity.md       | 120 +++++++++++
+ pilot/evidence/B0/run-20261028T1010/README.md      |  67 ++++++
+ pilot/evidence/B0/run-20261028T1010/commands.jsonl |   8 +
+ .../evidence/B0/run-20261028T1010/cross_path.json  | 139 ++++++++++++
+ .../evidence/B0/run-20261028T1010/cross_repo.json  | 199 +++++++++++++++++
+ pilot/evidence/B0/run-20261028T1010/diffstat.txt   |  66 ++++++
+ .../evidence/B0/run-20261028T1010/environment.txt  |  12 ++
+ .../run-20261028T1010/logs/01-baseline-archive.log |   7 +
+ .../B0/run-20261028T1010/logs/01-goal-create.log   |  44 ++++
+ .../logs/01-same-identity-copy.log                 |  21 ++
+ .../run-20261028T1010/logs/02-different-remote.log |  24 +++
+ .../run-20261028T1010/logs/02-pre-fix-baseline.log |   8 +
+ .../B0/run-20261028T1010/logs/02-test-run.log      |  78 +++++++
+ .../logs/03-cross-path-driver.log                  |   8 +
+ .../run-20261028T1010/logs/03-different-root.log   |  27 +++
+ .../run-20261028T1010/logs/03-run-start-target.log |  41 ++++
+ .../logs/04-cross-repo-driver.log                  |   8 +
+ .../logs/04-legacy-original-path.log               |  18 ++
+ .../logs/04-run-finish-target.log                  |  78 +++++++
+ .../logs/05-legacy-copied-path.log                 |  20 ++
+ .../logs/05-run-start-verifier.log                 |  41 ++++
+ .../B0/run-20261028T1010/logs/06-verify.log        | 172 +++++++++++++++
+ .../B0/run-20261028T1010/logs/07-intent-to-add.log |   7 +
+ .../B0/run-20261028T1010/logs/08-diffstat.log      |  40 ++++
+ .../B0/run-20261028T1010/logs/09-git-status.log    |  38 ++++
+ pilot/evidence/B0/run-20261028T1010/pre_fix.json   |  17 ++
+ pilot/evidence/B0/run-20261028T1010/pytest.log     |  11 +
+ .../B0/run-20261028T1010/scripts/check_receipt.py  |  44 ++++
+ .../B0/run-20261028T1010/scripts/cross_path.py     | 220 +++++++++++++++++++
+ .../B0/run-20261028T1010/scripts/cross_repo.py     | 191 +++++++++++++++++
+ .../B0/run-20261028T1010/scripts/finalize.py       |  95 +++++++++
+ .../B0/run-20261028T1010/scripts/repro_baseline.py |  82 +++++++
+ .../B0/run-20261028T1010/scripts/run_evidence.py   | 170 +++++++++++++++
+ pilot/evidence/B0/run-20261028T1010/sha256sums.txt |  32 +++
+ pilot/rounds/B0/context-recovery-pm02.md           |  50 +++++
+ project_memory/execution.py                        | 133 +++++++++++-
+ tests/test_repo_identity.py                        | 237 +++++++++++++++++++++
+ 37 files changed, 2565 insertions(+), 8 deletions(-)
+A	docs/decisions/ADR-0001-portable-repository-identity.md
+A	pilot/evidence/B0/run-20261028T1010/README.md
+A	pilot/evidence/B0/run-20261028T1010/commands.jsonl
+A	pilot/evidence/B0/run-20261028T1010/cross_path.json
+A	pilot/evidence/B0/run-20261028T1010/cross_repo.json
+A	pilot/evidence/B0/run-20261028T1010/diffstat.txt
+A	pilot/evidence/B0/run-20261028T1010/environment.txt
+A	pilot/evidence/B0/run-20261028T1010/logs/01-baseline-archive.log
+A	pilot/evidence/B0/run-20261028T1010/logs/01-goal-create.log
+A	pilot/evidence/B0/run-20261028T1010/logs/01-same-identity-copy.log
+A	pilot/evidence/B0/run-20261028T1010/logs/02-different-remote.log
+A	pilot/evidence/B0/run-20261028T1010/logs/02-pre-fix-baseline.log
+A	pilot/evidence/B0/run-20261028T1010/logs/02-test-run.log
+A	pilot/evidence/B0/run-20261028T1010/logs/03-cross-path-driver.log
+A	pilot/evidence/B0/run-20261028T1010/logs/03-different-root.log
+A	pilot/evidence/B0/run-20261028T1010/logs/03-run-start-target.log
+A	pilot/evidence/B0/run-20261028T1010/logs/04-cross-repo-driver.log
+A	pilot/evidence/B0/run-20261028T1010/logs/04-legacy-original-path.log
+A	pilot/evidence/B0/run-20261028T1010/logs/04-run-finish-target.log
+A	pilot/evidence/B0/run-20261028T1010/logs/05-legacy-copied-path.log
+A	pilot/evidence/B0/run-20261028T1010/logs/05-run-start-verifier.log
+A	pilot/evidence/B0/run-20261028T1010/logs/06-verify.log
+A	pilot/evidence/B0/run-20261028T1010/logs/07-intent-to-add.log
+A	pilot/evidence/B0/run-20261028T1010/logs/08-diffstat.log
+A	pilot/evidence/B0/run-20261028T1010/logs/09-git-status.log
+A	pilot/evidence/B0/run-20261028T1010/pre_fix.json
+A	pilot/evidence/B0/run-20261028T1010/pytest.log
+A	pilot/evidence/B0/run-20261028T1010/scripts/check_receipt.py
+A	pilot/evidence/B0/run-20261028T1010/scripts/cross_path.py
+A	pilot/evidence/B0/run-20261028T1010/scripts/cross_repo.py
+A	pilot/evidence/B0/run-20261028T1010/scripts/finalize.py
+A	pilot/evidence/B0/run-20261028T1010/scripts/repro_baseline.py
+A	pilot/evidence/B0/run-20261028T1010/scripts/run_evidence.py
+A	pilot/evidence/B0/run-20261028T1010/sha256sums.txt
+A	pilot/rounds/B0/context-recovery-pm02.md
+M	project_memory/execution.py
+A	tests/test_repo_identity.py

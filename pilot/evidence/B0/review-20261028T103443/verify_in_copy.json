@@ -1,0 +1,20 @@
+{
+  "workdir": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b0-probe-4z4qkkpm",
+  "receipt_ref": ".project-memory/receipts/EXE-0f250612dced740e98fb.json",
+  "results": {
+    "declared_a_path": {
+      "exit_code": 1,
+      "stdout_tail": "",
+      "stderr_tail": "project-memory: criterion evidence 的 target_repository 'C:\\\\Users\\\\ZMJ\\\\AppData\\\\Local\\\\Temp\\\\b0-probe-4z4qkkpm\\\\path-a' 不是当前仓库\n"
+    },
+    "declared_b_path": {
+      "exit_code": 2,
+      "stdout_tail": ",\n    \"stale\": false,\n    \"standard\": \"acceptance\",\n    \"status\": \"MANUAL_REVIEW_REQUIRED\",\n    \"target_head_sha\": \"d4fed38bef7bfcf066a3d335bcf0ac11b9a67815\",\n    \"target_run\": \"run-target\",\n    \"target_run_sha256\": \"f8b8971c8730285a520a76f568f7731f6dc73ef6489ffcc7dcde0a1083561043\",\n    \"task\": \"326\",\n    \"trust_level\": \"locally_observed\",\n    \"verdict\": \"pass\",\n    \"verification_id\": \"VER-declared_b_path\",\n    \"verified\": false,\n    \"verifier\": {\n      \"agent\": \"verifier-b\",\n      \"model\": {\n        \"id\": \"m2\",\n        \"provider\": \"p\"\n      },\n      \"session_id\": \"s2\",\n      \"tool\": \"\"\n    },\n    \"verifier_run\": \"run-verifier\",\n    \"verifier_run_sha256\": \"6474e3f5e6f8fa5d3ce0112504f2b4ba9513f64bd6d0c7d1010576679d2bc151\"\n  },\n  \"verified\": false,\n  \"would_update_run_status\": \"submitted\"\n}\n",
+      "stderr_tail": ""
+    }
+  },
+  "assertions": {
+    "verify_with_declared_a_path_rejected": true,
+    "verify_with_declared_b_path_accepted_structurally": true
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "result": {
+    "valid": false,
+    "problems": [
+      "repo_identity.remote 与当前仓库不一致（身份字段被改写）"
+    ],
+    "legacy_path_bound": false,
+    "identity_result": {
+      "schema": "1.1",
+      "kind": "remote+root",
+      "remote": "github.com/pilot-org/portable-a",
+      "root_commits": [
+        "27bceedefd76fb258906f157606b476e83ca0c76"
+      ],
+      "portable": true
+    },
+    "current_identity": {
+      "schema": "1.1",
+      "kind": "remote+root",
+      "remote": "github.com/pilot-org/portable-a",
+      "root_commits": [
+        "27bceedefd76fb258906f157606b476e83ca0c76"
+      ],
+      "id": "e1a984638dd1f3848f211a711b56893ad2c63a5a359c5c2ea395f499b0ad4522"
+    },
+    "receipt_repo_id": "e1a984638dd1f3848f211a711b56893ad2c63a5a359c5c2ea395f499b0ad4522",
+    "receipt_schema": "1.1",
+    "receipt_identity_field": {
+      "schema": "1.1",
+      "kind": "remote+root",
+      "remote": "evil.example/x",
+      "root_commits": [
+        "27bceedefd76fb258906f157606b476e83ca0c76"
+      ]
+    }
+  },
+  "assertions": {
+    "rejected": true,
+    "mentions_identity_field": true
+  }
+}

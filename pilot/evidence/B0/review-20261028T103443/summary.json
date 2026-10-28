@@ -1,0 +1,41 @@
+{
+  "workdir": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b0-review-hf6_lqeh",
+  "python": "C:\\SoftWare\\Anconda\\python.exe",
+  "candidate_root": "C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-03\\.pilot\\candidate",
+  "cross_path_assertions": {
+    "A_valid": true,
+    "B_valid": true,
+    "B_current": true,
+    "identity_equal": true,
+    "no_path_in_identity": true
+  },
+  "cross_repo_assertions": {
+    "same_root_different_remote": {
+      "rejected": true,
+      "mentions_repository_identity": true
+    },
+    "different_root_no_remote": {
+      "rejected": true,
+      "mentions_repository_identity": true
+    },
+    "different_root_same_remote": {
+      "rejected": true,
+      "mentions_repository_identity": true
+    },
+    "same_root_missing_remote": {
+      "rejected": true,
+      "mentions_repository_identity": true
+    }
+  },
+  "legacy_assertions": {
+    "original_valid": true,
+    "original_legacy_flag": true,
+    "original_kind": "legacy_path_bound",
+    "copied_rejected": true,
+    "copied_mentions_legacy": true
+  },
+  "tamper_assertions": {
+    "rejected": true,
+    "mentions_identity_field": true
+  }
+}

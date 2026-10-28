@@ -1,0 +1,53 @@
+{
+  "adrs": [],
+  "approved_by": null,
+  "background": "",
+  "constraints": [],
+  "created_at": "2026-10-28T02:38:13+00:00",
+  "history": [
+    {
+      "at": "2026-10-28T02:38:13+00:00",
+      "by": "PM-03 Reviewer",
+      "from": null,
+      "reason": "created",
+      "to": "proposed"
+    }
+  ],
+  "id": "G-B0-REVIEW",
+  "issues": [],
+  "kind": "goal",
+  "outcome": "programmatic independent verdict on B0 candidate 14cc8fc",
+  "owner": "PM-03 Reviewer",
+  "prs": [],
+  "revision": 1,
+  "schema_version": "1.2",
+  "status": "proposed",
+  "success_criteria": [
+    {
+      "evidence": [],
+      "id": "C1",
+      "required": true,
+      "statement": "跨路径正例"
+    },
+    {
+      "evidence": [],
+      "id": "C2",
+      "required": true,
+      "statement": "跨仓库负例"
+    },
+    {
+      "evidence": [],
+      "id": "C3",
+      "required": true,
+      "statement": "legacy 收据跨路径拒绝"
+    },
+    {
+      "evidence": [],
+      "id": "C4",
+      "required": true,
+      "statement": "回归全绿"
+    }
+  ],
+  "title": "Independent review of B0 portable repository identity",
+  "updated_at": "2026-10-28T02:38:13+00:00"
+}

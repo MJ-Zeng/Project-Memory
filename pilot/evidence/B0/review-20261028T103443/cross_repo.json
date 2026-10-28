@@ -1,0 +1,175 @@
+{
+  "cases": {
+    "same_root_different_remote": {
+      "valid": false,
+      "problems": [
+        "收据属于其他仓库",
+        "repo_identity.remote 与当前仓库不一致（身份字段被改写）"
+      ],
+      "legacy_path_bound": false,
+      "identity_result": {
+        "schema": "1.1",
+        "kind": "remote+root",
+        "remote": "gitlab.example.invalid/pilot-org/portable-a",
+        "root_commits": [
+          "6f0e4727859ffc42a9b8fc5fccf5a5470af97261"
+        ],
+        "portable": true
+      },
+      "current_identity": {
+        "schema": "1.1",
+        "kind": "remote+root",
+        "remote": "gitlab.example.invalid/pilot-org/portable-a",
+        "root_commits": [
+          "6f0e4727859ffc42a9b8fc5fccf5a5470af97261"
+        ],
+        "id": "b88005ebbe242e5ce73c18608012c1bc54cdf802b38aca46ca1d6c6745329187"
+      },
+      "receipt_repo_id": "79b9a69011d31c6c6b5d7bc2afa968d57aed751644f874b4b62ebffc21047839",
+      "receipt_schema": "1.1",
+      "receipt_identity_field": {
+        "schema": "1.1",
+        "kind": "remote+root",
+        "remote": "github.com/pilot-org/portable-a",
+        "root_commits": [
+          "6f0e4727859ffc42a9b8fc5fccf5a5470af97261"
+        ]
+      }
+    },
+    "different_root_no_remote": {
+      "valid": false,
+      "problems": [
+        "收据属于其他仓库",
+        "repo_identity.kind 与当前仓库不一致（身份字段被改写）",
+        "repo_identity.remote 与当前仓库不一致（身份字段被改写）",
+        "repo_identity.root_commits 与当前仓库不一致（身份字段被改写）",
+        "提交不存在：6f0e4727859ffc42a9b8fc5fccf5a5470af97261",
+        "找不到对应快照目录",
+        "日志文件不存在"
+      ],
+      "legacy_path_bound": false,
+      "identity_result": {
+        "schema": "1.1",
+        "kind": "root-only",
+        "remote": null,
+        "root_commits": [
+          "09ad77c6ddb63f8a30fb2104e13682f259775122"
+        ],
+        "portable": true
+      },
+      "current_identity": {
+        "schema": "1.1",
+        "kind": "root-only",
+        "remote": null,
+        "root_commits": [
+          "09ad77c6ddb63f8a30fb2104e13682f259775122"
+        ],
+        "id": "f1f429e671280f9a7e6ea567f05ceddd96e3c2589a56cade1094774183388f62"
+      },
+      "receipt_repo_id": "79b9a69011d31c6c6b5d7bc2afa968d57aed751644f874b4b62ebffc21047839",
+      "receipt_schema": "1.1",
+      "receipt_identity_field": {
+        "schema": "1.1",
+        "kind": "remote+root",
+        "remote": "github.com/pilot-org/portable-a",
+        "root_commits": [
+          "6f0e4727859ffc42a9b8fc5fccf5a5470af97261"
+        ]
+      }
+    },
+    "different_root_same_remote": {
+      "valid": false,
+      "problems": [
+        "收据属于其他仓库",
+        "repo_identity.root_commits 与当前仓库不一致（身份字段被改写）",
+        "提交不存在：6f0e4727859ffc42a9b8fc5fccf5a5470af97261",
+        "找不到对应快照目录",
+        "日志文件不存在"
+      ],
+      "legacy_path_bound": false,
+      "identity_result": {
+        "schema": "1.1",
+        "kind": "remote+root",
+        "remote": "github.com/pilot-org/portable-a",
+        "root_commits": [
+          "27616ae2700eaf68ae4df5d1bfc02c06e1dbb198"
+        ],
+        "portable": true
+      },
+      "current_identity": {
+        "schema": "1.1",
+        "kind": "remote+root",
+        "remote": "github.com/pilot-org/portable-a",
+        "root_commits": [
+          "27616ae2700eaf68ae4df5d1bfc02c06e1dbb198"
+        ],
+        "id": "9772c1b607d2b62385b754ce23f3b26bb807dd9565dad33b779892a7b4567614"
+      },
+      "receipt_repo_id": "79b9a69011d31c6c6b5d7bc2afa968d57aed751644f874b4b62ebffc21047839",
+      "receipt_schema": "1.1",
+      "receipt_identity_field": {
+        "schema": "1.1",
+        "kind": "remote+root",
+        "remote": "github.com/pilot-org/portable-a",
+        "root_commits": [
+          "6f0e4727859ffc42a9b8fc5fccf5a5470af97261"
+        ]
+      }
+    },
+    "same_root_missing_remote": {
+      "valid": false,
+      "problems": [
+        "收据属于其他仓库",
+        "repo_identity.kind 与当前仓库不一致（身份字段被改写）",
+        "repo_identity.remote 与当前仓库不一致（身份字段被改写）"
+      ],
+      "legacy_path_bound": false,
+      "identity_result": {
+        "schema": "1.1",
+        "kind": "root-only",
+        "remote": null,
+        "root_commits": [
+          "6f0e4727859ffc42a9b8fc5fccf5a5470af97261"
+        ],
+        "portable": true
+      },
+      "current_identity": {
+        "schema": "1.1",
+        "kind": "root-only",
+        "remote": null,
+        "root_commits": [
+          "6f0e4727859ffc42a9b8fc5fccf5a5470af97261"
+        ],
+        "id": "31dbf9743facb81dfbd88041c652729fb5d256f67f8e5454bef411cf26712b8d"
+      },
+      "receipt_repo_id": "79b9a69011d31c6c6b5d7bc2afa968d57aed751644f874b4b62ebffc21047839",
+      "receipt_schema": "1.1",
+      "receipt_identity_field": {
+        "schema": "1.1",
+        "kind": "remote+root",
+        "remote": "github.com/pilot-org/portable-a",
+        "root_commits": [
+          "6f0e4727859ffc42a9b8fc5fccf5a5470af97261"
+        ]
+      }
+    }
+  },
+  "assertions": {
+    "same_root_different_remote": {
+      "rejected": true,
+      "mentions_repository_identity": true
+    },
+    "different_root_no_remote": {
+      "rejected": true,
+      "mentions_repository_identity": true
+    },
+    "different_root_same_remote": {
+      "rejected": true,
+      "mentions_repository_identity": true
+    },
+    "same_root_missing_remote": {
+      "rejected": true,
+      "mentions_repository_identity": true
+    }
+  }
+}
