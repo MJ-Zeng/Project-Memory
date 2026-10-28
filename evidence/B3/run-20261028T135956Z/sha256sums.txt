@@ -1,13 +1,13 @@
-7b57df6f99b718e62f93a83be316b295b70a9c8710f0b2a4e70a2ec5ba9f76ac *./README.md
+# sha256 over LF-normalized content (CRLF -> LF); verify with verify_hashes.py
 e292e5210dd1f276d23fe91858e8dc221a9f0cf910531cb9dd7bda48a05d804b *./append_commands.py
-f5f22d612413bba92f2c5d5839c6ae4cead737cbfafb6795b6973f4e3ed4674f *./b2-pytest.log
-a3cc94fa569f96e68e4ee084cb5fdfa566ad052cd1c3482212fe04b7f5494f37 *./b2-regression.json
-6622cabb125a0ca1ac60b6535e865972ada8322346fc350f294679fed58917b1 *./b3-legacy.json
-ecb7a957480c5d9330e70634cb58fb2ca81dddef0958a4e82422d9b22841ba47 *./b3-negative.json
-67682c57bd4dee531d711682906511f0b2cf5504df8210b0ab0749741d0d6ff8 *./b3-positive.json
-2d125eadd3246f088364b952fbee8373de4156560c71fd6af9cb06d209cfe5f3 *./b3-pytest.log
+9027ffab72f5fbca5321b6e0ed76134464356c05169f03576c4052ed52391610 *./b2-pytest.log
+65fede208effec0496556dd39a84e3d92fb822fcab146ed6bcec83aacc1eb991 *./b2-regression.json
+8952dd26a4d7828b5384f4e6618e83c4a71ad310d6859f63689c91b90eb34d7d *./b3-legacy.json
+f07f433d0a031e1e2449a7ec157f557a932efcf001fdd4a27f3b45ed69ded105 *./b3-negative.json
+876141d91479b411f4f725015ad2e70ebfbb6e6964c27675a354efcb78d275ca *./b3-positive.json
+fe3c7e0b0d6bcfb7bd73c1bbd46190c96e428137d20c06e96c8fb3753705be07 *./b3-pytest.log
 22611119797cf70beb7244c89d54cffbb2e60fd19f42cfe4a5cd17f438e3cc2d *./collect_evidence.py
-38c78a58651642adb6976897a72684edc12a6b391abf53c8427eba75b909bf99 *./commands.jsonl
+81f4e5113247db583592c548b4e44dcccc796d090e58259647206807b38912d8 *./commands.jsonl
 56b60aba8d0aa2870e31e50e2a51655093fe6915b4c511e4f12097c04f7d8ddb *./diffstat.txt
 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 *./e2e/definition-change.evaluate.err
 93a167879355d6d24432df4b389072bc9fb6f03940e76986db774ef06a15f4d2 *./e2e/definition-change.evaluate.out
@@ -49,9 +49,11 @@ e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 *./e2e/genuine-
 482458a8253a329a38a121dd515f8e89dce6d036dbf48e717e3c609b2a671790 *./e2e_b3_extra.sh
 22cd10a393330e74d088ded30dd58da437db96089ce6f21a7dab58252fdd705d *./environment.sh
 21dd51feed5f75bcc368240a87c08a1e63850b77e88ed708058b029884efb721 *./environment.txt
+b62004120892f6bf7af2ca7094649eb26c2396c192d216d66e114c65d944a22b *./make_sha256sums.py
 a7fd871ba46fabc0bb047bb03bbd93331a53e5e4691136571440136ed96e356c *./new-stable-e2e.json
 36dd013b692f5903ef613399dfbbab2c9889884231fa09cf5a26e69e1df131d3 *./new_stable_e2e.py
-a55c9a6c0a48230597a972f0d2f90c5faa65900c491151a241adaeac57536e9e *./pytest.log
+8a78d89a5e1bd035d6666bf19a86a5786eda1bf4ed8cad7ca178a557a0c7fedd *./pytest.log
+01b9bbaf1daad23e308b8a1e5a9e2f948d71c71211eef38298ee7d0f71d04bdc *./README.md
 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 *./repro-goal-evaluate.err
 473dd7fda1a3ea075009335a8633d6185dc30e3739efc0e76415e59c1070e295 *./repro-goal-evaluate.json
 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 *./repro-goal-evidence.err
@@ -59,7 +61,8 @@ e10c86fd0544af2b7df835ae7f37f4c764f132a9eb4b714de23cf9e0ec0d8cf8 *./repro-goal-e
 a28439bbc46c4b1ac29b11a082e9dafea381720f07dc5436bbb9573991296a72 *./repro.sh
 4a2d9a8a28956fd2d69ee2d2a8973501bee94e757fba8c51ede67b8eb6899a88 *./verification-after.sha256
 4a2d9a8a28956fd2d69ee2d2a8973501bee94e757fba8c51ede67b8eb6899a88 *./verification-before.sha256
-# external read-only fixtures (unmodified)
+0125c343c60eb06f7d56277766a0f90794fb47f5f19fb5036c66247359d482d6 *./verify_hashes.py
+# external read-only fixtures (unmodified; hashed raw, checked only when present)
 e1a607f10a3b9b3ef573398e415050f5614c6f57824a4df7f7d7b72904ed5000 *C:/Documents/02_Research/Code/project-memory-verification-lab/fixtures/b2/genuine-trusted/repo/.project-memory/verifications/325/VER-B2-genuine-trusted.json
 af51da4663adcfaff689c70c62e123a0f8ad3131aaaeb5f16c93367d5d0b06e4 *C:/Documents/02_Research/Code/project-memory-verification-lab/fixtures/b2/exception/repo/.project-memory/verifications/325/VER-B2-exception.json
 8e658cfa2c545bb83080dece564288e99483dc5077377b6d53c71624e58fa613 *C:/Documents/02_Research/Code/project-memory-verification-lab/fixtures/b2/forged-untrusted/repo/.project-memory/verifications/325/VER-B2-forged-untrusted.json

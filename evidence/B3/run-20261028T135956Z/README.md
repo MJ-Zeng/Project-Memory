@@ -57,7 +57,9 @@ new_stable_e2e.py          新记录 + 临时测试锚（明确标注非 anchor-
 collect_evidence.py        汇总脚本
 append_commands.py         commands.jsonl 汇总脚本
 diffstat.txt               代码提交与工作树范围
-sha256sums.txt             本包文件与 fixture 记录哈希
+sha256sums.txt             本包文件与 fixture 记录哈希（LF 归一化）
+make_sha256sums.py         重新生成 sha256sums.txt
+verify_hashes.py           校验本包哈希（跨 CRLF/LF 检出）
 ```
 
 注意：`repro.sh` 是**修复前**的复现脚本；在 `19bba33` 上重跑会得到 `satisfied=true`。修复前的实际输出保存在本目录根部的 `repro-goal-*` 文件中。
@@ -69,3 +71,12 @@ sha256sums.txt             本包文件与 fixture 记录哈希
 - 未运行真实 WSL `trusted_exec` 启动器（B2 残留范围，未改动）。
 - 2 skipped 是既有 Windows 符号链接用例，未新增跳过。
 - `skill/project-memory/references/data-contracts.md` 的 digest 语义未更新（不在任务卡允许路径）。
+
+## 5. 校验本证据包
+
+```bash
+python evidence/B3/run-20261028T135956Z/verify_hashes.py
+```
+
+`sha256sums.txt` 对包内文件的哈希按 **LF 归一化** 后的字节计算（先 `\r\n`→`\n`），因此在 Windows（CRLF 工作树）和 Linux（LF 检出）上结果一致；直接用 `sha256sum -c` 只能在 LF 检出上匹配。外部 fixture 记录（`fixtures/b2/...`，不在本仓库内）按原始字节哈希，仅在文件存在时校验，缺失时报告数量但不判失败。重新生成用 `make_sha256sums.py`（需能访问 fixtures 目录）。
+
