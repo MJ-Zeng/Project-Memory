@@ -1,0 +1,269 @@
+{
+  "schema_version": "1.1",
+  "kind": "agent_handoff",
+  "status": "reported_unverified",
+  "pilot_status": "ready_for_review",
+  "handoff_id": "HO-B1-R1-DEV",
+  "schema": "pilot-handoff/v1",
+  "task": "B1",
+  "task_id": "B1",
+  "round": 1,
+  "issue": "https://github.com/MJ-Zeng/Project-Memory/issues/1",
+  "goal_id": "G-B1",
+  "from_role": "PM-02",
+  "to_role": "PM-03",
+  "agent": "PM-02 Developer <pm02@pilot.invalid>",
+  "agent_label": "PM-02 Developer <pm02@pilot.invalid>",
+  "run_id": "run-20261028T1344",
+  "from_run": "run-20261028T1344",
+  "session_id": "pm02-pilot-02-20261028T1331+0800",
+  "model": {
+    "provider": "dsh",
+    "id": "deepseek-flash"
+  },
+  "vcs": "git",
+  "base_sha": "25a919d63c7181fd4083e0fc1af33734d74c5515",
+  "frozen_ref": "0d08a1ad85144d11a46d6a361a2a3ce4eadbbed4",
+  "candidate_sha": "1c7ad94f8c3beb369f4a86a33accda6910213105",
+  "head_sha": "1c7ad94f8c3beb369f4a86a33accda6910213105",
+  "head_sha_note": "candidate_sha 1c7ad94 含代码、测试、ADR、证据包；本 Handoff 作为其上的最后一个提交（只含 .project-memory/handoffs/B1/ 与 pilot/rounds/B1/handoff-* 两个文件），推分支时分支头 = 该 Handoff 提交，代码/测试/证据字节不再变化。",
+  "branch": "fix/b1-openssl-verifier",
+  "pr": "not opened: 本环境无 gh CLI（PR 正文见 pilot/rounds/B1/handoff-run-20261028T1344.md §12，由 PM-01/人类代开）",
+  "criteria_sha256": "0fdc9469456b81bae26a3c29385f1745222e16b19211e27d4d04a418ef3be08d",
+  "generated_at": "2026-10-28T06:40:00+00:00",
+  "created_at": "2026-10-28T14:40:00+08:00",
+  "time_spent_minutes": 69,
+  "context_recovery_minutes": 10,
+  "commits": [
+    "89ea4bd7fdbddaf90f640d4cc1b71d66fd1a63e3",
+    "45813e2f5e3aad2a71fe952dfb82bb6b0f49b8cb",
+    "1c7ad94f8c3beb369f4a86a33accda6910213105"
+  ],
+  "commit_roles": {
+    "89ea4bd": "fix(b1): project_memory/authority.py + tests/test_authority_verifier.py + docs/decisions/ADR-0002",
+    "45813e2": "chore(b1): pilot/rounds/B1/context-recovery-pm02.md + pilot/evidence/B1/run-20261028T1344/",
+    "1c7ad94": "docs(b1): ADR-0002 §8 引用 AC-5 自测与 chain-after.json（文档，无代码改动）"
+  },
+  "changed_files": [
+    "project_memory/authority.py",
+    "tests/test_authority_verifier.py",
+    "docs/decisions/ADR-0002-inprocess-signature-verifier.md",
+    "pilot/rounds/B1/context-recovery-pm02.md",
+    "pilot/evidence/B1/run-20261028T1344/"
+  ],
+  "changed_files_numstat": [
+    "325\t48\tproject_memory/authority.py",
+    "279\t0\ttests/test_authority_verifier.py",
+    "136\t0\tdocs/decisions/ADR-0002-inprocess-signature-verifier.md",
+    "39\t0\tpilot/rounds/B1/context-recovery-pm02.md"
+  ],
+  "docs_changed": [
+    "docs/decisions/ADR-0002-inprocess-signature-verifier.md"
+  ],
+  "hashes": {
+    "authority_py_baseline": "4805b06b45e208013013a872cce0e6b5f5e2c67794f8ea237eb1e07ff384a88d",
+    "authority_py_candidate": "163a08ad4585d3d488ca628c9c30554029767b5a45784fe6f7e2bcc6537518ea",
+    "kit_probe_unchanged": "827ad0c29d50cd15ce345485d24e5a75edf069522c89b048236c08ba9e617c73",
+    "task_card": "0fdc9469456b81bae26a3c29385f1745222e16b19211e27d4d04a418ef3be08d"
+  },
+  "completed": [
+    "AC-2/3/4/6：project_memory/authority.py 不再 fork openssl —— 删除 shutil.which / subprocess / tempfile / PROJECT_MEMORY_OPENSSL 读取；全模块只剩 1 处 os.environ.get（信任锚变量），判定改为 RSA/ECDSA 数学结果",
+    "验签改为纯标准库进程内实现：RSASSA-PKCS1-v1_5 + SHA-256（模数 ≥ 2048、s < n、DigestInfo 逐字节、非提前返回比较）与 ECDSA P-256 + SHA-256（严格最小 DER、0 < r,s < n、Q 在曲线上）；自写最小 DER/SPKI/X.509 SubjectPublicKeyInfo 解析，解析失败一律拒绝、不抛异常到调用方",
+    "AC-1/9：anchor、payload 摘要、信封字段、provenance 检查语义未改；真人签名的 pilot/kit/b1/positive fixture 在两棵树上 goal evidence 退出码均为 0，记录未被改动（positive-before/after.json）",
+    "AC-5：修复前（基线树 25a919d，未修改的 kit 探针）观察到 PATH 前置、PROJECT_MEMORY_OPENSSL 指向假 openssl、指向 /bin/true 三种替换都被接受并走到 path_goal_status=achieved；修复后（候选树 89ea4bd，同一探针同一哈希）三种替换全部退出码 1",
+    "AC-7：chain_probe.py（只读 import kit 模块，未改 kit 文件）逐步跑完整链，修复后 goal evidence 退出码 1、achieved 迁移退出码 1、Goal 停在 evaluating 且 evidence=[]（chain-after.json）；差异与局限已在 README §2.5 披露",
+    "新增 tests/test_authority_verifier.py：26 项（假 openssl 自测 + 静态守卫 + RSA/ECDSA 负向向量 + 锚点所有权）；既有测试零删除、零跳过",
+    "AC-8：基线全量 pytest 164 passed / 2 skipped（seq 9，exit 0）→ 候选全量 190 passed / 2 skipped（seq 22，exit 0），差值恰为新增的 26；skip 项与基线一致",
+    "AC-10：docs/decisions/ADR-0002-inprocess-signature-verifier.md（信任根、方案、被拒方案、验签器完整性与轮换、残余风险、AC 对应表）",
+    "AC-11：git diff --name-only 25a919d..1c7ad94 全部落在允许范围（project_memory/、tests/、docs/、pilot/evidence/B1/run-20261028T1344/、pilot/rounds/B1/），无越界文件",
+    "证据包 pilot/evidence/B1/run-20261028T1344/：commands.jsonl（32 条）、logs/01..32、probe-before/after.json、positive-before/after.json + positive.json、chain-before/after.json、pytest.log、environment.txt、diffstat.txt、README.md、scripts/、work/capture-*、sha256sums.txt（63 项）",
+    "清单可复核：git archive 1c7ad94 导出到仓库外的干净树后 sha256sum -c sha256sums.txt 逐行 63 OK、退出码 0（见 observations.sha256sum_check_from_candidate_archive）"
+  ],
+  "remaining": [
+    "PM-03 独立复现：修复前/修复后探针、正向 fixture、全量测试、sha256sum -c",
+    "PM-03 自行植入假 openssl 复现 AC-5（不依赖我的测试文件）",
+    "PM-03 对 authority.py 做替换/绕过尝试（别名、相对导入、直接调用内部函数、ED25519/其它算法声明、超短密钥）",
+    "PM-01 用 §12 的 PR 正文代开 PR 到 dev/v1.0，并更新 pilot/STATUS.md 与 pilot/README.md",
+    "人类决定是否合并；PM-02 不 Approve、不合并、不宣布 Goal achieved",
+    "本轮未动的已知相邻项：project_memory/execution.py 的 _SENSITIVE_ENV 仍列 PROJECT_MEMORY_OPENSSL（该变量已无代码读取，但继续禁止注入环境携带它，保持现状）"
+  ],
+  "blockers": [],
+  "tests": [
+    {
+      "command": "C:/SoftWare/Anconda/python.exe -m pytest -q -p no:cacheprovider",
+      "exit_code": 0,
+      "log": "pilot/evidence/B1/run-20261028T1344/logs/09-baseline-pytest.log",
+      "observed": "baseline tree (25a919d): 164 passed, 2 skipped"
+    },
+    {
+      "command": "C:/SoftWare/Anconda/python.exe -m pytest --collect-only -q -p no:cacheprovider",
+      "exit_code": 0,
+      "log": "pilot/evidence/B1/run-20261028T1344/logs/08-baseline-collect-only.log",
+      "observed": "baseline collectable"
+    },
+    {
+      "command": "C:/SoftWare/Anconda/python.exe -m pytest -q -p no:cacheprovider tests/test_authority_verifier.py",
+      "exit_code": 0,
+      "log": "pilot/evidence/B1/run-20261028T1344/logs/21-tests-verifier-candidate.log",
+      "observed": "candidate 89ea4bd: 26 passed"
+    },
+    {
+      "command": "C:/SoftWare/Anconda/python.exe -m pytest -q -p no:cacheprovider",
+      "exit_code": 0,
+      "log": "pilot/evidence/B1/run-20261028T1344/logs/22-full-suite-candidate.log",
+      "observed": "candidate 89ea4bd: 190 passed, 2 skipped (pytest.log is a byte copy of this log)"
+    },
+    {
+      "command": "C:/SoftWare/Anconda/python.exe pilot/evidence/B1/run-20261028T1344/scripts/run_probe.py --code <git archive of 25a919d> ... (wsl.exe -u root -e python3 pilot/kit/b1/openssl_substitution.py)",
+      "exit_code": 0,
+      "log": "pilot/evidence/B1/run-20261028T1344/logs/13-probe-before.log",
+      "observed": "probe-before.json: path/env//bin/true substitution all accepted; path_goal_status=achieved"
+    },
+    {
+      "command": "C:/SoftWare/Anconda/python.exe pilot/evidence/B1/run-20261028T1344/scripts/run_probe.py --code <git archive of 89ea4bd> ... (same unmodified kit probe)",
+      "exit_code": 0,
+      "log": "pilot/evidence/B1/run-20261028T1344/logs/19-probe-after.log",
+      "observed": "probe-after.json: control_rejected=true, path/env/true substitutions all rejected (exit 1), agent_owned_anchor_rejected=true"
+    },
+    {
+      "command": "C:/SoftWare/Anconda/python.exe pilot/evidence/B1/run-20261028T1344/scripts/run_positive.py --code <git archive of 25a919d> ...",
+      "exit_code": 0,
+      "log": "pilot/evidence/B1/run-20261028T1344/logs/14-positive-before.log",
+      "observed": "positive-before.json: goal_evidence_exit=0, accepted=true, record_unchanged=true"
+    },
+    {
+      "command": "C:/SoftWare/Anconda/python.exe pilot/evidence/B1/run-20261028T1344/scripts/run_positive.py --code <git archive of 89ea4bd> ...",
+      "exit_code": 0,
+      "log": "pilot/evidence/B1/run-20261028T1344/logs/20-positive-after.log",
+      "observed": "positive-after.json: goal_evidence_exit=0, accepted=true, record_unchanged=true"
+    },
+    {
+      "command": "C:/SoftWare/Anconda/python.exe pilot/evidence/B1/run-20261028T1344/scripts/run_chain.py --code <git archive of 89ea4bd> ...",
+      "exit_code": 0,
+      "log": "pilot/evidence/B1/run-20261028T1344/logs/28-chain-after.log",
+      "observed": "chain-after.json: goal evidence exit 1 (untrusted), transition achieved exit 1, final goal status=evaluating, evidence=[]"
+    },
+    {
+      "command": "C:/SoftWare/Anconda/python.exe pilot/evidence/B1/run-20261028T1344/scripts/run_chain.py --code <git archive of 25a919d> ...",
+      "exit_code": 0,
+      "log": "pilot/evidence/B1/run-20261028T1344/logs/29-chain-before.log",
+      "observed": "chain-before.json: goal evidence exit 0 (forged signature accepted); see README §2.5 for the disclosed deviation from the kit probe"
+    },
+    {
+      "command": "sha256sum -c sha256sums.txt   (run inside a git archive export of 1c7ad94, outside this repo)",
+      "exit_code": 0,
+      "log": "NOT IN commands.jsonl — post-journal self-check, see observations",
+      "observed": "63 lines OK, 0 FAILED"
+    }
+  ],
+  "observations": {
+    "statement": "以下仅为我在本机观察到的命令与退出码，不构成 PASS/FAIL 判定。",
+    "probe_before": "control_rejected=true(1); path_substitution_accepted=true(0); path_evaluate_exit=0; path_achieved_exit=0; path_goal_status=achieved; env_openssl_accepted=true(0); env_true_accepted=true(0); agent_owned_anchor_rejected=true(1)",
+    "probe_after": "control_rejected=true(1); path_substitution_accepted=false(1); env_openssl_accepted=false(1); env_true_accepted=false(1); agent_owned_anchor_rejected=true(1); path_evaluate_exit / path_achieved_exit / path_goal_status 键不存在（第一步即被拒，未运行后续）",
+    "chain_after": "goal evidence exit 1 reason=没有可信授权来源（untrusted）：签名验证失败; goal evaluate exit 2 satisfied=false; approved/active/evaluating exit 0/0/0; achieved exit 1 insufficient_evidence; goal status=evaluating evidence=[]",
+    "chain_before": "同一链在基线树：goal evidence exit 0（伪造签名被接受）；其余步骤同上",
+    "sha256sum_check_from_candidate_archive": "git archive --format=tar -o %TEMP%/b1check1c/t.tar 1c7ad94f8c3beb369f4a86a33accda6910213105 + tar 解出干净树 + cd pilot/evidence/B1/run-20261028T1344 && sha256sum -c sha256sums.txt -> exit 0，63 行 OK，无 FAILED。该检查在 seq 32（最后一次打包）之后运行，未写入 commands.jsonl；日志/证据文件在此之后未再改动。",
+    "sha_resolution": "git cat-file -t: 25a919d…=commit, 89ea4bd…=commit, 45813e2…=commit, 1c7ad94…=commit, 0d08a1a…=commit",
+    "probe_unchanged": "logs/11 记录 pilot/kit/b1/openssl_substitution.py 的 SHA-256 = 827ad0c29d50cd15ce345485d24e5a75edf069522c89b048236c08ba9e617c73，与 pilot/kit/b1/README.md 一致；修复前后两次探针都用的这个未修改文件",
+    "exit_code_anomalies": "seq 12 exit 1（我的 WSL 输出解码包装崩溃，无探针结果）、seq 17 exit 128（git archive 目标目录未创建）——两条均为我的包装错误，保留在台账中，由 seq 13 / seq 18 取代",
+    "anchor_access": "信任锚 /etc/pm-rc3-review/anchor-a.json 为 root:root 644，由 CLI 以 uid 1000 只读；PM-02 未读取 /etc/pm-rc3-review/key-a.pem、未签名、未持有私钥"
+  },
+  "evidence": [
+    "pilot/evidence/B1/run-20261028T1344/README.md",
+    "pilot/evidence/B1/run-20261028T1344/commands.jsonl",
+    "pilot/evidence/B1/run-20261028T1344/probe-before.json",
+    "pilot/evidence/B1/run-20261028T1344/probe-after.json",
+    "pilot/evidence/B1/run-20261028T1344/chain-before.json",
+    "pilot/evidence/B1/run-20261028T1344/chain-after.json",
+    "pilot/evidence/B1/run-20261028T1344/positive.json",
+    "pilot/evidence/B1/run-20261028T1344/positive-before.json",
+    "pilot/evidence/B1/run-20261028T1344/positive-after.json",
+    "pilot/evidence/B1/run-20261028T1344/pytest.log",
+    "pilot/evidence/B1/run-20261028T1344/environment.txt",
+    "pilot/evidence/B1/run-20261028T1344/diffstat.txt",
+    "pilot/evidence/B1/run-20261028T1344/sha256sums.txt",
+    "pilot/evidence/B1/run-20261028T1344/logs/",
+    "pilot/evidence/B1/run-20261028T1344/scripts/",
+    "pilot/evidence/B1/run-20261028T1344/work/capture-before/",
+    "pilot/evidence/B1/run-20261028T1344/work/capture-after/",
+    "pilot/evidence/B1/run-20261028T1344/work/positive-before.json",
+    "pilot/evidence/B1/run-20261028T1344/work/positive-after.json",
+    "pilot/rounds/B1/context-recovery-pm02.md"
+  ],
+  "evidence_sha256": {
+    "README.md": "62428e4bba7e1c5be041298d01bdd9984d98d16b0eb1bc3d156b500dd1aabe85",
+    "commands.jsonl": "6be096d8bd53b802bb34dc67b991ce88a51110d59fd9d66a57a93dd989f01ea0",
+    "probe-before.json": "30ad669078bc659988026d19f713971e64dec12b07884f75c284f85ade5f3478",
+    "probe-after.json": "d3e389c768cc7c5ef14e222a46b0c41cd73c9c2ab8ead1182ed7d4aa1d769cef",
+    "chain-before.json": "edd6ecdb7c1e0ea61fb92c7f0c7c3c50e1fc6707a25ebfc7c67d736bfd7c749b",
+    "chain-after.json": "0f9aa1710760228616971b0a2f7c163d5ed7ff98d1b1412bc2041b94c8e6885c",
+    "positive.json": "4cffee0384fd1d906daa814043c6a72fee526258d8fe63998c14b5e8656b6d81",
+    "positive-before.json": "6f1f5f07c270193653fa133722c544ca62ced8e6a084a34d386eb061c9d97d22",
+    "positive-after.json": "75772d392ab7ab33f9e4e2cd553759af08bb44f6dc867eb48be6b17d13c5a792",
+    "pytest.log": "f28277a5ef790be77a1622f828d5598cda8f3807b3308f8fe3773a2d45cad535",
+    "environment.txt": "3d1dbe9aefa80be1a58d801e663367f841b615cb5a58408c638df58c35149b89",
+    "diffstat.txt": "28738c871ebe1ba68e199f88d225111ca839f3d239a11bea1d219c77f980eda4",
+    "sha256sums.txt": "NOT SELF-HASHED：清单是最后写入的文件，不覆盖自身（README §7）"
+  },
+  "not_verified": [
+    "未宣布任何 AC 的 PASS/VERIFIED：AC-1..AC-11 的最终判定权在 PM-03 与人类，本节只列出我观察到的退出码",
+    "AC-5 的独立复现：我的 VerifierIsNotEnvironmentSelectable 是同一形状的自测，PM-03 需自行植入假 openssl，不能只采信我的测试",
+    "AC-7 的替代链证据：chain_probe.py 省略了 kit 探针在 evidence 被接受后的 goal_criteria_sha256 修复步骤，因此基线树那条链的 achieved 也返回 1；修复前的完整攻击链以 probe-before.json（seq 13）为准，chain-before.json 不构成对基线行为的替代描述",
+    "非 RSA/ECDSA 之外的算法（ed25519 等）只做了拒绝测试，未验证任何真实 ed25519 签名路径（该算法本就不受支持）",
+    "侧信道强度：比较循环写作非提前返回，但未做时序测量或恒定时间证明",
+    "ASN.1 解析器的 fuzzing/语料覆盖：只测了自测向量里的退化 DER 与越界字节，未做随机 fuzz",
+    "大模数性能：2048/3072/4096 位仅测功能，未做基准；生产 anchor 为 RSA-2048",
+    "Windows 原生路径：探针与 fixture 全部经 WSL(root 锚点 + uid 1000 CLI) 运行；未在纯 Windows 环境复跑 goal evidence",
+    "真实 GitHub 上的 Issue #1 正文与 PR：本环境无 gh CLI，未认证读取 Issue 正文不可用，沿用仓库内任务卡与派发工件",
+    "其它 agent 的绕过尝试（如 monkeypatch authority._verify_signature、直接构造已验证记录写盘、篡改 anchor 文件后重放）未系统穷举；仅覆盖了 anchor 被 agent 拥有时拒绝、信封/摘要/记录改动时拒绝这几条",
+    "seq 12（exit 1）与 seq 17（exit 128）这两次失败是我的包装错误，未产出结论；对应成功运行为 seq 13 / seq 18",
+    "行尾归一（seq 25/26/31/32 的 package.py）只改行尾、不改内容，但确实是我对已生成证据文件的一次事后处理；每条 journal 保留了 log_sha256_before_eol_normalization 供对照"
+  ],
+  "open_questions": [
+    "验签器与 ADR 提出的“固定/轮换”流程落地：anchor 公钥轮换由谁执行、是否需要一条 goal 记录，本轮只写了操作步骤未执行",
+    "PM-03 是否要把 kit 探针的假 openssl 植入方式换成自己的（更严格的负例），以免与我的实现同时命中同一形状",
+    "PROJECT_MEMORY_OPENSSL 现在完全没有代码读取：是否保留 execution._SENSITIVE_ENV 里的条目（当前保留），以及 skill/ 文档是否需要在后续轮次正式声明该变量已废弃",
+    "本轮 diff 使 pilot/evidence/B1/ 增加约 5.1k 行（含 2 份 >950 行的探针 JSON）：试点是否接受这种体积，或要求后续轮次改用压缩/摘要形式"
+  ],
+  "next_actions": [
+    "PM-03：从候选 1c7ad94 导出干净树，跑 sha256sum -c sha256sums.txt（我观察到 63 OK / exit 0）",
+    "PM-03：按 README §5 复现修复前/修复后探针与正向 fixture（需 WSL 与 /etc/pm-rc3-review 的 root 锚点）",
+    "PM-03：自行植入假 openssl 复现 AC-5；对 authority.py 提出至少一条新绕过尝试并记录退出码",
+    "PM-03：核对 diff 范围（AC-11）与测试计数（164 → 190，skip 未变）",
+    "PM-01：按 §12 正文代开 PR fix/b1-openssl-verifier → dev/v1.0，链接 Issue #1、Handoff 与证据目录；更新 pilot/STATUS.md",
+    "人类：决定是否合并；PM-02 不 Approve、不合并、不宣布 Goal G-B1 achieved"
+  ],
+  "contamination": {
+    "human_relay": [],
+    "missing_artifacts": [
+      "GitHub Issue #1 正文与 PR：本环境无 gh CLI，未认证读取；输入仅为仓库内的 pilot/rounds/B1/task.md、handoff-dispatch.md、dispatch-b1-r1.json、.project-memory/goals/G-B1.json"
+    ],
+    "stale_artifacts": [
+      "pilot/STATUS.md：仍写 B1 派发中，未反映本轮候选",
+      "pilot/rounds/B1/task.md 的 AC-8 参考值“147”：我在基线 25a919d 实测 164 passed / 2 skipped（seq 9），差异未由我改动判据，交由 PM-03 核对",
+      "skill/ 文档：已 grep 确认不再引用 openssl 验签路径；project_memory/execution.py 的 _SENSITIVE_ENV 仍列 PROJECT_MEMORY_OPENSSL（无害，保持不注入）"
+    ],
+    "unauthorized_reads": [],
+    "prohibited_paths_not_touched": [
+      "C:/Documents/02_Research/Code/project-memory-mvp",
+      "pm-import",
+      "PM-01/PM-03 的会话、日志与工作树",
+      "frozen/rc3-0d08a1a（未 checkout、未改写、未 push）",
+      "/etc/pm-rc3-review/key-a.pem（未读取）",
+      "dev/v1.0（未 push、未 force）"
+    ],
+    "time_spent_minutes": 69
+  },
+  "facts": {
+    "base_sha": "25a919d63c7181fd4083e0fc1af33734d74c5515",
+    "candidate_sha": "1c7ad94f8c3beb369f4a86a33accda6910213105",
+    "branch": "fix/b1-openssl-verifier",
+    "pr": "not opened: 本环境无 gh CLI",
+    "criteria_sha256": "0fdc9469456b81bae26a3c29385f1745222e16b19211e27d4d04a418ef3be08d",
+    "tests_summary": "C:/SoftWare/Anconda/python.exe -m pytest -q -p no:cacheprovider -> exit 0, 190 passed, 2 skipped (baseline 164 passed / 2 skipped + 26 new)",
+    "probe_summary": "pilot/kit/b1/openssl_substitution.py (unmodified, 827ad0c2) — before: 3 substitutions accepted, path_goal_status=achieved; after: 3 substitutions rejected, control/agent-anchor still rejected",
+    "positive_fixture_summary": "goal evidence exit 0 on both baseline and candidate trees, record_unchanged=true",
+    "verdict_claim": "none — PM-02 不声称 PASS/VERIFIED；观察结果见 observations/tests",
+    "next_action": "PM-03 independent review (probe re-run, own fake-openssl AC-5 reproduction, bypass attempts); PM-01 opens the PR"
+  }
+}

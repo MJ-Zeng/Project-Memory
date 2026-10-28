@@ -1,0 +1,69 @@
+{
+  "label": "positive-after",
+  "code": "/mnt/c/Users/ZMJ/AppData/Local/Temp/pm-b1-candidate-89ea4bd/tree",
+  "anchor": "/etc/pm-rc3-review/anchor-a.json",
+  "fixture_hashes": {
+    "VER-positive.json": "d6f30d6faebfd3c8fefb18fef78ecf38e680f9bd248f1351b2e87bc1a201f362",
+    "template-repo.tar.gz": "a95cde67febf7cf0adf3351206b38ff53439336dd0003f5b53bf939762eecb42",
+    "anchor-a.json": "e85d1f500a8b93479d703ba28c96ef4693820a104160d111cda22e793c27515e",
+    "pub-a.pem": "25aaf069c14051bc65d33c9a71b2463ba067cbba1051eeea36a663c54869fe76"
+  },
+  "hash_mismatches": [],
+  "steps": [
+    {
+      "argv": [
+        "git",
+        "/mnt/c/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-02/pilot/evidence/B1/run-20261028T1344/work/positive-after-scratch/run-copy",
+        "config"
+      ],
+      "cwd": "/mnt/c/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-02/pilot/evidence/B1/run-20261028T1344/work/positive-after-scratch/run-copy",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "/mnt/c/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-02/pilot/evidence/B1/run-20261028T1344/work/positive-after-scratch/run-copy",
+        "config"
+      ],
+      "cwd": "/mnt/c/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-02/pilot/evidence/B1/run-20261028T1344/work/positive-after-scratch/run-copy",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "-m",
+        "project_memory",
+        "goal",
+        "evidence",
+        "--repo",
+        ".",
+        "--id",
+        "G-B1",
+        "--criterion",
+        "C1",
+        "--kind",
+        "verification",
+        "--ref",
+        "VER-positive"
+      ],
+      "cwd": "/mnt/c/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-02/pilot/evidence/B1/run-20261028T1344/work/positive-after-scratch/run-copy",
+      "exit_code": 0,
+      "stdout": "{\n  \"criterion\": \"C1\",\n  \"evidence\": {\n    \"kind\": \"verification\",\n    \"note\": \"\",\n    \"ref\": \"VER-positive\"\n  },\n  \"goal\": {\n    \"adrs\": [],\n    \"approved_by\": null,\n    \"background\": \"B1 AC-1\",\n    \"constraints\": [],\n    \"created_at\": \"2026-10-28T05:25:30+00:00\",\n    \"history\": [\n      {\n        \"at\": \"2026-10-28T05:25:30+00:00\",\n        \"by\": \"PM-01\",\n        \"from\": null,\n        \"reason\": \"created\",\n        \"to\": \"proposed\"\n      }\n    ],\n    \"id\": \"G-B1\",\n    \"issues\": [],\n    \"kind\": \"goal\",\n    \"outcome\": \"valid signature accepted\",\n    \"owner\": \"PM-01\",\n    \"prs\": [],\n    \"revision\": 2,\n    \"schema_version\": \"1.2\",\n    \"status\": \"proposed\",\n    \"success_criteria\": [\n      {\n        \"evidence\": [\n          {\n            \"kind\": \"verification\",\n            \"note\": \"\",\n            \"ref\": \"VER-positive\"\n          }\n        ],\n        \"id\": \"C1\",\n        \"required\": true,\n        \"statement\": \"有效的真实签名仍可被验证\"\n      }\n    ],\n    \"title\": \"B1 signed verifier\",\n    \"updated_at\": \"2026-10-28T06:08:59+00:00\"\n  },\n  \"goal_id\": \"G-B1\",\n  \"kind\": \"goal_evidence_result\",\n  \"schema_version\": \"1.2\"\n}\n",
+      "stderr": ""
+    }
+  ],
+  "anchor_matches_fixture_copy": true,
+  "record_path": "/mnt/c/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-02/pilot/evidence/B1/run-20261028T1344/work/positive-after-scratch/run-copy/.project-memory/verifications/4/VER-positive.json",
+  "record_sha256_before": "d6f30d6faebfd3c8fefb18fef78ecf38e680f9bd248f1351b2e87bc1a201f362",
+  "goal_evidence_exit": 0,
+  "goal_evidence_stdout": "{\n  \"criterion\": \"C1\",\n  \"evidence\": {\n    \"kind\": \"verification\",\n    \"note\": \"\",\n    \"ref\": \"VER-positive\"\n  },\n  \"goal\": {\n    \"adrs\": [],\n    \"approved_by\": null,\n    \"background\": \"B1 AC-1\",\n    \"constraints\": [],\n    \"created_at\": \"2026-10-28T05:25:30+00:00\",\n    \"history\": [\n      {\n        \"at\": \"2026-10-28T05:25:30+00:00\",\n        \"by\": \"PM-01\",\n        \"from\": null,\n        \"reason\": \"created\",\n        \"to\": \"proposed\"\n      }\n    ],\n    \"id\": \"G-B1\",\n    \"issues\": [],\n    \"kind\": \"goal\",\n    \"outcome\": \"valid signature accepted\",\n    \"owner\": \"PM-01\",\n    \"prs\": [],\n    \"revision\": 2,\n    \"schema_version\": \"1.2\",\n    \"status\": \"proposed\",\n    \"success_criteria\": [\n      {\n        \"evidence\": [\n          {\n            \"kind\": \"verification\",\n            \"note\": \"\",\n            \"ref\": \"VER-positive\"\n          }\n        ],\n        \"id\": \"C1\",\n        \"required\": true,\n        \"statement\": \"有效的真实签名仍可被验证\"\n      }\n    ],\n    \"title\": \"B1 signed verifier\",\n    \"updated_at\": \"2026-10-28T06:08:59+00:00\"\n  },\n  \"goal_id\": \"G-B1\",\n  \"kind\": \"goal_evidence_result\",\n  \"schema_version\": \"1.2\"\n}\n",
+  "goal_evidence_stderr": "",
+  "goal_evidence_accepted": true,
+  "record_sha256_after": "d6f30d6faebfd3c8fefb18fef78ecf38e680f9bd248f1351b2e87bc1a201f362",
+  "record_unchanged": true,
+  "goal_status_after": "proposed"
+}

@@ -1,0 +1,38 @@
+B1 evidence environment
+captured_at: 2026-10-28T14:29:14+08:00
+run_id: run-20261028T1344
+branch: fix/b1-openssl-verifier
+candidate_sha: 89ea4bd7fdbddaf90f640d4cc1b71d66fd1a63e3
+baseline_sha: 25a919d63c7181fd4083e0fc1af33734d74c5515
+
+[windows]
+platform: Windows 11 10.0.26300 AMD64
+python: 3.12.4 | packaged by Anaconda, Inc. | (main, Jun 18 2024, 15:03:56) [MSC v.1929 64 bit (AMD64)]
+python_path: C:\SoftWare\Anconda\python.exe
+git: git version 2.56.0.windows.2
+cwd: C:\Documents\02_Research\Code\project-memory-verification-lab\import-workspace\pm-pilot-02
+whoami: ZMJ
+
+[wsl (probe harness)]
+wsl_uname: Linux LAPTOP-KNMD5U8F 6.18.33.2-microsoft-standard-WSL2 #1 SMP PREEMPT_DYNAMIC Thu Jun 18 21:54:43 UTC 2026 x86_64 GNU/Linux
+wsl_python3: Python 3.14.4
+wsl_openssl: OpenSSL 3.5.5 27 Jan 2026 (Library: OpenSSL 3.5.5 27 Jan 2026)
+anchor_stat: root:root 644 /etc/pm-rc3-review/anchor-a.json
+anchor_dir_stat: root:root 755 /etc/pm-rc3-review
+private_key: /etc/pm-rc3-review/key-a.pem was never read or used by PM-02; the fixture signature comes from pilot/kit/b1/positive (human-signed), and PM-02 holds no signing key.
+probe_sha256: 827ad0c29d50cd15ce345485d24e5a75edf069522c89b048236c08ba9e617c73
+
+[project_memory.authority]
+baseline_authority_sha256: 4805b06b45e208013013a872cce0e6b5f5e2c67794f8ea237eb1e07ff384a88d
+candidate_authority_sha256: 163a08ad4585d3d488ca628c9c30554029767b5a45784fe6f7e2bcc6537518ea
+
+[notes]
+PROJECT_MEMORY_OPENSSL is no longer read by authority.py; the env var is dead.
+The probe working dirs listed below are throwaway fixtures (each contains a
+temporary git repo used by the probe) and are not part of the evidence set:
+  - work/before
+  - work/after
+  - work/chain-before
+  - work/chain-after
+  - work/positive-before-scratch
+  - work/positive-after-scratch

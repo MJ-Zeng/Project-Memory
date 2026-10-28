@@ -1,0 +1,8 @@
+COMMAND: C:/SoftWare/Anconda/python.exe pilot/evidence/B1/run-20261028T1344/scripts/finalize.py
+CWD: C:\Documents\02_Research\Code\project-memory-verification-lab\import-workspace\pm-pilot-02
+ENV: re-run of finalize.py after the §2.5 chain step: refreshes environment.txt/diffstat.txt/positive.json/pytest.log
+EXIT: 0
+--- stdout ---
+evidence files: 60
+environment.txt sha256: 0940b5f685fb44a3269d5a6e966d5967d9cd6922171abb0412578067454ee74b
+--- stderr ---

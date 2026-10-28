@@ -1,0 +1,26 @@
+COMMAND: C:/SoftWare/Anconda/python.exe pilot/evidence/B1/run-20261028T1344/scripts/run_probe.py --code C:/Users/ZMJ/AppData/Local/Temp/pm-b1-base-25a919d/tree --work pilot/evidence/B1/run-20261028T1344/work/before --out pilot/evidence/B1/run-20261028T1344/probe-before.json --capture-dir pilot/evidence/B1/run-20261028T1344/work/capture-before
+CWD: C:\Documents\02_Research\Code\project-memory-verification-lab\import-workspace\pm-pilot-02
+ENV: wsl.exe -u root -e python3 <kit probe 827ad0c2>; CODE=git archive of 25a919d (authority.py sha256 4805b06b); ANCHOR=/etc/pm-rc3-review/anchor-a.json (root:root 644); CLI runs as uid 1000; probe unmodified
+EXIT: 0
+--- stdout ---
+{
+  "wsl_exit_code": 0,
+  "probe_stdout_results": {
+    "control_real_openssl_exit": 1,
+    "control_rejected": true,
+    "path_substitution_exit": 0,
+    "path_substitution_accepted": true,
+    "path_evaluate_exit": 0,
+    "path_achieved_exit": 0,
+    "path_goal_status": "achieved",
+    "env_openssl_exit": 0,
+    "env_openssl_accepted": true,
+    "env_true_exit": 0,
+    "env_true_accepted": true,
+    "agent_owned_anchor_exit": 1,
+    "agent_owned_anchor_rejected": true
+  },
+  "output_present": true,
+  "stderr_wsl_notice": "wsl: \u68c0\u6d4b\u5230 localhost \u4ee3\u7406\u914d\u7f6e\uff0c\u4f46\u672a\u955c\u50cf\u5230 WSL\u3002NAT \u6a21\u5f0f\u4e0b\u7684 WSL \u4e0d\u652f\u6301 localhost \u4ee3\u7406\u3002"
+}
+--- stderr ---

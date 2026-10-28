@@ -10,6 +10,12 @@ This module deliberately does not create keys, sign records, or accept a
 self-declared ``authority.status == "trusted"``.  When no protected anchor is
 configured, every record is ``unconfigured``/``untrusted`` and no Goal can be
 achieved automatically.
+
+Signature checking is performed here, in-process, with the standard library
+only.  It never resolves an external program, so neither ``PATH`` nor any
+environment variable can select or replace the verifier: an attacker who
+controls the environment of the CLI still cannot make a forged signature pass.
+See ``docs/decisions/ADR-0002-inprocess-signature-verifier.md``.
 """
 from __future__ import annotations
 
@@ -18,16 +24,15 @@ import hashlib
 import json
 import os
 import platform
-import shutil
-import subprocess
-import tempfile
 from pathlib import Path
 
 ANCHOR_ENV = 'PROJECT_MEMORY_TRUST_ANCHOR'
-OPENSSL_ENV = 'PROJECT_MEMORY_OPENSSL'
 ANCHOR_SCHEMA = '1.0'
 ANCHOR_KIND = 'project_memory_trust_anchor'
 SUPPORTED_ALGORITHMS = ('rsa-sha256', 'ecdsa-sha256')
+MIN_RSA_MODULUS_BITS = 2048
+MAX_KEY_DER_BYTES = 65536
+MAX_SIGNATURE_BYTES = 1024
 
 
 def canonical_bytes(value) -> bytes:
@@ -50,26 +55,324 @@ def verification_digest(record: dict) -> str:
     return hashlib.sha256(verification_payload(record)).hexdigest()
 
 
-def _openssl() -> str | None:
-    candidate = os.environ.get(OPENSSL_ENV, '').strip() or 'openssl'
-    return shutil.which(candidate)
+class _DerError(ValueError):
+    """Malformed or unsupported DER input; always handled as fail-closed."""
 
 
-def _current_principal() -> str:
-    return (os.environ.get('USERNAME') or os.environ.get('USER') or '').strip().casefold()
+def _der_read_tlv(buf: bytes, index: int) -> tuple[int, bytes, int]:
+    """Return ``(tag, value, next)`` for the DER object starting at ``index``."""
+    if index >= len(buf):
+        raise _DerError('DER 数据截断')
+    tag = buf[index]
+    first = buf[index + 1] if index + 1 < len(buf) else None
+    if first is None:
+        raise _DerError('DER 数据截断')
+    if first < 0x80:
+        length, start = first, index + 2
+    else:
+        count = first & 0x7F
+        if count == 0 or count > 4 or index + 2 + count > len(buf):
+            raise _DerError('DER 长度编码非法')
+        length = int.from_bytes(buf[index + 2:index + 2 + count], 'big')
+        if length < 0x80:
+            raise _DerError('DER 长度不是最小编码')
+        start = index + 2 + count
+    end = start + length
+    if end > len(buf):
+        raise _DerError('DER 内容越界')
+    return tag, buf[start:end], end
 
 
-def _windows_owner(path: Path) -> str | None:
+def _der_children(body: bytes) -> list[tuple[int, bytes]]:
+    items = []
+    index = 0
+    while index < len(body):
+        tag, value, index = _der_read_tlv(body, index)
+        items.append((tag, value))
+    return items
+
+
+def _der_sequence(encoded: bytes) -> list[tuple[int, bytes]]:
+    tag, body, end = _der_read_tlv(encoded, 0)
+    if tag != 0x30 or end != len(encoded):
+        raise _DerError('期望 DER SEQUENCE')
+    return _der_children(body)
+
+
+def _der_integer(body: bytes) -> int:
+    if not body:
+        raise _DerError('DER INTEGER 为空')
+    if body[0] & 0x80:
+        raise _DerError('DER INTEGER 为负数')
+    if len(body) > 1 and body[0] == 0x00 and not body[1] & 0x80:
+        raise _DerError('DER INTEGER 不是最小编码')
+    return int.from_bytes(body, 'big')
+
+
+_RSA_OID = b'\x2a\x86\x48\x86\xf7\x0d\x01\x01\x01'
+_EC_PUBLIC_KEY_OID = b'\x2a\x86\x48\xce\x3d\x02\x01'
+_PRIME256V1_OID = b'\x2a\x86\x48\xce\x3d\x03\x01\x07'
+_SHA256_DIGEST_INFO_PREFIX = bytes.fromhex('3031300d060960864801650304020105000420')
+
+
+def _public_key(pem: str) -> tuple[str, int, int]:
+    """Parse a SubjectPublicKeyInfo PEM into ``('rsa'|'ecdsa', a, b)``.
+
+    RSA returns ``(modulus, publicExponent)``; ECDSA returns the uncompressed
+    P-256 point coordinates ``(x, y)``.  Anything else is refused.
+    """
+    head, tail = '-----BEGIN PUBLIC KEY-----', '-----END PUBLIC KEY-----'
+    text = str(pem or '').strip()
+    if head not in text or tail not in text:
+        raise _DerError('公钥不是 SubjectPublicKeyInfo PEM')
+    body = text.split(head, 1)[1].split(tail, 1)[0]
     try:
-        result = subprocess.run(
-            ['powershell.exe', '-NoProfile', '-NonInteractive', '-Command',
-             f"(Get-Acl -LiteralPath '{str(path)}').Owner"],
-            capture_output=True, text=True, encoding='utf-8', timeout=20)
-    except (OSError, subprocess.SubprocessError):
+        der = base64.b64decode(''.join(body.split()), validate=True)
+    except Exception as exc:  # noqa: BLE001 - malformed base64 is not a key
+        raise _DerError(f'公钥 base64 非法：{exc}') from exc
+    if len(der) > MAX_KEY_DER_BYTES:
+        raise _DerError('公钥 DER 过大')
+    algorithm = _der_sequence(der)
+    if len(algorithm) != 2 or algorithm[0][0] != 0x30 or algorithm[1][0] != 0x03:
+        raise _DerError('SubjectPublicKeyInfo 结构不符')
+    fields = _der_children(algorithm[0][1])
+    if len(fields) != 2 or fields[0][0] != 0x06:
+        raise _DerError('AlgorithmIdentifier 结构不符')
+    curve = fields[1][1] if fields[1][0] == 0x06 else None
+    bit_string = algorithm[1][1]
+    if not bit_string or bit_string[0] != 0x00:
+        raise _DerError('BIT STRING 未字节对齐')
+    key = bit_string[1:]
+    if fields[0][1] == _RSA_OID:
+        parts = _der_sequence(key)
+        if len(parts) != 2 or parts[0][0] != 0x02 or parts[1][0] != 0x02:
+            raise _DerError('RSAPublicKey 结构不符')
+        modulus, exponent = _der_integer(parts[0][1]), _der_integer(parts[1][1])
+        if modulus.bit_length() < MIN_RSA_MODULUS_BITS:
+            raise _DerError(f'RSA 模数小于 {MIN_RSA_MODULUS_BITS} 位')
+        if exponent < 3 or exponent % 2 == 0 or exponent.bit_length() > 64:
+            raise _DerError('RSA 公钥指数非法')
+        return 'rsa', modulus, exponent
+    if fields[0][1] == _EC_PUBLIC_KEY_OID and curve == _PRIME256V1_OID:
+        if len(key) != 65 or key[0] != 0x04:
+            raise _DerError('仅支持 P-256 未压缩公钥点')
+        return 'ecdsa', int.from_bytes(key[1:33], 'big'), int.from_bytes(key[33:65], 'big')
+    raise _DerError('信任锚公钥的算法或曲线不受支持')
+
+
+def _equals(left: bytes, right: bytes) -> bool:
+    """Length-checked byte comparison that does not return early."""
+    if len(left) != len(right):
+        return False
+    accumulator = 0
+    for a, b in zip(left, right):
+        accumulator |= a ^ b
+    return accumulator == 0
+
+
+def _rsa_verify(modulus: int, exponent: int, message: bytes, signature: bytes) -> bool:
+    """RSASSA-PKCS1-v1_5 with SHA-256, public operation only."""
+    size = (modulus.bit_length() + 7) // 8
+    if len(signature) != size or len(signature) > MAX_SIGNATURE_BYTES:
+        return False
+    value = int.from_bytes(signature, 'big')
+    if value >= modulus:
+        return False
+    encoded = pow(value, exponent, modulus).to_bytes(size, 'big')
+    digest_info = _SHA256_DIGEST_INFO_PREFIX + hashlib.sha256(message).digest()
+    padding = size - len(digest_info) - 3
+    if padding < 8:
+        return False
+    return _equals(encoded, b'\x00\x01' + b'\xff' * padding + b'\x00' + digest_info)
+
+
+# NIST P-256 (prime256v1) domain parameters.
+_P256_P = 0xFFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF
+_P256_A = _P256_P - 3
+_P256_B = 0x5AC635D8AA3A93E7B3EBBD55769886BC651D06B0CC53B0F63BCE3C3E27D2604B
+_P256_N = 0xFFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551
+_P256_G = (0x6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296,
+           0x4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F5)
+
+
+def _point_double(point):
+    if point is None:
         return None
-    if result.returncode != 0:
+    x, y = point
+    if y == 0:
         return None
-    return (result.stdout or '').strip() or None
+    slope = (3 * x * x + _P256_A) * pow(2 * y, -1, _P256_P) % _P256_P
+    result_x = (slope * slope - 2 * x) % _P256_P
+    return (result_x, (slope * (x - result_x) - y) % _P256_P)
+
+
+def _point_add(left, right):
+    if left is None:
+        return right
+    if right is None:
+        return left
+    if left[0] == right[0]:
+        if left[1] != right[1]:
+            return None
+        return _point_double(left)
+    slope = (right[1] - left[1]) * pow(right[0] - left[0], -1, _P256_P) % _P256_P
+    result_x = (slope * slope - left[0] - right[0]) % _P256_P
+    return (result_x, (slope * (left[0] - result_x) - left[1]) % _P256_P)
+
+
+def _point_multiply(scalar: int, point):
+    result, addend = None, point
+    while scalar:
+        if scalar & 1:
+            result = _point_add(result, addend)
+        addend = _point_double(addend)
+        scalar >>= 1
+    return result
+
+
+def _point_on_curve(x: int, y: int) -> bool:
+    return (y * y - (pow(x, 3, _P256_P) + _P256_A * x + _P256_B)) % _P256_P == 0
+
+
+def _ecdsa_verify(point_x: int, point_y: int, message: bytes, signature: bytes) -> bool:
+    """ECDSA over P-256 with SHA-256; strict DER and full range checks."""
+    if len(signature) > MAX_SIGNATURE_BYTES:
+        return False
+    if not _point_on_curve(point_x, point_y) or not (0 < point_x < _P256_P):
+        return False
+    components = _der_sequence(signature)
+    if len(components) != 2 or any(tag != 0x02 for tag, _ in components):
+        return False
+    radius, scalar = (_der_integer(value) for _, value in components)
+    if not 0 < radius < _P256_N or not 0 < scalar < _P256_N:
+        return False
+    integer = int.from_bytes(hashlib.sha256(message).digest(), 'big')
+    weight = pow(scalar, -1, _P256_N)
+    scaled = _point_add(_point_multiply(integer * weight % _P256_N, _P256_G),
+                        _point_multiply(radius * weight % _P256_N, (point_x, point_y)))
+    return scaled is not None and scaled[0] % _P256_N == radius
+
+
+def _verify_signature(anchor: dict, payload: bytes, signature_b64: str,
+                      algorithm: str) -> tuple[bool, str]:
+    """Check a detached signature with the pinned in-process implementation.
+
+    No subprocess, no ``PATH`` lookup, no output-string trust: acceptance comes
+    only from the arithmetic identity against the anchor's public key.  Every
+    failure mode returns ``(False, reason)``.
+    """
+    try:
+        signature = base64.b64decode(signature_b64, validate=True)
+    except Exception as exc:  # noqa: BLE001 - any bad encoding is untrusted
+        return False, f'签名不是合法 base64：{exc}'
+    if not signature:
+        return False, '签名为空'
+    try:
+        kind, first, second = _public_key(anchor.get('public_key_pem'))
+    except (_DerError, ValueError, IndexError) as exc:
+        return False, f'信任锚公钥无法解析：{exc}'
+    expected = {'rsa-sha256': 'rsa', 'ecdsa-sha256': 'ecdsa'}.get(algorithm)
+    if expected != kind:
+        return False, f'验签实现与信任锚公钥不匹配（algorithm={algorithm}，密钥类型={kind}）'
+    try:
+        if kind == 'rsa':
+            verified = _rsa_verify(first, second, payload, signature)
+        else:
+            verified = _ecdsa_verify(first, second, payload, signature)
+    except (ValueError, OverflowError, ZeroDivisionError) as exc:
+        return False, f'签名运算失败（fail-closed）：{exc}'
+    if not verified:
+        return False, '签名验证失败'
+    return True, 'signature verified'
+
+
+_TOKEN_QUERY = 0x0008
+_TOKEN_USER = 1
+_SE_FILE_OBJECT = 1
+_OWNER_SECURITY_INFORMATION = 0x00000001
+
+
+def _windows_apis():
+    """Load the system libraries that report SIDs.
+
+    Resolved through the OS loader by module name, never through ``PATH``, and
+    never through a helper process: the identity of the trust-root owner check
+    must not depend on the caller's environment either.
+    """
+    import ctypes
+    from ctypes import wintypes
+    return (ctypes, wintypes,
+            ctypes.WinDLL('kernel32', use_last_error=True),
+            ctypes.WinDLL('advapi32', use_last_error=True))
+
+
+def _sid_string(sid: int) -> str | None:
+    ctypes, wintypes, kernel32, advapi32 = _windows_apis()
+    text = wintypes.LPWSTR()
+    if not advapi32.ConvertSidToStringSidW(ctypes.c_void_p(sid), ctypes.byref(text)):
+        return None
+    value = text.value
+    kernel32.LocalFree(text)
+    return value or None
+
+
+def _current_user_sid() -> str | None:
+    """SID of the token the current process actually runs as."""
+    try:
+        ctypes, wintypes, kernel32, advapi32 = _windows_apis()
+        advapi32.OpenProcessToken.restype = wintypes.BOOL
+        advapi32.OpenProcessToken.argtypes = [wintypes.HANDLE, wintypes.DWORD,
+                                              ctypes.POINTER(wintypes.HANDLE)]
+        kernel32.GetCurrentProcess.restype = wintypes.HANDLE
+        token = wintypes.HANDLE()
+        if not advapi32.OpenProcessToken(kernel32.GetCurrentProcess(), _TOKEN_QUERY,
+                                         ctypes.byref(token)):
+            return None
+        advapi32.GetTokenInformation.restype = wintypes.BOOL
+        advapi32.GetTokenInformation.argtypes = [wintypes.HANDLE, ctypes.c_int,
+                                                 ctypes.c_void_p, wintypes.DWORD,
+                                                 ctypes.POINTER(wintypes.DWORD)]
+        needed = wintypes.DWORD()
+        advapi32.GetTokenInformation(token, _TOKEN_USER, None, 0, ctypes.byref(needed))
+        if not needed.value:
+            return None
+        buffer = ctypes.create_string_buffer(needed.value)
+        if not advapi32.GetTokenInformation(token, _TOKEN_USER, buffer, needed,
+                                            ctypes.byref(needed)):
+            return None
+        return _sid_string(ctypes.cast(buffer, ctypes.POINTER(ctypes.c_void_p))[0])
+    except (OSError, ValueError, AttributeError):
+        return None
+
+
+def _file_owner_sid(path: Path) -> str | None:
+    """Owner SID of a file, or None when it cannot be determined."""
+    try:
+        ctypes, wintypes, kernel32, advapi32 = _windows_apis()
+        pointer = ctypes.POINTER(ctypes.c_void_p)
+        advapi32.GetNamedSecurityInfoW.restype = wintypes.DWORD
+        advapi32.GetNamedSecurityInfoW.argtypes = [wintypes.LPCWSTR, ctypes.c_int,
+                                                   wintypes.DWORD, pointer, pointer,
+                                                   pointer, pointer, pointer]
+        owner = ctypes.c_void_p()
+        group = ctypes.c_void_p()
+        dacl = ctypes.c_void_p()
+        sacl = ctypes.c_void_p()
+        descriptor = ctypes.c_void_p()
+        code = advapi32.GetNamedSecurityInfoW(str(path), _SE_FILE_OBJECT,
+                                              _OWNER_SECURITY_INFORMATION,
+                                              ctypes.byref(owner), ctypes.byref(group),
+                                              ctypes.byref(dacl), ctypes.byref(sacl),
+                                              ctypes.byref(descriptor))
+        try:
+            if code != 0 or not owner.value:
+                return None
+            return _sid_string(owner.value)
+        finally:
+            if descriptor.value:
+                kernel32.LocalFree(descriptor)
+    except (OSError, ValueError, AttributeError):
+        return None
 
 
 def anchor_is_protected(path: Path) -> tuple[bool, str]:
@@ -86,12 +389,13 @@ def anchor_is_protected(path: Path) -> tuple[bool, str]:
     if os.access(path, os.W_OK):
         return False, '信任锚对当前进程可写；必须由仓库外受保护主体持有'
     if platform.system() == 'Windows':
-        owner = _windows_owner(path)
+        owner = _file_owner_sid(path)
         if not owner:
             return False, '无法确认信任锚所有者'
-        principal = _current_principal()
-        owner_name = owner.split('\\')[-1].casefold()
-        if principal and (owner_name == principal or owner.casefold().endswith('\\' + principal)):
+        principal = _current_user_sid()
+        if not principal:
+            return False, '无法确认当前进程的用户身份'
+        if owner.casefold() == principal.casefold():
             return False, '信任锚所有者是当前用户；不能作为独立信任根'
         return True, f'owner={owner}'
     if hasattr(os, 'geteuid') and stat.st_uid == os.geteuid():
@@ -134,33 +438,6 @@ def load_anchor(repo: Path) -> tuple[dict | None, str]:
     if not protected:
         return None, detail
     return {**anchor, 'path': str(resolved), 'protection': detail}, 'ok'
-
-
-def _verify_signature(anchor: dict, payload: bytes, signature_b64: str,
-                      algorithm: str) -> tuple[bool, str]:
-    openssl = _openssl()
-    if not openssl:
-        return False, '找不到 openssl，无法验证签名（fail-closed）'
-    try:
-        signature = base64.b64decode(signature_b64, validate=True)
-    except Exception as exc:  # noqa: BLE001
-        return False, f'签名不是合法 base64：{exc}'
-    with tempfile.TemporaryDirectory(prefix='pm-authority-') as tmp:
-        root = Path(tmp)
-        pub = root / 'public.pem'
-        data = root / 'payload.bin'
-        sig = root / 'signature.bin'
-        pub.write_text(anchor['public_key_pem'], encoding='utf-8')
-        data.write_bytes(payload)
-        sig.write_bytes(signature)
-        result = subprocess.run(
-            [openssl, 'dgst', '-sha256', '-verify', str(pub),
-             '-signature', str(sig), str(data)],
-            capture_output=True, text=True, encoding='utf-8', timeout=30)
-    if result.returncode != 0:
-        detail = (result.stdout or result.stderr or '').strip()
-        return False, f'签名验证失败：{detail or "openssl 返回非 0"}'
-    return True, 'signature verified'
 
 
 def verification_authority(repo: Path, record: dict) -> dict:

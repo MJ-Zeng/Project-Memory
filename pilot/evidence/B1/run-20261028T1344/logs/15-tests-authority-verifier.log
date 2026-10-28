@@ -1,0 +1,8 @@
+COMMAND: C:/SoftWare/Anconda/python.exe -m pytest -q -p no:cacheprovider tests/test_authority_verifier.py
+CWD: C:\Documents\02_Research\Code\project-memory-verification-lab\import-workspace\pm-pilot-02
+ENV: Windows Anconda python 3.12; only tests/test_authority_verifier.py
+EXIT: 0
+--- stdout ---
+..........................                                               [100%]
+26 passed in 0.11s
+--- stderr ---

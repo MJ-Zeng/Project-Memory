@@ -1,0 +1,19 @@
+git diff --stat 25a919d..89ea4bd
+ .../ADR-0002-inprocess-signature-verifier.md       | 136 ++++++++
+ project_memory/authority.py                        | 373 ++++++++++++++++++---
+ tests/test_authority_verifier.py                   | 279 +++++++++++++++
+ 3 files changed, 740 insertions(+), 48 deletions(-)
+
+git diff --name-status 25a919d..89ea4bd
+A	docs/decisions/ADR-0002-inprocess-signature-verifier.md
+M	project_memory/authority.py
+A	tests/test_authority_verifier.py
+
+git log --oneline 25a919d..89ea4bd
+89ea4bd fix(b1): verify signatures in-process instead of looking up openssl
+
+git diff --stat 25a919d..89ea4bd -- project_memory tests docs
+ .../ADR-0002-inprocess-signature-verifier.md       | 136 ++++++++
+ project_memory/authority.py                        | 373 ++++++++++++++++++---
+ tests/test_authority_verifier.py                   | 279 +++++++++++++++
+ 3 files changed, 740 insertions(+), 48 deletions(-)

@@ -1,0 +1,7 @@
+COMMAND: C:/SoftWare/Anconda/python.exe -m pytest --version
+CWD: C:\Documents\02_Research\Code\project-memory-verification-lab\import-workspace\pm-pilot-02
+ENV: inherited
+EXIT: 0
+--- stdout ---
+pytest 9.1.1
+--- stderr ---

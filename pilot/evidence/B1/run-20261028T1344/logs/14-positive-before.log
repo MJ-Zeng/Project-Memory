@@ -1,0 +1,11 @@
+COMMAND: C:/SoftWare/Anconda/python.exe pilot/evidence/B1/run-20261028T1344/scripts/run_positive.py --code C:/Users/ZMJ/AppData/Local/Temp/pm-b1-base-25a919d/tree --scratch pilot/evidence/B1/run-20261028T1344/work/positive-before-scratch --out pilot/evidence/B1/run-20261028T1344/work/positive-before.json --label positive-before
+CWD: C:\Documents\02_Research\Code\project-memory-verification-lab\import-workspace\pm-pilot-02
+ENV: WSL root launcher; CLI as uid 1000; PROJECT_MEMORY_TRUST_ANCHOR=/etc/pm-rc3-review/anchor-a.json; CODE=baseline archive
+EXIT: 0
+--- stdout ---
+{
+  "wsl_exit_code": 0,
+  "stdout": "{\n  \"label\": \"positive-before\",\n  \"goal_evidence_exit\": 0,\n  \"goal_evidence_accepted\": true,\n  \"record_unchanged\": true,\n  \"anchor_matches_fixture_copy\": true,\n  \"hash_mismatches\": []\n}\n",
+  "stderr": "wsl: \u68c0\u6d4b\u5230 localhost \u4ee3\u7406\u914d\u7f6e\uff0c\u4f46\u672a\u955c\u50cf\u5230 WSL\u3002NAT \u6a21\u5f0f\u4e0b\u7684 WSL \u4e0d\u652f\u6301 localhost \u4ee3\u7406\u3002\r\n"
+}
+--- stderr ---

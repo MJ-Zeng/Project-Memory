@@ -1,0 +1,12 @@
+COMMAND: C:/SoftWare/Anconda/python.exe -c '
+import hashlib,pathlib
+p=pathlib.Path('"'"'pilot/kit/b1/openssl_substitution.py'"'"');h=hashlib.sha256(p.read_bytes()).hexdigest()
+print('"'"'probe sha256'"'"',h);print('"'"'match kit README'"'"', h=='"'"'827ad0c29d50cd15ce345485d24e5a75edf069522c89b048236c08ba9e617c73'"'"')
+'
+CWD: C:\Documents\02_Research\Code\project-memory-verification-lab\import-workspace\pm-pilot-02
+ENV: inherited
+EXIT: 0
+--- stdout ---
+probe sha256 827ad0c29d50cd15ce345485d24e5a75edf069522c89b048236c08ba9e617c73
+match kit README True
+--- stderr ---

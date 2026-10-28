@@ -1,0 +1,6 @@
+COMMAND: git merge-base --is-ancestor 25a919d63c7181fd4083e0fc1af33734d74c5515 origin/dev/v1.0
+CWD: C:\Documents\02_Research\Code\project-memory-verification-lab\import-workspace\pm-pilot-02
+ENV: inherited
+EXIT: 0
+--- stdout ---
+--- stderr ---
