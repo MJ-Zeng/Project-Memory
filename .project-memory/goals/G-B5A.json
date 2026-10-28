@@ -1,0 +1,75 @@
+{
+  "adrs": [],
+  "approved_by": null,
+  "background": "cwd/PYTHONPATH 中的同名 project_memory 包可先于受信包被导入；CLI 验签/收据/状态机可能被整体替换。B1 复核 HIGH。",
+  "constraints": [
+    "不删除/跳过既有测试",
+    "不放宽 authority/签名/来源门禁",
+    "不只改文档要求用户加 -I"
+  ],
+  "created_at": "2026-10-28T14:58:27+00:00",
+  "history": [
+    {
+      "at": "2026-10-28T14:58:27+00:00",
+      "by": "PM-01",
+      "from": null,
+      "reason": "created",
+      "to": "proposed"
+    }
+  ],
+  "id": "G-B5A",
+  "issues": [],
+  "kind": "goal",
+  "outcome": "受信 CLI 不被同名包劫持；无法保证时 fail closed；正常调用可用；test-run 不回归。",
+  "owner": "PM-01",
+  "prs": [],
+  "revision": 1,
+  "schema_version": "1.2",
+  "status": "proposed",
+  "success_criteria": [
+    {
+      "evidence": [],
+      "id": "C1",
+      "required": true,
+      "statement": "PYTHONPATH 假冒包不能劫持 CLI"
+    },
+    {
+      "evidence": [],
+      "id": "C2",
+      "required": true,
+      "statement": "cwd 假冒包不能劫持 CLI"
+    },
+    {
+      "evidence": [],
+      "id": "C3",
+      "required": true,
+      "statement": "console script 不被 PYTHONPATH 劫持"
+    },
+    {
+      "evidence": [],
+      "id": "C4",
+      "required": true,
+      "statement": "正常调用仍可用"
+    },
+    {
+      "evidence": [],
+      "id": "C5",
+      "required": true,
+      "statement": "test-run 子进程不被假冒包劫持"
+    },
+    {
+      "evidence": [],
+      "id": "C6",
+      "required": true,
+      "statement": "无法证明受信时 fail closed"
+    },
+    {
+      "evidence": [],
+      "id": "C7",
+      "required": true,
+      "statement": "既有 213 项与新增测试全绿"
+    }
+  ],
+  "title": "B5A CLI 不得被同名 project_memory 模块顶替",
+  "updated_at": "2026-10-28T14:58:27+00:00"
+}
