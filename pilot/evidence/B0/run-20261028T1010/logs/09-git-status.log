@@ -1,0 +1,38 @@
+$ git -C C:\Documents\02_Research\Code\project-memory-verification-lab\import-workspace\pm-pilot-02 status --short --branch
+[cwd=C:\Documents\02_Research\Code\project-memory-verification-lab\import-workspace\pm-pilot-02]
+[exit_code=0]
+--- stdout ---
+## fix/b0-repo-identity
+AM pilot/evidence/B0/run-20261028T1010/README.md
+AM pilot/evidence/B0/run-20261028T1010/commands.jsonl
+AM pilot/evidence/B0/run-20261028T1010/cross_path.json
+AM pilot/evidence/B0/run-20261028T1010/cross_repo.json
+AM pilot/evidence/B0/run-20261028T1010/environment.txt
+AM pilot/evidence/B0/run-20261028T1010/logs/01-baseline-archive.log
+AM pilot/evidence/B0/run-20261028T1010/logs/01-goal-create.log
+AM pilot/evidence/B0/run-20261028T1010/logs/01-same-identity-copy.log
+AM pilot/evidence/B0/run-20261028T1010/logs/02-different-remote.log
+AM pilot/evidence/B0/run-20261028T1010/logs/02-pre-fix-baseline.log
+AM pilot/evidence/B0/run-20261028T1010/logs/02-test-run.log
+AM pilot/evidence/B0/run-20261028T1010/logs/03-cross-path-driver.log
+AM pilot/evidence/B0/run-20261028T1010/logs/03-different-root.log
+AM pilot/evidence/B0/run-20261028T1010/logs/03-run-start-target.log
+AM pilot/evidence/B0/run-20261028T1010/logs/04-cross-repo-driver.log
+AM pilot/evidence/B0/run-20261028T1010/logs/04-legacy-original-path.log
+AM pilot/evidence/B0/run-20261028T1010/logs/04-run-finish-target.log
+AM pilot/evidence/B0/run-20261028T1010/logs/05-legacy-copied-path.log
+AM pilot/evidence/B0/run-20261028T1010/logs/05-run-start-verifier.log
+AM pilot/evidence/B0/run-20261028T1010/logs/06-verify.log
+AM pilot/evidence/B0/run-20261028T1010/pre_fix.json
+AM pilot/evidence/B0/run-20261028T1010/pytest.log
+A  pilot/evidence/B0/run-20261028T1010/scripts/check_receipt.py
+AM pilot/evidence/B0/run-20261028T1010/scripts/cross_path.py
+AM pilot/evidence/B0/run-20261028T1010/scripts/cross_repo.py
+AM pilot/evidence/B0/run-20261028T1010/scripts/finalize.py
+AM pilot/evidence/B0/run-20261028T1010/scripts/repro_baseline.py
+AM pilot/evidence/B0/run-20261028T1010/scripts/run_evidence.py
+?? pilot/evidence/B0/run-20261028T1010/logs/07-intent-to-add.log
+?? pilot/evidence/B0/run-20261028T1010/logs/08-diffstat.log
+
+--- stderr ---
+

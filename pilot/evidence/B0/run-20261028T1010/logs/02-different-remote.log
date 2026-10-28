@@ -1,0 +1,24 @@
+{
+  "valid": false,
+  "problems": [
+    "收据属于其他仓库",
+    "repo_identity.remote 与当前仓库不一致（身份字段被改写）"
+  ],
+  "legacy_path_bound": false,
+  "identity": {
+    "schema": "1.1",
+    "kind": "remote+root",
+    "remote": "github.com/pilot-org/repo-b",
+    "root_commits": [
+      "6542d76ffcc28bab131cc0d5a1d2b89bc446d7d7"
+    ],
+    "portable": true
+  },
+  "receipt": {
+    "receipt_id": "EXE-1fbb152ca61585157281",
+    "schema_version": "1.1",
+    "repo_id": "2f814a8c334b2e9a19eb5281ef81deb408ec1f35b55bbd0aeb13fa2ff9050964"
+  }
+}
+
+--- stderr ---

@@ -1,0 +1,139 @@
+{
+  "schema": "b0-cross-path/v1",
+  "run_id": "run-20261028T1010",
+  "code_root": "C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-02",
+  "paths": {
+    "a": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b0-run-20261028T1010-49nyx1wl\\cross-path\\path-a",
+    "b": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b0-run-20261028T1010-49nyx1wl\\cross-path\\path-b"
+  },
+  "commit_sha": "e2ae128cbbd5fccb2e842ce3fff072153c16d711",
+  "receipt": {
+    "ref": ".project-memory/receipts/EXE-e582a4ec880df56bd7cb.json",
+    "receipt_id": "EXE-e582a4ec880df56bd7cb",
+    "schema_version": "1.1",
+    "repo_id": "dedf77cb987c9a2dfbc0b9e9edf78627d3ab030368b7a0bc429b5c96149bdc86",
+    "content_sha256": "4b9a7ce2484797eae36806279262fa43a385479c1e2552edbbf16eb08f5fb116"
+  },
+  "verification": {
+    "id": "VER-B0-XP",
+    "status": "MANUAL_REVIEW_REQUIRED",
+    "target_head_sha": "e2ae128cbbd5fccb2e842ce3fff072153c16d711"
+  },
+  "identity_a": {
+    "schema": "1.1",
+    "kind": "remote+root",
+    "remote": "github.com/pilot-org/b0-cross-path",
+    "root_commits": [
+      "e2ae128cbbd5fccb2e842ce3fff072153c16d711"
+    ],
+    "id": "dedf77cb987c9a2dfbc0b9e9edf78627d3ab030368b7a0bc429b5c96149bdc86"
+  },
+  "identity_b": {
+    "schema": "1.1",
+    "kind": "remote+root",
+    "remote": "github.com/pilot-org/b0-cross-path",
+    "root_commits": [
+      "e2ae128cbbd5fccb2e842ce3fff072153c16d711"
+    ],
+    "id": "dedf77cb987c9a2dfbc0b9e9edf78627d3ab030368b7a0bc429b5c96149bdc86"
+  },
+  "verify_receipt_in_b": {
+    "valid": true,
+    "problems": [],
+    "identity": {
+      "schema": "1.1",
+      "kind": "remote+root",
+      "remote": "github.com/pilot-org/b0-cross-path",
+      "root_commits": [
+        "e2ae128cbbd5fccb2e842ce3fff072153c16d711"
+      ],
+      "portable": true
+    },
+    "legacy_path_bound": false
+  },
+  "verify_receipt_in_a": {
+    "valid": true,
+    "problems": []
+  },
+  "verification_current_in_a": true,
+  "verification_current_in_b": true,
+  "assertions": {
+    "receipt_valid_in_a": true,
+    "receipt_valid_in_b": true,
+    "verification_current_in_a": true,
+    "verification_current_in_b": true,
+    "same_identity": true,
+    "same_commit": true,
+    "identity_kind": true,
+    "identity_portable": true,
+    "identity_has_no_path": true
+  },
+  "steps": [
+    {
+      "seq": 1,
+      "cwd": "C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-02",
+      "command": "C:\\SoftWare\\Anconda\\python.exe -m project_memory goal create --id G-B0 --title \"B0 cross-path\" --background \"B0 AC-1\" --outcome \"same repo, other path\" --owner PM-02 --criterion 模块通过测试 --repo C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b0-run-20261028T1010-49nyx1wl\\cross-path\\path-a",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "stdout_preview": "{\n  \"created\": true,\n  \"dry_run\": false,\n  \"goal\": {\n    \"adrs\": [],\n    \"approved_by\": null,\n    \"background\": \"B0 AC-1\",\n    \"constraints\": [],\n    \"created_at\": \"2026-10-28T02:00:04+00:00\",\n    \"history\": [\n      {\n        \"at\": \"2026-10-28T02:00:04+00:00\",\n        \"by\": \"PM-02\",\n        \"from\": null,\n        \"reason\": \"created\",\n        \"to\": \"proposed\"\n      }\n    ],\n    \"id\": \"G-B0\",\n    \"issues\": [],\n    \"kind\": \"goal\",\n    \"outcome\": \"same repo, other path\",\n    \"owner\": \"PM-02\",\n    \"prs\": [],\n    \"revision\": 1,\n    \"schema_version\": \"1.2\",\n    \"status\": \"proposed\",\n    \"success_criteria\": [\n      {\n        \"evidence\": [],\n        \"id\": \"C1\",\n        \"required\": true,\n        \"statement\": \"模块通过测试\"\n      }\n    ],\n    \"title\": \"B0 cross-path\",\n    \"updated_at\": \"2026-10-28T02:00:04+00:00\"\n  },\n  \"kind\": \"goal_create_result\",\n  \"path\": \".project-memory/goals/G-B0.json\",\n  \"schema_version\": \"1.2\"\n}\n",
+      "stderr_preview": "",
+      "log": "C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-02\\pilot\\evidence\\B0\\run-20261028T1010\\logs\\01-goal-create.log",
+      "log_sha256": "29449e889f2bcfaa8a90a2af07fcf891b97e7b2f4c08f133f56e14f9010f96b0"
+    },
+    {
+      "seq": 2,
+      "cwd": "C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-02",
+      "command": "C:\\SoftWare\\Anconda\\python.exe -m project_memory test-run --command \"\\\"C:\\SoftWare\\Anconda\\python.exe\\\" -c \\\"print('1 passed')\\\"\" --commit e2ae128cbbd5fccb2e842ce3fff072153c16d711 --agent pm02 --output C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b0-run-20261028T1010-49nyx1wl\\cross-path\\test-run.json --repo C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b0-run-20261028T1010-49nyx1wl\\cross-path\\path-a",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "stdout_preview": "{\n  \"attestation\": null,\n  \"isolation\": {\n    \"mode\": \"none\",\n    \"os_isolation\": false,\n    \"sandbox\": \"plain-child-process\",\n    \"workspace\": \"immutable-snapshot\"\n  },\n  \"log\": \".project-memory/logs/EXE-e582a4ec880df56bd7cb.log\",\n  \"mode\": \"local\",\n  \"path\": \".project-memory/receipts/EXE-e582a4ec880df56bd7cb.json\",\n  \"receipt\": {\n    \"caveat\": \"收据只证明该命令在这个快照内以该退出码执行过；不证明测试语义覆盖了任何业务标准，也不证明来源可信。\",\n    \"command\": \"\\\"C:\\\\SoftWare\\\\Anconda\\\\python.exe\\\" -c \\\"print('1 passed')\\\"\",\n    \"commit_sha\": \"e2ae128cbbd5fccb2e842ce3fff072153c16d711\",\n    \"content_sha256\": \"4b9a7ce2484797eae36806279262fa43a385479c1e2552edbbf16eb08f5fb116\",\n    \"executed_by\": \"pm02\",\n    \"execution_provenance\": {\n      \"attested\": false,\n      \"kind\": \"local_untrusted\",\n      \"launcher\": \"project_memory.execution\",\n      \"reason\": \"普通子进程；宿主文件系统与网络可见，收据只能证明内容未被后续修改\",\n      \"trusted\": false\n    },\n    \"executor\": {\n      \"mode\": \"local\",\n      \"name\": \"project-memory\",\n      \"platform\": \"Windows-11-10.0.26300-SP0\",\n      \"python\": \"3.12.4\"\n    },\n    \"exit_code\": 0,\n    \"finished_at\": \"2026-10-28T02:00:05+00:00\",\n    \"isolation\": {\n      \"mode\": \"none\",\n      \"os_isolation\": false,\n      \"sandbox\": \"plain-child-process\",\n      \"workspace\": \"immutable-snapshot\"\n    },\n    \"kind\": \"execution_receipt\",\n    \"log_bytes\": 281,\n    \"log_path\": \".project-memory/logs/EXE-e582a4ec880df56bd7cb.log\",\n    \"log_sha256\": \"0dfa18d81993f8921912ad14560cea61896e4c977c3dcbaec44be46033bea0e2\",\n    \"receipt_id\": \"EXE-e582a4ec880df56bd7cb\",\n    \"repo_id\": \"dedf77cb987c9a2dfbc0b9e9edf78627d3ab030368b7a0bc429b5c96149bdc86\",\n    \"repo_identity\": {\n      \"kind\": \"remote+root\",\n      \"remote\": \"github.com/pilot-org/b0-cross-path\",\n      \"root_commits\": [\n        \"e2ae128cbbd5fccb2e842ce3fff072153c16d711\"\n      ],\n      \"schema\": \"1.1\"\n    },\n    \"schema_version\": \"1.1\",\n    \"snapshot_id\": \"SNP-e7d5e18ce1ef18b2\",\n    \"snapshot_sha256\": \"9d985257b22ab969b112ed7574225a02e7e2ab8b70aa424c22b51831fecaf6a6\",\n    \"started_at\": \"2026-10-28T02:00:05+00:00\",\n    \"subject\": \"\",\n    \"tree_sha\": \"4228e08e051f2ede1e1d6b78ec3ade3cecdbea93\",\n    \"trust\": \"local_untrusted\"\n  },\n  \"snapshot\": {\n    \"commit_sha\": \"e2ae128cbbd5fccb2e842ce3fff072153c16d711\",\n    \"created_at\": \"2026-10-28T02:00:05+00:00\",\n    \"file_count\": 2,\n    \"files\": {\n      \"README.md\": \"cddf10160fc7b8861ab035f92142d2342a000be1d7dd4dfb65e48d9e8c221a88\",\n      \"tests/check.py\": \"c7d06ea7d4b64ee5b91c4b979d8b88b12f325e320ed6cbc9a7feb02eba25227d\"\n    },\n    \"kind\": \"execution_snapshot\",\n    \"schema_version\": \"1.1\",\n    \"snapshot_id\": \"SNP-e7d5e18ce1ef18b2\",\n    \"snapshot_sha256\": \"9d985257b22ab969b112ed7574225a02e7e2ab8b70aa424c22b51831fecaf6a6\",\n    \"tree_sha\": \"4228e08e051f2ede1e1d6b78ec3ade3cecdbea93\"\n  }\n}\n",
+      "stderr_preview": "警告：本地执行没有操作系统隔离，收据标记为 local_untrusted；需要隔离时请使用 --trusted。\n",
+      "log": "C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-02\\pilot\\evidence\\B0\\run-20261028T1010\\logs\\02-test-run.log",
+      "log_sha256": "ce7e6df02b85d5fde671a8cbc48925df194146e5900103a1164cec36f7027b5a"
+    },
+    {
+      "seq": 3,
+      "cwd": "C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-02",
+      "command": "C:\\SoftWare\\Anconda\\python.exe -m project_memory run start --goal G-B0 --task 3 --run-id run-target --agent dev-agent --model-provider qodercn --model-id executor-model --base-sha e2ae128cbbd5fccb2e842ce3fff072153c16d711 --role executor --repo C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b0-run-20261028T1010-49nyx1wl\\cross-path\\path-a",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "stdout_preview": "{\n  \"created\": true,\n  \"dry_run\": false,\n  \"kind\": \"run_start_result\",\n  \"path\": \".project-memory/runs/3/run-target.json\",\n  \"run\": {\n    \"agent\": \"dev-agent\",\n    \"artifacts\": [],\n    \"authorization\": \"\",\n    \"blockers\": [],\n    \"created_at\": \"2026-10-28T02:00:05+00:00\",\n    \"ended_at\": null,\n    \"evidence\": [],\n    \"git\": {\n      \"base_sha\": \"e2ae128cbbd5fccb2e842ce3fff072153c16d711\",\n      \"branch\": \"master\",\n      \"head_sha\": \"e2ae128cbbd5fccb2e842ce3fff072153c16d711\"\n    },\n    \"goal_id\": \"G-B0\",\n    \"handoff\": null,\n    \"kind\": \"agent_run\",\n    \"model\": {\n      \"id\": \"executor-model\",\n      \"provider\": \"qodercn\"\n    },\n    \"revision\": 1,\n    \"role\": \"executor\",\n    \"run_id\": \"run-target\",\n    \"schema_version\": \"1.2\",\n    \"session_id\": \"\",\n    \"started_at\": \"2026-10-28T02:00:05+00:00\",\n    \"status\": \"running\",\n    \"task\": \"3\",\n    \"tool\": \"\",\n    \"updated_at\": \"2026-10-28T02:00:05+00:00\"\n  },\n  \"schema_version\": \"1.2\",\n  \"warnings\": []\n}\n",
+      "stderr_preview": "",
+      "log": "C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-02\\pilot\\evidence\\B0\\run-20261028T1010\\logs\\03-run-start-target.log",
+      "log_sha256": "9cb01e6a10c3f1c33241215e4d99b37184ca9fb9738df724648f60c5f092fda3"
+    },
+    {
+      "seq": 4,
+      "cwd": "C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-02",
+      "command": "C:\\SoftWare\\Anconda\\python.exe -m project_memory run finish --task 3 --run-id run-target --completed implemented --remaining verify --head-sha e2ae128cbbd5fccb2e842ce3fff072153c16d711 --test-command \"\\\"C:\\SoftWare\\Anconda\\python.exe\\\" -c \\\"print('1 passed')\\\"\" --test-exit 0 --test-log .project-memory/logs/EXE-e582a4ec880df56bd7cb.log --repo C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b0-run-20261028T1010-49nyx1wl\\cross-path\\path-a",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "stdout_preview": "{\n  \"handoff\": {\n    \"agent\": \"dev-agent\",\n    \"base_sha\": \"e2ae128cbbd5fccb2e842ce3fff072153c16d711\",\n    \"blockers\": [],\n    \"changed_files\": [],\n    \"commits\": [],\n    \"completed\": [\n      \"implemented\"\n    ],\n    \"docs_changed\": [],\n    \"evidence\": [],\n    \"from_run\": \"run-target\",\n    \"generated_at\": \"2026-10-28T02:00:06+00:00\",\n    \"goal_id\": \"G-B0\",\n    \"head_sha\": \"e2ae128cbbd5fccb2e842ce3fff072153c16d711\",\n    \"kind\": \"agent_handoff\",\n    \"model\": {\n      \"id\": \"executor-model\",\n      \"provider\": \"qodercn\"\n    },\n    \"next_actions\": [],\n    \"open_questions\": [],\n    \"remaining\": [\n      \"verify\"\n    ],\n    \"run_id\": \"run-target\",\n    \"schema_version\": \"1.2\",\n    \"session_id\": \"\",\n    \"status\": \"reported_unverified\",\n    \"stored_at\": \".project-memory/handoffs/3/run-target.json\",\n    \"task\": \"3\",\n    \"tests\": [\n      {\n        \"command\": \"\\\"C:\\\\SoftWare\\\\Anconda\\\\python.exe\\\" -c \\\"print('1 passed')\\\"\",\n        \"exit_code\": 0,\n        \"log\": \".project-memory/logs/EXE-e582a4ec880df56bd7cb.log\"\n      }\n    ],\n    \"vcs\": \"git\"\n  },\n  \"handoff_path\": \".project-memory/handoffs/3/run-target.json\",\n  \"kind\": \"run_finish_result\",\n  \"run\": {\n    \"agent\": \"dev-agent\",\n    \"artifacts\": [],\n    \"authorization\": \"\",\n    \"blockers\": [],\n    \"created_at\": \"2026-10-28T02:00:05+00:00\",\n    \"ended_at\": \"2026-10-28T02:00:06+00:00\",\n    \"evidence\": [],\n    \"git\": {\n      \"base_sha\": \"e2ae128cbbd5fccb2e842ce3fff072153c16d711\",\n      \"branch\": \"master\",\n      \"head_sha\": \"e2ae128cbbd5fccb2e842ce3fff072153c16d711\"\n    },\n    \"goal_id\": \"G-B0\",\n    \"handoff\": \".project-memory/handoffs/3/run-target.json\",\n    \"kind\": \"agent_run\",\n    \"model\": {\n      \"id\": \"executor-model\",\n      \"provider\": \"qodercn\"\n    },\n    \"revision\": 2,\n    \"role\": \"executor\",\n    \"run_id\": \"run-target\",\n    \"schema_version\": \"1.2\",\n    \"session_id\": \"\",\n    \"started_at\": \"2026-10-28T02:00:05+00:00\",\n    \"status\": \"submitted\",\n    \"task\": \"3\",\n    \"tool\": \"\",\n    \"updated_at\": \"2026-10-28T02:00:06+00:00\"\n  },\n  \"schema_version\": \"1.2\"\n}\n",
+      "stderr_preview": "",
+      "log": "C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-02\\pilot\\evidence\\B0\\run-20261028T1010\\logs\\04-run-finish-target.log",
+      "log_sha256": "101b6f45194a013e2d0f2eaf777e28ece07b88958ace2505ea117b81eb69f2aa"
+    },
+    {
+      "seq": 5,
+      "cwd": "C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-02",
+      "command": "C:\\SoftWare\\Anconda\\python.exe -m project_memory run start --goal G-B0 --task 3 --run-id run-verifier --agent verifier-agent --model-provider qodercn --model-id verifier-model --base-sha e2ae128cbbd5fccb2e842ce3fff072153c16d711 --role verifier --repo C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b0-run-20261028T1010-49nyx1wl\\cross-path\\path-a",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "stdout_preview": "{\n  \"created\": true,\n  \"dry_run\": false,\n  \"kind\": \"run_start_result\",\n  \"path\": \".project-memory/runs/3/run-verifier.json\",\n  \"run\": {\n    \"agent\": \"verifier-agent\",\n    \"artifacts\": [],\n    \"authorization\": \"\",\n    \"blockers\": [],\n    \"created_at\": \"2026-10-28T02:00:06+00:00\",\n    \"ended_at\": null,\n    \"evidence\": [],\n    \"git\": {\n      \"base_sha\": \"e2ae128cbbd5fccb2e842ce3fff072153c16d711\",\n      \"branch\": \"master\",\n      \"head_sha\": \"e2ae128cbbd5fccb2e842ce3fff072153c16d711\"\n    },\n    \"goal_id\": \"G-B0\",\n    \"handoff\": null,\n    \"kind\": \"agent_run\",\n    \"model\": {\n      \"id\": \"verifier-model\",\n      \"provider\": \"qodercn\"\n    },\n    \"revision\": 1,\n    \"role\": \"verifier\",\n    \"run_id\": \"run-verifier\",\n    \"schema_version\": \"1.2\",\n    \"session_id\": \"\",\n    \"started_at\": \"2026-10-28T02:00:06+00:00\",\n    \"status\": \"running\",\n    \"task\": \"3\",\n    \"tool\": \"\",\n    \"updated_at\": \"2026-10-28T02:00:06+00:00\"\n  },\n  \"schema_version\": \"1.2\",\n  \"warnings\": []\n}\n",
+      "stderr_preview": "",
+      "log": "C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-02\\pilot\\evidence\\B0\\run-20261028T1010\\logs\\05-run-start-verifier.log",
+      "log_sha256": "8b886d478c397164658697fe2a6ebafaaf5c36b207cb9bf294a6efc15c42c19e"
+    },
+    {
+      "seq": 6,
+      "cwd": "C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-02",
+      "command": "C:\\SoftWare\\Anconda\\python.exe -m project_memory verify --target-run run-target --verifier-run run-verifier --standard acceptance --verdict pass --evidence-level locally_observed --test-receipt .project-memory/receipts/EXE-e582a4ec880df56bd7cb.json --criterion-evidence C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b0-run-20261028T1010-49nyx1wl\\cross-path\\mapping.json --verification-id VER-B0-XP --repo C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b0-run-20261028T1010-49nyx1wl\\cross-path\\path-a",
+      "exit_code": 2,
+      "expected_exit": 2,
+      "stdout_preview": "\",\n        \"description_match\": true,\n        \"evidence_command\": \"\\\"C:\\\\SoftWare\\\\Anconda\\\\python.exe\\\" -c \\\"print('1 passed')\\\"\",\n        \"evidence_exit_code\": 0,\n        \"evidence_id\": \"EV-XP-1\",\n        \"evidence_log\": \".project-memory/logs/EXE-e582a4ec880df56bd7cb.log\",\n        \"evidence_matched\": false,\n        \"evidence_receipt\": \".project-memory/receipts/EXE-e582a4ec880df56bd7cb.json\",\n        \"evidence_source\": \"test\",\n        \"evidence_state\": \"MANUAL_REVIEW_REQUIRED\",\n        \"execution_status\": \"passed\",\n        \"execution_trust\": \"local_untrusted\",\n        \"execution_verified\": false,\n        \"goal_id\": \"G-B0\",\n        \"human_review_claimed\": false,\n        \"independent_verifier\": \"verifier-agent\",\n        \"observed_level\": \"locally_observed\",\n        \"problems\": [\n          \"语义覆盖未由可信人工来源确认（不是 VERIFIED）\"\n        ],\n        \"receipt_id\": \"EXE-e582a4ec880df56bd7cb\",\n        \"receipt_integrity_valid\": true,\n        \"receipt_provenance\": {\n          \"kind\": \"local_untrusted\",\n          \"reason\": \"本地启动器；没有操作系统隔离，也没有外部签名来源\",\n          \"trusted\": false\n        },\n        \"receipt_sha256\": \"4b9a7ce2484797eae36806279262fa43a385479c1e2552edbbf16eb08f5fb116\",\n        \"semantic_coverage_verified\": false,\n        \"snapshot_id\": \"SNP-e7d5e18ce1ef18b2\",\n        \"snapshot_sha256\": \"9d985257b22ab969b112ed7574225a02e7e2ab8b70aa424c22b51831fecaf6a6\",\n        \"target_commit_sha\": \"e2ae128cbbd5fccb2e842ce3fff072153c16d711\",\n        \"target_repository\": \"C:\\\\Users\\\\ZMJ\\\\AppData\\\\Local\\\\Temp\\\\b0-run-20261028T1010-49nyx1wl\\\\cross-path\\\\path-a\",\n        \"task_id\": \"3\",\n        \"verification_result\": \"pass\"\n      }\n    ],\n    \"current_head_sha\": \"e2ae128cbbd5fccb2e842ce3fff072153c16d711\",\n    \"evidence_level\": \"locally_observed\",\n    \"findings\": [],\n    \"goal_criteria_sha256\": \"b17a716f397aba14c865cc834f38fb5f0c1976531199393d2b186271781e4127\",\n    \"goal_id\": \"G-B0\",\n    \"independence\": {\n      \"basis\": [\n        \"agent\",\n        \"model\"\n      ],\n      \"distinct\": true,\n      \"note\": \"独立会话或不同模型只证明记录不同，不证明验证结论正确。\"\n    },\n    \"kind\": \"verification_record\",\n    \"mapping_status\": \"review_required\",\n    \"missing_criteria\": [],\n    \"revision\": 1,\n    \"schema_version\": \"1.2\",\n    \"stale\": false,\n    \"standard\": \"acceptance\",\n    \"status\": \"MANUAL_REVIEW_REQUIRED\",\n    \"target_head_sha\": \"e2ae128cbbd5fccb2e842ce3fff072153c16d711\",\n    \"target_run\": \"run-target\",\n    \"target_run_sha256\": \"4ce0eb1b879d597bea9ad16fc25b94419f2ae6dd2cb4d9aea86015e8a92e5209\",\n    \"task\": \"3\",\n    \"trust_level\": \"locally_observed\",\n    \"verdict\": \"pass\",\n    \"verification_id\": \"VER-B0-XP\",\n    \"verified\": false,\n    \"verifier\": {\n      \"agent\": \"verifier-agent\",\n      \"model\": {\n        \"id\": \"verifier-model\",\n        \"provider\": \"qodercn\"\n      },\n      \"session_id\": \"\",\n      \"tool\": \"\"\n    },\n    \"verifier_run\": \"run-verifier\",\n    \"verifier_run_sha256\": \"f2545d0bcd4a7fb64b40128073f3698dc83032deed551f78f85fa10cd6352fd4\"\n  },\n  \"verified\": false,\n  \"would_update_run_status\": \"submitted\"\n}\n",
+      "stderr_preview": "",
+      "log": "C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-02\\pilot\\evidence\\B0\\run-20261028T1010\\logs\\06-verify.log",
+      "log_sha256": "c9155d952bd70a798cc9890b75ad4b80d8c89e5caa8be1390d5647a603c88793"
+    }
+  ]
+}

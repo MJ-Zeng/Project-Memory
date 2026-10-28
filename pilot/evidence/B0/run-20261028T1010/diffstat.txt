@@ -1,0 +1,66 @@
+$ git diff --stat 73be8e3ac4efc04c1811c122eb665344fe8ce4c3
+ .../ADR-0001-portable-repository-identity.md       | 120 +++++++++++
+ pilot/evidence/B0/run-20261028T1010/README.md      |  67 ++++++
+ pilot/evidence/B0/run-20261028T1010/commands.jsonl |   5 +
+ .../evidence/B0/run-20261028T1010/cross_path.json  | 139 ++++++++++++
+ .../evidence/B0/run-20261028T1010/cross_repo.json  | 199 +++++++++++++++++
+ .../evidence/B0/run-20261028T1010/environment.txt  |  12 ++
+ .../run-20261028T1010/logs/01-baseline-archive.log |   7 +
+ .../B0/run-20261028T1010/logs/01-goal-create.log   |  44 ++++
+ .../logs/01-same-identity-copy.log                 |  21 ++
+ .../run-20261028T1010/logs/02-different-remote.log |  24 +++
+ .../run-20261028T1010/logs/02-pre-fix-baseline.log |   8 +
+ .../B0/run-20261028T1010/logs/02-test-run.log      |  78 +++++++
+ .../logs/03-cross-path-driver.log                  |   8 +
+ .../run-20261028T1010/logs/03-different-root.log   |  27 +++
+ .../run-20261028T1010/logs/03-run-start-target.log |  41 ++++
+ .../logs/04-cross-repo-driver.log                  |   8 +
+ .../logs/04-legacy-original-path.log               |  18 ++
+ .../logs/04-run-finish-target.log                  |  78 +++++++
+ .../logs/05-legacy-copied-path.log                 |  20 ++
+ .../logs/05-run-start-verifier.log                 |  41 ++++
+ .../B0/run-20261028T1010/logs/06-verify.log        | 172 +++++++++++++++
+ pilot/evidence/B0/run-20261028T1010/pre_fix.json   |  17 ++
+ pilot/evidence/B0/run-20261028T1010/pytest.log     |  11 +
+ .../B0/run-20261028T1010/scripts/check_receipt.py  |  44 ++++
+ .../B0/run-20261028T1010/scripts/cross_path.py     | 220 +++++++++++++++++++
+ .../B0/run-20261028T1010/scripts/cross_repo.py     | 191 +++++++++++++++++
+ .../B0/run-20261028T1010/scripts/finalize.py       |  95 +++++++++
+ .../B0/run-20261028T1010/scripts/repro_baseline.py |  82 +++++++
+ .../B0/run-20261028T1010/scripts/run_evidence.py   | 170 +++++++++++++++
+ pilot/rounds/B0/context-recovery-pm02.md           |  50 +++++
+ project_memory/execution.py                        | 133 +++++++++++-
+ tests/test_repo_identity.py                        | 237 +++++++++++++++++++++
+ 32 files changed, 2379 insertions(+), 8 deletions(-)
+$ git status --short --branch
+## fix/b0-repo-identity
+AM pilot/evidence/B0/run-20261028T1010/README.md
+AM pilot/evidence/B0/run-20261028T1010/commands.jsonl
+AM pilot/evidence/B0/run-20261028T1010/cross_path.json
+AM pilot/evidence/B0/run-20261028T1010/cross_repo.json
+AM pilot/evidence/B0/run-20261028T1010/environment.txt
+AM pilot/evidence/B0/run-20261028T1010/logs/01-baseline-archive.log
+AM pilot/evidence/B0/run-20261028T1010/logs/01-goal-create.log
+AM pilot/evidence/B0/run-20261028T1010/logs/01-same-identity-copy.log
+AM pilot/evidence/B0/run-20261028T1010/logs/02-different-remote.log
+AM pilot/evidence/B0/run-20261028T1010/logs/02-pre-fix-baseline.log
+AM pilot/evidence/B0/run-20261028T1010/logs/02-test-run.log
+AM pilot/evidence/B0/run-20261028T1010/logs/03-cross-path-driver.log
+AM pilot/evidence/B0/run-20261028T1010/logs/03-different-root.log
+AM pilot/evidence/B0/run-20261028T1010/logs/03-run-start-target.log
+AM pilot/evidence/B0/run-20261028T1010/logs/04-cross-repo-driver.log
+AM pilot/evidence/B0/run-20261028T1010/logs/04-legacy-original-path.log
+AM pilot/evidence/B0/run-20261028T1010/logs/04-run-finish-target.log
+AM pilot/evidence/B0/run-20261028T1010/logs/05-legacy-copied-path.log
+AM pilot/evidence/B0/run-20261028T1010/logs/05-run-start-verifier.log
+AM pilot/evidence/B0/run-20261028T1010/logs/06-verify.log
+AM pilot/evidence/B0/run-20261028T1010/pre_fix.json
+AM pilot/evidence/B0/run-20261028T1010/pytest.log
+A  pilot/evidence/B0/run-20261028T1010/scripts/check_receipt.py
+AM pilot/evidence/B0/run-20261028T1010/scripts/cross_path.py
+AM pilot/evidence/B0/run-20261028T1010/scripts/cross_repo.py
+AM pilot/evidence/B0/run-20261028T1010/scripts/finalize.py
+AM pilot/evidence/B0/run-20261028T1010/scripts/repro_baseline.py
+AM pilot/evidence/B0/run-20261028T1010/scripts/run_evidence.py
+?? pilot/evidence/B0/run-20261028T1010/logs/07-intent-to-add.log
+?? pilot/evidence/B0/run-20261028T1010/logs/08-diffstat.log

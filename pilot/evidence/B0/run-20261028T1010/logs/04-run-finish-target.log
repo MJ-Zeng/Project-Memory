@@ -1,0 +1,78 @@
+{
+  "handoff": {
+    "agent": "dev-agent",
+    "base_sha": "e2ae128cbbd5fccb2e842ce3fff072153c16d711",
+    "blockers": [],
+    "changed_files": [],
+    "commits": [],
+    "completed": [
+      "implemented"
+    ],
+    "docs_changed": [],
+    "evidence": [],
+    "from_run": "run-target",
+    "generated_at": "2026-10-28T02:00:06+00:00",
+    "goal_id": "G-B0",
+    "head_sha": "e2ae128cbbd5fccb2e842ce3fff072153c16d711",
+    "kind": "agent_handoff",
+    "model": {
+      "id": "executor-model",
+      "provider": "qodercn"
+    },
+    "next_actions": [],
+    "open_questions": [],
+    "remaining": [
+      "verify"
+    ],
+    "run_id": "run-target",
+    "schema_version": "1.2",
+    "session_id": "",
+    "status": "reported_unverified",
+    "stored_at": ".project-memory/handoffs/3/run-target.json",
+    "task": "3",
+    "tests": [
+      {
+        "command": "\"C:\\SoftWare\\Anconda\\python.exe\" -c \"print('1 passed')\"",
+        "exit_code": 0,
+        "log": ".project-memory/logs/EXE-e582a4ec880df56bd7cb.log"
+      }
+    ],
+    "vcs": "git"
+  },
+  "handoff_path": ".project-memory/handoffs/3/run-target.json",
+  "kind": "run_finish_result",
+  "run": {
+    "agent": "dev-agent",
+    "artifacts": [],
+    "authorization": "",
+    "blockers": [],
+    "created_at": "2026-10-28T02:00:05+00:00",
+    "ended_at": "2026-10-28T02:00:06+00:00",
+    "evidence": [],
+    "git": {
+      "base_sha": "e2ae128cbbd5fccb2e842ce3fff072153c16d711",
+      "branch": "master",
+      "head_sha": "e2ae128cbbd5fccb2e842ce3fff072153c16d711"
+    },
+    "goal_id": "G-B0",
+    "handoff": ".project-memory/handoffs/3/run-target.json",
+    "kind": "agent_run",
+    "model": {
+      "id": "executor-model",
+      "provider": "qodercn"
+    },
+    "revision": 2,
+    "role": "executor",
+    "run_id": "run-target",
+    "schema_version": "1.2",
+    "session_id": "",
+    "started_at": "2026-10-28T02:00:05+00:00",
+    "status": "submitted",
+    "task": "3",
+    "tool": "",
+    "updated_at": "2026-10-28T02:00:06+00:00"
+  },
+  "schema_version": "1.2"
+}
+
+--- stderr ---

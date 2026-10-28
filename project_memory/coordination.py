@@ -14,7 +14,7 @@ from .knowledge import (audit, iter_docs, load_config, load_doc, log_problem,
 from .workflows import handoff as write_handoff
 from .workflows import task_id_of
 from .authority import canonical_digest, untrusted_envelope, verification_authority
-from .execution import verify_receipt
+from .execution import repo_identity, verify_receipt
 
 GOAL_STATUSES = {'proposed', 'approved', 'active', 'evaluating', 'achieved', 'cancelled', 'blocked'}
 GOAL_TRANSITIONS = {
@@ -357,16 +357,56 @@ def _norm_text(value) -> str:
     return re.sub(r'\s+', ' ', str(value or '')).strip().casefold()
 
 
-def _repo_aliases(repo: Path) -> set[str]:
-    resolved = repo.resolve()
-    values = {repo.name, resolved.name, resolved.as_posix(), str(resolved)}
-    return {str(value).replace('\\', '/').rstrip('/').casefold()
-            for value in values if value}
+def _repo_binding(repo: Path, declared: str) -> str | None:
+    """Return how ``declared`` names the repository at ``repo``, or ``None``.
+
+    Two forms are accepted, both tied to the stable identity from
+    :func:`execution.repo_identity` (canonical remote + root commits):
+
+    * ``identity`` -- the identity id or its canonical ``host/path`` remote;
+    * ``path`` -- an absolute path to this checkout, or to another checkout
+      whose identity is identical (a copy of the same repository).
+
+    A bare directory name is deliberately not accepted: an unrelated repository
+    with the same directory name would pass.  An absolute path that does not
+    exist, or that resolves to a different identity, is not evidence of
+    "this repository".
+    """
+    value = str(declared or '').strip()
+    if not value:
+        return None
+    current = repo_identity(repo)
+    if value.casefold() in {current['id'], (current.get('remote') or '').casefold()}:
+        return 'identity'
+    candidate = Path(value)
+    if not candidate.is_absolute():
+        return None
+    try:
+        candidate = candidate.resolve(strict=True)
+    except (OSError, RuntimeError):
+        return None
+    if not candidate.is_dir():
+        return None
+    if candidate == repo.resolve():
+        return 'path'
+    try:
+        candidate.relative_to(repo.resolve())
+    except ValueError:
+        pass
+    else:
+        return None  # a subdirectory cannot stand in for the repository
+    code, toplevel = _git(candidate, 'rev-parse', '--show-toplevel')
+    if code != 0 or Path(toplevel).resolve() != candidate:
+        return None  # only another checkout root, not a random subdirectory
+    try:
+        other = repo_identity(candidate)
+    except PMError:
+        return None
+    return 'identity' if other['id'] == current['id'] else None
 
 
 def _repo_matches(repo: Path, declared: str) -> bool:
-    value = str(declared or '').replace('\\', '/').rstrip('/').casefold()
-    return bool(value) and value in _repo_aliases(repo)
+    return _repo_binding(repo, declared) is not None
 
 
 def _criterion_evidence_entries(value, repo: Path, goal: dict, target: dict,

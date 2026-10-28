@@ -1,0 +1,66 @@
+HEAD: baeb2b9cafa4caa45e2faf679306c0bc59addfbb
+reviewed candidate: 14cc8fcba367dc36db0706041a21f22e10e3264e
+original B0 baseline: 73be8e3ac4efc04c1811c122eb665344fe8ce4c3
+
+## git diff --stat 14cc8fcba367dc36db0706041a21f22e10e3264e..HEAD
+ .project-memory/handoffs/B0/run-20261028T1010.json | 143 +++++++++++++++
+ .../ADR-0001-portable-repository-identity.md       |  16 +-
+ ...ry-pm02.md => handoff-context-recovery-pm02.md} |   0
+ pilot/rounds/B0/handoff-run-20261028T1010.md       | 138 ++++++++++++++
+ project_memory/coordination.py                     |  56 +++++-
+ project_memory/execution.py                        |  21 ++-
+ tests/test_repo_identity.py                        | 199 ++++++++++++++++++++-
+ 7 files changed, 558 insertions(+), 15 deletions(-)
+
+## git diff --name-status 14cc8fcba367dc36db0706041a21f22e10e3264e..HEAD
+A	.project-memory/handoffs/B0/run-20261028T1010.json
+M	docs/decisions/ADR-0001-portable-repository-identity.md
+R100	pilot/rounds/B0/context-recovery-pm02.md	pilot/rounds/B0/handoff-context-recovery-pm02.md
+A	pilot/rounds/B0/handoff-run-20261028T1010.md
+M	project_memory/coordination.py
+M	project_memory/execution.py
+M	tests/test_repo_identity.py
+
+## git diff --stat 73be8e3ac4efc04c1811c122eb665344fe8ce4c3..HEAD (cumulative B0)
+ .project-memory/handoffs/B0/run-20261028T1010.json | 143 +++++++
+ .../ADR-0001-portable-repository-identity.md       | 134 +++++++
+ pilot/evidence/B0/run-20261028T1010/README.md      |  67 ++++
+ pilot/evidence/B0/run-20261028T1010/commands.jsonl |   8 +
+ .../evidence/B0/run-20261028T1010/cross_path.json  | 139 +++++++
+ .../evidence/B0/run-20261028T1010/cross_repo.json  | 199 ++++++++++
+ pilot/evidence/B0/run-20261028T1010/diffstat.txt   |  66 ++++
+ .../evidence/B0/run-20261028T1010/environment.txt  |  12 +
+ .../run-20261028T1010/logs/01-baseline-archive.log |   7 +
+ .../B0/run-20261028T1010/logs/01-goal-create.log   |  44 +++
+ .../logs/01-same-identity-copy.log                 |  21 +
+ .../run-20261028T1010/logs/02-different-remote.log |  24 ++
+ .../run-20261028T1010/logs/02-pre-fix-baseline.log |   8 +
+ .../B0/run-20261028T1010/logs/02-test-run.log      |  78 ++++
+ .../logs/03-cross-path-driver.log                  |   8 +
+ .../run-20261028T1010/logs/03-different-root.log   |  27 ++
+ .../run-20261028T1010/logs/03-run-start-target.log |  41 ++
+ .../logs/04-cross-repo-driver.log                  |   8 +
+ .../logs/04-legacy-original-path.log               |  18 +
+ .../logs/04-run-finish-target.log                  |  78 ++++
+ .../logs/05-legacy-copied-path.log                 |  20 +
+ .../logs/05-run-start-verifier.log                 |  41 ++
+ .../B0/run-20261028T1010/logs/06-verify.log        | 172 +++++++++
+ .../B0/run-20261028T1010/logs/07-intent-to-add.log |   7 +
+ .../B0/run-20261028T1010/logs/08-diffstat.log      |  40 ++
+ .../B0/run-20261028T1010/logs/09-git-status.log    |  38 ++
+ pilot/evidence/B0/run-20261028T1010/pre_fix.json   |  17 +
+ pilot/evidence/B0/run-20261028T1010/pytest.log     |  11 +
+ .../B0/run-20261028T1010/scripts/check_receipt.py  |  44 +++
+ .../B0/run-20261028T1010/scripts/cross_path.py     | 220 +++++++++++
+ .../B0/run-20261028T1010/scripts/cross_repo.py     | 191 +++++++++
+ .../B0/run-20261028T1010/scripts/finalize.py       |  95 +++++
+ .../B0/run-20261028T1010/scripts/repro_baseline.py |  82 ++++
+ .../B0/run-20261028T1010/scripts/run_evidence.py   | 170 ++++++++
+ pilot/evidence/B0/run-20261028T1010/sha256sums.txt |  32 ++
+ pilot/rounds/B0/handoff-context-recovery-pm02.md   |  50 +++
+ pilot/rounds/B0/handoff-run-20261028T1010.md       | 138 +++++++
+ project_memory/coordination.py                     |  56 ++-
+ project_memory/execution.py                        | 148 ++++++-
+ tests/test_repo_identity.py                        | 430 +++++++++++++++++++++
+ 40 files changed, 3116 insertions(+), 16 deletions(-)
+

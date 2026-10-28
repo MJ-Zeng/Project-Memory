@@ -1,0 +1,8 @@
+$ C:\SoftWare\Anconda\python.exe C:\Documents\02_Research\Code\project-memory-verification-lab\import-workspace\pm-pilot-02\pilot\evidence\B0\run-20261028T1010\scripts\repro_baseline.py --out C:\Documents\02_Research\Code\project-memory-verification-lab\import-workspace\pm-pilot-02\pilot\evidence\B0\run-20261028T1010\pre_fix.json --base-sha 73be8e3ac4efc04c1811c122eb665344fe8ce4c3
+[cwd=C:\Users\ZMJ\AppData\Local\Temp\b0-run-20261028T1010-49nyx1wl\baseline]
+[exit_code=0]
+--- stdout ---
+{"reproduced": true, "valid_in_a": true, "valid_in_b": false, "receipt_repo_id": "12420eb01fb926b9827bedc16f2d446c9a48f96b2c4058e661c40f2a6be45277", "repo_id_path_b": "ef148cae31e72d4dbe6ba8434129db2d0d539a6712f930ad358cc83e458271e6"}
+
+--- stderr ---
+

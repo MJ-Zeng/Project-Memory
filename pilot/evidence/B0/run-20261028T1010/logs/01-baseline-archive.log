@@ -1,0 +1,7 @@
+$ git -C C:\Documents\02_Research\Code\project-memory-verification-lab\import-workspace\pm-pilot-02 archive 73be8e3ac4efc04c1811c122eb665344fe8ce4c3 --format=tar --output=C:\Users\ZMJ\AppData\Local\Temp\b0-run-20261028T1010-49nyx1wl\base.tar
+[cwd=C:\Documents\02_Research\Code\project-memory-verification-lab\import-workspace\pm-pilot-02]
+[exit_code=0]
+--- stdout ---
+
+--- stderr ---
+

@@ -1,0 +1,199 @@
+{
+  "schema": "b0-cross-repo/v1",
+  "run_id": "run-20261028T1010",
+  "code_root": "C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-02",
+  "receipt": {
+    "ref": ".project-memory/receipts/EXE-1fbb152ca61585157281.json",
+    "receipt_id": "EXE-1fbb152ca61585157281",
+    "repo_id": "2f814a8c334b2e9a19eb5281ef81deb408ec1f35b55bbd0aeb13fa2ff9050964"
+  },
+  "commit_a": "6542d76ffcc28bab131cc0d5a1d2b89bc446d7d7",
+  "identities": {
+    "repo_a": {
+      "schema": "1.1",
+      "kind": "remote+root",
+      "remote": "github.com/pilot-org/repo-a",
+      "root_commits": [
+        "6542d76ffcc28bab131cc0d5a1d2b89bc446d7d7"
+      ],
+      "id": "2f814a8c334b2e9a19eb5281ef81deb408ec1f35b55bbd0aeb13fa2ff9050964"
+    },
+    "other_remote": {
+      "schema": "1.1",
+      "kind": "remote+root",
+      "remote": "github.com/pilot-org/repo-b",
+      "root_commits": [
+        "6542d76ffcc28bab131cc0d5a1d2b89bc446d7d7"
+      ],
+      "id": "e89737537ef279fc021d1196ae04cca572354ecc5047dc79ab9f7f44c7d54ac4"
+    },
+    "other_root": {
+      "schema": "1.1",
+      "kind": "remote+root",
+      "remote": "github.com/pilot-org/repo-a",
+      "root_commits": [
+        "3bfedf70d57eee045b57b8e817fb744d1f5bb0fb"
+      ],
+      "id": "f9aeb6a0cb554867d73c1555828b2110dfee052bd71bf2c2d5a188f5561a74f1"
+    }
+  },
+  "cases": [
+    {
+      "case": "same-identity-copy",
+      "repo": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b0-run-20261028T1010-49nyx1wl\\cross-repo\\same-identity-copy",
+      "command": "C:\\SoftWare\\Anconda\\python.exe C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-02\\pilot\\evidence\\B0\\run-20261028T1010\\scripts\\check_receipt.py --code-root C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-02 --repo C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b0-run-20261028T1010-49nyx1wl\\cross-repo\\same-identity-copy --receipt .project-memory/receipts/EXE-1fbb152ca61585157281.json",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "result": {
+        "valid": true,
+        "problems": [],
+        "legacy_path_bound": false,
+        "identity": {
+          "schema": "1.1",
+          "kind": "remote+root",
+          "remote": "github.com/pilot-org/repo-a",
+          "root_commits": [
+            "6542d76ffcc28bab131cc0d5a1d2b89bc446d7d7"
+          ],
+          "portable": true
+        },
+        "receipt": {
+          "receipt_id": "EXE-1fbb152ca61585157281",
+          "schema_version": "1.1",
+          "repo_id": "2f814a8c334b2e9a19eb5281ef81deb408ec1f35b55bbd0aeb13fa2ff9050964"
+        }
+      },
+      "log": "C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-02\\pilot\\evidence\\B0\\run-20261028T1010\\logs\\01-same-identity-copy.log",
+      "log_sha256": "de8093ab50fe0bea5ff3658dca5773e34247ecaa32ebb366d8b38d644e1cf300"
+    },
+    {
+      "case": "different-remote",
+      "repo": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b0-run-20261028T1010-49nyx1wl\\cross-repo\\other-remote-copy",
+      "command": "C:\\SoftWare\\Anconda\\python.exe C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-02\\pilot\\evidence\\B0\\run-20261028T1010\\scripts\\check_receipt.py --code-root C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-02 --repo C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b0-run-20261028T1010-49nyx1wl\\cross-repo\\other-remote-copy --receipt .project-memory/receipts/EXE-1fbb152ca61585157281.json",
+      "exit_code": 3,
+      "expected_exit": 3,
+      "result": {
+        "valid": false,
+        "problems": [
+          "收据属于其他仓库",
+          "repo_identity.remote 与当前仓库不一致（身份字段被改写）"
+        ],
+        "legacy_path_bound": false,
+        "identity": {
+          "schema": "1.1",
+          "kind": "remote+root",
+          "remote": "github.com/pilot-org/repo-b",
+          "root_commits": [
+            "6542d76ffcc28bab131cc0d5a1d2b89bc446d7d7"
+          ],
+          "portable": true
+        },
+        "receipt": {
+          "receipt_id": "EXE-1fbb152ca61585157281",
+          "schema_version": "1.1",
+          "repo_id": "2f814a8c334b2e9a19eb5281ef81deb408ec1f35b55bbd0aeb13fa2ff9050964"
+        }
+      },
+      "log": "C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-02\\pilot\\evidence\\B0\\run-20261028T1010\\logs\\02-different-remote.log",
+      "log_sha256": "5c8b0cd43a1558db3fde527a2eff4ddf36e9084a590a721e346d9006f12a5948"
+    },
+    {
+      "case": "different-root",
+      "repo": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b0-run-20261028T1010-49nyx1wl\\cross-repo\\other-root-repo",
+      "command": "C:\\SoftWare\\Anconda\\python.exe C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-02\\pilot\\evidence\\B0\\run-20261028T1010\\scripts\\check_receipt.py --code-root C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-02 --repo C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b0-run-20261028T1010-49nyx1wl\\cross-repo\\other-root-repo --receipt .project-memory/receipts/EXE-1fbb152ca61585157281.json",
+      "exit_code": 3,
+      "expected_exit": 3,
+      "result": {
+        "valid": false,
+        "problems": [
+          "收据属于其他仓库",
+          "repo_identity.root_commits 与当前仓库不一致（身份字段被改写）",
+          "提交不存在：6542d76ffcc28bab131cc0d5a1d2b89bc446d7d7",
+          "找不到对应快照目录",
+          "日志文件不存在"
+        ],
+        "legacy_path_bound": false,
+        "identity": {
+          "schema": "1.1",
+          "kind": "remote+root",
+          "remote": "github.com/pilot-org/repo-a",
+          "root_commits": [
+            "3bfedf70d57eee045b57b8e817fb744d1f5bb0fb"
+          ],
+          "portable": true
+        },
+        "receipt": {
+          "receipt_id": "EXE-1fbb152ca61585157281",
+          "schema_version": "1.1",
+          "repo_id": "2f814a8c334b2e9a19eb5281ef81deb408ec1f35b55bbd0aeb13fa2ff9050964"
+        }
+      },
+      "log": "C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-02\\pilot\\evidence\\B0\\run-20261028T1010\\logs\\03-different-root.log",
+      "log_sha256": "cadcf57350c4091f8c83a34712bd230ade21145b98557039c03a8336541e7185"
+    },
+    {
+      "case": "legacy-original-path",
+      "repo": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b0-run-20261028T1010-49nyx1wl\\cross-repo\\repo-a",
+      "command": "C:\\SoftWare\\Anconda\\python.exe C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-02\\pilot\\evidence\\B0\\run-20261028T1010\\scripts\\check_receipt.py --code-root C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-02 --repo C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b0-run-20261028T1010-49nyx1wl\\cross-repo\\repo-a --receipt .project-memory/receipts/EXE-1fbb152ca61585157281.json",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "result": {
+        "valid": true,
+        "problems": [],
+        "legacy_path_bound": true,
+        "identity": {
+          "schema": "1.0",
+          "kind": "legacy_path_bound",
+          "portable": false,
+          "reason": "旧收据以仓库绝对路径为身份；只在原路径作为历史证据，不能作为跨路径证据"
+        },
+        "receipt": {
+          "receipt_id": "EXE-1fbb152ca61585157281",
+          "schema_version": "1.0",
+          "repo_id": "948ed6e08091400d5ff380e163b83d92465b6ac882b8992c9f607551093dacae"
+        }
+      },
+      "log": "C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-02\\pilot\\evidence\\B0\\run-20261028T1010\\logs\\04-legacy-original-path.log",
+      "log_sha256": "37533e6e0904d6bac1bf183aa952e2c7f734e24a762d15af5a4049c30ef99dfb"
+    },
+    {
+      "case": "legacy-copied-path",
+      "repo": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b0-run-20261028T1010-49nyx1wl\\cross-repo\\legacy-copy",
+      "command": "C:\\SoftWare\\Anconda\\python.exe C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-02\\pilot\\evidence\\B0\\run-20261028T1010\\scripts\\check_receipt.py --code-root C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-02 --repo C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b0-run-20261028T1010-49nyx1wl\\cross-repo\\legacy-copy --receipt .project-memory/receipts/EXE-1fbb152ca61585157281.json",
+      "exit_code": 3,
+      "expected_exit": 3,
+      "result": {
+        "valid": false,
+        "problems": [
+          "收据属于其他仓库（legacy 路径绑定，不能跨路径使用）"
+        ],
+        "legacy_path_bound": true,
+        "identity": {
+          "schema": "1.0",
+          "kind": "legacy_path_bound",
+          "portable": false,
+          "reason": "旧收据以仓库绝对路径为身份；只在原路径作为历史证据，不能作为跨路径证据"
+        },
+        "receipt": {
+          "receipt_id": "EXE-1fbb152ca61585157281",
+          "schema_version": "1.0",
+          "repo_id": "948ed6e08091400d5ff380e163b83d92465b6ac882b8992c9f607551093dacae"
+        }
+      },
+      "log": "C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-02\\pilot\\evidence\\B0\\run-20261028T1010\\logs\\05-legacy-copied-path.log",
+      "log_sha256": "04bce87b31b5033f26e573023733f426473cb4f5102432e62ac914307ddb2fed"
+    }
+  ],
+  "assertions": {
+    "same_copy_accepted": true,
+    "different_remote_rejected": true,
+    "different_remote_error_names_repository": true,
+    "different_root_rejected": true,
+    "different_root_error_names_repository": true,
+    "identities_differ_for_remote": true,
+    "identities_differ_for_root": true,
+    "legacy_valid_at_original_path": true,
+    "legacy_rejected_across_paths": true,
+    "legacy_error_names_legacy": true
+  }
+}

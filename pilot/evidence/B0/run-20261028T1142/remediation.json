@@ -1,0 +1,87 @@
+{
+  "run": "B0.1 remediation probe",
+  "base_sha": "d01fdf474801e7e58a258cb45c03c76f3c4dcc74",
+  "identity": {
+    "schema": "1.1",
+    "kind": "remote+root",
+    "remote": "github.com/pilot-org/repo-a",
+    "root_commits": [
+      "d01fdf474801e7e58a258cb45c03c76f3c4dcc74"
+    ],
+    "id": "df895391efcc66d03de395a69d195565ba32f3f3c5682351350a0d02c70b7d47"
+  },
+  "identity_A_equals_B": true,
+  "identity_contains_path": false,
+  "scenarios": {
+    "F2_cross_path_absolute_mapping": {
+      "ok": true,
+      "status": "MANUAL_REVIEW_REQUIRED",
+      "mapping_status": "review_required",
+      "verification_id": "VER-8e9e508763ac"
+    },
+    "F2_cross_path_identity_id": {
+      "ok": true,
+      "status": "MANUAL_REVIEW_REQUIRED",
+      "mapping_status": "review_required",
+      "verification_id": "VER-8e9e508763ac"
+    },
+    "F2_cross_path_canonical_remote": {
+      "ok": true,
+      "status": "MANUAL_REVIEW_REQUIRED",
+      "mapping_status": "review_required",
+      "verification_id": "VER-8e9e508763ac"
+    },
+    "F2_cross_repo_absolute_path": {
+      "ok": false,
+      "error": "criterion evidence 的 target_repository 'C:\\\\Users\\\\ZMJ\\\\AppData\\\\Local\\\\Temp\\\\b01-evidence-1793159420\\\\other-repo' 不是当前仓库",
+      "other_identity_id": "bdde35ea605538e79495baff8c0cef7614339866a0b9f7db51921fdc96fc88d1",
+      "other_base_sha": "2b98e90bee7e9d1801f724f9d0c504af5ce9bf84"
+    },
+    "F2_bare_directory_name": {
+      "ok": false,
+      "error": "criterion evidence 的 target_repository 'path-a' 不是当前仓库"
+    },
+    "F2_same_name_other_repo": {
+      "ok": false,
+      "error": "criterion evidence 的 target_repository 'C:\\\\Users\\\\ZMJ\\\\AppData\\\\Local\\\\Temp\\\\b01-evidence-1793159420\\\\elsewhere\\\\path-a' 不是当前仓库",
+      "identity_id": "d95d04b18de4e928fdeb0dbd666a663a4da7fd9a5034f6ee1f5c79f01b517f47"
+    },
+    "legacy_receipt": {
+      "original_path_valid": true,
+      "original_path_legacy": true,
+      "original_portable": false,
+      "copied_path_valid": false,
+      "copied_path_problems": [
+        "收据属于其他仓库（legacy 路径绑定，不能跨路径使用）"
+      ]
+    },
+    "F3_remote_normalisation": {
+      "ssh_default_port": "github.com/pilot-org/repo-a",
+      "scp_form": "github.com/pilot-org/repo-a",
+      "https_form": "github.com/pilot-org/repo-a",
+      "ssh_non_default_port": "github.com:2222/pilot-org/repo-a"
+    },
+    "AC1b_signed_record": {
+      "ran": true,
+      "kind": "test key, not a trust anchor",
+      "checks": {
+        "A": {
+          "signature_valid": true,
+          "detail": "signature verified",
+          "payload_sha256": "2557dbf84fa38dc39e7cfd875e16467dfafd11a547f5aa6bed4893d3f3649021"
+        },
+        "B": {
+          "signature_valid": true,
+          "detail": "signature verified",
+          "payload_sha256": "2557dbf84fa38dc39e7cfd875e16467dfafd11a547f5aa6bed4893d3f3649021"
+        }
+      },
+      "payload_identical": true
+    },
+    "AC1b_anchor_protection": {
+      "anchor_accepted": false,
+      "reason": "信任锚所有者是当前用户；不能作为独立信任根",
+      "writable_while_0444": false
+    }
+  }
+}
