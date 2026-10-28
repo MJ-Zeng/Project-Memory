@@ -1,17 +1,21 @@
 {
   "agent": "PM-01",
   "base_sha": null,
-  "base_sha_note": "resolved from the dispatch Issue after the scaffold PR merges to dev/v1.0",
-  "blockers": [
-    "B1 issue not created"
-  ],
+  "base_sha_note": "authoritative base is Issue #1: merge commit of the B1 dispatch-prep PR; includes pilot/kit/b1/positive",
+  "blockers": [],
   "completed": [
-    "dispatch handoff draft"
+    "dispatch handoff ready",
+    "B1 issue created (#1)",
+    "task card sha256 frozen",
+    "positive signed fixture generated and merged (PR #7, f116269)"
   ],
   "criteria_sha256": "0fdc9469456b81bae26a3c29385f1745222e16b19211e27d4d04a418ef3be08d",
-  "evidence": [],
+  "evidence": [
+    "pilot/kit/b1/positive/sha256sums.txt",
+    "pilot/kit/b1/positive/GENERATION.md"
+  ],
   "from_role": "PM-01",
-  "generated_at": "2026-10-27T13:37:02+00:00",
+  "generated_at": "2026-10-28T05:55:00+00:00",
   "goal_id": "G-B1",
   "handoff_id": "HO-B1-R1-SUP",
   "kind": "agent_handoff",
@@ -20,9 +24,9 @@
     "provider": "dsh"
   },
   "next_actions": [
-    "PM-02 reads task card and dispatch handoff",
-    "PM-02 performs cold-start recovery",
-    "PM-02 reports BLOCKED if Issue or criteria hash is missing"
+    "PM-02 cold-start recovery using the base SHA from Issue #1",
+    "PM-02 runs the AC-1 check from pilot/kit/b1/positive in a copy, not in the template repo",
+    "PM-02 reports BLOCKED or NEEDS_INFO if Issue, task card hash or fixture is missing"
   ],
   "open_questions": [
     "Which verifier path is pinned and how is its integrity checked?",
@@ -30,15 +34,11 @@
     "How is the positive signature proven without breaking tests?",
     "Which residual risks must be recorded in the ADR?"
   ],
-  "remaining": [
-    "create B1 issue",
-    "freeze task card sha256",
-    "generate positive fixture"
-  ],
+  "remaining": [],
   "run_id": "dispatch-b1-r1",
   "schema_version": "1.1",
   "session_id": "pm01-pilot-01",
-  "status": "reported_unverified",
+  "status": "ready",
   "task": "B1",
   "to_role": "PM-02",
   "vcs": "git"
