@@ -1,0 +1,143 @@
+{
+  "schema_version": "1.1",
+  "kind": "agent_handoff",
+  "status": "reported_unverified",
+  "pilot_status": "ready_for_review",
+  "task": "B0",
+  "task_id": "B0",
+  "handoff_id": "HO-B0-R1-DEV",
+  "schema": "pilot-handoff/v1",
+  "round": 1,
+  "issue": "https://github.com/MJ-Zeng/Project-Memory/issues/3",
+  "goal_id": "G-B0",
+  "from_role": "PM-02",
+  "to_role": "PM-03",
+  "agent": "PM-02 Developer <pm02@pilot.invalid>",
+  "agent_label": "PM-02 Developer <pm02@pilot.invalid>",
+  "run_id": "run-20261028T1010",
+  "from_run": "run-20261028T1010",
+  "session_id": "pm02-pilot-02-20261028T0939+0800",
+  "model": {
+    "provider": "dsh",
+    "id": "deepseek-flash"
+  },
+  "vcs": "git",
+  "base_sha": "73be8e3ac4efc04c1811c122eb665344fe8ce4c3",
+  "candidate_sha": "14cc8fcba367dc36db0706041a21f22e10e3264e",
+  "head_sha": "14cc8fcba367dc36db0706041a21f22e10e3264e",
+  "branch": "fix/b0-repo-identity",
+  "pr": "https://github.com/MJ-Zeng/Project-Memory/pull/5",
+  "criteria_sha256": "81e20cf8c16a30c904e925e195d7748bce5a11f24a62f5c16a3ec15b895061c0",
+  "generated_at": "2026-10-28T02:04:00+00:00",
+  "time_spent_minutes": 24,
+  "pr_head_note": "candidate_sha 14cc8fc 包含代码、测试、ADR 与证据；PR head 在其上追加一个只含本 Handoff 的提交，代码/测试/证据不再变化。",
+  "commits": [
+    "d872de11e389b67ee98acdb2ba80db7362dad464",
+    "14cc8fcba367dc36db0706041a21f22e10e3264e"
+  ],
+  "changed_files": [
+    "project_memory/execution.py",
+    "tests/test_repo_identity.py",
+    "docs/decisions/ADR-0001-portable-repository-identity.md",
+    "pilot/rounds/B0/context-recovery-pm02.md",
+    "pilot/evidence/B0/run-20261028T1010/"
+  ],
+  "docs_changed": [
+    "docs/decisions/ADR-0001-portable-repository-identity.md",
+    "pilot/rounds/B0/context-recovery-pm02.md"
+  ],
+  "completed": [
+    "冷启动恢复：6 项事实、任务卡 SHA-256、基线、环境与 147 项收集全部核对",
+    "ADR-0001：身份定义、被拒方案、迁移、信任模型与残余风险",
+    "repo_id 改为 sha256(规范化 remote + 根提交)；收据/快照 schema 1.1；收据新增 repo_identity",
+    "schema 1.0 旧收据按原路径校验并标记 legacy_path_bound / portable=false，跨路径拒绝",
+    "新增 11 项测试：跨路径正例、跨仓库负例（不同 remote / 不同根提交）、remote 规范化、身份字段改写、旧收据跨路径拒绝",
+    "基线复现：73be8e3 下同一 commit 跨路径 valid=false",
+    "跨路径正例：路径 B 中 verify_receipt.valid=true 且 _verification_current=true",
+    "跨仓库负例：不同 remote 与不同根提交均退出 3 且错误指向仓库身份",
+    "全量测试 156 passed / 2 skipped，退出码 0",
+    "证据包 pilot/evidence/B0/run-20261028T1010（commands.jsonl、cross_path.json、cross_repo.json、pytest.log、diffstat.txt、sha256sums.txt、logs/、scripts/）",
+    "推送 fix/b0-repo-identity 并创建 PR #5（未合并、未 Approve）"
+  ],
+  "remaining": [
+    "PM-03 从两个不同路径独立复现正例与负例",
+    "PM-03/人类用已签名 fixture 复测 goal evidence 全链路（AC-1 的 exit 0 子项）",
+    "人类决定是否合并 PR #5",
+    "PM-01 更新 pilot/STATUS.md（B0 状态、B0-D2）"
+  ],
+  "blockers": [],
+  "evidence": [
+    "pilot/evidence/B0/run-20261028T1010/README.md",
+    "pilot/evidence/B0/run-20261028T1010/environment.txt",
+    "pilot/evidence/B0/run-20261028T1010/commands.jsonl",
+    "pilot/evidence/B0/run-20261028T1010/pre_fix.json",
+    "pilot/evidence/B0/run-20261028T1010/cross_path.json",
+    "pilot/evidence/B0/run-20261028T1010/cross_repo.json",
+    "pilot/evidence/B0/run-20261028T1010/pytest.log",
+    "pilot/evidence/B0/run-20261028T1010/diffstat.txt",
+    "pilot/evidence/B0/run-20261028T1010/sha256sums.txt",
+    "pilot/evidence/B0/run-20261028T1010/logs/",
+    "pilot/evidence/B0/run-20261028T1010/scripts/",
+    "docs/decisions/ADR-0001-portable-repository-identity.md",
+    "pilot/rounds/B0/context-recovery-pm02.md"
+  ],
+  "tests": [
+    {
+      "command": "C:\\SoftWare\\Anconda\\python.exe -m pytest -q -p no:cacheprovider",
+      "exit_code": 0,
+      "log": "pilot/evidence/B0/run-20261028T1010/pytest.log"
+    },
+    {
+      "command": "python pilot/evidence/B0/run-20261028T1010/scripts/cross_path.py --code-root . --work <tmp> --out cross_path.json --log-dir logs",
+      "exit_code": 0,
+      "log": "pilot/evidence/B0/run-20261028T1010/logs/03-cross-path-driver.log"
+    },
+    {
+      "command": "python pilot/evidence/B0/run-20261028T1010/scripts/cross_repo.py --code-root . --work <tmp> --out cross_repo.json --log-dir logs --checker .../check_receipt.py",
+      "exit_code": 0,
+      "log": "pilot/evidence/B0/run-20261028T1010/logs/04-cross-repo-driver.log"
+    },
+    {
+      "command": "python pilot/evidence/B0/run-20261028T1010/scripts/repro_baseline.py --out pre_fix.json --base-sha 73be8e3... (cwd = baseline export)",
+      "exit_code": 0,
+      "log": "pilot/evidence/B0/run-20261028T1010/logs/02-pre-fix-baseline.log"
+    }
+  ],
+  "not_verified": [
+    "AC-1 的 goal evidence exit 0：本构建没有签名者，verify 写入 MANUAL_REVIEW_REQUIRED 并退出 2；需要 PM-03/人类用已签名 fixture 复测",
+    "浅克隆（--depth）下的根提交截断；需 git fetch --unshallow",
+    "真实远端 fetch；测试使用合成 remote URL",
+    "WSL / trusted 执行与 B1 探针（B0 不需要）",
+    "跨 OS 文件系统差异",
+    "AC-10 PM-03 独立复现"
+  ],
+  "open_questions": [
+    "Issue #3 页面正文/标签无法在未认证读取（私有仓库 404）；本会话以仓库内 issue.md、STATUS.md 与派发提示交叉确认 Issue 编号与任务卡哈希，无法确认派发后是否被修改",
+    "pilot/STATUS.md 与 pilot/README.md 仍写 B1 当前轮次 / B0 draft，需 PM-01 更新",
+    "旧 schema 1.0 收据选择“原路径继续有效 + 标记 legacy_path_bound”，而非一律拒绝；是否符合 AC-4 的审查期望",
+    "浅克隆是否需要在文档中强制 --unshallow，或改为不依赖根提交的身份回退"
+  ],
+  "next_actions": [
+    "PM-03 在独立 Clone/路径中复现 cross_path 与 cross_repo，并核对 sha256sums.txt",
+    "PM-03/人类用已签名 fixture 补 goal evidence 并记录退出码",
+    "人类审阅 PR #5 后决定合并/拒绝；PM-02 不合并、不 Approve",
+    "PM-01 在人类决定后更新 STATUS.md 与 decision.md"
+  ],
+  "contamination": {
+    "human_relay": [],
+    "missing_artifacts": [],
+    "stale_artifacts": [
+      "pilot/STATUS.md（B1 当前轮次、B0 status=draft、B0 base 未写入 Issue）",
+      "pilot/README.md（当前轮次 B1）"
+    ],
+    "unauthorized_reads": []
+  },
+  "facts": {
+    "base_sha": "73be8e3ac4efc04c1811c122eb665344fe8ce4c3",
+    "candidate_sha": "14cc8fcba367dc36db0706041a21f22e10e3264e",
+    "branch": "fix/b0-repo-identity",
+    "tests_summary": "156 passed, 2 skipped, exit 0 (147 baseline + 11 new)",
+    "verdict_claim": "none — PM-02 does not claim PASS/VERIFIED",
+    "next_action": "PM-03 independent review; human merge decision"
+  }
+}
