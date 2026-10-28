@@ -15,3 +15,8 @@ Reproduce: WSL as uid 1000, fixtures copied to `/tmp` per case,
 `PYTHONPATH=<repo>/.pilot/b3-candidate`, then `python3 run_matrix.py`.
 
 No private key bytes, tokens, or other project data are stored here.
+
+`sha256sums.txt` hashes the **git blob bytes (LF)**, not a Windows CRLF
+checkout. Verify with `git show HEAD:<path> | sha256sum` (or from a
+`core.autocrlf=false` checkout); fixture lines are hashed from the read-only
+fixture tree.
