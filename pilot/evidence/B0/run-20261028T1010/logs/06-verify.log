@@ -1,0 +1,172 @@
+{
+  "caveat": "本地 CLI 写出的验证记录没有受保护信任锚的分离签名，因此 status 最多是 MANUAL_REVIEW_REQUIRED，verified 恒为 false。CLI 不再接受 externally_verified 或 human_approved 作为声明的 evidence level。CI/review 证据只获得 agent_claimed 信任。测试收据只证明内容完整性，不证明来源；PASS 仍要求每个必达标准都有绑定提交、独立复核 coverage 的证据映射。",
+  "created": true,
+  "defects": [],
+  "dry_run": false,
+  "kind": "verify_result",
+  "mapping": {
+    "covered": [],
+    "execution_covered": [
+      "C1"
+    ],
+    "missing": [],
+    "partial": [
+      "C1"
+    ],
+    "problems": [
+      "C1: 语义覆盖未由可信人工来源确认（不是 VERIFIED）"
+    ],
+    "required": [
+      "C1"
+    ],
+    "review_required": [
+      "C1"
+    ],
+    "status": "review_required",
+    "unexpected": []
+  },
+  "path": ".project-memory/verifications/3/VER-B0-XP.json",
+  "schema_version": "1.2",
+  "status": "MANUAL_REVIEW_REQUIRED",
+  "verification": {
+    "authority": {
+      "algorithm": null,
+      "anchor_id": null,
+      "issuer": "local-cli",
+      "reason": "记录由本地 CLI 写出；没有受保护信任锚的分离签名，不能自证权威",
+      "signature_b64": null,
+      "signed_payload_sha256": null,
+      "status": "untrusted"
+    },
+    "authority_evaluation": {
+      "anchor_id": null,
+      "issuer": null,
+      "reason": "未配置受保护的信任锚（PROJECT_MEMORY_TRUST_ANCHOR）",
+      "status": "unconfigured",
+      "trusted": false
+    },
+    "checks": {
+      "ci": {
+        "provenance": "none",
+        "status": "not_provided",
+        "url": ""
+      },
+      "review": {
+        "provenance": "none",
+        "state": "not_provided",
+        "url": ""
+      },
+      "tests": {
+        "command": "\"C:\\SoftWare\\Anconda\\python.exe\" -c \"print('1 passed')\"",
+        "execution_provenance": {
+          "kind": "local_untrusted",
+          "reason": "本地启动器；没有操作系统隔离，也没有外部签名来源",
+          "trusted": false
+        },
+        "execution_trust": "local_untrusted",
+        "exit_code": 0,
+        "log": ".project-memory/logs/EXE-e582a4ec880df56bd7cb.log",
+        "log_content_sha256": "0dfa18d81993f8921912ad14560cea61896e4c977c3dcbaec44be46033bea0e2",
+        "log_exists": true,
+        "receipt": ".project-memory/receipts/EXE-e582a4ec880df56bd7cb.json",
+        "receipt_id": "EXE-e582a4ec880df56bd7cb",
+        "receipt_integrity_valid": true,
+        "receipt_sha256": "4b9a7ce2484797eae36806279262fa43a385479c1e2552edbbf16eb08f5fb116",
+        "snapshot_id": "SNP-e7d5e18ce1ef18b2",
+        "snapshot_sha256": "9d985257b22ab969b112ed7574225a02e7e2ab8b70aa424c22b51831fecaf6a6",
+        "tracked_changes_at_verification": "",
+        "tracked_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "worktree_dirty_at_verification": false
+      }
+    },
+    "covered_criteria": [],
+    "created_at": "2026-10-28T02:00:07+00:00",
+    "criterion_evidence": [
+      {
+        "coverage_claim": "覆盖对应标准",
+        "coverage_confirmed": false,
+        "coverage_review_status": "confirmed",
+        "criterion_description": "模块通过测试",
+        "criterion_id": "C1",
+        "description_match": true,
+        "evidence_command": "\"C:\\SoftWare\\Anconda\\python.exe\" -c \"print('1 passed')\"",
+        "evidence_exit_code": 0,
+        "evidence_id": "EV-XP-1",
+        "evidence_log": ".project-memory/logs/EXE-e582a4ec880df56bd7cb.log",
+        "evidence_matched": false,
+        "evidence_receipt": ".project-memory/receipts/EXE-e582a4ec880df56bd7cb.json",
+        "evidence_source": "test",
+        "evidence_state": "MANUAL_REVIEW_REQUIRED",
+        "execution_status": "passed",
+        "execution_trust": "local_untrusted",
+        "execution_verified": false,
+        "goal_id": "G-B0",
+        "human_review_claimed": false,
+        "independent_verifier": "verifier-agent",
+        "observed_level": "locally_observed",
+        "problems": [
+          "语义覆盖未由可信人工来源确认（不是 VERIFIED）"
+        ],
+        "receipt_id": "EXE-e582a4ec880df56bd7cb",
+        "receipt_integrity_valid": true,
+        "receipt_provenance": {
+          "kind": "local_untrusted",
+          "reason": "本地启动器；没有操作系统隔离，也没有外部签名来源",
+          "trusted": false
+        },
+        "receipt_sha256": "4b9a7ce2484797eae36806279262fa43a385479c1e2552edbbf16eb08f5fb116",
+        "semantic_coverage_verified": false,
+        "snapshot_id": "SNP-e7d5e18ce1ef18b2",
+        "snapshot_sha256": "9d985257b22ab969b112ed7574225a02e7e2ab8b70aa424c22b51831fecaf6a6",
+        "target_commit_sha": "e2ae128cbbd5fccb2e842ce3fff072153c16d711",
+        "target_repository": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b0-run-20261028T1010-49nyx1wl\\cross-path\\path-a",
+        "task_id": "3",
+        "verification_result": "pass"
+      }
+    ],
+    "current_head_sha": "e2ae128cbbd5fccb2e842ce3fff072153c16d711",
+    "evidence_level": "locally_observed",
+    "findings": [],
+    "goal_criteria_sha256": "b17a716f397aba14c865cc834f38fb5f0c1976531199393d2b186271781e4127",
+    "goal_id": "G-B0",
+    "independence": {
+      "basis": [
+        "agent",
+        "model"
+      ],
+      "distinct": true,
+      "note": "独立会话或不同模型只证明记录不同，不证明验证结论正确。"
+    },
+    "kind": "verification_record",
+    "mapping_status": "review_required",
+    "missing_criteria": [],
+    "revision": 1,
+    "schema_version": "1.2",
+    "stale": false,
+    "standard": "acceptance",
+    "status": "MANUAL_REVIEW_REQUIRED",
+    "target_head_sha": "e2ae128cbbd5fccb2e842ce3fff072153c16d711",
+    "target_run": "run-target",
+    "target_run_sha256": "4ce0eb1b879d597bea9ad16fc25b94419f2ae6dd2cb4d9aea86015e8a92e5209",
+    "task": "3",
+    "trust_level": "locally_observed",
+    "verdict": "pass",
+    "verification_id": "VER-B0-XP",
+    "verified": false,
+    "verifier": {
+      "agent": "verifier-agent",
+      "model": {
+        "id": "verifier-model",
+        "provider": "qodercn"
+      },
+      "session_id": "",
+      "tool": ""
+    },
+    "verifier_run": "run-verifier",
+    "verifier_run_sha256": "f2545d0bcd4a7fb64b40128073f3698dc83032deed551f78f85fa10cd6352fd4"
+  },
+  "verified": false,
+  "would_update_run_status": "submitted"
+}
+
+--- stderr ---

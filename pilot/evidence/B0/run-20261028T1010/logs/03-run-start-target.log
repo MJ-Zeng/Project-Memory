@@ -1,0 +1,41 @@
+{
+  "created": true,
+  "dry_run": false,
+  "kind": "run_start_result",
+  "path": ".project-memory/runs/3/run-target.json",
+  "run": {
+    "agent": "dev-agent",
+    "artifacts": [],
+    "authorization": "",
+    "blockers": [],
+    "created_at": "2026-10-28T02:00:05+00:00",
+    "ended_at": null,
+    "evidence": [],
+    "git": {
+      "base_sha": "e2ae128cbbd5fccb2e842ce3fff072153c16d711",
+      "branch": "master",
+      "head_sha": "e2ae128cbbd5fccb2e842ce3fff072153c16d711"
+    },
+    "goal_id": "G-B0",
+    "handoff": null,
+    "kind": "agent_run",
+    "model": {
+      "id": "executor-model",
+      "provider": "qodercn"
+    },
+    "revision": 1,
+    "role": "executor",
+    "run_id": "run-target",
+    "schema_version": "1.2",
+    "session_id": "",
+    "started_at": "2026-10-28T02:00:05+00:00",
+    "status": "running",
+    "task": "3",
+    "tool": "",
+    "updated_at": "2026-10-28T02:00:05+00:00"
+  },
+  "schema_version": "1.2",
+  "warnings": []
+}
+
+--- stderr ---

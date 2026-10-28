@@ -1,0 +1,8 @@
+$ C:\SoftWare\Anconda\python.exe C:\Documents\02_Research\Code\project-memory-verification-lab\import-workspace\pm-pilot-02\pilot\evidence\B0\run-20261028T1010\scripts\cross_repo.py --code-root C:\Documents\02_Research\Code\project-memory-verification-lab\import-workspace\pm-pilot-02 --work C:\Users\ZMJ\AppData\Local\Temp\b0-run-20261028T1010-49nyx1wl\cross-repo --out C:\Documents\02_Research\Code\project-memory-verification-lab\import-workspace\pm-pilot-02\pilot\evidence\B0\run-20261028T1010\cross_repo.json --log-dir C:\Documents\02_Research\Code\project-memory-verification-lab\import-workspace\pm-pilot-02\pilot\evidence\B0\run-20261028T1010\logs --checker C:\Documents\02_Research\Code\project-memory-verification-lab\import-workspace\pm-pilot-02\pilot\evidence\B0\run-20261028T1010\scripts\check_receipt.py
+[cwd=C:\Documents\02_Research\Code\project-memory-verification-lab\import-workspace\pm-pilot-02]
+[exit_code=0]
+--- stdout ---
+{"assertions": {"same_copy_accepted": true, "different_remote_rejected": true, "different_remote_error_names_repository": true, "different_root_rejected": true, "different_root_error_names_repository": true, "identities_differ_for_remote": true, "identities_differ_for_root": true, "legacy_valid_at_original_path": true, "legacy_rejected_across_paths": true, "legacy_error_names_legacy": true}}
+
+--- stderr ---
+

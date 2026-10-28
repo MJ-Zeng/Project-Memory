@@ -1,0 +1,7 @@
+$ git -C C:\Documents\02_Research\Code\project-memory-verification-lab\import-workspace\pm-pilot-02 add -N -- pilot/evidence/B0/run-20261028T1010
+[cwd=C:\Documents\02_Research\Code\project-memory-verification-lab\import-workspace\pm-pilot-02]
+[exit_code=0]
+--- stdout ---
+
+--- stderr ---
+

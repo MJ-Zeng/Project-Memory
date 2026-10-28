@@ -1,0 +1,20 @@
+{
+  "valid": false,
+  "problems": [
+    "收据属于其他仓库（legacy 路径绑定，不能跨路径使用）"
+  ],
+  "legacy_path_bound": true,
+  "identity": {
+    "schema": "1.0",
+    "kind": "legacy_path_bound",
+    "portable": false,
+    "reason": "旧收据以仓库绝对路径为身份；只在原路径作为历史证据，不能作为跨路径证据"
+  },
+  "receipt": {
+    "receipt_id": "EXE-1fbb152ca61585157281",
+    "schema_version": "1.0",
+    "repo_id": "948ed6e08091400d5ff380e163b83d92465b6ac882b8992c9f607551093dacae"
+  }
+}
+
+--- stderr ---
