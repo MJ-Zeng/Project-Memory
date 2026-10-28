@@ -10,7 +10,8 @@
 | 冻结基线 | `0d08a1ad85144d11a46d6a361a2a3ce4eadbbed4` | 2026-10-27 | `git rev-parse` |
 | 开发主线 | `dev/v1.0`（默认 HEAD，指向 `0d08a1a`） | 2026-10-27 | `git ls-remote --symref origin HEAD` |
 | `frozen/rc3-0d08a1a` | 存在，指向 `0d08a1a` | 2026-10-27 | `git ls-remote` |
-| 脚手架分支 | `pilot/bootstrap`（本地，未推送）；HEAD `ced2a65` | 2026-10-27 | `git rev-parse HEAD` |
+| 脚手架分支 | `pilot/bootstrap`（本地，未推送）；以 `git log -1` 为准 | 2026-10-27 | `git log --oneline` |
+| B1 任务卡 SHA-256 | `74b1773c97764caaceb7f3841615a9b073e2adeec162b31043de9f399dacf4f0` | 2026-10-27 | `Get-FileHash`；fresh clone 复核一致 |
 | B1 基线 | 脚手架 PR 合并到 `dev/v1.0` 的 merge commit；精确 SHA 在派发 Issue 中记录 | 待合并 | 待记录 |
 | B1 Issue | 未创建 | 2026-10-27 | 人工核对 |
 | B1 状态 | `draft`，未派发 | 2026-10-27 | 本文件 |
