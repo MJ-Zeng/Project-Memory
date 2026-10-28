@@ -226,6 +226,37 @@ def _criteria(values) -> list[dict]:
     return out
 
 
+def _criteria_definition(criteria) -> list[dict]:
+    """The immutable part of a criterion; evidence is deliberately excluded."""
+    return [{'id': c.get('id'), 'statement': c.get('statement'),
+             'required': c.get('required', True)} for c in criteria]
+
+
+def _criteria_definition_digest(criteria) -> str:
+    return canonical_digest(_criteria_definition(criteria))
+
+
+def _criteria_digest_matches(recorded: str, criteria) -> bool:
+    """Accept a stable digest or either legacy full-criteria digest.
+
+    Legacy records signed before this ADR stored a digest over the whole
+    ``success_criteria`` list.  They remain current when that list is unchanged,
+    or when only evidence was appended after a signature over ``evidence=[]``.
+    """
+    if not recorded:
+        return False
+    try:
+        if recorded == _criteria_definition_digest(criteria):
+            return True
+        if recorded == canonical_digest(criteria):
+            return True
+        return recorded == canonical_digest(
+            [{**criterion, 'evidence': []} for criterion in criteria])
+    except (AttributeError, TypeError):
+        # Malformed goal edits must fail closed, not abort the evaluation.
+        return False
+
+
 def _now_id(prefix: str, *parts) -> str:
     digest = hashlib.sha256('\x1f'.join(str(p) for p in parts).encode('utf-8')).hexdigest()[:12]
     return f'{prefix}-{digest}'
@@ -724,7 +755,8 @@ def _verification_current(repo: Path, verification: dict) -> bool:
             goal = load_goal(repo, verification.get('goal_id'))
         except PMError:
             return False
-        if canonical_digest(goal.get('success_criteria', [])) != recorded_goal_digest:
+        if not _criteria_digest_matches(recorded_goal_digest,
+                                        goal.get('success_criteria', [])):
             return False
     # T-04 (fixed): compare tracked-file state against the state recorded at
     # verification time. Untracked files (including .project-memory receipts and
@@ -792,6 +824,17 @@ def _verification_current(repo: Path, verification: dict) -> bool:
     return True
 
 
+def _criteria_definition_changed(repo: Path, verification: dict) -> bool:
+    recorded = verification.get('goal_criteria_sha256')
+    if not recorded:
+        return False
+    try:
+        goal = load_goal(repo, verification.get('goal_id'))
+    except PMError:
+        return False
+    return not _criteria_digest_matches(recorded, goal.get('success_criteria', []))
+
+
 def _verification_ok(repo: Path, evidence: dict, goal_id: str,
                      criterion_id: str = '') -> tuple[bool, str, str]:
     ref = str(evidence.get('ref') or '').strip()
@@ -849,6 +892,9 @@ def _verification_ok(repo: Path, evidence: dict, goal_id: str,
            for entry in entries):
         return False, f'{ref} 的证据映射与验证提交不一致', 'invalid'
     if not _verification_current(repo, verification):
+        if _criteria_definition_changed(repo, verification):
+            return (False, f'{ref} 的判据定义已变化（id/statement/required），'
+                           '验证记录失效；追加证据本身不会导致失效', 'unconfirmed')
         return False, f'{ref} 针对的不是当前提交或执行已失效', 'unconfirmed'
     return True, '独立验证通过，且覆盖该成功标准', 'evidence_matched'
 
@@ -1705,7 +1751,8 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
         'target_run': target_run, 'verifier_run': verifier_run,
         'target_run_sha256': canonical_digest(target),
         'verifier_run_sha256': canonical_digest(verifier),
-        'goal_criteria_sha256': canonical_digest(goal.get('success_criteria', [])),
+        'goal_criteria_sha256': _criteria_definition_digest(goal.get('success_criteria', [])),
+        'goal_criteria_legacy_sha256': canonical_digest(goal.get('success_criteria', [])),
         'verifier': {'agent': verifier.get('agent'), 'model': verifier.get('model'),
                      'tool': verifier.get('tool'), 'session_id': verifier.get('session_id')},
         'independence': independence,
@@ -1748,7 +1795,8 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
     identity = ('verification_id', 'target_run', 'verifier_run', 'target_head_sha',
                 'verdict', 'evidence_level', 'trust_level', 'status', 'mapping_status',
                 'criterion_evidence', 'findings', 'verified', 'standard',
-                'target_run_sha256', 'verifier_run_sha256', 'goal_criteria_sha256', 'authority')
+                'target_run_sha256', 'verifier_run_sha256', 'goal_criteria_sha256',
+                'goal_criteria_legacy_sha256', 'authority')
     resolved = []
     if verdict == 'pass':
         for defect_id in resolves_defects or []:
