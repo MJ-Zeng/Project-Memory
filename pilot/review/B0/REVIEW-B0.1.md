@@ -145,9 +145,9 @@ python3 -m project_memory goal evidence \
 
 ### 证据清单与校验
 
-`pilot/evidence/B0/review-20261028T130230/` 共 31 个受校验文件：驱动与脚本（`driver_b01.py`、`match_control.py`、`assemble.py`、`review_state.py`、`ac1b_run.sh`）、F-2/F-3 结果（`f2_cross_path.json`、`f2_binding_matrix.json`、`f2_negative.json`、`f3_identity.json`、`prior_acs.json`、`control_prev.json`、`control_candidate.json`、`prev_control.json`、`summary.json`）、AC-1(b)（`ac1b_goal_evidence.json`、`ac1b_compare.json`、`ac1b_environment.txt`、`ac1b_exit_code.txt`、`ac1b_stderr.txt`、`ac1b_record_hash_before.txt`、`ac1b_record_hashes_after.txt`、`ac1b_git_status_before.txt`、`ac1b_git_status_after.txt`）、日志（`pytest.log`、`pytest-identity.log`、`pytest-security.log`、`driver.log`、`verify_sha256sums.log`）、`environment.txt`、`diffstat.txt`、`commands.jsonl`、`sha256sums.txt`。
+`pilot/evidence/B0/review-20261028T130230/` 共 32 个受校验文件：驱动与脚本（`driver_b01.py`、`match_control.py`、`assemble.py`、`review_state.py`、`ac1b_run.sh`）、F-2/F-3 结果（`f2_cross_path.json`、`f2_binding_matrix.json`、`f2_negative.json`、`f3_identity.json`、`prior_acs.json`、`control_prev.json`、`control_candidate.json`、`prev_control.json`、`summary.json`）、AC-1(b)（`ac1b_goal_evidence.json`、`ac1b_compare.json`、`ac1b_environment.txt`、`ac1b_exit_code.txt`、`ac1b_stderr.txt`、`ac1b_record_hash_before.txt`、`ac1b_record_hashes_after.txt`、`ac1b_git_status_before.txt`、`ac1b_git_status_after.txt`）、日志（`pytest.log`、`pytest-identity.log`、`pytest-security.log`、`driver.log`、`verify_sha256sums.log`、`pr_comment.txt`）、`environment.txt`、`diffstat.txt`、`commands.jsonl`、`sha256sums.txt`。
 
-哈希取自提交后的 LF blob（`.gitattributes` 强制 `pilot/**` LF），在新检出 worktree 中 `sha256sum -c sha256sums.txt`：**31 OK / 0 FAILED**（exit 0）。
+哈希取自提交后的 LF blob（`.gitattributes` 强制 `pilot/**` LF），在新检出 worktree 中 `sha256sum -c sha256sums.txt`：**32 OK / 0 FAILED**（exit 0）。
 
 ## 5. 新发现
 
@@ -199,6 +199,7 @@ PM-02 未声明 PASS/VERIFIED，自报与复现无实质性夸大。
 
 - `human_relay`: 无。
 - `missing_artifacts`: PR #5 描述/评论（无 `gh`/token，私有仓库未认证）；Issue #3 正文未认证读取，沿用仓库内 `pilot/rounds/B0/issue.md`。
+- PR 评论未能提交：`gh` 未安装、`GH_TOKEN`/`GITHUB_TOKEN` 均未设置，无可用凭据；未使用或编造替代凭据。记录见 `pr_comment.txt`。结论仅以 `review/b0-8506dd4` 分支与仓库内报告/证据交付。
 - `stale_artifacts`: `pilot/STATUS.md`、`pilot/README.md`（B1 当前轮次）；`skill/project-memory/references/data-contracts.md`（O-2）。
 - `unauthorized_reads`: 无。未读 PM-01/PM-02 聊天、终端、未提交文件；未使用候选树 `.project-memory/tooling` 或候选探针；未读签名私钥，未签名。
 - 偏差：动态复现全部在 `%TEMP%` 新建仓库；AC-1(b) 使用 fixture 的新副本（未在原 `repo/` 运行）；上一候选对照使用 `.pilot/prev` 只读代码；pytest 禁用缓存与字节码以保持候选树干净。第一次 AC-1(b) 后 WSL `/tmp` 被系统清理，已重建副本重跑并补充前后哈希。

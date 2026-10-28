@@ -1,0 +1,6 @@
+target: https://github.com/MJ-Zeng/Project-Memory/pull/5
+date_utc: 2026-10-28T05:16:01Z
+attempt: gh pr comment 5 --body-file <path>
+result: BLOCKED - gh not installed (which gh -> not found); GH_TOKEN len=0; GITHUB_TOKEN len=0; no API credential available
+action: comment NOT posted; no alternative credential used or invented
+pr_head_confirmed: refs/pull/5/head = 8f7a63e7c049638083436fb070fc56d2e56b411b (git ls-remote)
