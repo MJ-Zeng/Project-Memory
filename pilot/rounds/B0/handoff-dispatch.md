@@ -2,7 +2,7 @@
 handoff_id: HO-B0-R1-SUP
 schema: pilot-handoff/v1
 task_id: B0
-issue: see dispatch Issue
+issue: https://github.com/MJ-Zeng/Project-Memory/issues/3
 goal_id: G-B0
 round: 1
 from_role: PM-01
@@ -16,7 +16,7 @@ agent_label: "PM-01 Supervisor <pm01@pilot.invalid>"   # 自述，不是认证
 session_id: pm01-setup-20261028
 model: dsh/deepseek-flash
 created_at: 2026-10-28T09:35:00+08:00
-status: draft
+status: dispatched
 ---
 
 # PM-01 → PM-02 派发交接（B0）
