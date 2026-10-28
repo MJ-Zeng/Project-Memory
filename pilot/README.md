@@ -30,13 +30,13 @@
 - 任何角色发现工件缺失/过期，先记录，再决定是否阻塞。
 - 不得提交私钥、token 或其他项目数据。
 
-## 当前轮次
+## 当前状态（2026-10-28 收尾）
 
-- 轮次：**B1**（`merged` @ `15f4b3c`，PR #9）
-- 基线：`25a919d63c7181fd4083e0fc1af33734d74c5515`；冻结参照 `0d08a1a`
-- 上一轮：B0 已合并（`a70ad19`），B0.1 复审 PASS（`review/b0-8506dd4` 的 `pilot/review/B0/REVIEW-B0.1.md`）
-- B1 复审：PASS（`review/b1-1c7ad94` @ `09f68d8`）；决定记录：`rounds/B1/decision.md`
-- 状态：见 `STATUS.md`
+- 试点：**closed**；三轮 B0/B1/B2 均已合并；报告见 `PILOT_CLOSEOUT.md`
+- B2：`merged` @ `5a5abddf`（PR #14）；PM-03 PASS（逻辑 28/28 + anchor-a E2E 4/4）
+- B2 AC-3 caveat：正例 `goal evidence` 通过，但 `goal evaluate satisfied=true` 留给 B3（人类接受 scope split）
+- B3/B4/B5：未开始；v1.0 **未 GO**
+- 状态与证据索引：见 `STATUS.md`
 
 ## 目录
 
