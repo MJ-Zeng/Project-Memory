@@ -1,0 +1,8 @@
+ docs/decisions/ADR-0003-execution-provenance.md  | 176 ++++++++++
+ pilot/evidence/B2/run-20261028T110321Z/README.md |  60 ++++
+ pilot/rounds/B2/context-recovery-pm02.md         |  44 +++
+ project_memory/authority.py                      |  66 ++++
+ project_memory/coordination.py                   |  21 +-
+ project_memory/execution.py                      | 155 ++++++++-
+ tests/test_security_b2.py                        | 391 +++++++++++++++++++++++
+ 7 files changed, 911 insertions(+), 2 deletions(-)

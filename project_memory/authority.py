@@ -491,3 +491,69 @@ def untrusted_envelope(reason: str) -> dict:
     return {'status': 'untrusted', 'issuer': 'local-cli', 'anchor_id': None,
             'algorithm': None, 'signed_payload_sha256': None,
             'signature_b64': None, 'reason': reason}
+
+
+EXECUTION_ATTESTATION_KIND = 'execution_attestation'
+EXECUTION_EXCEPTION_KIND = 'execution_exception'
+EXECUTION_RECORD_SCHEMA = '1.0'
+
+
+def execution_record_payload(record: dict) -> bytes:
+    """Signed payload for an execution attestation/exception (excludes authority)."""
+    payload = {key: value for key, value in record.items() if key != 'authority'}
+    return canonical_bytes(payload)
+
+
+def execution_record_digest(record: dict) -> str:
+    return hashlib.sha256(execution_record_payload(record)).hexdigest()
+
+
+def _execution_record_authority(repo: Path, record: dict, label: str) -> dict:
+    """Verify an execution record against the protected anchor; fail closed."""
+    anchor, anchor_reason = load_anchor(repo)
+    if anchor is None:
+        return {'trusted': False, 'status': 'unconfigured',
+                'reason': anchor_reason, 'anchor_id': None, 'issuer': None}
+    envelope = record.get('authority') if isinstance(record, dict) else None
+    if not isinstance(envelope, dict):
+        return {'trusted': False, 'status': 'untrusted',
+                'reason': f'{label}缺少 authority 信封（本地写出的记录一律不可信）',
+                'anchor_id': anchor['anchor_id'], 'issuer': anchor['issuer']}
+    if envelope.get('anchor_id') != anchor['anchor_id']:
+        return {'trusted': False, 'status': 'untrusted',
+                'reason': f'{label}的 authority.anchor_id 与受保护信任锚不一致',
+                'anchor_id': anchor['anchor_id'], 'issuer': anchor['issuer']}
+    if envelope.get('issuer') != anchor['issuer']:
+        return {'trusted': False, 'status': 'untrusted',
+                'reason': f'{label}的 authority.issuer 与受保护信任锚不一致',
+                'anchor_id': anchor['anchor_id'], 'issuer': anchor['issuer']}
+    algorithm = envelope.get('algorithm')
+    if algorithm != anchor['algorithm']:
+        return {'trusted': False, 'status': 'untrusted',
+                'reason': f'{label}的 authority.algorithm 与信任锚不一致',
+                'anchor_id': anchor['anchor_id'], 'issuer': anchor['issuer']}
+    payload = execution_record_payload(record)
+    digest = hashlib.sha256(payload).hexdigest()
+    if envelope.get('signed_payload_sha256') != digest:
+        return {'trusted': False, 'status': 'untrusted',
+                'reason': f'{label}的 signed_payload_sha256 与记录内容不一致',
+                'anchor_id': anchor['anchor_id'], 'issuer': anchor['issuer']}
+    signature = envelope.get('signature_b64')
+    if not isinstance(signature, str) or not signature.strip():
+        return {'trusted': False, 'status': 'untrusted',
+                'reason': f'{label}的 authority.signature_b64 缺失',
+                'anchor_id': anchor['anchor_id'], 'issuer': anchor['issuer']}
+    ok, detail = _verify_signature(anchor, payload, signature, algorithm)
+    return {'trusted': ok, 'status': 'trusted' if ok else 'untrusted',
+            'reason': detail, 'anchor_id': anchor['anchor_id'],
+            'issuer': anchor['issuer'], 'signed_payload_sha256': digest}
+
+
+def verify_execution_attestation_authority(repo: Path, record: dict) -> dict:
+    """Return the authority status of a signed execution attestation."""
+    return _execution_record_authority(repo, record, '执行 attestation')
+
+
+def verify_execution_exception_authority(repo: Path, record: dict) -> dict:
+    """Return the authority status of a signed human exception."""
+    return _execution_record_authority(repo, record, '人类例外')

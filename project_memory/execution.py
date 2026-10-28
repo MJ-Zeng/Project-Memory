@@ -48,7 +48,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-from . import trusted_exec
+from . import authority, trusted_exec
 from .common import PMError, validate_identifier
 
 RECEIPT_SCHEMA = '1.1'
@@ -520,6 +520,159 @@ def verify_receipt(repo: Path, ref: str, expected: dict | None = None) -> dict:
             'log_ok': log_ok, 'snapshot_sha256': digest,
             'identity': identity, 'legacy_path_bound': legacy_path_bound,
             'integrity_valid': not problems, 'provenance': provenance}
+
+
+def _resolve_meta_file(repo: Path, ref: str, label: str) -> Path:
+    value = str(ref or '').strip()
+    if not value:
+        raise PMError(f'缺少{label}')
+    candidate = Path(value)
+    if not candidate.is_absolute():
+        candidate = repo / candidate
+    if candidate.is_symlink():
+        raise PMError(f'{label}不能是符号链接')
+    try:
+        resolved = candidate.resolve()
+        resolved.relative_to((repo / META_ROOT).resolve())
+    except (ValueError, OSError):
+        raise PMError(f'{label}必须位于仓库 .project-memory 内：{value}')
+    if not resolved.is_file():
+        raise PMError(f'{label}不存在：{value}')
+    return resolved
+
+
+def _load_execution_record(repo: Path, ref: str, label: str) -> tuple[dict, Path]:
+    path = _resolve_meta_file(repo, ref, label)
+    try:
+        record = json.loads(path.read_text(encoding='utf-8'))
+    except Exception as exc:  # noqa: BLE001 - malformed records are untrusted
+        raise PMError(f'{label}不是合法 JSON：{exc}')
+    if not isinstance(record, dict):
+        raise PMError(f'{label}必须是 JSON 对象')
+    return record, path
+
+
+def _provenance_reject(kind: str, reason: str) -> dict:
+    return {'authenticated': False, 'kind': kind, 'reason': reason}
+
+
+def _attestation_isolation_problem(record: dict) -> str | None:
+    if record.get('launcher_mode') != trusted_exec.MODE:
+        return (f'attestation.launcher_mode 不是受保护启动器'
+                f'（期望 {trusted_exec.MODE}）')
+    isolation = record.get('isolation') if isinstance(record.get('isolation'), dict) else {}
+    try:
+        uid = int(isolation.get('uid'))
+        levels = int(isolation.get('pid_ns_levels') or 0)
+        env_count = int(isolation.get('env_count') or 0)
+    except (TypeError, ValueError):
+        return 'attestation 的隔离事实不是整数'
+    if uid != 0:
+        return 'attestation 没有证明命名空间内 uid=0'
+    if levels < 1:
+        return 'attestation 没有证明 PID namespace'
+    if env_count < 1:
+        return 'attestation 没有证明环境 allowlist'
+    return None
+
+
+def _verify_execution_attestation(repo: Path, receipt: dict, target_commit: str,
+                                  ref: str, recorded_sha256) -> dict:
+    try:
+        record, path = _load_execution_record(repo, ref, '执行 attestation')
+    except PMError as exc:
+        return _provenance_reject('attestation', f'来源不可信：{exc}')
+    if record.get('kind') != authority.EXECUTION_ATTESTATION_KIND:
+        return _provenance_reject('attestation', '来源不可信：kind 不是 execution_attestation')
+    if record.get('schema_version') != authority.EXECUTION_RECORD_SCHEMA:
+        return _provenance_reject('attestation', '来源不可信：attestation schema_version 不受支持')
+    if recorded_sha256 and _sha256_file(path) != recorded_sha256:
+        return _provenance_reject('attestation', '来源不可信：attestation 内容哈希与收据不一致')
+    status = authority.verify_execution_attestation_authority(repo, record)
+    if not status['trusted']:
+        return _provenance_reject(
+            'attestation', f'来源不可信：attestation 签名未通过（{status["status"]}：{status["reason"]}）')
+    problem = _attestation_isolation_problem(record)
+    if problem:
+        return _provenance_reject('attestation', f'来源不可信：{problem}')
+    command_sha = _sha256_bytes(str(receipt.get('command') or '').encode('utf-8'))
+    bindings = {
+        'receipt_id': receipt.get('receipt_id'),
+        'receipt_sha256': _canonical_receipt_digest(receipt),
+        'commit_sha': target_commit,
+        'tree_sha': receipt.get('tree_sha'),
+        'snapshot_id': receipt.get('snapshot_id'),
+        'snapshot_sha256': receipt.get('snapshot_sha256'),
+        'command_sha256': command_sha,
+    }
+    for key, want in bindings.items():
+        if not want or record.get(key) != want:
+            return _provenance_reject(
+                'attestation',
+                f'来源不可信：attestation.{key} 与实时收据/目标提交不一致')
+    return {'authenticated': True, 'kind': 'attestation',
+            'reason': '执行 attestation 签名有效且与收据/提交绑定',
+            'path': path.relative_to(repo).as_posix(),
+            'signed_payload_sha256': status.get('signed_payload_sha256')}
+
+
+def _verify_execution_exception(repo: Path, receipt: dict, target_commit: str,
+                                goal_id: str, criterion_id: str, ref: str,
+                                recorded_sha256) -> dict:
+    try:
+        record, path = _load_execution_record(repo, ref, '人类例外')
+    except PMError as exc:
+        return _provenance_reject('exception', f'人类例外缺失：{exc}')
+    if record.get('kind') != authority.EXECUTION_EXCEPTION_KIND:
+        return _provenance_reject('exception', '人类例外缺失：kind 不是 execution_exception')
+    if record.get('schema_version') != authority.EXECUTION_RECORD_SCHEMA:
+        return _provenance_reject('exception', '人类例外缺失：schema_version 不受支持')
+    if recorded_sha256 and _sha256_file(path) != recorded_sha256:
+        return _provenance_reject('exception', '人类例外缺失：例外内容哈希与收据不一致')
+    status = authority.verify_execution_exception_authority(repo, record)
+    if not status['trusted']:
+        return _provenance_reject(
+            'exception', f'人类例外缺失：例外签名未通过（{status["status"]}：{status["reason"]}）')
+    for field in ('reason', 'scope', 'issued_by'):
+        if not str(record.get(field) or '').strip():
+            return _provenance_reject('exception', f'人类例外缺失：例外缺少 {field}')
+    if record.get('goal_id') != goal_id:
+        return _provenance_reject('exception', '人类例外缺失：例外不属于当前 Goal')
+    allowed = record.get('criterion_ids')
+    if not isinstance(allowed, list) or criterion_id not in allowed:
+        return _provenance_reject('exception', '人类例外缺失：例外范围不覆盖当前 criterion')
+    bindings = {
+        'receipt_id': receipt.get('receipt_id'),
+        'receipt_sha256': _canonical_receipt_digest(receipt),
+        'commit_sha': target_commit,
+    }
+    for key, want in bindings.items():
+        if not want or record.get(key) != want:
+            return _provenance_reject(
+                'exception', f'人类例外缺失：exception.{key} 与实时收据/目标提交不一致')
+    return {'authenticated': True, 'kind': 'exception',
+            'reason': '人类签名的执行例外有效且与收据/提交/范围绑定',
+            'path': path.relative_to(repo).as_posix(),
+            'signed_payload_sha256': status.get('signed_payload_sha256')}
+
+
+def verify_execution_provenance(repo: Path, receipt: dict, target_commit: str, *,
+                                goal_id: str = '', criterion_id: str = '') -> dict:
+    """Authorize execution provenance independently of receipt content integrity."""
+    repo = Path(repo).resolve()
+    receipt = receipt if isinstance(receipt, dict) else {}
+    attestation_ref = str(receipt.get('execution_attestation_path') or '').strip()
+    exception_ref = str(receipt.get('execution_exception_path') or '').strip()
+    if attestation_ref:
+        return _verify_execution_attestation(
+            repo, receipt, target_commit, attestation_ref,
+            receipt.get('execution_attestation_sha256'))
+    if exception_ref:
+        return _verify_execution_exception(
+            repo, receipt, target_commit, goal_id, criterion_id, exception_ref,
+            receipt.get('execution_exception_sha256'))
+    return _provenance_reject(
+        None, '人类例外缺失：收据没有可验证的执行 attestation，也没有人类签名例外')
 
 
 _SENSITIVE_ENV = ('TOKEN', 'SECRET', 'PASSWORD', 'PASSWD', 'API_KEY', 'APIKEY',

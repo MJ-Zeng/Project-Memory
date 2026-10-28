@@ -1,0 +1,21 @@
+{"seq": 1, "command": "git remote -v", "cwd": "pm-pilot-02", "exit_code": 0, "result": "origin git@github.com:MJ-Zeng/Project-Memory.git", "log": null}
+{"seq": 2, "command": "git status --short --branch", "cwd": "pm-pilot-02", "exit_code": 0, "result": "## dev/v1.0...origin/dev/v1.0 (clean)", "log": null}
+{"seq": 3, "command": "git fetch origin", "cwd": "pm-pilot-02", "exit_code": 0, "result": "fetched", "log": null}
+{"seq": 4, "command": "git rev-parse 587ac6a5024db3a6076a863876076d7fc7ecdd98^{commit}", "cwd": "pm-pilot-02", "exit_code": 0, "result": "587ac6a5024db3a6076a863876076d7fc7ecdd98", "log": null}
+{"seq": 5, "command": "git rev-parse origin/dev/v1.0", "cwd": "pm-pilot-02", "exit_code": 0, "result": "587ac6a5024db3a6076a863876076d7fc7ecdd98", "log": null}
+{"seq": 6, "command": "sha256sum pilot/rounds/B2/task.md", "cwd": "pm-pilot-02", "exit_code": 0, "result": "3617dab01ca01c05ba2cb9ec87b38eae2622a6b69b480b2e7abb1c0881a7900e", "log": null}
+{"seq": 7, "command": "C:/SoftWare/Anconda/python.exe --version", "cwd": "pm-pilot-02", "exit_code": 0, "result": "Python 3.12.4", "log": null}
+{"seq": 8, "command": "C:/SoftWare/Anconda/python.exe -m pytest --version", "cwd": "pm-pilot-02", "exit_code": 0, "result": "pytest 9.1.1", "log": null}
+{"seq": 9, "command": "C:/SoftWare/Anconda/python.exe -m pytest --collect-only -q -p no:cacheprovider", "cwd": "pm-pilot-02", "exit_code": 0, "result": "192 tests collected", "log": null}
+{"seq": 10, "command": "openssl version", "cwd": "pm-pilot-02", "exit_code": 0, "result": "OpenSSL 3.5.9 29 Sep 2026", "log": null}
+{"seq": 11, "command": "git worktree add --detach /tmp/b2-base-wt 587ac6a && (cd /tmp/b2-base-wt && C:/SoftWare/Anconda/python.exe -m pytest -q -p no:cacheprovider)", "cwd": "pm-pilot-02", "exit_code": 0, "result": "190 passed, 2 skipped", "log": "baseline-pytest.log"}
+{"seq": 12, "command": "C:/SoftWare/Anconda/python.exe -m pytest -q -p no:cacheprovider tests/test_security_b2.py", "cwd": "pm-pilot-02", "exit_code": 0, "result": "13 passed", "log": "b2-tests.log"}
+{"seq": 13, "command": "C:/SoftWare/Anconda/python.exe -m pytest -q -p no:cacheprovider", "cwd": "pm-pilot-02", "exit_code": 0, "result": "203 passed, 2 skipped", "log": "pytest.log"}
+{"seq": 14, "command": "git diff --stat", "cwd": "pm-pilot-02", "exit_code": 0, "result": "3 files changed, 261 insertions(+), 2 deletions(-)", "log": "diffstat.txt"}
+{"seq": 15, "command": "C:/SoftWare/Anconda/python.exe -m pytest -q -p no:cacheprovider tests/test_security_b2.py", "cwd": "pm-pilot-02", "exit_code": 0, "result": "13 passed (rerun after criterion_id ordering edit)", "log": "b2-tests.log"}
+{"seq": 16, "command": "C:/SoftWare/Anconda/python.exe -m pytest -q -p no:cacheprovider", "cwd": "pm-pilot-02", "exit_code": 0, "result": "203 passed, 2 skipped (rerun after criterion_id ordering edit)", "log": "pytest.log"}
+{"seq": 17, "command": "git diff --stat", "cwd": "pm-pilot-02", "exit_code": 0, "result": "3 files changed, 261 insertions(+), 2 deletions(-)", "log": "diffstat.txt"}
+{"seq": 18, "command": "C:/SoftWare/Anconda/python.exe -m pytest -q -p no:cacheprovider tests/test_security_b2.py", "cwd": "pm-pilot-02", "exit_code": 0, "result": "13 passed (final, after comment cleanup)", "log": "b2-tests.log"}
+{"seq": 19, "command": "C:/SoftWare/Anconda/python.exe -m pytest -q -p no:cacheprovider", "cwd": "pm-pilot-02", "exit_code": 0, "result": "203 passed, 2 skipped (final, after comment cleanup)", "log": "pytest.log"}
+{"seq": 20, "command": "git add -N <new files> && git diff --stat HEAD", "cwd": "pm-pilot-02", "exit_code": 0, "result": "7 files changed, 911 insertions(+), 2 deletions(-)", "log": "diffstat.txt"}
+{"seq": 21, "command": "python: replace CRLF with LF in evidence text files", "cwd": "pm-pilot-02", "exit_code": 0, "result": "b2-tests.log, baseline-pytest.log, pytest.log normalized (pilot/** is eol=lf)", "log": null}

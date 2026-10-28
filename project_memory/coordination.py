@@ -14,7 +14,8 @@ from .knowledge import (audit, iter_docs, load_config, load_doc, log_problem,
 from .workflows import handoff as write_handoff
 from .workflows import task_id_of
 from .authority import canonical_digest, untrusted_envelope, verification_authority
-from .execution import repo_identity, verify_receipt
+from .execution import (repo_identity, verify_execution_provenance,
+                        verify_receipt)
 
 GOAL_STATUSES = {'proposed', 'approved', 'active', 'evaluating', 'achieved', 'cancelled', 'blocked'}
 GOAL_TRANSITIONS = {
@@ -800,6 +801,8 @@ def _verification_ok(repo: Path, evidence: dict, goal_id: str,
     if path is None:
         return False, f'找不到验证记录 {ref}', 'invalid'
     verification = _load(path)
+    if verification.get('kind') not in (None, 'verification_record'):
+        return False, f'{ref} 不是 verification 记录', 'invalid'
     if verification.get('goal_id') != goal_id:
         return False, f'{ref} 属于其他目标：{verification.get("goal_id")}', 'invalid'
     if verification.get('verdict') != 'pass' or verification.get('status') != 'VERIFIED':
@@ -819,6 +822,22 @@ def _verification_ok(repo: Path, evidence: dict, goal_id: str,
         return False, f'{ref} 的执行收据没有通过完整性校验', 'invalid'
     if not criterion_id:
         return False, f'{ref} 缺少 criterion id，无法确认覆盖', 'unconfirmed'
+    # B2: a signed record must not vouch for a handwritten receipt.
+    receipt_ref = tests_info.get('receipt')
+    if not receipt_ref:
+        return False, f'{ref} 缺少执行收据引用，无法确认执行来源', 'untrusted'
+    checked_receipt = verify_receipt(
+        repo, receipt_ref, expected={'commit_sha': verification.get('target_head_sha')})
+    if not checked_receipt.get('valid'):
+        return (False, f'{ref} 的执行收据内容不完整：'
+                       + '；'.join(checked_receipt.get('problems') or []), 'invalid')
+    provenance = verify_execution_provenance(
+        repo, checked_receipt.get('receipt') or {},
+        verification.get('target_head_sha') or '',
+        goal_id=goal_id, criterion_id=criterion_id)
+    if not provenance.get('authenticated'):
+        return (False, f'{ref} 的执行来源不可信：{provenance.get("reason")}',
+                'untrusted')
     entries = [entry for entry in (verification.get('criterion_evidence') or [])
                if entry.get('criterion_id') == criterion_id and entry.get('evidence_matched')]
     if not entries:

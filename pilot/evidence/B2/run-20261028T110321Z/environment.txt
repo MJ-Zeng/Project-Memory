@@ -1,0 +1,14 @@
+recorded_at_utc=2026-10-28T11:05:25Z
+os=MINGW64_NT-10.0-26300 3.6.10-5a1665c8.x86_64 x86_64
+host_platform=win32 x64
+windows_python=Python 3.12.4
+pytest=pytest 9.1.1
+openssl=OpenSSL 3.5.9 29 Sep 2026 (Library: OpenSSL 3.5.9 29 Sep 2026)
+git=git version 2.56.0.windows.2
+wsl_python=Python 3.14.4
+repo=/c/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-02
+branch=fix/b2-receipt-provenance
+base_sha=587ac6a5024db3a6076a863876076d7fc7ecdd98
+dev_tip=587ac6a5024db3a6076a863876076d7fc7ecdd98
+task_card_sha256=3617dab01ca01c05ba2cb9ec87b38eae2622a6b69b480b2e7abb1c0881a7900e
+test_time_key=test-time RSA via openssl; no production key read
