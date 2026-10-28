@@ -1,0 +1,10 @@
+COMMAND: C:/SoftWare/Anconda/python.exe -m pytest -q -p no:cacheprovider
+CWD: C:\Documents\02_Research\Code\project-memory-verification-lab\import-workspace\pm-pilot-02
+ENV: Windows Anaconda Python 3.12.4; pre-fix baseline tree (25a919d + untracked docs only)
+EXIT: 0
+--- stdout ---
+........................................................................ [ 43%]
+........................................................................ [ 86%]
+..................ss..                                                   [100%]
+164 passed, 2 skipped in 98.24s (0:01:38)
+--- stderr ---

@@ -1,0 +1,10 @@
+COMMAND: C:/SoftWare/Anconda/python.exe -m pytest -q -p no:cacheprovider
+CWD: C:\Documents\02_Research\Code\project-memory-verification-lab\import-workspace\pm-pilot-02
+ENV: Windows Anconda python 3.12; full suite at committed candidate 89ea4bd7; supersedes seq 16 (whitespace-only test edit after it)
+EXIT: 0
+--- stdout ---
+........................................................................ [ 37%]
+........................................................................ [ 75%]
+............................................ss..                         [100%]
+190 passed, 2 skipped in 99.52s (0:01:39)
+--- stderr ---

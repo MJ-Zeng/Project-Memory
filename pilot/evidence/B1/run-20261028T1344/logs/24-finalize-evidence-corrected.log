@@ -1,0 +1,8 @@
+COMMAND: C:/SoftWare/Anconda/python.exe pilot/evidence/B1/run-20261028T1344/scripts/finalize.py
+CWD: C:\Documents\02_Research\Code\project-memory-verification-lab\import-workspace\pm-pilot-02
+ENV: re-run of seq 23 with the scratch-dir exclusion fixed (seq 23 had hashed 654 files including throwaway probe case dirs); regenerates sha256sums.txt/environment.txt/diffstat.txt/pytest.log/positive.json
+EXIT: 0
+--- stdout ---
+evidence files: 49
+environment.txt sha256: 7ae824877b114973d5d3bbf9fd7abfdb008e9d05206c92feb117629730c9eff7
+--- stderr ---

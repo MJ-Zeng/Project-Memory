@@ -1,0 +1,9 @@
+wsl.exe
+-u
+root
+-e
+python3
+/mnt/c/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-02/pilot/kit/b1/openssl_substitution.py
+/mnt/c/Users/ZMJ/AppData/Local/Temp/pm-b1-base-25a919d/tree
+/mnt/c/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-02/pilot/evidence/B1/run-20261028T1344/work/before
+/mnt/c/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-02/pilot/evidence/B1/run-20261028T1344/probe-before.json

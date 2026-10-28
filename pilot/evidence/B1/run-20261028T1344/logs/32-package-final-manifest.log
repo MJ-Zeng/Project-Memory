@@ -1,0 +1,8 @@
+COMMAND: C:/SoftWare/Anconda/python.exe pilot/evidence/B1/run-20261028T1344/scripts/package.py --label 32-package-final-manifest --env-note 'final manifest after the README §7 rewrite; no further evidence edits'
+CWD: C:\Documents\02_Research\Code\project-memory-verification-lab\import-workspace\pm-pilot-02
+ENV: final packaging pass; sha256sums.txt is the last file written
+EXIT: 0
+files converted CRLF -> LF: 0 (line endings only, content unchanged)
+journal entries whose log_sha256 was re-pointed: 0
+pre-conversion digests are kept per entry as log_sha256_before_eol_normalization
+--- table: path / sha256 before / sha256 after ---

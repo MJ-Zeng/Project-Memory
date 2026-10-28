@@ -1,0 +1,11 @@
+COMMAND: C:/SoftWare/Anconda/python.exe pilot/evidence/B1/run-20261028T1344/scripts/run_chain.py --code C:/Users/ZMJ/AppData/Local/Temp/pm-b1-candidate-89ea4bd/tree --work pilot/evidence/B1/run-20261028T1344/work/chain-after --out pilot/evidence/B1/run-20261028T1344/chain-after.json
+CWD: C:\Documents\02_Research\Code\project-memory-verification-lab\import-workspace\pm-pilot-02
+ENV: wsl.exe -u root; scripts/run_chain.py -> scripts/chain_probe.py imports the unmodified kit module (read-only) to reuse build_case/bogus_record; CODE=archive of candidate 89ea4bd7; CLI as uid 1000; PATH prepends /tmp/pm-rc3-fakebin and PROJECT_MEMORY_OPENSSL points at a fake openssl that prints Verified OK
+EXIT: 0
+--- stdout ---
+{
+  "wsl_exit_code": 0,
+  "stdout": "{\n  \"goal_evidence_exit\": 1,\n  \"goal_evidence_stderr_tail\": \"project-memory: \u8bc1\u636e\u65e0\u6548\uff1aVER-bogus \u6ca1\u6709\u53ef\u4fe1\u6388\u6743\u6765\u6e90\uff08untrusted\uff09\uff1a\u7b7e\u540d\u9a8c\u8bc1\u5931\u8d25\\n\",\n  \"goal_evaluate_exit\": 2,\n  \"goal_satisfied\": false,\n  \"transition_approved_exit\": 0,\n  \"transition_active_exit\": 0,\n  \"transition_evaluating_exit\": 0,\n  \"transition_achieved_exit\": 1,\n  \"achieved_exit\": 1,\n  \"achieved_stderr_tail\": \"project-memory: Goal \u7684\u6210\u529f\u6807\u51c6\u5c1a\u672a\u6ee1\u8db3\uff08insufficient_evidence\uff09\uff1aC1\uff1b\u4e0d\u80fd\u4ec5\u51ed Issue \u5173\u95ed\u6216 Agent \u58f0\u660e\u6807\u8bb0 achieved\\n\",\n  \"goal_state_after_chain\": {\n    \"status\": \"evaluating\",\n    \"evidence\": []\n  }\n}\n",
+  "stderr": "wsl: \u68c0\u6d4b\u5230 localhost \u4ee3\u7406\u914d\u7f6e\uff0c\u4f46\u672a\u955c\u50cf\u5230 WSL\u3002NAT \u6a21\u5f0f\u4e0b\u7684 WSL \u4e0d\u652f\u6301 localhost \u4ee3\u7406\u3002\r\n"
+}
+--- stderr ---

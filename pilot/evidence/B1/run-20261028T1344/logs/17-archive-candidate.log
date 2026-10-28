@@ -1,0 +1,7 @@
+COMMAND: git archive --format=tar --output=C:/Users/ZMJ/AppData/Local/Temp/pm-b1-candidate-89ea4bd/tree.tar 89ea4bd7fdbddaf90f640d4cc1b71d66fd1a63e3
+CWD: C:\Documents\02_Research\Code\project-memory-verification-lab\import-workspace\pm-pilot-02
+ENV: git archive of candidate 89ea4bd7 (the fix commit) into %TEMP%; used as CODE for the after-fix probe and positive runs
+EXIT: 128
+--- stdout ---
+--- stderr ---
+fatal: could not open 'C:/Users/ZMJ/AppData/Local/Temp/pm-b1-candidate-89ea4bd/tree.tar' for writing: No such file or directory

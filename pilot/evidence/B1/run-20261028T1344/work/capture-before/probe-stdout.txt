@@ -1,0 +1,15 @@
+{
+  "control_real_openssl_exit": 1,
+  "control_rejected": true,
+  "path_substitution_exit": 0,
+  "path_substitution_accepted": true,
+  "path_evaluate_exit": 0,
+  "path_achieved_exit": 0,
+  "path_goal_status": "achieved",
+  "env_openssl_exit": 0,
+  "env_openssl_accepted": true,
+  "env_true_exit": 0,
+  "env_true_accepted": true,
+  "agent_owned_anchor_exit": 1,
+  "agent_owned_anchor_rejected": true
+}

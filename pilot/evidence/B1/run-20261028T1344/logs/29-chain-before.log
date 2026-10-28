@@ -1,0 +1,11 @@
+COMMAND: C:/SoftWare/Anconda/python.exe pilot/evidence/B1/run-20261028T1344/scripts/run_chain.py --code C:/Users/ZMJ/AppData/Local/Temp/pm-b1-base-25a919d/tree --work pilot/evidence/B1/run-20261028T1344/work/chain-before --out pilot/evidence/B1/run-20261028T1344/chain-before.json
+CWD: C:\Documents\02_Research\Code\project-memory-verification-lab\import-workspace\pm-pilot-02
+ENV: same chain scripts, CODE=archive of baseline 25a919d; chain_probe.py does NOT perform the kit goal_criteria_sha256 repair step, so evaluate/achieved differ from the kit chain; the faithful pre-fix chain is probe-before.json
+EXIT: 0
+--- stdout ---
+{
+  "wsl_exit_code": 0,
+  "stdout": "{\n  \"goal_evidence_exit\": 0,\n  \"goal_evidence_stderr_tail\": \"\",\n  \"goal_evaluate_exit\": 2,\n  \"goal_satisfied\": false,\n  \"transition_approved_exit\": 0,\n  \"transition_active_exit\": 0,\n  \"transition_evaluating_exit\": 0,\n  \"transition_achieved_exit\": 1,\n  \"achieved_exit\": 1,\n  \"achieved_stderr_tail\": \"project-memory: Goal \u7684\u6210\u529f\u6807\u51c6\u5c1a\u672a\u6ee1\u8db3\uff08insufficient_evidence\uff09\uff1aC1\uff1b\u4e0d\u80fd\u4ec5\u51ed Issue \u5173\u95ed\u6216 Agent \u58f0\u660e\u6807\u8bb0 achieved\\n\",\n  \"goal_state_after_chain\": {\n    \"status\": \"evaluating\",\n    \"evidence\": []\n  }\n}\n",
+  "stderr": "wsl: \u68c0\u6d4b\u5230 localhost \u4ee3\u7406\u914d\u7f6e\uff0c\u4f46\u672a\u955c\u50cf\u5230 WSL\u3002NAT \u6a21\u5f0f\u4e0b\u7684 WSL \u4e0d\u652f\u6301 localhost \u4ee3\u7406\u3002\r\n"
+}
+--- stderr ---

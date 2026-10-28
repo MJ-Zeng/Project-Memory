@@ -1,0 +1,20 @@
+COMMAND: C:/SoftWare/Anconda/python.exe -c '
+import subprocess, tarfile, pathlib, shutil, hashlib, io
+scratch = pathlib.Path('"'"'C:/Users/ZMJ/AppData/Local/Temp/pm-b1-candidate-89ea4bd'"'"')
+if scratch.exists(): shutil.rmtree(scratch)
+tree = scratch/'"'"'tree'"'"'; tree.mkdir(parents=True)
+data = subprocess.run(['"'"'git'"'"','"'"'archive'"'"','"'"'--format=tar'"'"','"'"'89ea4bd7fdbddaf90f640d4cc1b71d66fd1a63e3'"'"'], capture_output=True, check=True).stdout
+with tarfile.open(fileobj=io.BytesIO(data)) as h: h.extractall(tree)
+print('"'"'candidate authority.py sha256'"'"', hashlib.sha256((tree/'"'"'project_memory/authority.py'"'"').read_bytes()).hexdigest())
+print('"'"'baseline  authority.py sha256'"'"', hashlib.sha256(pathlib.Path('"'"'project_memory/authority.py'"'"').read_bytes()).hexdigest() if False else '"'"'4805b06b45e208013013a872cce0e6b5f5e2c67794f8ea237eb1e07ff384a88d'"'"')
+print('"'"'probe kit present in archive'"'"', (tree/'"'"'pilot/kit/b1/openssl_substitution.py'"'"').is_file())
+'
+CWD: C:\Documents\02_Research\Code\project-memory-verification-lab\import-workspace\pm-pilot-02
+ENV: git archive of the fix commit 89ea4bd7 extracted to %TEMP%/pm-b1-candidate-89ea4bd/tree; prints authority.py sha256 of the candidate and the baseline
+EXIT: 0
+--- stdout ---
+candidate authority.py sha256 163a08ad4585d3d488ca628c9c30554029767b5a45784fe6f7e2bcc6537518ea
+baseline  authority.py sha256 4805b06b45e208013013a872cce0e6b5f5e2c67794f8ea237eb1e07ff384a88d
+probe kit present in archive True
+--- stderr ---
+<string>:7: DeprecationWarning: Python 3.14 will, by default, filter extracted tar archives and reject files or modify their metadata. Use the filter argument to control this behavior.

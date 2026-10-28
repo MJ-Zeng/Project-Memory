@@ -1,0 +1,10 @@
+COMMAND: git status --short --branch
+CWD: C:\Documents\02_Research\Code\project-memory-verification-lab\import-workspace\pm-pilot-02
+ENV: Windows Git Bash
+EXIT: 0
+--- stdout ---
+## fix/b1-openssl-verifier
+?? docs/decisions/ADR-0002-inprocess-signature-verifier.md
+?? pilot/evidence/B1/
+?? pilot/rounds/B1/context-recovery-pm02.md
+--- stderr ---

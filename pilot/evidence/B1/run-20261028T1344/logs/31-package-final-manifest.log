@@ -1,0 +1,15 @@
+COMMAND: C:/SoftWare/Anconda/python.exe pilot/evidence/B1/run-20261028T1344/scripts/package.py --label 31-package-final-manifest --env-note 'final: normalize line endings, re-point journal digests, rebuild sha256sums.txt; no evidence edits after this'
+CWD: C:\Documents\02_Research\Code\project-memory-verification-lab\import-workspace\pm-pilot-02
+ENV: final packaging pass; sha256sums.txt is the last file written
+EXIT: 0
+files converted CRLF -> LF: 7 (line endings only, content unchanged)
+journal entries whose log_sha256 was re-pointed: 3
+pre-conversion digests are kept per entry as log_sha256_before_eol_normalization
+--- table: path / sha256 before / sha256 after ---
+commands.jsonl  a05f062131db73990071b408f75e69bf1db6db1c5db2a8881fe950d22f32045a  2ee8d4b20e7afa02cf1698975d631fb435e1f7ef2465bc9bd062246328c9c0b0
+diffstat.txt  e2b7dc5cfba8adfb328f07e9daee71682604abb4954e7b967c8d114eff8d6e66  28738c871ebe1ba68e199f88d225111ca839f3d239a11bea1d219c77f980eda4
+environment.txt  0940b5f685fb44a3269d5a6e966d5967d9cd6922171abb0412578067454ee74b  3d1dbe9aefa80be1a58d801e663367f841b615cb5a58408c638df58c35149b89
+logs/28-chain-after.log  a6316185345aa8fcd3a874afcfb4cd1c70f9d6d8f4c6acae2f327e0fa83d97db  38e9b27dc576b1f1afb8d20bbb69e456cf8e453a7b4373561c1c18b063f0a6d6
+logs/29-chain-before.log  6c0a92210010cffd38b5730e4f6964b2aad403a3974e73b1fa0f74fcc752df58  384591741dd67d83b76993dc0a08c0348dbb129b69b2f1dcd998494a2d0aa285
+logs/30-finalize-refresh.log  dd1b787e174ad2a1e09365b3faab3c75b6cd46ea02079f239bf64ddf85db9b84  ebda3e3bf8c1b63c1f0a4589c66a19b1575027e233cfede976823910eab3eac3
+positive.json  a3bd59c05d7878167a49bbd94133d1fe49c164aed16c34dd3e0cac7ee506b68f  4cffee0384fd1d906daa814043c6a72fee526258d8fe63998c14b5e8656b6d81

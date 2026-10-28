@@ -1,0 +1,19 @@
+COMMAND: C:/SoftWare/Anconda/python.exe -c '
+import subprocess, tarfile, pathlib, shutil
+scratch = pathlib.Path('"'"'C:/Users/ZMJ/AppData/Local/Temp/pm-b1-base-25a919d'"'"')
+if scratch.exists(): shutil.rmtree(scratch)
+scratch.mkdir(parents=True)
+data = subprocess.run(['"'"'git'"'"','"'"'archive'"'"','"'"'--format=tar'"'"','"'"'25a919d63c7181fd4083e0fc1af33734d74c5515'"'"'], capture_output=True, check=True).stdout
+pathlib.Path(scratch,'"'"'base.tar'"'"').write_bytes(data)
+with tarfile.open(scratch/'"'"'base.tar'"'"') as h: h.extractall(scratch/'"'"'tree'"'"')
+print('"'"'extracted'"'"', scratch/'"'"'tree'"'"', '"'"'project_memory present'"'"', (scratch/'"'"'tree/project_memory/authority.py'"'"').is_file())
+print('"'"'authority sha256'"'"', __import__('"'"'hashlib'"'"').sha256((scratch/'"'"'tree/project_memory/authority.py'"'"').read_bytes()).hexdigest())
+'
+CWD: C:\Documents\02_Research\Code\project-memory-verification-lab\import-workspace\pm-pilot-02
+ENV: git archive of exact baseline commit to scratch outside the repo
+EXIT: 0
+--- stdout ---
+extracted C:\Users\ZMJ\AppData\Local\Temp\pm-b1-base-25a919d\tree project_memory present True
+authority sha256 4805b06b45e208013013a872cce0e6b5f5e2c67794f8ea237eb1e07ff384a88d
+--- stderr ---
+<string>:8: DeprecationWarning: Python 3.14 will, by default, filter extracted tar archives and reject files or modify their metadata. Use the filter argument to control this behavior.

@@ -1,0 +1,8 @@
+COMMAND: C:/SoftWare/Anconda/python.exe -c 'import hashlib,pathlib;h=hashlib.sha256(pathlib.Path('"'"'pilot/rounds/B1/task.md'"'"').read_bytes()).hexdigest();print('"'"'task.md sha256'"'"',h);print('"'"'match'"'"', h=='"'"'0fdc9469456b81bae26a3c29385f1745222e16b19211e27d4d04a418ef3be08d'"'"')'
+CWD: C:\Documents\02_Research\Code\project-memory-verification-lab\import-workspace\pm-pilot-02
+ENV: inherited
+EXIT: 0
+--- stdout ---
+task.md sha256 0fdc9469456b81bae26a3c29385f1745222e16b19211e27d4d04a418ef3be08d
+match True
+--- stderr ---
