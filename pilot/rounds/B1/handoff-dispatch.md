@@ -13,9 +13,9 @@ branch: fix/b1-openssl-verifier
 pr: null
 criteria_sha256: 0fdc9469456b81bae26a3c29385f1745222e16b19211e27d4d04a418ef3be08d
 agent_label: "PM-01 Supervisor <pm01@pilot.invalid>"   # 自述，不是认证
-session_id: <PM-01 会话标识>
-model: <provider/id>
-created_at: <ISO 8601>
+session_id: pm01-setup-20261028
+model: dsh/deepseek-flash
+created_at: 2026-10-28T09:10:00+08:00
 status: draft
 ---
 
