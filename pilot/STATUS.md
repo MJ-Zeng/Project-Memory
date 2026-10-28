@@ -9,7 +9,7 @@
 | 仓库可见性 | Private | 2026-10-27 | 用户确认 |
 | 冻结基线 | `0d08a1ad85144d11a46d6a361a2a3ce4eadbbed4` | 2026-10-27 | `git rev-parse` |
 | 开发主线 | `dev/v1.0`（默认分支；不在此固定 tip，合并 SHA 见下一行） | 2026-10-28 | `git ls-remote --symref origin HEAD` |
-| 最近合并 | PR #10 → `904a22a`（B1 收口） | 2026-10-28 | GitHub API `merged=true` |
+| 最近合并 | PR #14 → `5a5abddf`（B2 合并；试点收尾） | 2026-10-28 | GitHub API `merged=true` |
 | `frozen/rc3-0d08a1a` | 存在，指向 `0d08a1a` | 2026-10-27 | `git ls-remote` |
 | 脚手架分支 | `pilot/bootstrap` 已推送；PR #2 **已合并** | 2026-10-28 | GitHub PR #2 |
 | B1 任务卡 SHA-256 | `0fdc9469456b81bae26a3c29385f1745222e16b19211e27d4d04a418ef3be08d` | 2026-10-28 | `Get-FileHash`；fresh clone 复核一致 |
@@ -22,15 +22,18 @@
 | B0 状态 | `merged`（PR #5，Merge commit `a70ad19`） | 2026-10-28 | GitHub API `merged=true` |
 | B0.1 复审 | **PASS（程序性独立复核）**；报告 `review/b0-8506dd4` @ `b1e977c` | 2026-10-28 | 该分支的 `pilot/review/B0/REVIEW-B0.1.md` |
 | B2 任务卡 SHA-256 | `3617dab01ca01c05ba2cb9ec87b38eae2622a6b69b480b2e7abb1c0881a7900e` | 2026-10-28 | `Get-FileHash` |
-| B2 状态 | `dispatch_pending_merge`；PR 待建 | 2026-10-28 | 本文件 |
+| B2 状态 | `merged`（PR #14，Merge commit `5a5abddf`） | 2026-10-28 | GitHub API `merged=true` |
+| B2 复审 | **PASS**（逻辑级 28/28 + anchor-a E2E 4/4）；`review/b2-004a35b` @ `6cbdc76` | 2026-10-28 | `REVIEW-B2.md` + `REVIEW-B2-E2E.md` |
+| B2 AC-3 caveat | 正例 `goal evidence` 通过，但 `goal evaluate satisfied=true` **NOT VERIFIED**，留 B3 | 2026-10-28 | 人类接受 scope split；`rounds/B2/decision.md` |
+| 试点状态 | **closed**（2026-10-28）；三轮 B0/B1/B2 完成 | 2026-10-28 | `pilot/PILOT_CLOSEOUT.md` |
 
 ## 工作区
 
 | 工作区 | 状态 | 说明 |
 |---|---|---|
 | `pm-pilot-01` | 已创建 | PM-01；`dev/v1.0`，与 `origin/dev/v1.0` 同步，干净 |
-| `pm-pilot-02` | 已创建 | PM-02；`fix/b1-openssl-verifier` @ `216f154`（已合并），干净 |
-| `pm-pilot-03` | 已创建 | PM-03；`review/b1-1c7ad94` @ `09f68d8`，干净 |
+| `pm-pilot-02` | 已创建 | PM-02；`fix/b2-receipt-provenance` @ `6257fb6`（已合并），干净 |
+| `pm-pilot-03` | 已创建 | PM-03；`review/b2-004a35b` @ `6cbdc76`，干净 |
 | 原始 `project-memory-mvp` | 未修改 | 不是试点工作区 |
 
 ## 分支保护（方案 1）
@@ -45,7 +48,7 @@
 | Restrict updates | 关 |
 | Conversation resolution | 开 |
 
-**限制**：同账号下分支保护只能防误操作，不能强制“只有人类能合并”。人类批准记录在 PR 评论 + `rounds/B1/decision.md`，不是 GitHub 强制。
+**限制**：同账号下分支保护只能防误操作，不能强制“只有人类能合并”。人类批准记录在 PR 评论 + `rounds/*/decision.md`，不是 GitHub 强制。
 
 ## 已知阻塞
 
@@ -61,6 +64,11 @@
 | B1-REVIEW | B1 独立复审 | **已完成**：PM-03 PASS（`09f68d8`） |
 | B1-MERGE | B1 合并待人类决定 | **已批准并合并**：PR #9，`15f4b3c` |
 | B1-B5 | `PYTHONPATH`/cwd 同名模块顶替（HIGH，范围外） | **未处理**：待 B5 立条；需人类授权 |
+| B2-MERGE | B2 合并 | **已批准并合并**：PR #14，`5a5abddf` |
+| B2-AC3 | AC-3 的 `goal evaluate satisfied=true` | **NOT VERIFIED，B3 范围**：人类接受 scope split |
+| B3 | 正向流程自失效 | **未开始**：产品阻塞；B2 AC-3 的遗留子项 |
+| B4/B5 | RC3 剩余产品阻塞（含默认 test-run 隔离、WSL_EXE） | **未开始** |
+| PILOT | 试点三轮 | **已收尾**：见 `pilot/PILOT_CLOSEOUT.md`；v1.0 未 GO |
 
 ## 环境
 
@@ -69,7 +77,7 @@
 | Windows Python | `C:\SoftWare\Anconda\python.exe` 3.12.4 | `--version` |
 | pytest | 9.1.1 | `pytest --version` |
 | 基线测试数 | 164 passed / 2 skipped（`25a919d`） | `pilot/evidence/B1/run-20261028T1344/logs/09-baseline-pytest.log` |
-| 合并后测试数 | 190 passed / 2 skipped（`15f4b3c`，合并树=候选树） | `.../logs/22-full-suite-candidate.log`、`pilot/evidence/B1/review-20261028T1802/pytest.log`、PM-01 本地复跑 |
+| 合并后测试数 | 203 passed / 2 skipped（`5a5abddf`，B2 候选树；基线 190/2） | `pilot/evidence/B2/run-20261028T110321Z/pytest.log`、PM-03 `review-e2e-20261028T213532Z/`、PM-01 本地复跑 |
 | WSL | Ubuntu；python3 3.14.4；无 pytest | `wsl` 命令 |
 | 签名 anchor | `/etc/pm-rc3-review/` 存在 | 目录检查 |
 | Git SSH | 当前代理不可用；Clone 使用 `core.sshCommand="ssh -o ProxyCommand=none"` | `git ls-remote` |
@@ -83,3 +91,6 @@
 - 2026-10-28：B1 候选 `1c7ad94` 交付（分支头 `216f154`）；PM-03 独立复审 PASS（`review/b1-1c7ad94`）；D-B1-R1-01 整改后干净检出 18/18 OK。
 - 2026-10-28：人类批准合并；PR #9 以 Merge commit 合并（`15f4b3c`），Issue #1 随 `Closes #1` 关闭；合并后回归 190 passed / 2 skipped。Goal `G-B1` 仍为 `proposed`。
 - 2026-10-28：启动 B2 派发准备（任务卡 `3617dab0…`；分支 `pilot/b2-dispatch`；B2 Issue/PR 待创建/合并）。
+- 2026-10-28：B2 派发合并（PR #13，`587ac6a`）；候选 `004a35b`（PR #14 head `6257fb6`）；PM-03 逻辑级 28/28，先判 NOT VERIFIED（缺 anchor-a E2E）。
+- 2026-10-28：PM-01 生成 B2 anchor-a E2E fixture（`fixtures/b2/`，4/4）；PM-03 短复审 PASS（逻辑 28/28 + E2E 4/4，`6cbdc76`）。
+- 2026-10-28：人类接受 scope split（AC-3 的 `evaluate` 留给 B3）；PR #14 以 Merge commit 合并（`5a5abddf`）；Issue #12 closed；试点三轮 B0/B1/B2 收尾，报告 `pilot/PILOT_CLOSEOUT.md`。
