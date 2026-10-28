@@ -127,9 +127,9 @@ self SID  = advapi32.OpenProcessToken(当前进程, TOKEN_QUERY) + GetTokenInfor
 |---|---|---|
 | AC-1 | 未改动 anchor/载荷语义，RSA 验证接受真实签名 | `positive.json`（`goal evidence` exit 0）、交叉验证日志 |
 | AC-2/3/4 | 验证路径不再查询 `PATH`/`PROJECT_MEMORY_OPENSSL` | 原始探针 `probe-after.json` |
-| AC-5 | 判定来自公钥数学，不看任何输出字符串 | 新增负向测试 + `probe-after.json` |
+| AC-5 | 判定来自公钥数学，不看任何输出字符串 | 新增负向测试（植入会打印 `Verified OK` 且 exit 0 的假 `openssl`/`openssl.bat`，前置 `PATH` 并设 `PROJECT_MEMORY_OPENSSL`）+ `probe-after.json`；任务卡要求由 PM-03 自建变体，本行只是同型自测 |
 | AC-6 | 无环境选择、无回退、解析失败一律拒绝 | `authority.py` diff、新增单测 |
-| AC-7 | `trusted` 无法被伪造 ⇒ 链路停在 `goal evidence` | `probe-after.json` |
+| AC-7 | `trusted` 无法被伪造 ⇒ 链路停在 `goal evidence` | `probe-after.json`；原始探针只在替换成功时才继续走状态链，所以修复后它的 `path_achieved_exit`/`path_goal_status` 两键不存在。逐步退出码的直接观测在 `chain-after.json`（`goal evidence` exit 1 → `transition achieved` exit 1，Goal 停在 `evaluating`；见证据包 README §2.5） |
 | AC-8 | 不删/不跳既有测试 | `pytest.log` |
 | AC-9 | 信封/摘要/anchor 检查全部保留 | 既有 RC3 测试 + 新增负向测试 |
 | AC-10 | 本文档 | 本文件 |
