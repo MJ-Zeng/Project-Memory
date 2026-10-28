@@ -34,9 +34,10 @@ kind     = "remote+root"（有 remote）| "root-only"（无网络 remote）
 ```
 
 - **remote 选择**：优先 `origin`；否则取名字字典序最小的 remote。取 `git remote get-url <name>`。
-- **remote 规范化**（只做无损归一，不猜测等价关系）：
+- remote 规范化（只做无损归一，不猜测等价关系）：
   - 去掉结尾 `/` 与结尾 `.git`；
   - `scheme://[user@]host[:port]/path` → `host[:port]/path`（host 小写，path 保持原样；user 与 scheme 丢弃）；
+  - 显式默认端口 `:22` 被丢弃：`ssh://[user@]host:22/path` 与 scp 形式 `[user@]host:path` 归一到同一身份 `host/path`。非默认端口保留（`host:2222/path` 与 `host/path` 不同）；
   - scp 形式 `[user@]host:path` → `host/path`；
   - 本地路径、`file://`、相对路径视为**没有网络 remote**，不进入身份，避免把绝对路径重新引入；
   - 因此 `git@github.com:Owner/Repo.git` 与 `https://github.com/Owner/Repo` 归一到同一身份 `github.com/Owner/Repo`。
@@ -69,6 +70,17 @@ kind     = "remote+root"（有 remote）| "root-only"（无网络 remote）
   - **同一路径**：继续有效，但结果带 `identity.kind="legacy_path_bound"`、`identity.portable=false`、`legacy_path_bound=true`，明确“不能作为跨路径证据”；
   - **不同路径**：`valid=false`，问题“收据属于其他仓库（legacy 路径绑定，不能跨路径使用）”。
 - 不提供静默迁移命令。要获得可移植收据，重新运行 `test-run` 生成 `1.1` 收据，并重新生成引用它的验证记录。文档写明升级后旧证据的可信范围。
+
+### 2.5 验证映射的仓库绑定（B0.1 整改）
+
+`verify` 的 criterion evidence 映射带 `target_repository`。判断它是否属于当前仓库不再依赖绝对路径或目录名，而是复用 §2.1 的稳定身份：
+
+- 接受**稳定身份本身**：`repo_identity.id`，或规范化 remote（`host/path`）；
+- 接受**绝对路径**，但只当它是当前检出路径，或另一个**存在**的检出目录且 `repo_identity` 相同（同一仓库的复制品）。该路径必须是 git 顶层目录，且不能位于当前仓库内部；
+- **不再接受裸目录名**：同名目录的不同仓库无法用名字通过检查；
+- 路径不存在或解析失败时按不匹配处理（fail-closed），不猜测。
+
+于是路径 A 写下的 mapping 在复制出的路径 B 中仍按身份通过；不同 remote 或不同根提交的仓库即使目录同名也会被拒绝。长期可移植的 mapping 推荐直接写稳定身份或规范化 remote，而不是绝对路径。
 
 ## 3. 被拒方案
 
@@ -103,6 +115,8 @@ kind     = "remote+root"（有 remote）| "root-only"（无网络 remote）
 4. **本地路径 remote 退化为 `root-only`**：此时身份只剩根提交；两个不同来源但根提交相同的仓库无法区分（现实中只在复制时发生）。这是为了避免把绝对路径重新引入身份而接受的取舍。
 5. **浅克隆（`--depth`）**：`--max-parents=0` 会停在被截断的边界，根提交与完整 Clone 不同，跨路径验证会失败。需要在 CI 中 `git fetch --unshallow`（或 `--filter` 的完整历史）后再生成/验证收据；文档与 Handoff 记录该限制。
 6. **身份不是签名**：`repo_id` 无密钥，收据内容哈希也无密钥。它只回答“这是不是同一个仓库”，不回答“谁执行、是否可信”。`execution_provenance.trusted` 仍恒为 false，`VERIFIED` 仍必须经过 authority 签名。
+7. **映射写绝对路径时依赖对方检出存在**（§2.5）：复制场景下 A 仍在，B 可按身份匹配；若 A 已被删除/移动，B 无法从旧路径解析身份，会失败关闭。需要长期可移植时在 mapping 中写稳定身份或规范化 remote。
+8. **显式非默认端口是独立身份**：`ssh://host:2222/path` 与 `host/path` 不同（只归一默认端口 22）；这是有意保守，避免把不同端点合并。
 
 ## 6. 验证计划（对应任务卡 AC）
 

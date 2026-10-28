@@ -79,8 +79,10 @@ def _canonical_remote(url: str) -> str | None:
 
     Returns ``None`` for empty URLs and for local-path remotes: a local path
     remote is machine-local and must not smuggle an absolute path back into the
-    identity.  No equivalence beyond scheme/user/``.git``/trailing-slash removal
-    is guessed, so distinct hosts and paths stay distinct.
+    identity.  No equivalence beyond scheme/user/default-port/``.git``/trailing-
+    slash removal is guessed, so distinct hosts and paths stay distinct.  An
+    explicit ``:22`` is dropped because it is SSH's default and the scp form
+    ``git@host:path`` cannot spell it, so both spellings must share an identity.
     """
     raw = str(url or '').strip()
     if not raw:
@@ -95,7 +97,7 @@ def _canonical_remote(url: str) -> str | None:
         if match.group('scheme').lower() == 'file':
             return None
         host, _, path = match.group('rest').partition('/')
-        host = host.rsplit('@', 1)[-1].lower()
+        host = _strip_default_ssh_port(host.rsplit('@', 1)[-1].lower())
         path = path.strip('/')
         if not host or not path:
             return None
@@ -107,6 +109,19 @@ def _canonical_remote(url: str) -> str | None:
         if host and path:
             return f'{host}/{path}'
     return None  # relative/local path: no network identity
+
+
+def _strip_default_ssh_port(host: str) -> str:
+    """Drop an explicit ``:22`` (SSH default) from a URL host part."""
+    if host.startswith('['):
+        name, sep, rest = host.partition(']')
+        if sep and rest in ('', ':22'):
+            return name + ']'
+        return host
+    name, sep, port = host.rpartition(':')
+    if sep and port == '22' and ':' not in name:
+        return name
+    return host
 
 
 def repo_identity(repo: Path) -> dict:
