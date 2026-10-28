@@ -8,7 +8,8 @@
 |---|---|---|---|
 | 仓库可见性 | Private | 2026-10-27 | 用户确认 |
 | 冻结基线 | `0d08a1ad85144d11a46d6a361a2a3ce4eadbbed4` | 2026-10-27 | `git rev-parse` |
-| 开发主线 | `dev/v1.0`（默认 HEAD，指向 `15f4b3c`，PR #9 merge） | 2026-10-28 | `git ls-remote origin refs/heads/dev/v1.0` |
+| 开发主线 | `dev/v1.0`（默认分支；不在此固定 tip，合并 SHA 见下一行） | 2026-10-28 | `git ls-remote --symref origin HEAD` |
+| 最近合并 | PR #10 → `904a22a`（B1 收口） | 2026-10-28 | GitHub API `merged=true` |
 | `frozen/rc3-0d08a1a` | 存在，指向 `0d08a1a` | 2026-10-27 | `git ls-remote` |
 | 脚手架分支 | `pilot/bootstrap` 已推送；PR #2 **已合并** | 2026-10-28 | GitHub PR #2 |
 | B1 任务卡 SHA-256 | `0fdc9469456b81bae26a3c29385f1745222e16b19211e27d4d04a418ef3be08d` | 2026-10-28 | `Get-FileHash`；fresh clone 复核一致 |
@@ -25,7 +26,7 @@
 
 | 工作区 | 状态 | 说明 |
 |---|---|---|
-| `pm-pilot-01` | 已创建 | PM-01；`dev/v1.0` @ `15f4b3c`，干净 |
+| `pm-pilot-01` | 已创建 | PM-01；`dev/v1.0`，与 `origin/dev/v1.0` 同步，干净 |
 | `pm-pilot-02` | 已创建 | PM-02；`fix/b1-openssl-verifier` @ `216f154`（已合并），干净 |
 | `pm-pilot-03` | 已创建 | PM-03；`review/b1-1c7ad94` @ `09f68d8`，干净 |
 | 原始 `project-memory-mvp` | 未修改 | 不是试点工作区 |
