@@ -1,0 +1,93 @@
+{
+  "anchor_a_e2e": "NOT VERIFIED",
+  "cases": [
+    {
+      "name": "AC-4 local untrusted receipt, valid signature, no exception",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-1d4ab7909041 的执行来源不可信：人类例外缺失：收据没有可验证的执行 attestation，也没有人类签名例外",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true
+    },
+    {
+      "name": "AC-4 signed human exception covers local execution",
+      "expected": "accept",
+      "ok": true,
+      "trust": "evidence_matched",
+      "reason": "独立验证通过，且覆盖该成功标准",
+      "add_goal_evidence": "accepted",
+      "evaluate_satisfied": true,
+      "evaluate_status": "satisfied",
+      "pass": true
+    },
+    {
+      "name": "exception without a signature",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-338d67716113 的执行来源不可信：人类例外缺失：例外签名未通过（untrusted：人类例外的 authority.anchor_id 与受保护信任锚不一致）",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true
+    },
+    {
+      "name": "exception signed by a non-anchor key",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-e169986144cb 的执行来源不可信：人类例外缺失：例外签名未通过（untrusted：签名验证失败）",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true
+    },
+    {
+      "name": "exception bound to another goal",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-b04ecbf305b6 的执行来源不可信：人类例外缺失：例外不属于当前 Goal",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true
+    },
+    {
+      "name": "exception does not cover the criterion",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-7e55fb048b2d 的执行来源不可信：人类例外缺失：例外范围不覆盖当前 criterion",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true
+    },
+    {
+      "name": "exception missing issued_by",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-3eb40550a225 的执行来源不可信：人类例外缺失：例外缺少 issued_by",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true
+    },
+    {
+      "name": "exception missing reason",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-6adabca2d805 的执行来源不可信：人类例外缺失：例外缺少 reason",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true
+    }
+  ]
+}

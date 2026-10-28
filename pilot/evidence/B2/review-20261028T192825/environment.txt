@@ -1,0 +1,17 @@
+captured_at: 2026-10-28T19:42+08:00
+host_os: Windows 10.0.26300 x64 (Git Bash)
+repo: git@github.com:MJ-Zeng/Project-Memory.git
+base_sha: 587ac6a5024db3a6076a863876076d7fc7ecdd98
+candidate_sha: 004a35bd7c6b6584a9054d7b61eca88b44ec25e6
+pr_head: 6257fb61cf29974aad32216b24788766bc37d147
+pr: https://github.com/MJ-Zeng/Project-Memory/pull/14
+task_card_sha256: 3617dab01ca01c05ba2cb9ec87b38eae2622a6b69b480b2e7abb1c0881a7900e
+windows_python: 3.12.4 (C:\SoftWare\Anconda\python.exe)
+pytest: 9.1.1
+openssl: OpenSSL 3.5.9 29 Sep 2026
+wsl: Ubuntu, python3 3.14.4
+anchor_a: /etc/pm-rc3-review/anchor-a.json present (contents not read; private keys not read)
+anchor_a_e2e: NOT VERIFIED (no pilot/kit/b2 anchor-a fixture exists)
+b2_test_double: temporary RSA-2048 key + patched authority.load_anchor (logic-level, not anchor-a E2E)
+candidate_worktree_note: core.autocrlf=true; .py files checked out CRLF, pilot/** and docs/decisions/** forced LF
+artifact_hash_basis: manifest hashes are computed from committed blobs / clean archive (LF), not from the CRLF worktree

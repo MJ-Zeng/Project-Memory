@@ -1,0 +1,42 @@
+{
+  "anchor_a_e2e": "NOT VERIFIED",
+  "cases": [
+    {
+      "name": "AC-2 receipt claims trusted=true, no attestation",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-a22061fa7e04 的执行来源不可信：人类例外缺失：收据没有可验证的执行 attestation，也没有人类签名例外",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true,
+      "receipt_integrity_valid": true,
+      "parser_provenance_trusted": false
+    },
+    {
+      "name": "self-written launcher attestation (legacy attestation_path, unsigned)",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-aeae75df95d0 的执行来源不可信：人类例外缺失：收据没有可验证的执行 attestation，也没有人类签名例外",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true,
+      "receipt_integrity_valid": true,
+      "parser_provenance_trusted": false
+    },
+    {
+      "name": "claimed trusted=true with a broken signed attestation",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-f319fa424633 的执行来源不可信：来源不可信：attestation 签名未通过（untrusted：执行 attestation的 signed_payload_sha256 与记录内容不一致）",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true
+    }
+  ]
+}

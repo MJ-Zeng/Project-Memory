@@ -1,0 +1,117 @@
+{
+  "anchor_a_e2e": "NOT VERIFIED",
+  "cases": [
+    {
+      "name": "self-written launcher attestation (legacy attestation_path, unsigned)",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-aeae75df95d0 的执行来源不可信：人类例外缺失：收据没有可验证的执行 attestation，也没有人类签名例外",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true,
+      "receipt_integrity_valid": true,
+      "parser_provenance_trusted": false
+    },
+    {
+      "name": "AC-3b execution_attestation_path with forged envelope",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-991dbbf8f4fa 的执行来源不可信：来源不可信：attestation 签名未通过（untrusted：执行 attestation的 signed_payload_sha256 与记录内容不一致）",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true
+    },
+    {
+      "name": "exception signed by a non-anchor key",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-e169986144cb 的执行来源不可信：人类例外缺失：例外签名未通过（untrusted：签名验证失败）",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true
+    },
+    {
+      "name": "tamper attestation.isolation.uid after signing",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-4a5781be75b5 的执行来源不可信：来源不可信：attestation 签名未通过（untrusted：执行 attestation的 signed_payload_sha256 与记录内容不一致）",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true
+    },
+    {
+      "name": "tamper attestation.receipt_sha256 after signing",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-4a5781be75b5 的执行来源不可信：来源不可信：attestation 签名未通过（untrusted：执行 attestation的 signed_payload_sha256 与记录内容不一致）",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true
+    },
+    {
+      "name": "attestation signed by a non-anchor key",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-b7b6473292dd 的执行来源不可信：来源不可信：attestation 签名未通过（untrusted：签名验证失败）",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true
+    },
+    {
+      "name": "signed attestation missing snapshot_id",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-db22cb73da92 的执行来源不可信：来源不可信：attestation.snapshot_id 与实时收据/目标提交不一致",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true
+    },
+    {
+      "name": "receipt execution_attestation_sha256 mismatch",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-f536fa7003f3 的执行来源不可信：来源不可信：attestation 内容哈希与收据不一致",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true
+    },
+    {
+      "name": "receipt points at a missing attestation file",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-51d6801b3d72 的执行来源不可信：来源不可信：执行 attestation不存在：.project-memory/attestations/absent.json",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true
+    },
+    {
+      "name": "attestation path outside .project-memory",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-8c594fb0f479 的执行来源不可信：来源不可信：执行 attestation必须位于仓库 .project-memory 内：C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b2-review-work\\outside-attestation.json",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true
+    }
+  ]
+}

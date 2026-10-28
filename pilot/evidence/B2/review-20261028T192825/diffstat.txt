@@ -1,0 +1,34 @@
+ docs/decisions/ADR-0003-execution-provenance.md    | 176 ++++++++++
+ pilot/evidence/B2/run-20261028T110321Z/README.md   |  60 ++++
+ .../evidence/B2/run-20261028T110321Z/b2-tests.exit |   1 +
+ .../evidence/B2/run-20261028T110321Z/b2-tests.log  |   2 +
+ .../B2/run-20261028T110321Z/baseline-pytest.log    |   4 +
+ .../B2/run-20261028T110321Z/commands.jsonl         |  21 ++
+ .../evidence/B2/run-20261028T110321Z/diffstat.txt  |   8 +
+ .../B2/run-20261028T110321Z/environment.txt        |  14 +
+ pilot/evidence/B2/run-20261028T110321Z/pytest.exit |   1 +
+ pilot/evidence/B2/run-20261028T110321Z/pytest.log  |   4 +
+ .../B2/run-20261028T110321Z/sha256sums.txt         |   9 +
+ pilot/rounds/B2/context-recovery-pm02.md           |  44 +++
+ project_memory/authority.py                        |  66 ++++
+ project_memory/coordination.py                     |  21 +-
+ project_memory/execution.py                        | 155 +++++++-
+ tests/test_security_b2.py                          | 391 +++++++++++++++++++++
+ 16 files changed, 975 insertions(+), 2 deletions(-)
+
+A	docs/decisions/ADR-0003-execution-provenance.md
+A	pilot/evidence/B2/run-20261028T110321Z/README.md
+A	pilot/evidence/B2/run-20261028T110321Z/b2-tests.exit
+A	pilot/evidence/B2/run-20261028T110321Z/b2-tests.log
+A	pilot/evidence/B2/run-20261028T110321Z/baseline-pytest.log
+A	pilot/evidence/B2/run-20261028T110321Z/commands.jsonl
+A	pilot/evidence/B2/run-20261028T110321Z/diffstat.txt
+A	pilot/evidence/B2/run-20261028T110321Z/environment.txt
+A	pilot/evidence/B2/run-20261028T110321Z/pytest.exit
+A	pilot/evidence/B2/run-20261028T110321Z/pytest.log
+A	pilot/evidence/B2/run-20261028T110321Z/sha256sums.txt
+A	pilot/rounds/B2/context-recovery-pm02.md
+M	project_memory/authority.py
+M	project_memory/coordination.py
+M	project_memory/execution.py
+A	tests/test_security_b2.py

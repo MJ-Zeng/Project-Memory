@@ -1,0 +1,319 @@
+{
+  "candidate": "C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-03\\.pilot\\candidate",
+  "anchor": "temporary reviewer RSA key (patched load_anchor)",
+  "anchor_a_e2e": "NOT VERIFIED",
+  "cases": [
+    {
+      "name": "AC-1 handwritten receipt (trusted=false), valid verification signature",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-046ca2913ae6 的执行来源不可信：人类例外缺失：收据没有可验证的执行 attestation，也没有人类签名例外",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true
+    },
+    {
+      "name": "AC-4 local untrusted receipt, valid signature, no exception",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-1d4ab7909041 的执行来源不可信：人类例外缺失：收据没有可验证的执行 attestation，也没有人类签名例外",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true
+    },
+    {
+      "name": "AC-2 receipt claims trusted=true, no attestation",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-a22061fa7e04 的执行来源不可信：人类例外缺失：收据没有可验证的执行 attestation，也没有人类签名例外",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true,
+      "receipt_integrity_valid": true,
+      "parser_provenance_trusted": false
+    },
+    {
+      "name": "self-written launcher attestation (legacy attestation_path, unsigned)",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-aeae75df95d0 的执行来源不可信：人类例外缺失：收据没有可验证的执行 attestation，也没有人类签名例外",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true,
+      "receipt_integrity_valid": true,
+      "parser_provenance_trusted": false
+    },
+    {
+      "name": "AC-3b execution_attestation_path with forged envelope",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-991dbbf8f4fa 的执行来源不可信：来源不可信：attestation 签名未通过（untrusted：执行 attestation的 signed_payload_sha256 与记录内容不一致）",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true
+    },
+    {
+      "name": "AC-3 signed attestation bound to receipt/commit is accepted",
+      "expected": "accept",
+      "ok": true,
+      "trust": "evidence_matched",
+      "reason": "独立验证通过，且覆盖该成功标准",
+      "add_goal_evidence": "accepted",
+      "evaluate_satisfied": true,
+      "evaluate_status": "satisfied",
+      "pass": true
+    },
+    {
+      "name": "replay same attestation to same receipt/commit",
+      "expected": "accept_by_design",
+      "ok": true,
+      "trust": "evidence_matched",
+      "reason": "独立验证通过，且覆盖该成功标准",
+      "pass": true
+    },
+    {
+      "name": "AC-4 signed human exception covers local execution",
+      "expected": "accept",
+      "ok": true,
+      "trust": "evidence_matched",
+      "reason": "独立验证通过，且覆盖该成功标准",
+      "add_goal_evidence": "accepted",
+      "evaluate_satisfied": true,
+      "evaluate_status": "satisfied",
+      "pass": true
+    },
+    {
+      "name": "exception without a signature",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-338d67716113 的执行来源不可信：人类例外缺失：例外签名未通过（untrusted：人类例外的 authority.anchor_id 与受保护信任锚不一致）",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true
+    },
+    {
+      "name": "exception signed by a non-anchor key",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-e169986144cb 的执行来源不可信：人类例外缺失：例外签名未通过（untrusted：签名验证失败）",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true
+    },
+    {
+      "name": "exception bound to another goal",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-b04ecbf305b6 的执行来源不可信：人类例外缺失：例外不属于当前 Goal",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true
+    },
+    {
+      "name": "exception does not cover the criterion",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-7e55fb048b2d 的执行来源不可信：人类例外缺失：例外范围不覆盖当前 criterion",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true
+    },
+    {
+      "name": "exception missing issued_by",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-3eb40550a225 的执行来源不可信：人类例外缺失：例外缺少 issued_by",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true
+    },
+    {
+      "name": "exception missing reason",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-6adabca2d805 的执行来源不可信：人类例外缺失：例外缺少 reason",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true
+    },
+    {
+      "name": "swap the receipt under a signed verification",
+      "expected": "reject",
+      "ok": false,
+      "trust": "invalid",
+      "reason": "VER-93df7e3828e3 的执行收据内容不完整：收据文件路径与 receipt_id 不一致（复制、改名或替换的收据）",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true
+    },
+    {
+      "name": "move another receipt's attestation onto this receipt",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-f70705a43329 的执行来源不可信：来源不可信：attestation.receipt_id 与实时收据/目标提交不一致",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true
+    },
+    {
+      "name": "edit provenance and recompute receipt content hash",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-2b1c01a485e2 的执行来源不可信：来源不可信：attestation.receipt_sha256 与实时收据/目标提交不一致",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true
+    },
+    {
+      "name": "tamper attestation.isolation.uid after signing",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-4a5781be75b5 的执行来源不可信：来源不可信：attestation 签名未通过（untrusted：执行 attestation的 signed_payload_sha256 与记录内容不一致）",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true
+    },
+    {
+      "name": "tamper attestation.receipt_sha256 after signing",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-4a5781be75b5 的执行来源不可信：来源不可信：attestation 签名未通过（untrusted：执行 attestation的 signed_payload_sha256 与记录内容不一致）",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true
+    },
+    {
+      "name": "attestation signed by a non-anchor key",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-b7b6473292dd 的执行来源不可信：来源不可信：attestation 签名未通过（untrusted：签名验证失败）",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true
+    },
+    {
+      "name": "signed attestation missing snapshot_id",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-db22cb73da92 的执行来源不可信：来源不可信：attestation.snapshot_id 与实时收据/目标提交不一致",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true
+    },
+    {
+      "name": "receipt execution_attestation_sha256 mismatch",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-f536fa7003f3 的执行来源不可信：来源不可信：attestation 内容哈希与收据不一致",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true
+    },
+    {
+      "name": "receipt points at a missing attestation file",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-51d6801b3d72 的执行来源不可信：来源不可信：执行 attestation不存在：.project-memory/attestations/absent.json",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true
+    },
+    {
+      "name": "attestation path outside .project-memory",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-8c594fb0f479 的执行来源不可信：来源不可信：执行 attestation必须位于仓库 .project-memory 内：C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b2-review-work\\outside-attestation.json",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true
+    },
+    {
+      "name": "change the receipt commit after attestation",
+      "expected": "reject",
+      "ok": false,
+      "trust": "invalid",
+      "reason": "VER-26b6a3f2762b 的执行收据内容不完整：commit_sha 与预期不一致：收据 '4dcf298ba8f486080a94563d69c7e886c912702a' != 预期 '8b3edbc067a1cea0985a2e65f660816bb5bb64bf'",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true
+    },
+    {
+      "name": "claimed trusted=true with a broken signed attestation",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-f319fa424633 的执行来源不可信：来源不可信：attestation 签名未通过（untrusted：执行 attestation的 signed_payload_sha256 与记录内容不一致）",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true
+    },
+    {
+      "name": "agent-owned anchor (env override) must not authenticate",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-67d8dd79dae7 没有可信授权来源（unconfigured）：信任锚对当前进程可写；必须由仓库外受保护主体持有",
+      "pass": true
+    },
+    {
+      "name": "B1: PATH/PROJECT_MEMORY_OPENSSL cannot change the in-process verifier",
+      "expected": "valid accepted, invalid rejected",
+      "valid_before": [
+        true,
+        "signature verified"
+      ],
+      "valid_after_path_substitution": [
+        true,
+        "signature verified"
+      ],
+      "tampered_rejected": true,
+      "pass": true
+    }
+  ],
+  "total": 28,
+  "passed": 28,
+  "failed": []
+}

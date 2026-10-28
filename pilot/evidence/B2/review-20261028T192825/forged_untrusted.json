@@ -1,0 +1,27 @@
+{
+  "anchor_a_e2e": "NOT VERIFIED",
+  "cases": [
+    {
+      "name": "AC-1 handwritten receipt (trusted=false), valid verification signature",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-046ca2913ae6 的执行来源不可信：人类例外缺失：收据没有可验证的执行 attestation，也没有人类签名例外",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true
+    },
+    {
+      "name": "AC-4 local untrusted receipt, valid signature, no exception",
+      "expected": "reject",
+      "ok": false,
+      "trust": "untrusted",
+      "reason": "VER-1d4ab7909041 的执行来源不可信：人类例外缺失：收据没有可验证的执行 attestation，也没有人类签名例外",
+      "add_goal_evidence": "rejected",
+      "evaluate_satisfied": false,
+      "evaluate_status": "insufficient_evidence",
+      "pass": true
+    }
+  ]
+}
