@@ -1,0 +1,26 @@
+用法：project-memory [-h]
+                      {init,sync-tooling,start,handoff,finish,decision,new-doc,audit,graph,search,goal,run,verify,test-run,defect,reconcile} ...
+
+面向仓库、多 Agent 共用的项目记忆工具
+
+位置参数:
+  {init,sync-tooling,start,handoff,finish,decision,new-doc,audit,graph,search,goal,run,verify,test-run,defect,reconcile}
+    init                初始化，不覆盖已有文件
+    sync-tooling        刷新仓库内 vendored 工具；默认只预览
+    start               生成任务上下文包
+    handoff             生成可重试、不覆盖的 Agent 交接记录
+    finish              生成只读的完成门禁
+    decision            生成 Proposed 状态的 ADR，不会批准
+    new-doc             按固定格式生成文档骨架，不覆盖已有文件
+    audit               审计本地文档的元数据与一致性
+    graph               用本地文档和快照构建证据图
+    search              在知识图中检索，并标注来源与权威级别
+    goal                目标记忆：成功标准、证据与状态转换
+    run                 Agent 执行记忆：启动、检查点、恢复、结束
+    verify              独立验证记录；验证者不能是被验证的执行
+    test-run            在不可变提交快照中执行命令并生成执行收据
+    defect              缺陷记录与修复状态
+    reconcile           对账 Goal、执行、验证、缺陷、ADR 与当前文档
+
+选项:
+  -h, --help            显示帮助并退出

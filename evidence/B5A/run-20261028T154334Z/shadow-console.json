@@ -1,0 +1,31 @@
+{
+  "threat": "console script + 恶意 PYTHONPATH",
+  "baseline": {
+    "command_group": "baseline",
+    "case": "shadow-console",
+    "exit_code": 1,
+    "marker_seen": true,
+    "help_seen": false,
+    "stdout_head": [
+      "SHADOW_INIT"
+    ],
+    "stderr_head": [
+      "Traceback (most recent call last):",
+      "  File \"<frozen runpy>\", line 198, in _run_module_as_main",
+      "  File \"<frozen runpy>\", line 88, in _run_code"
+    ]
+  },
+  "candidate_console": {
+    "command_group": "candidate",
+    "case": "shadow-console",
+    "exit_code": 0,
+    "marker_seen": false,
+    "help_seen": true,
+    "stdout_head": [
+      "用法：project-memory [-h]",
+      "                      {init,sync-tooling,start,handoff,finish,decision,new-doc,audit,graph,search,goal,run,verify,test-run,defect,reconcile}",
+      "                      ..."
+    ],
+    "stderr_head": []
+  }
+}

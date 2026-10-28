@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\ZMJ\AppData\Local\Temp\b5a-win-base-venv\Scripts\project-memory.exe\__main__.py", line 4, in <module>
+ModuleNotFoundError: No module named 'project_memory.cli'
