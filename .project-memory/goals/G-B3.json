@@ -1,0 +1,75 @@
+{
+  "adrs": [],
+  "approved_by": null,
+  "background": "goal evidence 追加到 success_criteria.evidence，改变 goal_criteria_sha256；已签名验证在 evaluate 时被判失效；B2 正例 goal evidence 通过但 evaluate 不 satisfied。",
+  "constraints": [
+    "不删除/跳过既有测试",
+    "不放宽 authority/签名/execution_provenance",
+    "不自动重新签名"
+  ],
+  "created_at": "2026-10-28T13:52:30+00:00",
+  "history": [
+    {
+      "at": "2026-10-28T13:52:30+00:00",
+      "by": "PM-01",
+      "from": null,
+      "reason": "created",
+      "to": "proposed"
+    }
+  ],
+  "id": "G-B3",
+  "issues": [],
+  "kind": "goal",
+  "outcome": "追加证据不改变判据定义绑定；新记录追加证据后 evaluate satisfied；旧记录兼容；改 criterion 定义仍失效；B2 门禁不回归。",
+  "owner": "PM-01",
+  "prs": [],
+  "revision": 1,
+  "schema_version": "1.2",
+  "status": "proposed",
+  "success_criteria": [
+    {
+      "evidence": [],
+      "id": "C1",
+      "required": true,
+      "statement": "新签名记录追加证据后 goal evaluate satisfied"
+    },
+    {
+      "evidence": [],
+      "id": "C2",
+      "required": true,
+      "statement": "追加证据不需要重新签名"
+    },
+    {
+      "evidence": [],
+      "id": "C3",
+      "required": true,
+      "statement": "B2 正例 legacy 记录仍可用"
+    },
+    {
+      "evidence": [],
+      "id": "C4",
+      "required": true,
+      "statement": "改 criterion id/statement/required 仍使记录失效"
+    },
+    {
+      "evidence": [],
+      "id": "C5",
+      "required": true,
+      "statement": "改 evidence 不使新记录失效"
+    },
+    {
+      "evidence": [],
+      "id": "C6",
+      "required": true,
+      "statement": "B2 执行来源门禁不回归"
+    },
+    {
+      "evidence": [],
+      "id": "C7",
+      "required": true,
+      "statement": "既有 203 项与新增测试全绿"
+    }
+  ],
+  "title": "B3 证据附件不得使已签名验证失效",
+  "updated_at": "2026-10-28T13:52:30+00:00"
+}
