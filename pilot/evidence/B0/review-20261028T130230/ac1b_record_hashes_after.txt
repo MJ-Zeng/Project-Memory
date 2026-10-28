@@ -1,0 +1,2 @@
+4ca8ec5d7a0026846061250996ff6b38a915534dc9ccfa0180d143618db3eb30  /tmp/pm03-ac1b-run/repo-copy/.project-memory/verifications/3/VER-B0-XP.json
+b78add15fee6146aae543a9c34f30f777d36ce80c7cd64d9658c1656dc9d74e3  /tmp/pm03-ac1b-run/repo-copy/.project-memory/goals/G-B0.json

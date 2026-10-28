@@ -1,0 +1,135 @@
+{
+  "temp_root": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\pm03-b01-mhgfot_o",
+  "accept": [
+    {
+      "case": "identity id",
+      "expected": "identity",
+      "actual": "identity",
+      "error": null,
+      "ok": true,
+      "declared": "c81791a44801326129e6da29ab1b3afe94bb1558f143e0f8a8cf4e3316aa5d5a"
+    },
+    {
+      "case": "canonical remote",
+      "expected": "identity",
+      "actual": "identity",
+      "error": null,
+      "ok": true,
+      "declared": "github.com/pilot-org/repo-a"
+    },
+    {
+      "case": "current absolute path",
+      "expected": "path",
+      "actual": "path",
+      "error": null,
+      "ok": true,
+      "declared": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\pm03-b01-mhgfot_o\\path-b"
+    },
+    {
+      "case": "other checkout same identity",
+      "expected": "identity",
+      "actual": "identity",
+      "error": null,
+      "ok": true,
+      "declared": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\pm03-b01-mhgfot_o\\path-a"
+    },
+    {
+      "case": "uppercase identity id",
+      "expected": "identity",
+      "actual": "identity",
+      "error": null,
+      "ok": true,
+      "declared": "C81791A44801326129E6DA29AB1B3AFE94BB1558F143E0F8A8CF4E3316AA5D5A"
+    },
+    {
+      "case": "_repo_matches other checkout",
+      "expected": true,
+      "actual": true,
+      "error": null,
+      "ok": true,
+      "declared": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\pm03-b01-mhgfot_o\\path-a"
+    }
+  ],
+  "reject": [
+    {
+      "case": "different remote (copy C)",
+      "expected": null,
+      "actual": null,
+      "error": null,
+      "ok": true,
+      "declared": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\pm03-b01-mhgfot_o\\path-c"
+    },
+    {
+      "case": "different root, same remote (D)",
+      "expected": null,
+      "actual": null,
+      "error": null,
+      "ok": true,
+      "declared": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\pm03-b01-mhgfot_o\\other-root"
+    },
+    {
+      "case": "same directory name, other repo (E)",
+      "expected": null,
+      "actual": null,
+      "error": null,
+      "ok": true,
+      "declared": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\pm03-b01-mhgfot_o\\elsewhere\\path-b"
+    },
+    {
+      "case": "bare directory name",
+      "expected": null,
+      "actual": null,
+      "error": null,
+      "ok": true,
+      "declared": "path-b"
+    },
+    {
+      "case": "subdirectory of current repo",
+      "expected": null,
+      "actual": null,
+      "error": null,
+      "ok": true,
+      "declared": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\pm03-b01-mhgfot_o\\path-b\\tests"
+    },
+    {
+      "case": "nonexistent absolute path",
+      "expected": null,
+      "actual": null,
+      "error": null,
+      "ok": true,
+      "declared": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\pm03-b01-mhgfot_o\\path-b\\missing"
+    },
+    {
+      "case": "file inside current repo",
+      "expected": null,
+      "actual": null,
+      "error": null,
+      "ok": true,
+      "declared": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\pm03-b01-mhgfot_o\\path-b\\README.md"
+    },
+    {
+      "case": "relative path",
+      "expected": null,
+      "actual": null,
+      "error": null,
+      "ok": true,
+      "declared": "../path-b"
+    },
+    {
+      "case": "identity id of different repo (C)",
+      "expected": null,
+      "actual": null,
+      "error": null,
+      "ok": true,
+      "declared": "1f70ce666fca08abd28c8fc575725fc201b4ab6b0fcfce13b85f1588916e7544"
+    },
+    {
+      "case": "_repo_matches bare name",
+      "expected": false,
+      "actual": false,
+      "error": null,
+      "ok": true,
+      "declared": "path-b"
+    }
+  ]
+}

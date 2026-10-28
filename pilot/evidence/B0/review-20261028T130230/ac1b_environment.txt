@@ -1,0 +1,9 @@
+uid=1000
+user=zmj
+python=Python 3.14.4
+anchor=-rw-r--r-- 1 root root 679 Oct 27 15:18 /etc/pm-rc3-review/anchor-a.json
+pythonpath=/mnt/c/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-03/.pilot/candidate
+copy=/tmp/pm03-ac1b-run/repo-copy
+head=c3c122c09b231837e549b46d0e4ae93886648dc8
+remote=https://github.com/pilot-org/b0-cross-path
+git_status=

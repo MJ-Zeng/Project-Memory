@@ -1,0 +1,92 @@
+{
+  "temp_root": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\pm03-b01-mhgfot_o",
+  "binding_reject_cases": [
+    {
+      "case": "different remote (copy C)",
+      "expected": null,
+      "actual": null,
+      "error": null,
+      "ok": true,
+      "declared": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\pm03-b01-mhgfot_o\\path-c"
+    },
+    {
+      "case": "different root, same remote (D)",
+      "expected": null,
+      "actual": null,
+      "error": null,
+      "ok": true,
+      "declared": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\pm03-b01-mhgfot_o\\other-root"
+    },
+    {
+      "case": "same directory name, other repo (E)",
+      "expected": null,
+      "actual": null,
+      "error": null,
+      "ok": true,
+      "declared": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\pm03-b01-mhgfot_o\\elsewhere\\path-b"
+    },
+    {
+      "case": "bare directory name",
+      "expected": null,
+      "actual": null,
+      "error": null,
+      "ok": true,
+      "declared": "path-b"
+    },
+    {
+      "case": "subdirectory of current repo",
+      "expected": null,
+      "actual": null,
+      "error": null,
+      "ok": true,
+      "declared": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\pm03-b01-mhgfot_o\\path-b\\tests"
+    },
+    {
+      "case": "nonexistent absolute path",
+      "expected": null,
+      "actual": null,
+      "error": null,
+      "ok": true,
+      "declared": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\pm03-b01-mhgfot_o\\path-b\\missing"
+    },
+    {
+      "case": "file inside current repo",
+      "expected": null,
+      "actual": null,
+      "error": null,
+      "ok": true,
+      "declared": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\pm03-b01-mhgfot_o\\path-b\\README.md"
+    },
+    {
+      "case": "relative path",
+      "expected": null,
+      "actual": null,
+      "error": null,
+      "ok": true,
+      "declared": "../path-b"
+    },
+    {
+      "case": "identity id of different repo (C)",
+      "expected": null,
+      "actual": null,
+      "error": null,
+      "ok": true,
+      "declared": "1f70ce666fca08abd28c8fc575725fc201b4ab6b0fcfce13b85f1588916e7544"
+    },
+    {
+      "case": "_repo_matches bare name",
+      "expected": false,
+      "actual": false,
+      "error": null,
+      "ok": true,
+      "declared": "path-b"
+    }
+  ],
+  "end_to_end_different_repository": {
+    "expected": "PMError containing 不是当前仓库",
+    "raised": true,
+    "type": "PMError",
+    "message": "criterion evidence 的 target_repository 'C:\\\\Users\\\\ZMJ\\\\AppData\\\\Local\\\\Temp\\\\pm03-b01-mhgfot_o\\\\path-c' 不是当前仓库",
+    "ok": true
+  }
+}

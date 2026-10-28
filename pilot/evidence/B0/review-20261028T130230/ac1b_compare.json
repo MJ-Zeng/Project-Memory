@@ -1,0 +1,39 @@
+{
+  "run_id": "review-20261028T130230",
+  "command": "wsl -u zmj: python3 -m project_memory goal evidence --repo . --id G-B0 --criterion C1 --kind verification --ref VER-B0-XP",
+  "cwd": "/tmp/pm03-ac1b-run/repo-copy (copy of the fixture; WSL uid 1000)",
+  "env": {
+    "PROJECT_MEMORY_TRUST_ANCHOR": "/etc/pm-rc3-review/anchor-a.json",
+    "PYTHONPATH": "/mnt/c/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-03/.pilot/candidate",
+    "PYTHONDONTWRITEBYTECODE": "1"
+  },
+  "exit_code": 0,
+  "stderr_bytes": 0,
+  "fields": {
+    "kind": {
+      "actual": "goal_evidence_result",
+      "expected": "goal_evidence_result",
+      "ok": true
+    },
+    "goal_id": {
+      "actual": "G-B0",
+      "expected": "G-B0",
+      "ok": true
+    },
+    "criterion": {
+      "actual": "C1",
+      "expected": "C1",
+      "ok": true
+    },
+    "schema_version": {
+      "actual": "1.2",
+      "expected": "1.2",
+      "ok": true
+    }
+  },
+  "goal_status_after": "proposed",
+  "record_sha256_before": "4ca8ec5d7a0026846061250996ff6b38a915534dc9ccfa0180d143618db3eb30",
+  "record_sha256_after": "4ca8ec5d7a0026846061250996ff6b38a915534dc9ccfa0180d143618db3eb30",
+  "record_unchanged": true,
+  "ok": true
+}

@@ -1,0 +1,20 @@
+{
+  "prev": {
+    "package": "C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-03\\.pilot\\prev",
+    "repo": "C:/Users/ZMJ/AppData/Local/Temp/pm03-b01-mhgfot_o/path-b",
+    "results": {
+      "C:/Users/ZMJ/AppData/Local/Temp/pm03-b01-mhgfot_o/path-a": false,
+      "path-b": true,
+      "C:/Users/ZMJ/AppData/Local/Temp/pm03-b01-mhgfot_o/path-c": false
+    }
+  },
+  "candidate": {
+    "package": "C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-03\\.pilot\\candidate",
+    "repo": "C:/Users/ZMJ/AppData/Local/Temp/pm03-b01-mhgfot_o/path-b",
+    "results": {
+      "C:/Users/ZMJ/AppData/Local/Temp/pm03-b01-mhgfot_o/path-a": true,
+      "path-b": false,
+      "C:/Users/ZMJ/AppData/Local/Temp/pm03-b01-mhgfot_o/path-c": false
+    }
+  }
+}

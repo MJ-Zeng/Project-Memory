@@ -1,0 +1,61 @@
+{
+  "temp_root": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\pm03-b01-mhgfot_o",
+  "cases": [
+    {
+      "case": "AC-1 cross-path receipt in copy B",
+      "ok": true,
+      "detail": {
+        "valid": true,
+        "portable": true,
+        "problems": []
+      }
+    },
+    {
+      "case": "AC-2 different remote rejects receipt",
+      "ok": true,
+      "detail": {
+        "valid": false,
+        "problems": [
+          "收据属于其他仓库",
+          "repo_identity.remote 与当前仓库不一致（身份字段被改写）"
+        ]
+      }
+    },
+    {
+      "case": "identity field tamper rejected",
+      "ok": true,
+      "detail": {
+        "valid": false,
+        "problems": [
+          "repo_identity.remote 与当前仓库不一致（身份字段被改写）"
+        ]
+      }
+    },
+    {
+      "case": "AC-4 legacy 1.0 valid at original path, flagged",
+      "ok": true,
+      "detail": {
+        "valid": true,
+        "legacy_path_bound": true,
+        "kind": "legacy_path_bound",
+        "problems": []
+      }
+    },
+    {
+      "case": "AC-4 legacy 1.0 rejected after copy",
+      "ok": true,
+      "detail": {
+        "valid": false,
+        "problems": [
+          "收据属于其他仓库（legacy 路径绑定，不能跨路径使用）"
+        ]
+      }
+    }
+  ],
+  "prev_control": {
+    "note": "See match_control.py invoked with --package .pilot/prev.",
+    "repo_b": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\pm03-b01-mhgfot_o\\path-b",
+    "repo_a": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\pm03-b01-mhgfot_o\\path-a",
+    "bare_name": "path-b"
+  }
+}

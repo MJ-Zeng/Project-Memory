@@ -1,0 +1,12 @@
+{
+  "ok": true,
+  "files": {
+    "f2_cross_path.json": "C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-03\\pilot\\evidence\\B0\\review-20261028T130230\\f2_cross_path.json",
+    "f2_binding_matrix.json": "C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-03\\pilot\\evidence\\B0\\review-20261028T130230\\f2_binding_matrix.json",
+    "f2_negative.json": "C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-03\\pilot\\evidence\\B0\\review-20261028T130230\\f2_negative.json",
+    "f3_identity.json": "C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-03\\pilot\\evidence\\B0\\review-20261028T130230\\f3_identity.json",
+    "prior_acs.json": "C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-03\\pilot\\evidence\\B0\\review-20261028T130230\\prior_acs.json"
+  },
+  "checks_total": 26,
+  "checks_failed": []
+}

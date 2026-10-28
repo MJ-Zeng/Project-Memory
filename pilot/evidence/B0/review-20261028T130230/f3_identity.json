@@ -1,0 +1,244 @@
+{
+  "temp_root": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\pm03-b01-mhgfot_o",
+  "cases": [
+    {
+      "case": "https",
+      "remote": "https://github.com/pilot-org/repo-a",
+      "canonical_remote": "github.com/pilot-org/repo-a",
+      "kind": "remote+root",
+      "id": "31ce0802d030a20e9a416a5d0e795864d0838818568209c2c987b6175cc721c5",
+      "same_as_baseline": true,
+      "expected": "same_id",
+      "ok": true
+    },
+    {
+      "case": "https trailing .git/",
+      "remote": "https://github.com/pilot-org/repo-a.git/",
+      "canonical_remote": "github.com/pilot-org/repo-a",
+      "kind": "remote+root",
+      "id": "31ce0802d030a20e9a416a5d0e795864d0838818568209c2c987b6175cc721c5",
+      "same_as_baseline": true,
+      "expected": "same_id",
+      "ok": true
+    },
+    {
+      "case": "ssh default port 22",
+      "remote": "ssh://git@github.com:22/pilot-org/repo-a",
+      "canonical_remote": "github.com/pilot-org/repo-a",
+      "kind": "remote+root",
+      "id": "31ce0802d030a20e9a416a5d0e795864d0838818568209c2c987b6175cc721c5",
+      "same_as_baseline": true,
+      "expected": "same_id",
+      "ok": true
+    },
+    {
+      "case": "scp form",
+      "remote": "git@github.com:pilot-org/repo-a",
+      "canonical_remote": "github.com/pilot-org/repo-a",
+      "kind": "remote+root",
+      "id": "31ce0802d030a20e9a416a5d0e795864d0838818568209c2c987b6175cc721c5",
+      "same_as_baseline": true,
+      "expected": "same_id",
+      "ok": true
+    },
+    {
+      "case": "ssh 22 with .git",
+      "remote": "ssh://git@github.com:22/pilot-org/repo-a.git",
+      "canonical_remote": "github.com/pilot-org/repo-a",
+      "kind": "remote+root",
+      "id": "31ce0802d030a20e9a416a5d0e795864d0838818568209c2c987b6175cc721c5",
+      "same_as_baseline": true,
+      "expected": "same_id",
+      "ok": true
+    },
+    {
+      "case": "ssh other user",
+      "remote": "ssh://other@github.com:22/pilot-org/repo-a",
+      "canonical_remote": "github.com/pilot-org/repo-a",
+      "kind": "remote+root",
+      "id": "31ce0802d030a20e9a416a5d0e795864d0838818568209c2c987b6175cc721c5",
+      "same_as_baseline": true,
+      "expected": "same_id",
+      "ok": true
+    },
+    {
+      "case": "https with user",
+      "remote": "https://user@github.com/pilot-org/repo-a",
+      "canonical_remote": "github.com/pilot-org/repo-a",
+      "kind": "remote+root",
+      "id": "31ce0802d030a20e9a416a5d0e795864d0838818568209c2c987b6175cc721c5",
+      "same_as_baseline": true,
+      "expected": "same_id",
+      "ok": true
+    },
+    {
+      "case": "https with :22 (observation)",
+      "remote": "https://github.com:22/pilot-org/repo-a",
+      "canonical_remote": "github.com/pilot-org/repo-a",
+      "kind": "remote+root",
+      "id": "31ce0802d030a20e9a416a5d0e795864d0838818568209c2c987b6175cc721c5",
+      "same_as_baseline": true,
+      "expected": "same_id",
+      "ok": true
+    },
+    {
+      "case": "ipv6 no port",
+      "remote": "ssh://git@[2001:db8::1]/team/repo",
+      "canonical_remote": "[2001:db8::1]/team/repo",
+      "kind": "remote+root",
+      "id": "20e20cc2dd695126dc67f2f437d335d3e42b1fd387dc4324e3abbe15410aaadf",
+      "same_as_baseline": false,
+      "expected": "same_id",
+      "ok": true
+    },
+    {
+      "case": "ipv6 :22",
+      "remote": "ssh://git@[2001:db8::1]:22/team/repo",
+      "canonical_remote": "[2001:db8::1]/team/repo",
+      "kind": "remote+root",
+      "id": "20e20cc2dd695126dc67f2f437d335d3e42b1fd387dc4324e3abbe15410aaadf",
+      "same_as_baseline": false,
+      "expected": "same_id",
+      "ok": true
+    },
+    {
+      "case": "ipv6 :2222",
+      "remote": "ssh://git@[2001:db8::1]:2222/team/repo",
+      "canonical_remote": "[2001:db8::1]:2222/team/repo",
+      "kind": "remote+root",
+      "id": "05707c5f259036a16674146d4e714d7054078e2686d43cedab99ff23b3ec221a",
+      "same_as_baseline": false,
+      "expected": "DIFFERENT_FROM_IPV6",
+      "ok": true
+    },
+    {
+      "case": "non-default port 2222",
+      "remote": "ssh://git@github.com:2222/pilot-org/repo-a",
+      "canonical_remote": "github.com:2222/pilot-org/repo-a",
+      "kind": "remote+root",
+      "id": "a5bece63113b64028b0e6873131816d893d367dd6b8b889ab2ca31f37283318b",
+      "same_as_baseline": false,
+      "expected": "DIFFERENT_FROM_BASELINE",
+      "ok": true
+    }
+  ],
+  "identities": {
+    "https": {
+      "schema": "1.1",
+      "kind": "remote+root",
+      "remote": "github.com/pilot-org/repo-a",
+      "root_commits": [
+        "9c497844b91367cb02473c13975a9e29d0b3a1cb"
+      ],
+      "id": "31ce0802d030a20e9a416a5d0e795864d0838818568209c2c987b6175cc721c5"
+    },
+    "https trailing .git/": {
+      "schema": "1.1",
+      "kind": "remote+root",
+      "remote": "github.com/pilot-org/repo-a",
+      "root_commits": [
+        "9c497844b91367cb02473c13975a9e29d0b3a1cb"
+      ],
+      "id": "31ce0802d030a20e9a416a5d0e795864d0838818568209c2c987b6175cc721c5"
+    },
+    "ssh default port 22": {
+      "schema": "1.1",
+      "kind": "remote+root",
+      "remote": "github.com/pilot-org/repo-a",
+      "root_commits": [
+        "9c497844b91367cb02473c13975a9e29d0b3a1cb"
+      ],
+      "id": "31ce0802d030a20e9a416a5d0e795864d0838818568209c2c987b6175cc721c5"
+    },
+    "scp form": {
+      "schema": "1.1",
+      "kind": "remote+root",
+      "remote": "github.com/pilot-org/repo-a",
+      "root_commits": [
+        "9c497844b91367cb02473c13975a9e29d0b3a1cb"
+      ],
+      "id": "31ce0802d030a20e9a416a5d0e795864d0838818568209c2c987b6175cc721c5"
+    },
+    "ssh 22 with .git": {
+      "schema": "1.1",
+      "kind": "remote+root",
+      "remote": "github.com/pilot-org/repo-a",
+      "root_commits": [
+        "9c497844b91367cb02473c13975a9e29d0b3a1cb"
+      ],
+      "id": "31ce0802d030a20e9a416a5d0e795864d0838818568209c2c987b6175cc721c5"
+    },
+    "ssh other user": {
+      "schema": "1.1",
+      "kind": "remote+root",
+      "remote": "github.com/pilot-org/repo-a",
+      "root_commits": [
+        "9c497844b91367cb02473c13975a9e29d0b3a1cb"
+      ],
+      "id": "31ce0802d030a20e9a416a5d0e795864d0838818568209c2c987b6175cc721c5"
+    },
+    "https with user": {
+      "schema": "1.1",
+      "kind": "remote+root",
+      "remote": "github.com/pilot-org/repo-a",
+      "root_commits": [
+        "9c497844b91367cb02473c13975a9e29d0b3a1cb"
+      ],
+      "id": "31ce0802d030a20e9a416a5d0e795864d0838818568209c2c987b6175cc721c5"
+    },
+    "https with :22 (observation)": {
+      "schema": "1.1",
+      "kind": "remote+root",
+      "remote": "github.com/pilot-org/repo-a",
+      "root_commits": [
+        "9c497844b91367cb02473c13975a9e29d0b3a1cb"
+      ],
+      "id": "31ce0802d030a20e9a416a5d0e795864d0838818568209c2c987b6175cc721c5"
+    },
+    "ipv6 no port": {
+      "schema": "1.1",
+      "kind": "remote+root",
+      "remote": "[2001:db8::1]/team/repo",
+      "root_commits": [
+        "9c497844b91367cb02473c13975a9e29d0b3a1cb"
+      ],
+      "id": "20e20cc2dd695126dc67f2f437d335d3e42b1fd387dc4324e3abbe15410aaadf"
+    },
+    "ipv6 :22": {
+      "schema": "1.1",
+      "kind": "remote+root",
+      "remote": "[2001:db8::1]/team/repo",
+      "root_commits": [
+        "9c497844b91367cb02473c13975a9e29d0b3a1cb"
+      ],
+      "id": "20e20cc2dd695126dc67f2f437d335d3e42b1fd387dc4324e3abbe15410aaadf"
+    },
+    "ipv6 :2222": {
+      "schema": "1.1",
+      "kind": "remote+root",
+      "remote": "[2001:db8::1]:2222/team/repo",
+      "root_commits": [
+        "9c497844b91367cb02473c13975a9e29d0b3a1cb"
+      ],
+      "id": "05707c5f259036a16674146d4e714d7054078e2686d43cedab99ff23b3ec221a"
+    },
+    "non-default port 2222": {
+      "schema": "1.1",
+      "kind": "remote+root",
+      "remote": "github.com:2222/pilot-org/repo-a",
+      "root_commits": [
+        "9c497844b91367cb02473c13975a9e29d0b3a1cb"
+      ],
+      "id": "a5bece63113b64028b0e6873131816d893d367dd6b8b889ab2ca31f37283318b"
+    }
+  },
+  "distinct": {
+    "ssh_22_vs_https_same": true,
+    "scp_vs_https_same": true,
+    "port_2222_differs": true,
+    "ipv6_22_vs_no_port_same": true,
+    "ipv6_2222_differs": true,
+    "path_not_in_identity": true
+  },
+  "ok": true
+}

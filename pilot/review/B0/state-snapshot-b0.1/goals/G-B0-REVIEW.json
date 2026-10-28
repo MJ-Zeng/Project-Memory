@@ -1,0 +1,53 @@
+{
+  "adrs": [],
+  "approved_by": null,
+  "background": "PM-03 independent session; candidate 8506dd4",
+  "constraints": [],
+  "created_at": "2026-10-28T05:13:24+00:00",
+  "history": [
+    {
+      "at": "2026-10-28T05:13:24+00:00",
+      "by": "PM-03 Reviewer",
+      "from": null,
+      "reason": "created",
+      "to": "proposed"
+    }
+  ],
+  "id": "G-B0-REVIEW",
+  "issues": [],
+  "kind": "goal",
+  "outcome": "programmatic verdict on B0.1 remediation",
+  "owner": "PM-03 Reviewer",
+  "prs": [],
+  "revision": 1,
+  "schema_version": "1.2",
+  "status": "proposed",
+  "success_criteria": [
+    {
+      "evidence": [],
+      "id": "C1",
+      "required": true,
+      "statement": "F-2 跨路径 mapping 正例与负例"
+    },
+    {
+      "evidence": [],
+      "id": "C2",
+      "required": true,
+      "statement": "F-3 远程身份归一化"
+    },
+    {
+      "evidence": [],
+      "id": "C3",
+      "required": true,
+      "statement": "AC-1(b) 已签名 goal evidence"
+    },
+    {
+      "evidence": [],
+      "id": "C4",
+      "required": true,
+      "statement": "回归与上一轮 AC 无退化"
+    }
+  ],
+  "title": "B0.1 independent review",
+  "updated_at": "2026-10-28T05:13:24+00:00"
+}

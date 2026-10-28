@@ -1,0 +1,73 @@
+{
+  "context": {
+    "candidate": "C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-03\\.pilot\\candidate",
+    "started_at": "2026-10-28T05:03:57.410711+00:00",
+    "python": "3.12.4 | packaged by Anaconda, Inc. | (main, Jun 18 2024, 15:03:56) [MSC v.1929 64 bit (AMD64)]",
+    "temp_root": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\pm03-b01-mhgfot_o",
+    "repo_binding": "project_memory.coordination._repo_binding",
+    "identity_a": {
+      "schema": "1.1",
+      "kind": "remote+root",
+      "remote": "github.com/pilot-org/repo-a",
+      "root_commits": [
+        "d7ed028c2ce201da36444e2defde84856b8e80c9"
+      ],
+      "id": "c81791a44801326129e6da29ab1b3afe94bb1558f143e0f8a8cf4e3316aa5d5a"
+    },
+    "identity_b": {
+      "schema": "1.1",
+      "kind": "remote+root",
+      "remote": "github.com/pilot-org/repo-a",
+      "root_commits": [
+        "d7ed028c2ce201da36444e2defde84856b8e80c9"
+      ],
+      "id": "c81791a44801326129e6da29ab1b3afe94bb1558f143e0f8a8cf4e3316aa5d5a"
+    },
+    "identity_c": {
+      "schema": "1.1",
+      "kind": "remote+root",
+      "remote": "github.com/pilot-org/repo-b",
+      "root_commits": [
+        "d7ed028c2ce201da36444e2defde84856b8e80c9"
+      ],
+      "id": "1f70ce666fca08abd28c8fc575725fc201b4ab6b0fcfce13b85f1588916e7544"
+    },
+    "identity_d": {
+      "schema": "1.1",
+      "kind": "remote+root",
+      "remote": "github.com/pilot-org/repo-a",
+      "root_commits": [
+        "ccf5dea5d65a661f73a86863c8df529272a0f5db"
+      ],
+      "id": "fadbb7181a19b1d2d63118df983ac16a78a721ec02e55c3f3041e03ab4dc7058"
+    },
+    "identity_e": {
+      "schema": "1.1",
+      "kind": "remote+root",
+      "remote": "github.com/pilot-org/repo-b",
+      "root_commits": [
+        "ccf5dea5d65a661f73a86863c8df529272a0f5db"
+      ],
+      "id": "452fb5bcf58151b0bdb7855abe6e3b2ccc5fb0f9c9bd4db10cb5aab07f0900f8"
+    },
+    "base": "d7ed028c2ce201da36444e2defde84856b8e80c9"
+  },
+  "result": {
+    "temp_root": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\pm03-b01-mhgfot_o",
+    "mapping_used": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\pm03-b01-mhgfot_o\\path-a",
+    "cases": [],
+    "verify_run_ok": true,
+    "verification_id": "VER-7e949f175a13",
+    "record_target_repository": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\pm03-b01-mhgfot_o\\path-a",
+    "verification_current_in_b": true,
+    "receipt_in_b": {
+      "valid": true,
+      "problems": [],
+      "portable": true,
+      "legacy_path_bound": false
+    },
+    "receipt_in_a": {
+      "valid": true
+    }
+  }
+}

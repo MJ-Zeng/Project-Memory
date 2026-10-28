@@ -1,0 +1,201 @@
+=== diffstat 73be8e3..8506dd4 (exit 0) ===
+.project-memory/handoffs/B0/run-20261028T1010.json | 143 +++++++
+ .../ADR-0001-portable-repository-identity.md       | 134 +++++++
+ pilot/evidence/B0/run-20261028T1010/README.md      |  67 ++++
+ pilot/evidence/B0/run-20261028T1010/commands.jsonl |   8 +
+ .../evidence/B0/run-20261028T1010/cross_path.json  | 139 +++++++
+ .../evidence/B0/run-20261028T1010/cross_repo.json  | 199 ++++++++++
+ pilot/evidence/B0/run-20261028T1010/diffstat.txt   |  66 ++++
+ .../evidence/B0/run-20261028T1010/environment.txt  |  12 +
+ .../run-20261028T1010/logs/01-baseline-archive.log |   7 +
+ .../B0/run-20261028T1010/logs/01-goal-create.log   |  44 +++
+ .../logs/01-same-identity-copy.log                 |  21 +
+ .../run-20261028T1010/logs/02-different-remote.log |  24 ++
+ .../run-20261028T1010/logs/02-pre-fix-baseline.log |   8 +
+ .../B0/run-20261028T1010/logs/02-test-run.log      |  78 ++++
+ .../logs/03-cross-path-driver.log                  |   8 +
+ .../run-20261028T1010/logs/03-different-root.log   |  27 ++
+ .../run-20261028T1010/logs/03-run-start-target.log |  41 ++
+ .../logs/04-cross-repo-driver.log                  |   8 +
+ .../logs/04-legacy-original-path.log               |  18 +
+ .../logs/04-run-finish-target.log                  |  78 ++++
+ .../logs/05-legacy-copied-path.log                 |  20 +
+ .../logs/05-run-start-verifier.log                 |  41 ++
+ .../B0/run-20261028T1010/logs/06-verify.log        | 172 +++++++++
+ .../B0/run-20261028T1010/logs/07-intent-to-add.log |   7 +
+ .../B0/run-20261028T1010/logs/08-diffstat.log      |  40 ++
+ .../B0/run-20261028T1010/logs/09-git-status.log    |  38 ++
+ pilot/evidence/B0/run-20261028T1010/pre_fix.json   |  17 +
+ pilot/evidence/B0/run-20261028T1010/pytest.log     |  11 +
+ .../B0/run-20261028T1010/scripts/check_receipt.py  |  44 +++
+ .../B0/run-20261028T1010/scripts/cross_path.py     | 220 +++++++++++
+ .../B0/run-20261028T1010/scripts/cross_repo.py     | 191 +++++++++
+ .../B0/run-20261028T1010/scripts/finalize.py       |  95 +++++
+ .../B0/run-20261028T1010/scripts/repro_baseline.py |  82 ++++
+ .../B0/run-20261028T1010/scripts/run_evidence.py   | 170 ++++++++
+ pilot/evidence/B0/run-20261028T1010/sha256sums.txt |  32 ++
+ pilot/evidence/B0/run-20261028T1142/README.md      |  72 ++++
+ pilot/evidence/B0/run-20261028T1142/commands.jsonl |   5 +
+ pilot/evidence/B0/run-20261028T1142/diffstat.txt   |  65 ++++
+ .../evidence/B0/run-20261028T1142/environment.txt  |  15 +
+ .../logs/01-remediation-probe.log                  |  72 ++++
+ .../B0/run-20261028T1142/logs/02-pytest.log        |   4 +
+ .../B0/run-20261028T1142/logs/03-environment.log   |  16 +
+ .../B0/run-20261028T1142/logs/04-diffstat.log      |  66 ++++
+ .../B0/run-20261028T1142/logs/05-sha256sums.log    |  15 +
+ .../evidence/B0/run-20261028T1142/remediation.json |  87 +++++
+ .../B0/run-20261028T1142/scripts/diffstat.py       |  42 ++
+ .../B0/run-20261028T1142/scripts/environment.py    |  54 +++
+ .../B0/run-20261028T1142/scripts/finalize.py       |  65 ++++
+ .../B0/run-20261028T1142/scripts/record.py         |  55 +++
+ .../run-20261028T1142/scripts/remediation_probe.py | 290 ++++++++++++++
+ pilot/evidence/B0/run-20261028T1142/sha256sums.txt |  15 +
+ pilot/rounds/B0/handoff-context-recovery-pm02.md   |  50 +++
+ pilot/rounds/B0/handoff-run-20261028T1010.md       | 138 +++++++
+ project_memory/coordination.py                     |  56 ++-
+ project_memory/execution.py                        | 148 ++++++-
+ tests/test_repo_identity.py                        | 430 +++++++++++++++++++++
+ 56 files changed, 4054 insertions(+), 16 deletions(-)
+
+=== name-status 73be8e3..8506dd4 (exit 0) ===
+A	.project-memory/handoffs/B0/run-20261028T1010.json
+A	docs/decisions/ADR-0001-portable-repository-identity.md
+A	pilot/evidence/B0/run-20261028T1010/README.md
+A	pilot/evidence/B0/run-20261028T1010/commands.jsonl
+A	pilot/evidence/B0/run-20261028T1010/cross_path.json
+A	pilot/evidence/B0/run-20261028T1010/cross_repo.json
+A	pilot/evidence/B0/run-20261028T1010/diffstat.txt
+A	pilot/evidence/B0/run-20261028T1010/environment.txt
+A	pilot/evidence/B0/run-20261028T1010/logs/01-baseline-archive.log
+A	pilot/evidence/B0/run-20261028T1010/logs/01-goal-create.log
+A	pilot/evidence/B0/run-20261028T1010/logs/01-same-identity-copy.log
+A	pilot/evidence/B0/run-20261028T1010/logs/02-different-remote.log
+A	pilot/evidence/B0/run-20261028T1010/logs/02-pre-fix-baseline.log
+A	pilot/evidence/B0/run-20261028T1010/logs/02-test-run.log
+A	pilot/evidence/B0/run-20261028T1010/logs/03-cross-path-driver.log
+A	pilot/evidence/B0/run-20261028T1010/logs/03-different-root.log
+A	pilot/evidence/B0/run-20261028T1010/logs/03-run-start-target.log
+A	pilot/evidence/B0/run-20261028T1010/logs/04-cross-repo-driver.log
+A	pilot/evidence/B0/run-20261028T1010/logs/04-legacy-original-path.log
+A	pilot/evidence/B0/run-20261028T1010/logs/04-run-finish-target.log
+A	pilot/evidence/B0/run-20261028T1010/logs/05-legacy-copied-path.log
+A	pilot/evidence/B0/run-20261028T1010/logs/05-run-start-verifier.log
+A	pilot/evidence/B0/run-20261028T1010/logs/06-verify.log
+A	pilot/evidence/B0/run-20261028T1010/logs/07-intent-to-add.log
+A	pilot/evidence/B0/run-20261028T1010/logs/08-diffstat.log
+A	pilot/evidence/B0/run-20261028T1010/logs/09-git-status.log
+A	pilot/evidence/B0/run-20261028T1010/pre_fix.json
+A	pilot/evidence/B0/run-20261028T1010/pytest.log
+A	pilot/evidence/B0/run-20261028T1010/scripts/check_receipt.py
+A	pilot/evidence/B0/run-20261028T1010/scripts/cross_path.py
+A	pilot/evidence/B0/run-20261028T1010/scripts/cross_repo.py
+A	pilot/evidence/B0/run-20261028T1010/scripts/finalize.py
+A	pilot/evidence/B0/run-20261028T1010/scripts/repro_baseline.py
+A	pilot/evidence/B0/run-20261028T1010/scripts/run_evidence.py
+A	pilot/evidence/B0/run-20261028T1010/sha256sums.txt
+A	pilot/evidence/B0/run-20261028T1142/README.md
+A	pilot/evidence/B0/run-20261028T1142/commands.jsonl
+A	pilot/evidence/B0/run-20261028T1142/diffstat.txt
+A	pilot/evidence/B0/run-20261028T1142/environment.txt
+A	pilot/evidence/B0/run-20261028T1142/logs/01-remediation-probe.log
+A	pilot/evidence/B0/run-20261028T1142/logs/02-pytest.log
+A	pilot/evidence/B0/run-20261028T1142/logs/03-environment.log
+A	pilot/evidence/B0/run-20261028T1142/logs/04-diffstat.log
+A	pilot/evidence/B0/run-20261028T1142/logs/05-sha256sums.log
+A	pilot/evidence/B0/run-20261028T1142/remediation.json
+A	pilot/evidence/B0/run-20261028T1142/scripts/diffstat.py
+A	pilot/evidence/B0/run-20261028T1142/scripts/environment.py
+A	pilot/evidence/B0/run-20261028T1142/scripts/finalize.py
+A	pilot/evidence/B0/run-20261028T1142/scripts/record.py
+A	pilot/evidence/B0/run-20261028T1142/scripts/remediation_probe.py
+A	pilot/evidence/B0/run-20261028T1142/sha256sums.txt
+A	pilot/rounds/B0/handoff-context-recovery-pm02.md
+A	pilot/rounds/B0/handoff-run-20261028T1010.md
+M	project_memory/coordination.py
+M	project_memory/execution.py
+A	tests/test_repo_identity.py
+
+=== diffstat 14cc8fc..8506dd4 (exit 0) ===
+.project-memory/handoffs/B0/run-20261028T1010.json | 143 ++++++++++
+ .../ADR-0001-portable-repository-identity.md       |  16 +-
+ pilot/evidence/B0/run-20261028T1142/README.md      |  72 +++++
+ pilot/evidence/B0/run-20261028T1142/commands.jsonl |   5 +
+ pilot/evidence/B0/run-20261028T1142/diffstat.txt   |  65 +++++
+ .../evidence/B0/run-20261028T1142/environment.txt  |  15 ++
+ .../logs/01-remediation-probe.log                  |  72 +++++
+ .../B0/run-20261028T1142/logs/02-pytest.log        |   4 +
+ .../B0/run-20261028T1142/logs/03-environment.log   |  16 ++
+ .../B0/run-20261028T1142/logs/04-diffstat.log      |  66 +++++
+ .../B0/run-20261028T1142/logs/05-sha256sums.log    |  15 ++
+ .../evidence/B0/run-20261028T1142/remediation.json |  87 +++++++
+ .../B0/run-20261028T1142/scripts/diffstat.py       |  42 +++
+ .../B0/run-20261028T1142/scripts/environment.py    |  54 ++++
+ .../B0/run-20261028T1142/scripts/finalize.py       |  65 +++++
+ .../B0/run-20261028T1142/scripts/record.py         |  55 ++++
+ .../run-20261028T1142/scripts/remediation_probe.py | 290 +++++++++++++++++++++
+ pilot/evidence/B0/run-20261028T1142/sha256sums.txt |  15 ++
+ ...ry-pm02.md => handoff-context-recovery-pm02.md} |   0
+ pilot/rounds/B0/handoff-run-20261028T1010.md       | 138 ++++++++++
+ project_memory/coordination.py                     |  56 +++-
+ project_memory/execution.py                        |  21 +-
+ tests/test_repo_identity.py                        | 199 +++++++++++++-
+ 23 files changed, 1496 insertions(+), 15 deletions(-)
+
+=== name-status 14cc8fc..8506dd4 (exit 0) ===
+A	.project-memory/handoffs/B0/run-20261028T1010.json
+M	docs/decisions/ADR-0001-portable-repository-identity.md
+A	pilot/evidence/B0/run-20261028T1142/README.md
+A	pilot/evidence/B0/run-20261028T1142/commands.jsonl
+A	pilot/evidence/B0/run-20261028T1142/diffstat.txt
+A	pilot/evidence/B0/run-20261028T1142/environment.txt
+A	pilot/evidence/B0/run-20261028T1142/logs/01-remediation-probe.log
+A	pilot/evidence/B0/run-20261028T1142/logs/02-pytest.log
+A	pilot/evidence/B0/run-20261028T1142/logs/03-environment.log
+A	pilot/evidence/B0/run-20261028T1142/logs/04-diffstat.log
+A	pilot/evidence/B0/run-20261028T1142/logs/05-sha256sums.log
+A	pilot/evidence/B0/run-20261028T1142/remediation.json
+A	pilot/evidence/B0/run-20261028T1142/scripts/diffstat.py
+A	pilot/evidence/B0/run-20261028T1142/scripts/environment.py
+A	pilot/evidence/B0/run-20261028T1142/scripts/finalize.py
+A	pilot/evidence/B0/run-20261028T1142/scripts/record.py
+A	pilot/evidence/B0/run-20261028T1142/scripts/remediation_probe.py
+A	pilot/evidence/B0/run-20261028T1142/sha256sums.txt
+R100	pilot/rounds/B0/context-recovery-pm02.md	pilot/rounds/B0/handoff-context-recovery-pm02.md
+A	pilot/rounds/B0/handoff-run-20261028T1010.md
+M	project_memory/coordination.py
+M	project_memory/execution.py
+M	tests/test_repo_identity.py
+
+=== summary -M 14cc8fc..8506dd4 (exit 0) ===
+create mode 100644 .project-memory/handoffs/B0/run-20261028T1010.json
+ create mode 100644 pilot/evidence/B0/run-20261028T1142/README.md
+ create mode 100644 pilot/evidence/B0/run-20261028T1142/commands.jsonl
+ create mode 100644 pilot/evidence/B0/run-20261028T1142/diffstat.txt
+ create mode 100644 pilot/evidence/B0/run-20261028T1142/environment.txt
+ create mode 100644 pilot/evidence/B0/run-20261028T1142/logs/01-remediation-probe.log
+ create mode 100644 pilot/evidence/B0/run-20261028T1142/logs/02-pytest.log
+ create mode 100644 pilot/evidence/B0/run-20261028T1142/logs/03-environment.log
+ create mode 100644 pilot/evidence/B0/run-20261028T1142/logs/04-diffstat.log
+ create mode 100644 pilot/evidence/B0/run-20261028T1142/logs/05-sha256sums.log
+ create mode 100644 pilot/evidence/B0/run-20261028T1142/remediation.json
+ create mode 100644 pilot/evidence/B0/run-20261028T1142/scripts/diffstat.py
+ create mode 100644 pilot/evidence/B0/run-20261028T1142/scripts/environment.py
+ create mode 100644 pilot/evidence/B0/run-20261028T1142/scripts/finalize.py
+ create mode 100644 pilot/evidence/B0/run-20261028T1142/scripts/record.py
+ create mode 100644 pilot/evidence/B0/run-20261028T1142/scripts/remediation_probe.py
+ create mode 100644 pilot/evidence/B0/run-20261028T1142/sha256sums.txt
+ rename pilot/rounds/B0/{context-recovery-pm02.md => handoff-context-recovery-pm02.md} (100%)
+ create mode 100644 pilot/rounds/B0/handoff-run-20261028T1010.md
+
+=== name-status 8506dd4..8f7a63e (exit 0) ===
+A	.project-memory/handoffs/B0/run-20261028T1142.json
+A	pilot/rounds/B0/handoff-run-20261028T1142.md
+
+=== authority.py diff 73be8e3..8506dd4 (exit 0) ===
+(empty)
+
+=== deleted files 73be8e3..8506dd4 (exit 0) ===
+(empty)
+
+=== candidate worktree status (exit 0) ===
+(empty)
