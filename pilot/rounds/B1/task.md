@@ -5,7 +5,7 @@
 - 优先级：P0 / security
 - 基线：`dev/v1.0` 的脚手架合并提交；精确 SHA 见派发 Issue；冻结参照 `0d08a1ad85144d11a46d6a361a2a3ce4eadbbed4`
 - 候选分支：`fix/b1-openssl-verifier`
-- 关联 Issue：`<B1_ISSUE_URL>`（派发时填写）
+- 关联 Issue：见派发 Issue（本任务卡不绑定 URL，避免哈希漂移）
 - Goal：`G-B1`
 - 依赖：无；B2/B3 不并行
 

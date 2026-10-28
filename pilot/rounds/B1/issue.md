@@ -7,7 +7,7 @@
 - Task ID：`B1`
 - Goal：`G-B1`
 - 任务卡：`pilot/rounds/B1/task.md`
-- 任务卡 SHA-256：`74b1773c97764caaceb7f3841615a9b073e2adeec162b31043de9f399dacf4f0`
+- 任务卡 SHA-256：`0fdc9469456b81bae26a3c29385f1745222e16b19211e27d4d04a418ef3be08d`
 - 基线：`dev/v1.0` 的脚手架合并提交（派发后填入精确 SHA）
 - 冻结参照：`0d08a1ad85144d11a46d6a361a2a3ce4eadbbed4`
 - 候选分支：`fix/b1-openssl-verifier`

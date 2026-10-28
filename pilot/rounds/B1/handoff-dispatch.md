@@ -2,16 +2,16 @@
 handoff_id: HO-B1-R1-SUP
 schema: pilot-handoff/v1
 task_id: B1
-issue: <B1_ISSUE_URL>
+issue: see dispatch Issue
 goal_id: G-B1
 round: 1
 from_role: PM-01
 to_role: PM-02
-base_sha: <BASE_SHA_FROM_ISSUE>
+base_sha: see dispatch Issue
 candidate_sha: null
 branch: fix/b1-openssl-verifier
 pr: null
-criteria_sha256: 74b1773c97764caaceb7f3841615a9b073e2adeec162b31043de9f399dacf4f0
+criteria_sha256: 0fdc9469456b81bae26a3c29385f1745222e16b19211e27d4d04a418ef3be08d
 agent_label: "PM-01 Supervisor <pm01@pilot.invalid>"   # 自述，不是认证
 session_id: <PM-01 会话标识>
 model: <provider/id>
