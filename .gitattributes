@@ -3,6 +3,7 @@ pilot/** text eol=lf
 tasks/** text eol=lf
 .project-memory/** text eol=lf
 docs/decisions/** text eol=lf
+evidence/B4/** text eol=lf
 
 # 原生入口包装器：跨平台行尾必须确定。POSIX shell 用 LF（CRLF 会破坏 shebang），
 # Windows 批处理用 CRLF（多行 if 块在部分 cmd 版本下对 LF 敏感）。见 ADR-0005。

@@ -1,0 +1,23 @@
+{
+  "scenario": "CLI exit semantics",
+  "results": [
+    {
+      "case": "verify_valid_unanchored",
+      "exit": 0,
+      "stdout": "{\n  \"authoritative\": false,\n  \"caveat\": \"valid_unanchored 只证明链自洽，不证明历史未被重建；achieved 需要 anchor 签名的 checkpoint。\",\n  \"chain_problems\": [],\n  \"checkpoint\": {\n    \"matches\": false,\n    \"path\": \".project-memory/audit/head.json\",\n    \"present\": false,\n    \"reason\": \"checkpoint_missing\",\n    \"trusted\": false\n  },\n  \"entries\": 3,\n  \"head\": \"ec80c3858c4bf2c5a4b91d1a7ffd1e15f4ab57725c4b3e7dafac601292e23970\",\n  \"kind\": \"audit_chain_verification\",\n  \"migration\": null,\n  \"migration_sha256\": null,\n  \"problems\": [],\n  \"schema_version\": \"1.3\",\n  \"status\": \"valid_unanchored\",\n  \"valid\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "case": "head_valid_unanchored",
+      "exit": 0,
+      "stdout": "{\n  \"authoritative\": false,\n  \"checkpoint\": {\n    \"matches\": false,\n    \"path\": \".project-memory/audit/head.json\",\n    \"present\": false,\n    \"reason\": \"checkpoint_missing\",\n    \"trusted\": false\n  },\n  \"entries\": 3,\n  \"head\": \"ec80c3858c4bf2c5a4b91d1a7ffd1e15f4ab57725c4b3e7dafac601292e23970\",\n  \"kind\": \"audit_head_result\",\n  \"migration\": null,\n  \"problems\": [],\n  \"schema_version\": \"1.3\",\n  \"status\": \"valid_unanchored\"\n}\n",
+      "stderr": ""
+    },
+    {
+      "case": "verify_missing",
+      "exit": 2,
+      "stdout": "{\n  \"authoritative\": false,\n  \"caveat\": \"valid_unanchored 只证明链自洽，不证明历史未被重建；achieved 需要 anchor 签名的 checkpoint。\",\n  \"chain_problems\": [\n    \"audit_missing\"\n  ],\n  \"checkpoint\": {\n    \"matches\": false,\n    \"path\": \".project-memory/audit/head.json\",\n    \"present\": false,\n    \"reason\": \"checkpoint_missing\",\n    \"trusted\": false\n  },\n  \"entries\": 0,\n  \"head\": null,\n  \"kind\": \"audit_chain_verification\",\n  \"migration\": null,\n  \"migration_sha256\": null,\n  \"problems\": [\n    \"audit_missing\"\n  ],\n  \"schema_version\": \"1.3\",\n  \"status\": \"invalid\",\n  \"valid\": false\n}\n",
+      "stderr": ""
+    }
+  ]
+}

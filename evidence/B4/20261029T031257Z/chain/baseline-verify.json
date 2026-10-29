@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.3",
+  "kind": "audit_chain_verification",
+  "status": "valid_unanchored",
+  "valid": true,
+  "authoritative": false,
+  "entries": 3,
+  "head": "ec80c3858c4bf2c5a4b91d1a7ffd1e15f4ab57725c4b3e7dafac601292e23970",
+  "chain_problems": [],
+  "migration": null,
+  "migration_sha256": null,
+  "checkpoint": {
+    "present": false,
+    "trusted": false,
+    "matches": false,
+    "path": ".project-memory/audit/head.json",
+    "reason": "checkpoint_missing"
+  },
+  "problems": [],
+  "caveat": "valid_unanchored 只证明链自洽，不证明历史未被重建；achieved 需要 anchor 签名的 checkpoint。"
+}

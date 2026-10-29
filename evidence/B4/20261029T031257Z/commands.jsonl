@@ -1,0 +1,27 @@
+{"cmd": ["git", "-C", "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b4-evidence-chain-dyqfe1gc", "init", "-q"], "exit": 0, "note": ""}
+{"cmd": ["git", "-C", "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b4-evidence-chain-dyqfe1gc", "config", "user.email", "b4@example.invalid"], "exit": 0, "note": ""}
+{"cmd": ["git", "-C", "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b4-evidence-chain-dyqfe1gc", "config", "user.name", "B4"], "exit": 0, "note": ""}
+{"cmd": ["git", "-C", "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b4-evidence-chain-dyqfe1gc", "add", "README.md", "tests/test_auth.py"], "exit": 0, "note": ""}
+{"cmd": ["git", "-C", "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b4-evidence-chain-dyqfe1gc", "commit", "-qm", "base"], "exit": 0, "note": ""}
+{"cmd": ["python", "-m", "project_memory", "audit", "verify", "--repo", "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b4-evidence-chain-dyqfe1gc"], "exit": 0, "note": "verify_valid_unanchored"}
+{"cmd": ["python", "-m", "project_memory", "audit", "head", "--repo", "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b4-evidence-chain-dyqfe1gc"], "exit": 0, "note": "head_valid_unanchored"}
+{"cmd": ["python", "-m", "project_memory", "audit", "verify", "--repo", "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b4-evidence-chain-dyqfe1gc", "(audit missing)"], "exit": 2, "note": "verify_invalid"}
+{"cmd": ["git", "-C", "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b4-evidence-goal-_eu5nfjl", "init", "-q"], "exit": 0, "note": ""}
+{"cmd": ["git", "-C", "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b4-evidence-goal-_eu5nfjl", "config", "user.email", "b4@example.invalid"], "exit": 0, "note": ""}
+{"cmd": ["git", "-C", "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b4-evidence-goal-_eu5nfjl", "config", "user.name", "B4"], "exit": 0, "note": ""}
+{"cmd": ["git", "-C", "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b4-evidence-goal-_eu5nfjl", "add", "README.md", "tests/test_auth.py"], "exit": 0, "note": ""}
+{"cmd": ["git", "-C", "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b4-evidence-goal-_eu5nfjl", "commit", "-qm", "base"], "exit": 0, "note": ""}
+{"cmd": ["git", "-C", "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b4-evidence-legit-5h1hz99e", "init", "-q"], "exit": 0, "note": ""}
+{"cmd": ["git", "-C", "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b4-evidence-legit-5h1hz99e", "config", "user.email", "b4@example.invalid"], "exit": 0, "note": ""}
+{"cmd": ["git", "-C", "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b4-evidence-legit-5h1hz99e", "config", "user.name", "B4"], "exit": 0, "note": ""}
+{"cmd": ["git", "-C", "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b4-evidence-legit-5h1hz99e", "add", "README.md", "tests/test_auth.py"], "exit": 0, "note": ""}
+{"cmd": ["git", "-C", "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b4-evidence-legit-5h1hz99e", "commit", "-qm", "base"], "exit": 0, "note": ""}
+{"cmd": ["run_command(local, explicit library call)", "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b4-evidence-legit-5h1hz99e"], "exit": 0, "note": "evidence-harness local execution; B5B CLI default untouched"}
+{"cmd": ["verify_run", "acceptance"], "exit": 0, "note": ""}
+{"cmd": ["git", "-C", "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b4-evidence-migrate-igtkyg9s", "init", "-q"], "exit": 0, "note": ""}
+{"cmd": ["git", "-C", "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b4-evidence-migrate-igtkyg9s", "config", "user.email", "b4@example.invalid"], "exit": 0, "note": ""}
+{"cmd": ["git", "-C", "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b4-evidence-migrate-igtkyg9s", "config", "user.name", "B4"], "exit": 0, "note": ""}
+{"cmd": ["git", "-C", "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b4-evidence-migrate-igtkyg9s", "add", "README.md", "tests/test_auth.py"], "exit": 0, "note": ""}
+{"cmd": ["git", "-C", "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b4-evidence-migrate-igtkyg9s", "commit", "-qm", "base"], "exit": 0, "note": ""}
+{"cmd": ["C:\\SoftWare\\Anconda\\python.exe", "-m", "pytest", "tests/", "-q"], "cwd": "C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-02", "exit": 0, "note": "247 passed, 2 skipped"}
+{"cmd": ["C:\\SoftWare\\Anconda\\python.exe", "-m", "pytest", "tests/test_security_b5b.py", "tests/test_security_b5a.py", "tests/test_security_b3.py", "tests/test_security_b2.py", "tests/test_security_rc3.py", "-q"], "cwd": "C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-02", "exit": 0, "note": "61 passed, 2 skipped"}

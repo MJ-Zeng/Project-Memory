@@ -1,0 +1,29 @@
+{
+  "scenario": "deleted audit directory",
+  "verify": {
+    "schema_version": "1.3",
+    "kind": "audit_chain_verification",
+    "status": "invalid",
+    "valid": false,
+    "authoritative": false,
+    "entries": 0,
+    "head": null,
+    "chain_problems": [
+      "audit_missing"
+    ],
+    "migration": null,
+    "migration_sha256": null,
+    "checkpoint": {
+      "present": false,
+      "trusted": false,
+      "matches": false,
+      "path": ".project-memory/audit/head.json",
+      "reason": "checkpoint_missing"
+    },
+    "problems": [
+      "audit_missing"
+    ],
+    "caveat": "valid_unanchored 只证明链自洽，不证明历史未被重建；achieved 需要 anchor 签名的 checkpoint。"
+  },
+  "detected": true
+}

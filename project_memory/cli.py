@@ -12,7 +12,8 @@ from .execution import run_command
 from .coordination import (create_goal, goal_list, goal_show, evaluate_goal, add_goal_evidence,
                            transition_goal, start_run, checkpoint_run, resume_run, finish_run,
                            run_show, iter_runs, verify_run, defect_list, defect_show,
-                           update_defect, reconcile)
+                           update_defect, reconcile, audit_verify, audit_head, audit_migrate,
+                           write_audit_checkpoint_request, attach_audit_checkpoint)
 from .gh import GitHubReader
 
 
@@ -141,6 +142,20 @@ def parser():
     s.add_argument('--path-source', choices=['manifest', 'filesystem', 'shadow'], help='显式声明路径证据来源')
     s.add_argument('--output', type=Path)
     _add_roots(s)
+    g = s.add_subparsers(dest='audit_command')
+    c = _leaf(g, 'verify', '从 genesis 重算执行审计链并校验签名 checkpoint')
+    c.add_argument('--output', type=Path)
+    c = _leaf(g, 'head', '显示审计链头、长度与 checkpoint 状态')
+    c.add_argument('--output', type=Path)
+    c = _leaf(g, 'migrate', '为旧版无链审计行补建哈希链；迁移本身不产生信任')
+    c.add_argument('--output', type=Path)
+    c = _leaf(g, 'checkpoint-request', '为 achieved 生成未签名 checkpoint 请求，供 anchor 签名')
+    c.add_argument('--goal', required=True)
+    c.add_argument('--approved-by')
+    c.add_argument('--output', type=Path)
+    c = _leaf(g, 'checkpoint-attach', '附加仓库外 anchor 已签名的 checkpoint')
+    c.add_argument('--signature', required=True, type=Path)
+    c.add_argument('--output', type=Path)
     s = base('graph', '用本地文档和快照构建证据图')
     s.add_argument('--output', type=Path)
     _add_roots(s)
@@ -384,6 +399,23 @@ def run(args):
     elif args.command == 'new-doc':
         emit(create_document(repo, args.id, args.title, args.kind, args.status, args.owner, args.path, args.issue, _config(args, repo)))
     elif args.command == 'audit':
+        if getattr(args, 'audit_command', None) == 'verify':
+            report = audit_verify(repo)
+            emit(report, args.output)
+            return 0 if report['valid'] else 2
+        if getattr(args, 'audit_command', None) == 'head':
+            report = audit_head(repo)
+            emit(report, args.output)
+            return 0 if report['status'] in ('valid', 'valid_unanchored') else 2
+        if getattr(args, 'audit_command', None) == 'migrate':
+            emit(audit_migrate(repo), args.output)
+            return 0
+        if getattr(args, 'audit_command', None) == 'checkpoint-request':
+            emit(write_audit_checkpoint_request(repo, args.goal, args.approved_by), args.output)
+            return 0
+        if getattr(args, 'audit_command', None) == 'checkpoint-attach':
+            emit(attach_audit_checkpoint(repo, args.signature), args.output)
+            return 0
         manifest = None
         if args.repo_manifest:
             manifest = load_reference_manifest(args.repo_manifest, repo)
