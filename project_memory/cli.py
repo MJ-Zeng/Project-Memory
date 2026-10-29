@@ -279,6 +279,8 @@ def parser():
     s.add_argument('--timeout', type=int, default=900, help='超时秒数')
     s.add_argument('--trusted', action='store_true',
                    help='在 WSL2 user/mount/PID/network namespace 中执行；预检失败即停止，不回退')
+    s.add_argument('--allow-local-untrusted', action='store_true',
+                   help='显式允许在宿主上以普通子进程执行（无 OS 隔离）；收据标记 local_untrusted')
     s.add_argument('--wsl-distro', help='指定 WSL2 发行版；默认使用系统默认发行版')
     s.add_argument('--subject', help='可选：被验证对象标识（写入收据）')
     s.add_argument('--output', type=Path)
@@ -482,6 +484,15 @@ def run(args):
         emit(result)
         return 0 if result.get('verified') else 2
     elif args.command == 'test-run':
+        if args.trusted and args.allow_local_untrusted:
+            print('project-memory: 拒绝执行：test-run 必须且只能选择一种执行模式，'
+                  '--trusted 与 --allow-local-untrusted 不能同时使用。', file=sys.stderr)
+            return 3
+        if not args.trusted and not args.allow_local_untrusted:
+            print('project-memory: 拒绝执行：test-run 默认不执行未隔离代码。'
+                  '请显式选择 --trusted（WSL2 隔离）或 --allow-local-untrusted'
+                  '（宿主本地执行，无隔离）。', file=sys.stderr)
+            return 3
         mode = 'trusted' if args.trusted else 'local'
         if mode == 'local':
             print('警告：本地执行没有操作系统隔离，收据标记为 local_untrusted；'

@@ -1752,7 +1752,7 @@ class CoordinationTest(unittest.TestCase):
                  '--model-id', 'qwen3.8-flash', '--role', 'verifier', '--base-sha', self.base)
         command = f'"{sys.executable}" -c "import sys; print(\'1 passed\'); sys.exit(0)"'
         run_out = self.cli('test-run', '--command', command, '--commit', self.base,
-                           '--agent', 'verifier-agent')
+                           '--agent', 'verifier-agent', '--allow-local-untrusted')
         receipt = run_out['receipt']
         mapping = {'criteria': [{
             'criterion_id': 'C1', 'goal_id': 'G-CLI', 'task_id': '325',

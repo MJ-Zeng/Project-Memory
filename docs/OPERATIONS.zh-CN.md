@@ -113,7 +113,7 @@ PYTHONPATH=.project-memory/tooling python3 -m project_memory verify --repo . \
 
 `agent_claimed` 不能 pass。`locally_observed` 必须提供 `test-run` 生成的执行收据；手写日志不再算执行证据。外部验证需要 CI URL 和 passed，但 CLI 不联网抓取；人工批准需要 review URL 和 approved，但 CLI 不认证审批人。发现用 `--findings-file` 提交，high 级发现会阻断 pass。
 
-`test-run` 默认是本地普通子进程，收据标记为 `local_untrusted`。`--trusted` 才进入 WSL2 user/mount/PID/network namespace：屏蔽 Windows 盘符、宿主 home、`/root`、`/var`、`/tmp` 和 `/etc/ssh`，只保留快照副本与 `env -i` allowlist，无默认路由；预检失败返回 `BLOCKED`，不回退普通子进程。attestation 位于仓库内、没有外部签名，所以收据只标 `isolated_local_attestation`，不代表来源可信。
+`test-run` 必须显式选择执行模式，默认不执行：既无 `--trusted` 也无 `--allow-local-untrusted` 时拒绝执行（exit 3，不建快照、不写收据、无副作用）。`--allow-local-untrusted` 才在宿主上以普通子进程执行，收据标记为 `local_untrusted`，并保留警告。`--trusted` 进入 WSL2 user/mount/PID/network namespace：屏蔽 Windows 盘符、宿主 home、`/root`、`/var`、`/tmp` 和 `/etc/ssh`，只保留快照副本与 `env -i` allowlist，无默认路由；预检失败返回 `BLOCKED`（exit 3），不回退普通子进程。attestation 位于仓库内、没有外部签名，所以收据只标 `isolated_local_attestation`，不代表来源可信。
 
 本地 CLI 写出的验证记录最多是 `MANUAL_REVIEW_REQUIRED`，`verified` 恒为 false；JSON 里自报 `status: VERIFIED` 或 `authority.status: trusted` 不被接受。只有仓库外的受保护信任锚（`PROJECT_MEMORY_TRUST_ANCHOR`）对记录做分离签名，`goal evidence` 才可能把验证当作达成依据。没有配置信任锚时，`goal evaluate` 停在 `needs_review` 是预期的 fail-closed 结果。
 
