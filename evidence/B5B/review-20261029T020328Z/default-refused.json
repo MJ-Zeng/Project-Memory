@@ -1,0 +1,9 @@
+{
+  "scenario": "default-refused",
+  "source": "reviewer-derived from default.out/err/exit",
+  "exit_code": 3,
+  "stdout_empty": true,
+  "stderr": "project-memory: 拒绝执行：test-run 默认不执行未隔离代码。请显式选择 --trusted（WSL2 隔离）或 --allow-local-untrusted（宿主本地执行，无隔离）。",
+  "marker_present": false,
+  "project_memory_dir_exists": true
+}

@@ -1,0 +1,52 @@
+{
+  "schema_version": "1.1",
+  "kind": "execution_receipt",
+  "receipt_id": "EXE-fb03113b2cc5220d3607",
+  "repo_id": "fd57c3ee674e4fc695ff95b6ec118789e474bed3f37c6eee621f3cfa0f5852ee",
+  "repo_identity": {
+    "schema": "1.1",
+    "kind": "root-only",
+    "remote": null,
+    "root_commits": [
+      "44070e7bdd741fc257e1cae187b8b7bc5e59a435"
+    ]
+  },
+  "commit_sha": "44070e7bdd741fc257e1cae187b8b7bc5e59a435",
+  "tree_sha": "bcf5db02d35f53cc61823e42930d56015337941d",
+  "snapshot_id": "SNP-aa5dd2e13708c700",
+  "snapshot_sha256": "0b4f122c9849f4524c942320824edafdd68f712508a4377a2f33a62924020d4c",
+  "command": "python3 marker-command.py /tmp/b5b-sandbox-marker",
+  "exit_code": 0,
+  "log_path": ".project-memory/logs/EXE-fb03113b2cc5220d3607.log",
+  "log_sha256": "043a8a0f70a23914aff1e5bc39e5a959954d5234de1b1b6011e5d36b6a74740b",
+  "log_bytes": 332,
+  "started_at": "2026-10-29T02:04:00+00:00",
+  "finished_at": "2026-10-29T02:04:01+00:00",
+  "executed_by": "reviewer",
+  "subject": "",
+  "executor": {
+    "name": "project-memory",
+    "mode": "trusted",
+    "python": "3.12.4",
+    "platform": "Windows-11-10.0.26300-SP0"
+  },
+  "isolation": {
+    "mode": "wsl2-user-mount-pid-net-namespace",
+    "os_isolation": true,
+    "sandbox": "wsl2-user-mount-pid-net-namespace",
+    "distro": "default",
+    "snapshot_wsl": "/mnt/c/Users/ZMJ/AppData/Local/Temp/b5b-review/review-20261029T020328Z/repo/.project-memory/snapshots/SNP-aa5dd2e13708c700/tree"
+  },
+  "execution_provenance": {
+    "kind": "trusted_launcher",
+    "launcher": "project_memory.trusted_exec",
+    "attested": true,
+    "trusted": false,
+    "reason": "隔离由启动器 attestation 记录，但 attestation 位于仓库内，没有外部签名来源；不能证明收据未被同权限 Agent 改写"
+  },
+  "trust": "isolated_local_attestation",
+  "caveat": "收据只证明该命令在这个快照内以该退出码执行过；不证明测试语义覆盖了任何业务标准，也不证明来源可信。",
+  "attestation_path": ".project-memory/attest/EXE-fb03113b2cc5220d3607/attest.json",
+  "attestation_sha256": "8da7d0924c1f51a591afbc6e63ce985023ee73effa3895e09eb26114425702e0",
+  "content_sha256": "010e651b702e0fc70c4aaf1c89c1c580264d6a14df9887ead3c6331ab32a4204"
+}

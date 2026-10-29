@@ -1,0 +1,13 @@
+
+=================================== ERRORS ====================================
+__ ERROR collecting evidence/B5A/run-20261029T001414Z/test_run_env_probe.py ___
+import file mismatch:
+imported module 'test_run_env_probe' has this __file__ attribute:
+  C:\Documents\02_Research\Code\project-memory-verification-lab\import-workspace\pm-pilot-03\.pilot\b5b-base\evidence\B5A\run-20261028T154334Z\test_run_env_probe.py
+which is not the same as the test file we want to collect:
+  C:\Documents\02_Research\Code\project-memory-verification-lab\import-workspace\pm-pilot-03\.pilot\b5b-base\evidence\B5A\run-20261029T001414Z\test_run_env_probe.py
+HINT: remove __pycache__ / .pyc files and/or use a unique basename for your test file modules
+=========================== short test summary info ===========================
+ERROR evidence/B5A/run-20261029T001414Z/test_run_env_probe.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+1 error in 0.24s

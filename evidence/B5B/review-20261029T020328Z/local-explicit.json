@@ -1,0 +1,16 @@
+{
+  "scenario": "local-explicit",
+  "source": "reviewer-derived from local.out + host marker",
+  "exit_code": 0,
+  "marker_present": false,
+  "marker_content": null,
+  "stderr": "警告：本地执行没有操作系统隔离，收据标记为 local_untrusted；需要隔离时请使用 --trusted。",
+  "mode": "local",
+  "isolation_mode": "none",
+  "os_isolation": false,
+  "provenance_kind": "local_untrusted",
+  "provenance_trusted": false,
+  "trust": "local_untrusted",
+  "command_exit_code": 0,
+  "receipt_path": ".project-memory/receipts/EXE-92ae3891a0f0b16b1287.json"
+}

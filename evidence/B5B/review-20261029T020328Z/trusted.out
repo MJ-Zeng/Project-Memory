@@ -1,0 +1,93 @@
+{
+  "attestation": {
+    "canary": "/mnt/c/Users/ZMJ/AppData/Local/Temp/b5b-review/review-20261029T020328Z/repo/.git/HEAD",
+    "command_sha256": "ac5965b2b0fcd3bf3364ac0c1065d5ee7388edc4ba34de4d18d6d4be6b7adcf9",
+    "created_at": "2026-10-29T02:04:01Z",
+    "distro": "default",
+    "env_count": 8,
+    "kernel": "6.18.33.2-microsoft-standard-WSL2",
+    "mode": "wsl2-user-mount-pid-net-namespace",
+    "ok": true,
+    "pid": 1,
+    "pid_ns_levels": 1,
+    "receipt_id": "EXE-fb03113b2cc5220d3607",
+    "snapshot": "/mnt/c/Users/ZMJ/AppData/Local/Temp/b5b-review/review-20261029T020328Z/repo/.project-memory/snapshots/SNP-aa5dd2e13708c700/tree",
+    "uid": 0
+  },
+  "isolation": {
+    "distro": "default",
+    "mode": "wsl2-user-mount-pid-net-namespace",
+    "os_isolation": true,
+    "sandbox": "wsl2-user-mount-pid-net-namespace",
+    "snapshot_wsl": "/mnt/c/Users/ZMJ/AppData/Local/Temp/b5b-review/review-20261029T020328Z/repo/.project-memory/snapshots/SNP-aa5dd2e13708c700/tree"
+  },
+  "log": ".project-memory/logs/EXE-fb03113b2cc5220d3607.log",
+  "mode": "trusted",
+  "path": ".project-memory/receipts/EXE-fb03113b2cc5220d3607.json",
+  "receipt": {
+    "attestation_path": ".project-memory/attest/EXE-fb03113b2cc5220d3607/attest.json",
+    "attestation_sha256": "8da7d0924c1f51a591afbc6e63ce985023ee73effa3895e09eb26114425702e0",
+    "caveat": "收据只证明该命令在这个快照内以该退出码执行过；不证明测试语义覆盖了任何业务标准，也不证明来源可信。",
+    "command": "python3 marker-command.py /tmp/b5b-sandbox-marker",
+    "commit_sha": "44070e7bdd741fc257e1cae187b8b7bc5e59a435",
+    "content_sha256": "010e651b702e0fc70c4aaf1c89c1c580264d6a14df9887ead3c6331ab32a4204",
+    "executed_by": "reviewer",
+    "execution_provenance": {
+      "attested": true,
+      "kind": "trusted_launcher",
+      "launcher": "project_memory.trusted_exec",
+      "reason": "隔离由启动器 attestation 记录，但 attestation 位于仓库内，没有外部签名来源；不能证明收据未被同权限 Agent 改写",
+      "trusted": false
+    },
+    "executor": {
+      "mode": "trusted",
+      "name": "project-memory",
+      "platform": "Windows-11-10.0.26300-SP0",
+      "python": "3.12.4"
+    },
+    "exit_code": 0,
+    "finished_at": "2026-10-29T02:04:01+00:00",
+    "isolation": {
+      "distro": "default",
+      "mode": "wsl2-user-mount-pid-net-namespace",
+      "os_isolation": true,
+      "sandbox": "wsl2-user-mount-pid-net-namespace",
+      "snapshot_wsl": "/mnt/c/Users/ZMJ/AppData/Local/Temp/b5b-review/review-20261029T020328Z/repo/.project-memory/snapshots/SNP-aa5dd2e13708c700/tree"
+    },
+    "kind": "execution_receipt",
+    "log_bytes": 332,
+    "log_path": ".project-memory/logs/EXE-fb03113b2cc5220d3607.log",
+    "log_sha256": "043a8a0f70a23914aff1e5bc39e5a959954d5234de1b1b6011e5d36b6a74740b",
+    "receipt_id": "EXE-fb03113b2cc5220d3607",
+    "repo_id": "fd57c3ee674e4fc695ff95b6ec118789e474bed3f37c6eee621f3cfa0f5852ee",
+    "repo_identity": {
+      "kind": "root-only",
+      "remote": null,
+      "root_commits": [
+        "44070e7bdd741fc257e1cae187b8b7bc5e59a435"
+      ],
+      "schema": "1.1"
+    },
+    "schema_version": "1.1",
+    "snapshot_id": "SNP-aa5dd2e13708c700",
+    "snapshot_sha256": "0b4f122c9849f4524c942320824edafdd68f712508a4377a2f33a62924020d4c",
+    "started_at": "2026-10-29T02:04:00+00:00",
+    "subject": "",
+    "tree_sha": "bcf5db02d35f53cc61823e42930d56015337941d",
+    "trust": "isolated_local_attestation"
+  },
+  "snapshot": {
+    "commit_sha": "44070e7bdd741fc257e1cae187b8b7bc5e59a435",
+    "created_at": "2026-10-29T02:03:53+00:00",
+    "file_count": 2,
+    "files": {
+      "README.md": "cd2eca3535741f27a8ae40c31b0c41d4057a7a7b912b33b9aed86485d1c84676",
+      "marker-command.py": "789676c705955eed96ca4b4db4c7671c52109a5544034800e0c9c5a18701067a"
+    },
+    "kind": "execution_snapshot",
+    "schema_version": "1.1",
+    "snapshot_id": "SNP-aa5dd2e13708c700",
+    "snapshot_sha256": "0b4f122c9849f4524c942320824edafdd68f712508a4377a2f33a62924020d4c",
+    "tree_sha": "bcf5db02d35f53cc61823e42930d56015337941d"
+  }
+}

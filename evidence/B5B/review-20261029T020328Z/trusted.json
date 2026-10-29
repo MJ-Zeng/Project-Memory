@@ -1,0 +1,13 @@
+{
+  "scenario": "trusted",
+  "source": "reviewer-derived from trusted.out + host marker",
+  "exit_code": 0,
+  "host_marker_present": false,
+  "mode": "trusted",
+  "isolation_mode": "wsl2-user-mount-pid-net-namespace",
+  "os_isolation": true,
+  "provenance_kind": "trusted_launcher",
+  "trust": "isolated_local_attestation",
+  "attestation_path": ".project-memory/attest/EXE-fb03113b2cc5220d3607/attest.json",
+  "command_exit_code": 0
+}

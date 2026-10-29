@@ -1,0 +1,62 @@
+{
+  "schema_version": "1.1",
+  "kind": "execution_receipt",
+  "receipt_id": "EXE-92ae3891a0f0b16b1287",
+  "repo_id": "fd57c3ee674e4fc695ff95b6ec118789e474bed3f37c6eee621f3cfa0f5852ee",
+  "repo_identity": {
+    "schema": "1.1",
+    "kind": "root-only",
+    "remote": null,
+    "root_commits": [
+      "44070e7bdd741fc257e1cae187b8b7bc5e59a435"
+    ]
+  },
+  "commit_sha": "44070e7bdd741fc257e1cae187b8b7bc5e59a435",
+  "tree_sha": "bcf5db02d35f53cc61823e42930d56015337941d",
+  "snapshot_id": "SNP-aa5dd2e13708c700",
+  "snapshot_sha256": "0b4f122c9849f4524c942320824edafdd68f712508a4377a2f33a62924020d4c",
+  "command": "C:/SoftWare/Anconda/python.exe C:/Users/ZMJ/AppData/Local/Temp/b5b-review/review-20261029T020328Z/repo/marker-command.py C:/Users/ZMJ/AppData/Local/Temp/b5b-review/review-20261029T020328Z/host-marker",
+  "exit_code": 0,
+  "log_path": ".project-memory/logs/EXE-92ae3891a0f0b16b1287.log",
+  "log_sha256": "9f759634f3204d2ff8d073e2c37e433fcaf15dd7c4ec041a6fbe664d9edfdd20",
+  "log_bytes": 503,
+  "started_at": "2026-10-29T02:03:53+00:00",
+  "finished_at": "2026-10-29T02:03:53+00:00",
+  "executed_by": "reviewer",
+  "subject": "",
+  "executor": {
+    "name": "project-memory",
+    "mode": "local",
+    "python": "3.12.4",
+    "platform": "Windows-11-10.0.26300-SP0"
+  },
+  "isolation": {
+    "mode": "none",
+    "os_isolation": false,
+    "sandbox": "plain-child-process",
+    "workspace": "immutable-snapshot",
+    "python_env": {
+      "path_source": "snapshot-only",
+      "safepath": true,
+      "nousersite": true,
+      "stripped": [
+        "PYTHONPATH",
+        "PYTHONHOME",
+        "PYTHONSTARTUP",
+        "PYTHONUSERBASE",
+        "PYTHONSAFEPATH",
+        "PYTHONNOUSERSITE"
+      ]
+    }
+  },
+  "execution_provenance": {
+    "kind": "local_untrusted",
+    "launcher": "project_memory.execution",
+    "attested": false,
+    "trusted": false,
+    "reason": "普通子进程；宿主文件系统与网络可见，收据只能证明内容未被后续修改"
+  },
+  "trust": "local_untrusted",
+  "caveat": "收据只证明该命令在这个快照内以该退出码执行过；不证明测试语义覆盖了任何业务标准，也不证明来源可信。",
+  "content_sha256": "892ca7be2478c70490c85cadf4524e803a3240a4eadf977fe9a92be2c406b839"
+}

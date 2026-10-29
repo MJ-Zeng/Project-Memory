@@ -1,0 +1,10 @@
+{
+  "scenario": "trusted-host-attempt",
+  "source": "reviewer-derived from trusted-host-attempt.out + host marker",
+  "exit_code": 0,
+  "host_marker_present": false,
+  "inner_exit_code": 1,
+  "mode": "trusted",
+  "isolation_mode": "wsl2-user-mount-pid-net-namespace",
+  "log_contains_marker_write_failed": true
+}

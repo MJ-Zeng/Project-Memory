@@ -1,0 +1,52 @@
+{
+  "schema_version": "1.1",
+  "kind": "execution_receipt",
+  "receipt_id": "EXE-ff3fa7de402c5c67d342",
+  "repo_id": "fd57c3ee674e4fc695ff95b6ec118789e474bed3f37c6eee621f3cfa0f5852ee",
+  "repo_identity": {
+    "schema": "1.1",
+    "kind": "root-only",
+    "remote": null,
+    "root_commits": [
+      "44070e7bdd741fc257e1cae187b8b7bc5e59a435"
+    ]
+  },
+  "commit_sha": "44070e7bdd741fc257e1cae187b8b7bc5e59a435",
+  "tree_sha": "bcf5db02d35f53cc61823e42930d56015337941d",
+  "snapshot_id": "SNP-aa5dd2e13708c700",
+  "snapshot_sha256": "0b4f122c9849f4524c942320824edafdd68f712508a4377a2f33a62924020d4c",
+  "command": "python3 marker-command.py /mnt/c/Users/ZMJ/AppData/Local/Temp/b5b-review/review-20261029T020328Z/host-marker-trusted",
+  "exit_code": 1,
+  "log_path": ".project-memory/logs/EXE-ff3fa7de402c5c67d342.log",
+  "log_sha256": "3e0afdc7e154a17ce6c0eb9862681553f54124559df37c2f69a156fda8a502d9",
+  "log_bytes": 508,
+  "started_at": "2026-10-29T02:04:18+00:00",
+  "finished_at": "2026-10-29T02:04:19+00:00",
+  "executed_by": "reviewer",
+  "subject": "",
+  "executor": {
+    "name": "project-memory",
+    "mode": "trusted",
+    "python": "3.12.4",
+    "platform": "Windows-11-10.0.26300-SP0"
+  },
+  "isolation": {
+    "mode": "wsl2-user-mount-pid-net-namespace",
+    "os_isolation": true,
+    "sandbox": "wsl2-user-mount-pid-net-namespace",
+    "distro": "default",
+    "snapshot_wsl": "/mnt/c/Users/ZMJ/AppData/Local/Temp/b5b-review/review-20261029T020328Z/repo/.project-memory/snapshots/SNP-aa5dd2e13708c700/tree"
+  },
+  "execution_provenance": {
+    "kind": "trusted_launcher",
+    "launcher": "project_memory.trusted_exec",
+    "attested": true,
+    "trusted": false,
+    "reason": "隔离由启动器 attestation 记录，但 attestation 位于仓库内，没有外部签名来源；不能证明收据未被同权限 Agent 改写"
+  },
+  "trust": "isolated_local_attestation",
+  "caveat": "收据只证明该命令在这个快照内以该退出码执行过；不证明测试语义覆盖了任何业务标准，也不证明来源可信。",
+  "attestation_path": ".project-memory/attest/EXE-ff3fa7de402c5c67d342/attest.json",
+  "attestation_sha256": "6115c21f6d67f369027327ba045b22c23f60e108d4770dff75771a6e219a83a6",
+  "content_sha256": "8ee0aee0f2dfdc8dbc736a7231ed54b29726440813e82a156c853007ca2d2ff4"
+}
