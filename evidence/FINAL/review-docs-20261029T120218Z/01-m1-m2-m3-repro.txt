@@ -1,0 +1,89 @@
+utc=2026-10-29T12:02:19Z
+temp_repo=/tmp/tmp.BELbyByKlc
+candidate=C:/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-03/.pilot/docs-candidate
+warning: in the working copy of 'test_ok.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'test_ok.py', LF will be replaced by CRLF the next time Git touches it
+temp_head=7534a740a88afe04d432ca8c51b68072e8541964
+
+===== M-1: README test-run example =====
+
+----- m1-old-no-mode
+$ C:/SoftWare/Anconda/python.exe -m project_memory test-run --repo . --command \"C:\\SoftWare\\Anconda\\python.exe\"\ -m\ unittest --agent qoder
+exit=3
+stderr: project-memory: 拒绝执行：test-run 默认不执行未隔离代码。请显式选择 --trusted（WSL2 隔离）或 --allow-local-untrusted（宿主本地执行，无隔离）。
+receipts_after_reject=0
+
+----- m1-new-local
+$ C:/SoftWare/Anconda/python.exe -m project_memory test-run --repo . --command \"C:\\SoftWare\\Anconda\\python.exe\"\ -m\ unittest --agent qoder --allow-local-untrusted
+exit=0
+stderr: 警告：本地执行没有操作系统隔离，收据标记为 local_untrusted；需要隔离时请使用 --trusted。
+receipt: .project-memory/receipts\EXE-b72a3764cd13c9ebdc41.json
+  trust = local_untrusted
+  isolation.mode = none
+  exit_code = 0
+
+----- m1-both-modes
+$ C:/SoftWare/Anconda/python.exe -m project_memory test-run --repo . --command \"C:\\SoftWare\\Anconda\\python.exe\"\ -m\ unittest --agent qoder --allow-local-untrusted --trusted
+exit=3
+stderr: project-memory: 拒绝执行：test-run 必须且只能选择一种执行模式，--trusted 与 --allow-local-untrusted 不能同时使用。
+
+===== M-2: approved-by email =====
+
+----- m2-create
+$ C:/SoftWare/Anconda/python.exe -m project_memory goal create --repo . --id G-AUTH --title fix\ auth\ bypass --outcome unauthorized\ rejected --owner backend-team --criterion no-token\ request\ returns\ 401
+exit=0
+
+----- m2-old-human-owner
+$ C:/SoftWare/Anconda/python.exe -m project_memory goal transition --repo . --id G-AUTH --to approved --approved-by human-owner --reason old\ doc\ example
+exit=1
+stderr: project-memory: Goal 批准人身份无效：approved_by 必须是邮箱地址格式（如 reviewer@example.com），以便追溯人类身份
+
+----- m2-new-email
+$ C:/SoftWare/Anconda/python.exe -m project_memory goal transition --repo . --id G-AUTH --to approved --approved-by owner@example.com --reason grooming
+exit=0
+approved_by = owner@example.com
+approvals = [{"approval_authority": "claimed_unverified", "at": "2026-10-29T12:02:22+00:00", "by": "owner@example.com", "from": "proposed", "reason": "grooming", "to": "approved"}]
+
+-- workflows.md manual-evidence example as written (ref 'review:https://...') --
+
+----- m2-manual-docstyle
+$ C:/SoftWare/Anconda/python.exe -m project_memory goal evidence --repo . --id G-AUTH --criterion C1 --kind manual --ref review:https://... --approved-by owner@example.com
+exit=1
+stderr: project-memory: 证据无效：manual 证据的 ref 必须是批准链接、PR/Issue 编号或 40 位提交 SHA
+-- same example with an accepted ref ('#12') --
+
+----- m2-manual-valid-ref
+$ C:/SoftWare/Anconda/python.exe -m project_memory goal evidence --repo . --id G-AUTH --criterion C1 --kind manual --ref \#12 --approved-by owner@example.com
+exit=0
+
+===== M-3: empty required set =====
+
+----- m3-to-active
+$ C:/SoftWare/Anconda/python.exe -m project_memory goal transition --repo . --id G-AUTH --to active
+exit=0
+
+----- m3-to-evaluating
+$ C:/SoftWare/Anconda/python.exe -m project_memory goal transition --repo . --id G-AUTH --to evaluating
+exit=0
+
+----- m3-evaluate-ordinary-unmet
+$ C:/SoftWare/Anconda/python.exe -m project_memory goal evaluate --repo . --id G-AUTH
+exit=2
+
+----- m3-transition-achieved-unmet
+$ C:/SoftWare/Anconda/python.exe -m project_memory goal transition --repo . --id G-AUTH --to achieved --approved-by owner@example.com --reason should\ be\ rejected
+exit=1
+stderr: project-memory: Goal 的成功标准尚未满足（needs_review）：C1；不能仅凭 Issue 关闭或 Agent 声明标记 achieved
+demoted all criteria to required=False
+
+----- m3-evaluate-empty-required
+$ C:/SoftWare/Anconda/python.exe -m project_memory goal evaluate --repo . --id G-AUTH
+exit=0
+structured: {"satisfied": false, "evaluation_status": "insufficient_evidence", "no_required_criteria": true, "status_problems": ["no_required_criteria"], "effective_status": "evaluating", "status_trusted": null}
+
+----- m3-transition-achieved-empty
+$ C:/SoftWare/Anconda/python.exe -m project_memory goal transition --repo . --id G-AUTH --to achieved --approved-by owner@example.com --reason should\ still\ be\ rejected
+exit=1
+stderr: project-memory: Goal 的成功标准尚未满足（insufficient_evidence）：无；不能仅凭 Issue 关闭或 Agent 声明标记 achieved
+
+done

@@ -1,0 +1,11 @@
+utc=2026-10-29T12:07:30Z
+reviewer=PM-03 (independent)
+host_os=Windows 10.0.26300 x64
+shell=GNU bash, version 5.3.15(2)-release (x86_64-pc-cygwin)
+git=git version 2.56.0.windows.2
+python=Python 3.12.4
+python_path=C:/SoftWare/Anconda/python.exe
+base=f79a85f49cbdf3d0e2804c3485c1ca630a226ec1
+candidate=dbc858d2a3cf8144b24bf9e1523a509cd93cfce6
+core.autocrlf=true
+note: local 'python' is a Microsoft Store alias stub; all commands used the absolute Anaconda interpreter

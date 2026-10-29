@@ -1,0 +1,52 @@
+utc=2026-10-29T12:07:24Z
+Purpose: does verify_release_docs.sh re-run cleanly, and what does it do to the evidence bundle?
+Method: detached worktree at dbc858d (/tmp/pm03-clone), run: bash evidence/release-docs/20261029T115211Z/verify_release_docs.sh
+
+== script exit ==
+SCRIPT_EXIT=0
+
+== reproduced exit codes (from script output) ==
+m1-old-no-mode-exit3 exit=3
+m1-new-local-mode exit=0
+m2-goal-create exit=0
+m2-old-human-owner-exit1 exit=1
+m2-goal-create-auth exit=0
+m2-new-email exit=0
+m3-to-active exit=0
+m3-to-evaluating exit=0
+m3-evaluate-empty-required exit=0
+m3-transition-achieved-exit1 exit=1
+
+== pytest section ==
+pytest exit=0
+253 passed, 2 skipped in 191.29s (0:03:11)
+
+== effect on evidence bundle ==
+verification.log lines before: 86
+verification.log lines after : 180
+files modified by the re-run (git status of the worktree):
+   M evidence/release-docs/20261029T115211Z/exit-codes.txt
+   M evidence/release-docs/20261029T115211Z/m1-new.json
+   M evidence/release-docs/20261029T115211Z/m2-goal-create-auth.json
+   M evidence/release-docs/20261029T115211Z/m2-goal-create.json
+   M evidence/release-docs/20261029T115211Z/m2-new.json
+   M evidence/release-docs/20261029T115211Z/m3-active.json
+   M evidence/release-docs/20261029T115211Z/m3-evaluate.json
+   M evidence/release-docs/20261029T115211Z/m3-evaluating.json
+   M evidence/release-docs/20261029T115211Z/pytest-default.log
+   M evidence/release-docs/20261029T115211Z/verification.log
+
+== manifest check after the re-run ==
+m1-new.json: FAILED
+m2-goal-create-auth.json: FAILED
+m2-goal-create.json: FAILED
+m2-new.json: FAILED
+m3-active.json: FAILED
+m3-evaluate.json: FAILED
+m3-evaluating.json: FAILED
+pytest-default.log: FAILED
+verification.log: FAILED
+verify_release_docs.sh: FAILED
+
+== does the script regenerate sha256sums.txt? ==
+no occurrence of sha256sum in verify_release_docs.sh

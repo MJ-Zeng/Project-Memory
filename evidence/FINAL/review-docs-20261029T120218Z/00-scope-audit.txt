@@ -1,0 +1,88 @@
+utc=2026-10-29T12:02:32Z
+== local HEAD (review session start) ==
+5c22d4f7d8e9186b256a829e64be59d4f1211a36
+
+== candidate parents ==
+dbc858d2a3cf8144b24bf9e1523a509cd93cfce6 f79a85f49cbdf3d0e2804c3485c1ca630a226ec1
+
+== remote branch ==
+dbc858d2a3cf8144b24bf9e1523a509cd93cfce6	refs/heads/fix/release-docs
+
+== diff name-status base..candidate ==
+M	README.md
+M	docs/OPERATIONS.zh-CN.md
+A	evidence/release-docs/20261029T115211Z/exit-codes.txt
+A	evidence/release-docs/20261029T115211Z/m1-new.json
+A	evidence/release-docs/20261029T115211Z/m1-new.json.stderr
+A	evidence/release-docs/20261029T115211Z/m1-old.json
+A	evidence/release-docs/20261029T115211Z/m1-old.json.stderr
+A	evidence/release-docs/20261029T115211Z/m2-goal-create-auth.json
+A	evidence/release-docs/20261029T115211Z/m2-goal-create-auth.json.stderr
+A	evidence/release-docs/20261029T115211Z/m2-goal-create.json
+A	evidence/release-docs/20261029T115211Z/m2-goal-create.json.stderr
+A	evidence/release-docs/20261029T115211Z/m2-new.json
+A	evidence/release-docs/20261029T115211Z/m2-new.json.stderr
+A	evidence/release-docs/20261029T115211Z/m2-old.json
+A	evidence/release-docs/20261029T115211Z/m2-old.json.stderr
+A	evidence/release-docs/20261029T115211Z/m3-active.json
+A	evidence/release-docs/20261029T115211Z/m3-active.json.stderr
+A	evidence/release-docs/20261029T115211Z/m3-evaluate.json
+A	evidence/release-docs/20261029T115211Z/m3-evaluate.json.stderr
+A	evidence/release-docs/20261029T115211Z/m3-evaluating.json
+A	evidence/release-docs/20261029T115211Z/m3-evaluating.json.stderr
+A	evidence/release-docs/20261029T115211Z/m3-transition.json
+A	evidence/release-docs/20261029T115211Z/m3-transition.json.stderr
+A	evidence/release-docs/20261029T115211Z/pytest-default.log
+A	evidence/release-docs/20261029T115211Z/sha256sums.txt
+A	evidence/release-docs/20261029T115211Z/verification.log
+A	evidence/release-docs/20261029T115211Z/verify_release_docs.sh
+M	skill/project-memory/references/workflows.md
+A	tasks/release-docs-handoff-20261029T115211Z.md
+
+== diff numstat ==
+9	4	README.md
+7	3	docs/OPERATIONS.zh-CN.md
+10	0	evidence/release-docs/20261029T115211Z/exit-codes.txt
+155	0	evidence/release-docs/20261029T115211Z/m1-new.json
+1	0	evidence/release-docs/20261029T115211Z/m1-new.json.stderr
+0	0	evidence/release-docs/20261029T115211Z/m1-old.json
+1	0	evidence/release-docs/20261029T115211Z/m1-old.json.stderr
+42	0	evidence/release-docs/20261029T115211Z/m2-goal-create-auth.json
+0	0	evidence/release-docs/20261029T115211Z/m2-goal-create-auth.json.stderr
+42	0	evidence/release-docs/20261029T115211Z/m2-goal-create.json
+0	0	evidence/release-docs/20261029T115211Z/m2-goal-create.json.stderr
+59	0	evidence/release-docs/20261029T115211Z/m2-new.json
+0	0	evidence/release-docs/20261029T115211Z/m2-new.json.stderr
+0	0	evidence/release-docs/20261029T115211Z/m2-old.json
+1	0	evidence/release-docs/20261029T115211Z/m2-old.json.stderr
+66	0	evidence/release-docs/20261029T115211Z/m3-active.json
+0	0	evidence/release-docs/20261029T115211Z/m3-active.json.stderr
+48	0	evidence/release-docs/20261029T115211Z/m3-evaluate.json
+0	0	evidence/release-docs/20261029T115211Z/m3-evaluate.json.stderr
+73	0	evidence/release-docs/20261029T115211Z/m3-evaluating.json
+0	0	evidence/release-docs/20261029T115211Z/m3-evaluating.json.stderr
+0	0	evidence/release-docs/20261029T115211Z/m3-transition.json
+1	0	evidence/release-docs/20261029T115211Z/m3-transition.json.stderr
+5	0	evidence/release-docs/20261029T115211Z/pytest-default.log
+24	0	evidence/release-docs/20261029T115211Z/sha256sums.txt
+86	0	evidence/release-docs/20261029T115211Z/verification.log
+135	0	evidence/release-docs/20261029T115211Z/verify_release_docs.sh
+5	5	skill/project-memory/references/workflows.md
+65	0	tasks/release-docs-handoff-20261029T115211Z.md
+
+== deletions/renames (expect empty) ==
+(end)
+
+== forbidden paths in diff (expect none) ==
+none
+
+== evidence dir entries that are not A (expect none) ==
+none
+
+== base commit ==
+f79a85f49cbdf3d0e2804c3485c1ca630a226ec1 Merge pull request #32 from fix/release-gates
+== candidate commit ==
+dbc858d2a3cf8144b24bf9e1523a509cd93cfce6
+PM-02 Developer <pm02@pilot.invalid>
+Thu Oct 29 19:56:50 2026 +0800
+docs(release): fix test-run examples, approved-by email, evaluate exit-code note

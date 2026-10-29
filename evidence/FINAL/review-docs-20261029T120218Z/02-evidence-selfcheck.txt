@@ -1,0 +1,46 @@
+utc=2026-10-29T12:03:00Z
+== A) documented self-check: sha256sum -c sha256sums.txt (candidate worktree) ==
+verify_release_docs.sh: FAILED open or read
+sha256sum: WARNING: 24 listed files could not be read
+exit=0
+
+== B) same manifest, CR stripped from manifest (candidate worktree, CRLF files) ==
+exit-codes.txt: FAILED
+verification.log: FAILED
+verify_release_docs.sh: FAILED
+sha256sum: WARNING: 3 computed checksums did NOT match
+ok_count=21
+
+== C) recorded hash basis vs committed blobs (git cat-file) ==
+manifest_entries=24
+manifest_line_ending=CRLF
+
+file                               worktree  blob_LF   recorded_basis 
+----------------------------------------------------------------------
+exit-codes.txt                     FAIL      OK        LF             
+m1-new.json                        OK        FAIL      CRLF           
+m1-new.json.stderr                 OK        FAIL      CRLF           
+m1-old.json                        OK        OK        CRLF           
+m1-old.json.stderr                 OK        FAIL      CRLF           
+m2-goal-create-auth.json           OK        FAIL      CRLF           
+m2-goal-create-auth.json.stderr    OK        OK        CRLF           
+m2-goal-create.json                OK        FAIL      CRLF           
+m2-goal-create.json.stderr         OK        OK        CRLF           
+m2-new.json                        OK        FAIL      CRLF           
+m2-new.json.stderr                 OK        OK        CRLF           
+m2-old.json                        OK        OK        CRLF           
+m2-old.json.stderr                 OK        FAIL      CRLF           
+m3-active.json                     OK        FAIL      CRLF           
+m3-active.json.stderr              OK        OK        CRLF           
+m3-evaluate.json                   OK        FAIL      CRLF           
+m3-evaluate.json.stderr            OK        OK        CRLF           
+m3-evaluating.json                 OK        FAIL      CRLF           
+m3-evaluating.json.stderr          OK        OK        CRLF           
+m3-transition.json                 OK        OK        CRLF           
+m3-transition.json.stderr          OK        FAIL      CRLF           
+pytest-default.log                 OK        FAIL      CRLF           
+verification.log                   FAIL      FAIL      STALE/none     
+verify_release_docs.sh             FAIL      OK        LF             
+
+worktree_fail(3): ['exit-codes.txt', 'verification.log', 'verify_release_docs.sh']
+blob_LF_fail(13): ['m1-new.json', 'm1-new.json.stderr', 'm1-old.json.stderr', 'm2-goal-create-auth.json', 'm2-goal-create.json', 'm2-new.json', 'm2-old.json.stderr', 'm3-active.json', 'm3-evaluate.json', 'm3-evaluating.json', 'm3-transition.json.stderr', 'pytest-default.log', 'verification.log']
