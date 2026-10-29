@@ -1,0 +1,15 @@
+{
+  "note": "Installed-layout simulation: throwaway venv with project_memory copied into Lib/site-packages and both wrappers + launcher copied into Scripts/ (sibling launcher, exercises the launcher '-m project_memory' branch). Not a pip build; packaging automation is a disclosed follow-up (ADR-0005 §7.7).",
+  "venv_layout": "venv/Scripts/{project-memory,project-memory.cmd,_project_memory_launcher.py,python.exe} + venv/Lib/site-packages/project_memory/",
+  "cases": [
+    {"case": "win_installed_normal", "entry": "cmd /c venv\\Scripts\\project-memory.cmd --help", "cwd": "empty", "malicious": "none", "exit": 0, "FAKE_LAUNCHER": false, "SHADOW": false, "real_help": true},
+    {"case": "win_installed_pythonpath_fake_launcher", "entry": "cmd /c venv\\Scripts\\project-memory.cmd --help", "cwd": "empty", "malicious": "PYTHONPATH=fixtures/b5a/launcher-shadow", "exit": 0, "FAKE_LAUNCHER": false, "SHADOW": false, "real_help": true},
+    {"case": "win_installed_pythonpath_fake_package", "entry": "cmd /c venv\\Scripts\\project-memory.cmd --help", "cwd": "empty", "malicious": "PYTHONPATH=fixtures/b5a/shadow", "exit": 0, "FAKE_LAUNCHER": false, "SHADOW": false, "real_help": true},
+    {"case": "win_installed_cwd_fake_package", "entry": "cmd /c venv\\Scripts\\project-memory.cmd --help", "cwd": "cwd-shadow copy", "malicious": "cwd=project_memory/", "exit": 0, "FAKE_LAUNCHER": false, "SHADOW": false, "real_help": true},
+    {"case": "posix_installed_normal", "entry": "sh venv/Scripts/project-memory --help", "cwd": "empty", "malicious": "none", "exit": 0, "FAKE_LAUNCHER": false, "SHADOW": false, "real_help": true},
+    {"case": "posix_installed_pythonpath_fake_package", "entry": "sh venv/Scripts/project-memory --help", "cwd": "empty", "malicious": "PYTHONPATH=fixtures/b5a/shadow", "exit": 0, "FAKE_LAUNCHER": false, "SHADOW": false, "real_help": true},
+    {"case": "posix_installed_pythonpath_fake_launcher", "entry": "sh venv/Scripts/project-memory --help", "cwd": "empty", "malicious": "PYTHONPATH=fixtures/b5a/launcher-shadow", "exit": 0, "FAKE_LAUNCHER": false, "SHADOW": false, "real_help": true},
+    {"case": "posix_installed_cwd_fake_package", "entry": "sh venv/Scripts/project-memory --help", "cwd": "cwd-shadow copy", "malicious": "cwd=project_memory/", "exit": 0, "FAKE_LAUNCHER": false, "SHADOW": false, "real_help": true}
+  ],
+  "all_pass": true
+}

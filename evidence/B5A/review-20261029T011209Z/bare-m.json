@@ -1,0 +1,42 @@
+[
+  {
+    "case": "residual_tmp_pythonpath",
+    "exit": 0,
+    "FAKE_LAUNCHER": false,
+    "SHADOW_INIT": true,
+    "SHADOW_MAIN": true,
+    "real_help": false,
+    "stdout_head": "SHADOW_INIT\nSHADOW_MAIN\n",
+    "stderr_head": ""
+  },
+  {
+    "case": "raw_cwd_shadow",
+    "exit": 0,
+    "FAKE_LAUNCHER": false,
+    "SHADOW_INIT": true,
+    "SHADOW_MAIN": true,
+    "real_help": false,
+    "stdout_head": "SHADOW_INIT\nSHADOW_MAIN\n",
+    "stderr_head": ""
+  },
+  {
+    "case": "guarded_repo_pythonpath",
+    "exit": 3,
+    "FAKE_LAUNCHER": false,
+    "SHADOW_INIT": false,
+    "SHADOW_MAIN": false,
+    "real_help": false,
+    "stdout_head": "",
+    "stderr_head": "project-memory：检测到同名 project_memory 包位于不可信路径：C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\fixtures\\b5a\\shadow\\project_memory；拒绝以未隔离方式启动，请使用 project-memory 启动器\n"
+  },
+  {
+    "case": "isolated_tmp_pythonpath",
+    "exit": 1,
+    "FAKE_LAUNCHER": false,
+    "SHADOW_INIT": false,
+    "SHADOW_MAIN": false,
+    "real_help": false,
+    "stdout_head": "",
+    "stderr_head": "C:\\SoftWare\\Anconda\\python.exe: No module named project_memory\n"
+  }
+]

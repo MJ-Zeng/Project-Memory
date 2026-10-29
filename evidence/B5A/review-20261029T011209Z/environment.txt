@@ -1,0 +1,24 @@
+review_run: 20261029T011209Z
+reviewer: PM-03 Independent Reviewer (independent session)
+collected_at_utc: 2026-10-29T01:20:13Z
+platform: Windows-11-10.0.26300-SP0
+python: 3.12.4 | packaged by Anaconda, Inc. | (main, Jun 18 2024, 15:03:56) [MSC v.1929 64 bit (AMD64)]
+executable: C:\SoftWare\Anconda\python.exe
+repo: C:\Documents\02_Research\Code\project-memory-verification-lab\import-workspace\pm-pilot-03
+candidate_worktree: /c/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-03/.pilot/b5a-candidate
+prev_worktree: /c/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-03/.pilot/b5a-prev
+base_worktree: /c/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-03/.pilot/b5a-base
+fixtures: /c/Documents/02_Research/Code/project-memory-verification-lab/fixtures/b5a (shared verification-lab fixtures; PM-01 maintained)
+base_sha: ddd9dba28d518339348f55ebcc382aba070782d8
+prev_candidate_sha: 85b1a4ecad13675a83cb8cf47b3e6cd7cf757672
+candidate_sha: 9288818351bcc4318ccde67b58d9abb07ac5d9e7
+pr_head_sha: 399ca2d868fc2c343e1fb9978c85a528f625e180
+task_card_sha256: 88e31661ac766b7963ec655eb13de0e448ca51fa2e235cffc24161a1ef9681b9
+expected_task_card_sha256: 88e31661ac766b7963ec655eb13de0e448ca51fa2e235cffc24161a1ef9681b9
+# shared fixture sha256 (raw bytes)
+e46bdb7ab621594f9d9cf6fc7a5bfa194328793a65d1540e214011e27bf3922d  shadow/project_memory/__init__.py
+4f72832f164f38de69d777d0d5e636960a456d3b6d11b4f4ff126ec6a5106f1e  shadow/project_memory/__main__.py
+e46bdb7ab621594f9d9cf6fc7a5bfa194328793a65d1540e214011e27bf3922d  cwd-shadow/project_memory/__init__.py
+4f72832f164f38de69d777d0d5e636960a456d3b6d11b4f4ff126ec6a5106f1e  cwd-shadow/project_memory/__main__.py
+5a865e1631f774b137947e668957bb69d5c6ee2b9f954b15ec55784f7ca1e9cb  launcher-shadow/_project_memory_launcher.py
+2340d1d28f93b8f5f46e6b5b0f6a0f21d2a2f2fb1e3df2d5940a7eee7d44974e  console_entry_probe.py

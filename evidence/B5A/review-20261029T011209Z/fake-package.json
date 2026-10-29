@@ -1,0 +1,96 @@
+[
+  {
+    "case": "posix_pythonpath_shared",
+    "exit": 0,
+    "FAKE_LAUNCHER": false,
+    "SHADOW_INIT": false,
+    "SHADOW_MAIN": false,
+    "real_help": true,
+    "stdout_head": "用法：project-memory [-h]\n                      {init,sync-tooling,start,handoff,finish,decision,new-doc,audit,graph,search,goal,run,verify,test-run,defect,reconcile}\n                      ...\n\n面向仓库、多 Ag",
+    "stderr_head": ""
+  },
+  {
+    "case": "posix_pythonpath_own_marker",
+    "exit": 0,
+    "FAKE_LAUNCHER": false,
+    "SHADOW_INIT": false,
+    "SHADOW_MAIN": false,
+    "real_help": true,
+    "stdout_head": "用法：project-memory [-h]\n                      {init,sync-tooling,start,handoff,finish,decision,new-doc,audit,graph,search,goal,run,verify,test-run,defect,reconcile}\n                      ...\n\n面向仓库、多 Ag",
+    "stderr_head": "",
+    "marker_written": false
+  },
+  {
+    "case": "posix_cwd_own_marker",
+    "exit": 0,
+    "FAKE_LAUNCHER": false,
+    "SHADOW_INIT": false,
+    "SHADOW_MAIN": false,
+    "real_help": true,
+    "stdout_head": "用法：project-memory [-h]\n                      {init,sync-tooling,start,handoff,finish,decision,new-doc,audit,graph,search,goal,run,verify,test-run,defect,reconcile}\n                      ...\n\n面向仓库、多 Ag",
+    "stderr_head": "",
+    "marker_written": false
+  },
+  {
+    "case": "windows_pythonpath_shared",
+    "exit": 0,
+    "FAKE_LAUNCHER": false,
+    "SHADOW_INIT": false,
+    "SHADOW_MAIN": false,
+    "real_help": true,
+    "stdout_head": "用法：project-memory [-h]\n                      {init,sync-tooling,start,handoff,finish,decision,new-doc,audit,graph,search,goal,run,verify,test-run,defect,reconcile}\n                      ...\n\n面向仓库、多 Ag",
+    "stderr_head": ""
+  },
+  {
+    "case": "windows_pythonpath_own_marker",
+    "exit": 0,
+    "FAKE_LAUNCHER": false,
+    "SHADOW_INIT": false,
+    "SHADOW_MAIN": false,
+    "real_help": true,
+    "stdout_head": "用法：project-memory [-h]\n                      {init,sync-tooling,start,handoff,finish,decision,new-doc,audit,graph,search,goal,run,verify,test-run,defect,reconcile}\n                      ...\n\n面向仓库、多 Ag",
+    "stderr_head": "",
+    "marker_written": false
+  },
+  {
+    "case": "windows_cwd_own_marker",
+    "exit": 0,
+    "FAKE_LAUNCHER": false,
+    "SHADOW_INIT": false,
+    "SHADOW_MAIN": false,
+    "real_help": true,
+    "stdout_head": "用法：project-memory [-h]\n                      {init,sync-tooling,start,handoff,finish,decision,new-doc,audit,graph,search,goal,run,verify,test-run,defect,reconcile}\n                      ...\n\n面向仓库、多 Ag",
+    "stderr_head": "",
+    "marker_written": false
+  },
+  {
+    "case": "posix_cwd_shared",
+    "exit": 0,
+    "FAKE_LAUNCHER": false,
+    "SHADOW_INIT": false,
+    "SHADOW_MAIN": false,
+    "real_help": true,
+    "stdout_head": "用法：project-memory [-h]\n                      {init,sync-tooling,start,handoff,finish,decision,new-doc,audit,graph,search,goal,run,verify,test-run,defect,reconcile}\n                      ...\n\n面向仓库、多 Ag",
+    "stderr_head": ""
+  },
+  {
+    "case": "windows_cwd_shared",
+    "exit": 0,
+    "FAKE_LAUNCHER": false,
+    "SHADOW_INIT": false,
+    "SHADOW_MAIN": false,
+    "real_help": true,
+    "stdout_head": "用法：project-memory [-h]\n                      {init,sync-tooling,start,handoff,finish,decision,new-doc,audit,graph,search,goal,run,verify,test-run,defect,reconcile}\n                      ...\n\n面向仓库、多 Ag",
+    "stderr_head": ""
+  },
+  {
+    "case": "posix_cwd_both",
+    "exit": 0,
+    "FAKE_LAUNCHER": false,
+    "SHADOW_INIT": false,
+    "SHADOW_MAIN": false,
+    "real_help": true,
+    "stdout_head": "用法：project-memory [-h]\n                      {init,sync-tooling,start,handoff,finish,decision,new-doc,audit,graph,search,goal,run,verify,test-run,defect,reconcile}\n                      ...\n\n面向仓库、多 Ag",
+    "stderr_head": ""
+  }
+]

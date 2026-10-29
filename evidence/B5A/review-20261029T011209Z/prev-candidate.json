@@ -1,0 +1,41 @@
+[
+  {
+    "case": "prev_85b1a4e_probe_fake_launcher",
+    "exit": 0,
+    "FAKE_LAUNCHER": true,
+    "SHADOW_INIT": false,
+    "SHADOW_MAIN": false,
+    "real_help": false,
+    "stdout_head": "FAKE_LAUNCHER\n",
+    "stderr_head": ""
+  },
+  {
+    "case": "candidate_probe_oldform_fake_launcher",
+    "exit": 0,
+    "FAKE_LAUNCHER": true,
+    "SHADOW_INIT": false,
+    "SHADOW_MAIN": false,
+    "real_help": false,
+    "stdout_head": "FAKE_LAUNCHER\n",
+    "stderr_head": ""
+  },
+  {
+    "case": "base_ddd9dba_bare_m_pythonpath",
+    "exit": 0,
+    "FAKE_LAUNCHER": false,
+    "SHADOW_INIT": true,
+    "SHADOW_MAIN": true,
+    "real_help": false,
+    "stdout_head": "SHADOW_INIT\nSHADOW_MAIN\n",
+    "stderr_head": ""
+  },
+  {
+    "prev_pyproject_scripts": [
+      "name = \"project-memory-skill\"",
+      "[project.scripts]",
+      "project-memory = \"_project_memory_launcher:main\"",
+      "py-modules = [\"_project_memory_launcher\"]"
+    ],
+    "cand_pyproject_scripts": []
+  }
+]

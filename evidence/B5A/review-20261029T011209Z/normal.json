@@ -1,0 +1,32 @@
+[
+  {
+    "case": "posix_wrapper_normal",
+    "exit": 0,
+    "FAKE_LAUNCHER": false,
+    "SHADOW_INIT": false,
+    "SHADOW_MAIN": false,
+    "real_help": true,
+    "stdout_head": "用法：project-memory [-h]\n                      {init,sync-tooling,start,handoff,finish,decision,new-doc,audit,graph,search,goal,run,verify,test-run,defect,reconcile}\n                      ...\n\n面向仓库、多 Ag",
+    "stderr_head": ""
+  },
+  {
+    "case": "windows_wrapper_normal",
+    "exit": 0,
+    "FAKE_LAUNCHER": false,
+    "SHADOW_INIT": false,
+    "SHADOW_MAIN": false,
+    "real_help": true,
+    "stdout_head": "用法：project-memory [-h]\n                      {init,sync-tooling,start,handoff,finish,decision,new-doc,audit,graph,search,goal,run,verify,test-run,defect,reconcile}\n                      ...\n\n面向仓库、多 Ag",
+    "stderr_head": ""
+  },
+  {
+    "case": "bare_m_normal_repo",
+    "exit": 0,
+    "FAKE_LAUNCHER": false,
+    "SHADOW_INIT": false,
+    "SHADOW_MAIN": false,
+    "real_help": true,
+    "stdout_head": "用法：project-memory [-h]\n                      {init,sync-tooling,start,handoff,finish,decision,new-doc,audit,graph,search,goal,run,verify,test-run,defect,reconcile}\n                      ...\n\n面向仓库、多 Ag",
+    "stderr_head": ""
+  }
+]

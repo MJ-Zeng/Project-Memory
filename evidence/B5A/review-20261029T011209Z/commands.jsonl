@@ -1,0 +1,21 @@
+{"step":"fetch","cmd":"git -C pm-pilot-03 fetch origin","exit":0}
+{"step":"sha-check","cmd":"git rev-parse base/prev/candidate/prhead","exit":0}
+{"step":"task-card-hash","cmd":"sha256sum tasks/B5A.md","exit":0,"sha256":"88e31661ac766b7963ec655eb13de0e448ca51fa2e235cffc24161a1ef9681b9","matches_expected":true}
+{"step":"ancestry","cmd":"git merge-base --is-ancestor base candidate","exit":0,"result":"candidate is descendant of base"}
+{"step":"ancestry","cmd":"git merge-base --is-ancestor candidate prhead","exit":0,"result":"pr head is descendant of candidate"}
+{"step":"worktrees","cmd":"git worktree add .pilot/b5a-base ddd9dba; .pilot/b5a-candidate 9288818; .pilot/b5a-prev 85b1a4e","exit":0}
+{"step":"static","cmd":"grep pyproject for project.scripts/py-modules","exit":0,"result":"no [project.scripts] entry; no py-modules; script-files present"}
+{"step":"static","cmd":"git diff --name-only base..candidate | grep gate files","exit":1,"result":"NONE (no authority/sign/provenance/cli changes)"}
+{"step":"static","cmd":"test file set base vs candidate","exit":0,"result":"only tests/test_security_b5a.py added; none removed; no new skip/xfail"}
+{"step":"dynamic","cmd":"C:/SoftWare/Anconda/python.exe drive.py (POSIX sh + Windows cmd wrappers; fake launcher/package; cwd; normal; bare -m; prev comparison)","exit":0,"result":"see fake-launcher.json fake-package.json normal.json bare-m.json prev-candidate.json"}
+{"step":"dynamic","cmd":"POSIX wrapper normal: PROJECT_MEMORY_PYTHON=/c/SoftWare/Anconda/python.exe sh bin/project-memory --help","exit":0,"result":"real help; note: PATH auto-discovery picked WindowsApps python3 stub (env quirk), override used"}
+{"step":"dynamic","cmd":"Windows wrapper normal: cmd /c bin\\project-memory.cmd --help","exit":0,"result":"real help"}
+{"step":"dynamic","cmd":"bare -m residual: cd /tmp && PYTHONPATH=fixtures/b5a/shadow python -m project_memory --help","exit":0,"result":"SHADOW_INIT/SHADOW_MAIN printed (documented residual, NOT a pass)"}
+{"step":"dynamic","cmd":"bare -m guarded: cd <repo> && PYTHONPATH=fixtures/b5a/shadow python -m project_memory --help","exit":3,"result":"refused; message contains 同名; no SHADOW"}
+{"step":"dynamic","cmd":"prev 85b1a4e probe <- PYTHONPATH=launcher-shadow (old module:function form)","exit":0,"result":"FAKE_LAUNCHER (confirms fixture effective and old form unsafe)"}
+{"step":"dynamic","cmd":"base ddd9dba bare -m <- PYTHONPATH=shadow","exit":0,"result":"SHADOW_INIT/SHADOW_MAIN (baseline vulnerable)"}
+{"step":"dynamic","cmd":"installed-layout sim (venv site-packages + Scripts wrappers) 8 cases POSIX+Windows","exit":0,"result":"all real help, no FAKE/SHADOW, exit 0 (see installed.json)"}
+{"step":"testrun","cmd":"C:/SoftWare/Anconda/python.exe probe_testrun.py (run_command child under hostile host PYTHONPATH)","exit":0,"result":"9/9 assertions true (see test-run-env.json)"}
+{"step":"pytest","cmd":"cd .pilot/b5a-candidate && C:/SoftWare/Anconda/python.exe -m pytest -q -p no:cacheprovider","exit":0,"result":"226 passed, 2 skipped in 133.64s"}
+{"step":"pytest-b5a","cmd":"pytest -q tests/test_security_b5a.py","exit":0,"result":"13 passed"}
+{"step":"pytest-base","cmd":"cd .pilot/b5a-base && C:/SoftWare/Anconda/python.exe -m pytest -q -rs -p no:cacheprovider","exit":0,"result":"see pytest-base.log"}
