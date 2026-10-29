@@ -24,3 +24,4 @@
 {"cmd": ["git", "-C", "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b4-evidence-migrate-igtkyg9s", "add", "README.md", "tests/test_auth.py"], "exit": 0, "note": ""}
 {"cmd": ["git", "-C", "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b4-evidence-migrate-igtkyg9s", "commit", "-qm", "base"], "exit": 0, "note": ""}
 {"cmd": ["C:\\SoftWare\\Anconda\\python.exe", "-m", "pytest", "tests/", "-q"], "cwd": "C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-02", "exit": 0, "note": "247 passed, 2 skipped"}
+{"cmd": ["C:\\SoftWare\\Anconda\\python.exe", "-m", "pytest", "tests/test_security_b5b.py", "tests/test_security_b5a.py", "tests/test_security_b3.py", "tests/test_security_b2.py", "tests/test_security_rc3.py", "-q"], "cwd": "C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-02", "exit": 0, "note": "61 passed, 2 skipped"}
