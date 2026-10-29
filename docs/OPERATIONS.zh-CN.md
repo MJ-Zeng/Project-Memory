@@ -61,6 +61,8 @@ PROJECT_MEMORY_REQUIRE_OPENSSL=1 python3 -m pytest -q
 python3 -m pytest -q
 ```
 
+Windows 上 `python3` 可能是 Microsoft Store 的别名桩（exit 49），请改用实际解释器（如 `python`、venv 或 Anaconda 路径）执行上述命令。
+
 ## 目标、执行与验证
 
 Goal 至少有一条必达成功标准。标准要能用提交、测试日志、验证记录或人工批准判断：

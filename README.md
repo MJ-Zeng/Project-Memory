@@ -38,6 +38,8 @@ PROJECT_MEMORY_REQUIRE_OPENSSL=1 python3 -m pytest -q
 python3 -m pytest -q
 ```
 
+Windows 上 `python3` 可能是 Microsoft Store 的别名桩（exit 49），请改用实际解释器（如 `python`、venv 或 Anaconda 路径）执行上述命令。
+
 开关取值为 `1`、`true`、`yes`（大小写不敏感）。详见 `docs/OPERATIONS.zh-CN.md`。
 
 ## 目标、执行与独立验证

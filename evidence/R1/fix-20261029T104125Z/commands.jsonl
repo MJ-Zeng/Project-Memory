@@ -1,0 +1,6 @@
+{"ts":"2026-10-29T10:41:25Z","cwd":".","command":"git rev-parse HEAD","exit":0,"note":"bb06037c469b6586b95fbcd69b6965585f2c977e"}
+{"ts":"2026-10-29T10:42:00Z","cwd":".","command":"bash evidence/R1/fix-20261029T104125Z/reproduce-b5b.sh > evidence/R1/fix-20261029T104125Z/b5b-recheck.log 2>&1","exit":0,"note":"41/42 any-hit; raw 29, lf 17, blob 19; miss=environment.txt"}
+{"ts":"2026-10-29T10:42:10Z","cwd":".","command":"wc -c < evidence/B5B/run-20261029T015035Z/receipts/trusted/run.log; tr -dc '\\000' < ... | wc -c","exit":0,"note":"345 bytes / 42 NUL; trusted-host-attempt 443 bytes / 42 NUL"}
+{"ts":"2026-10-29T10:43:00Z","cwd":".","command":"python -m pytest -q -p no:cacheprovider","exit":49,"note":"python 亦为 Store 别名桩，无输出"}
+{"ts":"2026-10-29T10:44:00Z","cwd":".","command":"PYTHONUTF8=1 /c/SoftWare/Anconda/python.exe -m pytest -q -p no:cacheprovider","exit":0,"note":"253 passed, 2 skipped in 329.41s"}
+{"ts":"2026-10-29T10:52:00Z","cwd":"evidence/R1/fix-20261029T104125Z","command":"sha256sum -c sha256sums.txt","exit":0,"note":"自校验全部 OK"}
