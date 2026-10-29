@@ -1,0 +1,151 @@
+{
+  "checkout_wrapper": [
+    {
+      "case": "normal",
+      "entry": "C:\\WINDOWS\\system32\\cmd.exe /c C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-02\\bin\\project-memory.cmd --help",
+      "cwd": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\tmpp0a0h89x",
+      "malicious": "none",
+      "exit": 0,
+      "FAKE_LAUNCHER": false,
+      "SHADOW": false,
+      "real_help": true,
+      "stdout_head": "用法：project-memory [-h]"
+    },
+    {
+      "case": "pythonpath-fake-launcher",
+      "entry": "C:\\WINDOWS\\system32\\cmd.exe /c C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-02\\bin\\project-memory.cmd --help",
+      "cwd": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\tmpp0a0h89x",
+      "malicious": "PYTHONPATH=C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\fixtures\\b5a\\launcher-shadow",
+      "exit": 0,
+      "FAKE_LAUNCHER": false,
+      "SHADOW": false,
+      "real_help": true,
+      "stdout_head": "用法：project-memory [-h]"
+    },
+    {
+      "case": "cwd-fake-launcher",
+      "entry": "C:\\WINDOWS\\system32\\cmd.exe /c C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-02\\bin\\project-memory.cmd --help",
+      "cwd": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\tmpp0a0h89x\\cwd-launcher",
+      "malicious": "cwd=_project_memory_launcher.py",
+      "exit": 0,
+      "FAKE_LAUNCHER": false,
+      "SHADOW": false,
+      "real_help": true,
+      "stdout_head": "用法：project-memory [-h]"
+    },
+    {
+      "case": "pythonpath-fake-package",
+      "entry": "C:\\WINDOWS\\system32\\cmd.exe /c C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-02\\bin\\project-memory.cmd --help",
+      "cwd": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\tmpp0a0h89x",
+      "malicious": "PYTHONPATH=C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\fixtures\\b5a\\shadow",
+      "exit": 0,
+      "FAKE_LAUNCHER": false,
+      "SHADOW": false,
+      "real_help": true,
+      "stdout_head": "用法：project-memory [-h]"
+    },
+    {
+      "case": "cwd-fake-package",
+      "entry": "C:\\WINDOWS\\system32\\cmd.exe /c C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-02\\bin\\project-memory.cmd --help",
+      "cwd": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\tmpp0a0h89x\\cwd-package",
+      "malicious": "cwd=project_memory/",
+      "exit": 0,
+      "FAKE_LAUNCHER": false,
+      "SHADOW": false,
+      "real_help": true,
+      "stdout_head": "用法：project-memory [-h]"
+    },
+    {
+      "case": "cwd-both-plus-pythonpath",
+      "entry": "C:\\WINDOWS\\system32\\cmd.exe /c C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-02\\bin\\project-memory.cmd --help",
+      "cwd": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\tmpp0a0h89x\\cwd-both",
+      "malicious": "cwd=both; PYTHONPATH=C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\fixtures\\b5a\\launcher-shadow",
+      "exit": 0,
+      "FAKE_LAUNCHER": false,
+      "SHADOW": false,
+      "real_help": true,
+      "stdout_head": "用法：project-memory [-h]"
+    }
+  ],
+  "checkout_marker_written": false,
+  "bare_m": [
+    {
+      "case": "guard-pythonpath-fake-package",
+      "entry": "C:\\SoftWare\\Anconda\\python.exe -m project_memory --help",
+      "cwd": "C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-02",
+      "malicious": "PYTHONPATH=C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\fixtures\\b5a\\shadow",
+      "exit": 3,
+      "FAKE_LAUNCHER": false,
+      "SHADOW": false,
+      "real_help": false,
+      "stdout_head": ""
+    },
+    {
+      "case": "residual-bare-pythonpath-fake-package",
+      "entry": "C:\\SoftWare\\Anconda\\python.exe -m project_memory --help",
+      "cwd": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\tmpp0a0h89x",
+      "malicious": "PYTHONPATH=C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\fixtures\\b5a\\shadow (unsupported entry)",
+      "exit": 0,
+      "FAKE_LAUNCHER": false,
+      "SHADOW": true,
+      "real_help": false,
+      "stdout_head": "SHADOW_INIT"
+    }
+  ],
+  "installed_wrapper": [
+    {
+      "case": "normal",
+      "entry": "C:\\WINDOWS\\system32\\cmd.exe /c C:\\Users\\ZMJ\\AppData\\Local\\Temp\\tmpp0a0h89x\\venv\\Scripts\\project-memory.cmd --help",
+      "cwd": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\tmpp0a0h89x",
+      "malicious": "none",
+      "exit": 0,
+      "FAKE_LAUNCHER": false,
+      "SHADOW": false,
+      "real_help": true,
+      "stdout_head": "用法：project-memory [-h]"
+    },
+    {
+      "case": "pythonpath-fake-launcher",
+      "entry": "C:\\WINDOWS\\system32\\cmd.exe /c C:\\Users\\ZMJ\\AppData\\Local\\Temp\\tmpp0a0h89x\\venv\\Scripts\\project-memory.cmd --help",
+      "cwd": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\tmpp0a0h89x",
+      "malicious": "PYTHONPATH=C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\fixtures\\b5a\\launcher-shadow",
+      "exit": 0,
+      "FAKE_LAUNCHER": false,
+      "SHADOW": false,
+      "real_help": true,
+      "stdout_head": "用法：project-memory [-h]"
+    },
+    {
+      "case": "pythonpath-fake-package",
+      "entry": "C:\\WINDOWS\\system32\\cmd.exe /c C:\\Users\\ZMJ\\AppData\\Local\\Temp\\tmpp0a0h89x\\venv\\Scripts\\project-memory.cmd --help",
+      "cwd": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\tmpp0a0h89x",
+      "malicious": "PYTHONPATH=C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\fixtures\\b5a\\shadow",
+      "exit": 0,
+      "FAKE_LAUNCHER": false,
+      "SHADOW": false,
+      "real_help": true,
+      "stdout_head": "用法：project-memory [-h]"
+    },
+    {
+      "case": "cwd-both",
+      "entry": "C:\\WINDOWS\\system32\\cmd.exe /c C:\\Users\\ZMJ\\AppData\\Local\\Temp\\tmpp0a0h89x\\venv\\Scripts\\project-memory.cmd --help",
+      "cwd": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\tmpp0a0h89x\\inst-cwd-both",
+      "malicious": "cwd=both",
+      "exit": 0,
+      "FAKE_LAUNCHER": false,
+      "SHADOW": false,
+      "real_help": true,
+      "stdout_head": "用法：project-memory [-h]"
+    }
+  ],
+  "installed_info": {
+    "venv": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\tmpp0a0h89x\\venv",
+    "pip_exit": 0,
+    "scripts_dir_contents": [
+      "_project_memory_launcher.py",
+      "project-memory",
+      "project-memory.cmd"
+    ],
+    "marker_written": false
+  }
+}

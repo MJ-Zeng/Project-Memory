@@ -1,0 +1,45 @@
+{
+  "host_pythonpath": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\tmplv2yho6e\\hostile",
+  "env_child": {
+    "exit_code": 0,
+    "log": "$ C:\\SoftWare\\Anconda\\python.exe -c import os, sys; print(\"PYTHONPATH=\" + os.environ.get(\"PYTHONPATH\", \"\")); print(\"SAFEPATH=\" + os.environ.get(\"PYTHONSAFEPATH\", \"\")); print(\"NOUSERSITE=\" + os.environ.get(\"PYTHONNOUSERSITE\", \"\")); print(\"SYSPATH0=\" + repr(sys.path[0]))\n[cwd=C:\\Users\\ZMJ\\AppData\\Local\\Temp\\tmplv2yho6e\\.project-memory\\snapshots\\SNP-b303378a4b00e755\\tree (local, no isolation)]\n--- stdout ---\nPYTHONPATH=C:\\Users\\ZMJ\\AppData\\Local\\Temp\\tmplv2yho6e\\.project-memory\\snapshots\\SNP-b303378a4b00e755\\tree\nSAFEPATH=1\nNOUSERSITE=1\nSYSPATH0='C:\\\\Users\\\\ZMJ\\\\AppData\\\\Local\\\\Temp\\\\tmplv2yho6e\\\\.project-memory\\\\snapshots\\\\SNP-b303378a4b00e755\\\\tree'\n\n--- stderr ---\n\n[exit_code=0]\n"
+  },
+  "probe_child": {
+    "exit_code": 1,
+    "log": "$ C:\\SoftWare\\Anconda\\python.exe -c import b5a_shadow_probe\n[cwd=C:\\Users\\ZMJ\\AppData\\Local\\Temp\\tmplv2yho6e\\.project-memory\\snapshots\\SNP-b303378a4b00e755\\tree (local, no isolation)]\n--- stdout ---\n\n--- stderr ---\nTraceback (most recent call last):\n  File \"<string>\", line 1, in <module>\nModuleNotFoundError: No module named 'b5a_shadow_probe'\n\n[exit_code=1]\n"
+  },
+  "receipt": {
+    "path": ".project-memory/receipts/EXE-0f406e5b42958271103f.json",
+    "snapshot_tree": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\tmplv2yho6e\\.project-memory\\snapshots\\SNP-b303378a4b00e755\\tree",
+    "trust": "local_untrusted",
+    "isolation": {
+      "mode": "none",
+      "os_isolation": false,
+      "sandbox": "plain-child-process",
+      "workspace": "immutable-snapshot",
+      "python_env": {
+        "path_source": "snapshot-only",
+        "safepath": true,
+        "nousersite": true,
+        "stripped": [
+          "PYTHONPATH",
+          "PYTHONHOME",
+          "PYTHONSTARTUP",
+          "PYTHONUSERBASE",
+          "PYTHONSAFEPATH",
+          "PYTHONNOUSERSITE"
+        ]
+      }
+    },
+    "content_sha256": "ba109e7c5c7c8ffd96a67f8b7a64054abe0f5451c2018edcf7dbb6c559e8689e"
+  },
+  "assertions": {
+    "host_path_absent_from_child_env": true,
+    "child_pythonpath_is_snapshot": true,
+    "safepath_enabled": true,
+    "nousersite_enabled": true,
+    "sys_path0_is_explicit_pythonpath": true,
+    "shadow_probe_not_importable": true,
+    "receipt_records_python_env": true
+  }
+}
