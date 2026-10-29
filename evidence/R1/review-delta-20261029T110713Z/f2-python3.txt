@@ -1,0 +1,32 @@
+== which python3 / python ==
+/c/Users/ZMJ/AppData/Local/Microsoft/WindowsApps/python3
+/c/Users/ZMJ/AppData/Local/Microsoft/WindowsApps/python
+== targets ==
+lrwxrwxrwx 1 ZMJ 197121 121 Sep 22 08:39 /c/Users/ZMJ/AppData/Local/Microsoft/WindowsApps/python3 -> /c/Program Files/WindowsApps/Microsoft.DesktopAppInstaller_1.29.380.0_x64__8wekyb3d8bbwe/AppInstallerPythonRedirector.exe
+lrwxrwxrwx 1 ZMJ 197121 121 Sep 22 08:39 /c/Users/ZMJ/AppData/Local/Microsoft/WindowsApps/python -> /c/Program Files/WindowsApps/Microsoft.DesktopAppInstaller_1.29.380.0_x64__8wekyb3d8bbwe/AppInstallerPythonRedirector.exe
+== real interpreter ==
+Python 3.12.4
+exit=0
+== note ==
+python3/python resolve to Microsoft Store AppExecutionAlias redirector (AppInstallerPythonRedirector.exe).
+This session did NOT execute the stub (to avoid launching the Store UI); exit=49 is corroborated by the concurrent PM-03 artifact f2-python3-check.txt on the same host and by the redirector path above.
+
+== doc lines (F2) ==
+README.md:41:Windows 上 `python3` 可能是 Microsoft Store 的别名桩（exit 49），请改用实际解释器（如 `python`、venv 或 Anaconda 路径）执行上述命令。
+docs/OPERATIONS.zh-CN.md:64:Windows 上 `python3` 可能是 Microsoft Store 的别名桩（exit 49），请改用实际解释器（如 `python`、venv 或 Anaconda 路径）执行上述命令。
+
+== release requirement context (unchanged) ==
+openssl 只在测试期用于生成测试密钥和签名，**不是运行时依赖**；CLI 的验签在进程内完成。缺少 openssl 时，B2/B3/B4 签名测试默认 `SkipTest`，本地仍可跑其余测试。发布和 CI **必须**设置开关，让缺 openssl 直接失败，避免把 skip 当成通过：
+
+```bash
+# 发布/CI：缺 openssl 时签名测试 failed/error，不再 skip
+PROJECT_MEMORY_REQUIRE_OPENSSL=1 python3 -m pytest -q
+
+# 本地默认：缺 openssl 时跳过签名测试
+python3 -m pytest -q
+```
+
+Windows 上 `python3` 可能是 Microsoft Store 的别名桩（exit 49），请改用实际解释器（如 `python`、venv 或 Anaconda 路径）执行上述命令。
+
+开关取值为 `1`、`true`、`yes`（大小写不敏感）。详见 `docs/OPERATIONS.zh-CN.md`。
+

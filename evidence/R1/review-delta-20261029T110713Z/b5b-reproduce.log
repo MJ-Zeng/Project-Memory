@@ -1,0 +1,10 @@
+total=42
+raw_hits=29
+lf_hits=17
+blob_hits=19
+any_hit=41/42
+MISS environment.txt
+  manifest=d4f6d19fab1a3cd728c44f24724fc21e17139a2ca277fcf92e3aa2c4ce88f5c3
+  raw=44c6eba74e51fd726c607588d50f1bff5a6f6883dc495ea354cacd74fbc90a52
+  lf_norm=a78b12ed17ebc4c613474c1102d44b794d04c554af837f3f88318e63710246c2
+  git_blob=a78b12ed17ebc4c613474c1102d44b794d04c554af837f3f88318e63710246c2

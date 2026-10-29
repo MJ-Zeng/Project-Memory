@@ -1,0 +1,52 @@
+== git rev-parse HEAD (review worktree) ==
+5dcfaff9666d343256bd50b6d6a28774445c9031
+review/r1-9d5f957
+== delta commit + parent ==
+9d5f957e65faf536be4dc763cb97d50e815bdd91 bb06037c469b6586b95fbcd69b6965585f2c977e
+== origin/fix/release-gates ==
+9d5f957e65faf536be4dc763cb97d50e815bdd91
+== diff --name-status bb06037..9d5f957 ==
+M	README.md
+M	docs/OPERATIONS.zh-CN.md
+M	evidence/B5B/README.md
+A	evidence/R1/fix-20261029T104125Z/README.md
+A	evidence/R1/fix-20261029T104125Z/b5b-recheck.log
+A	evidence/R1/fix-20261029T104125Z/changed-docs.sha256
+A	evidence/R1/fix-20261029T104125Z/commands.jsonl
+A	evidence/R1/fix-20261029T104125Z/pytest-default.log
+A	evidence/R1/fix-20261029T104125Z/reproduce-b5b.sh
+A	evidence/R1/fix-20261029T104125Z/sha256sums.txt
+A	tasks/R1-fix1-handoff-20261029T104125Z.md
+== forbidden path check (empty = none changed) ==
+== version files (must be identical) ==
+SAME project_memory/__init__.py d93ec6382443a4a59468511b80ad1fd115d83869
+SAME pyproject.toml e7e7761d587a734728e73880f4ef0ee996d5dc35
+SAME CHANGELOG.md c1edf05b3167d477c872ba261f5b8edb1070bcd7
+SAME tasks/R1.md 25d8818ccfd40be72bc696c41c4b064b49e5f4f4
+== task card sha256 ==
+5949420f784feeb1484c8b8465cec40e7646931d5ff6c0a6af865113f13131f1 *-
+== R1 historical evidence unchanged ==
+(empty above = unchanged)
+== B5B blobs: only README differs ==
+6d5
+< 100644 blob 0b8e75b67719bd4ef878ef6f07f3e180585721c0	evidence/B5B/README.md
+7a7
+> 100644 blob 28359ba1dd8c03c1a9c603efadd85c88a178495f	evidence/B5B/README.md
+blob diff exit=1 (1 = expected, README only)
+file count base=44 cand=44
+== environment.txt blob base vs cand ==
+e27a17fc7bee71aacf2888afa538772c222db463
+e27a17fc7bee71aacf2888afa538772c222db463
+== review branch beyond candidate: evidence-only ==
+A	evidence/R1/review-delta-20261029T105055Z/b5b-reproduce.log
+A	evidence/R1/review-delta-20261029T105055Z/commands.jsonl
+A	evidence/R1/review-delta-20261029T105055Z/environment.txt
+A	evidence/R1/review-delta-20261029T105055Z/f1-crosscheck.txt
+A	evidence/R1/review-delta-20261029T105055Z/f1-readme-claims.txt
+A	evidence/R1/review-delta-20261029T105055Z/f1-reproduce.log
+A	evidence/R1/review-delta-20261029T105055Z/f1-reproduce.py
+A	evidence/R1/review-delta-20261029T105055Z/scope-b5b-integrity.txt
+A	evidence/R1/review-delta-20261029T105055Z/scope-commits.txt
+A	evidence/R1/review-delta-20261029T105055Z/scope-doc-diffs.txt
+A	evidence/R1/review-delta-20261029T105055Z/scope-name-status.txt
+A	evidence/R1/review-delta-20261029T105055Z/scope-stat.txt

@@ -1,0 +1,15 @@
+raw                    44c6eba74e51fd726c607588d50f1bff5a6f6883dc495ea354cacd74fbc90a52 
+lf_norm                a78b12ed17ebc4c613474c1102d44b794d04c554af837f3f88318e63710246c2 
+crlf_norm              44c6eba74e51fd726c607588d50f1bff5a6f6883dc495ea354cacd74fbc90a52 
+bom                    436d63eadc50649f3059656ed1fd3317694651450d776dee1b8a6ad67624f9ea 
+bom_lf                 c630baaa25656765792ffeba7fe834075690238552a67f8d318c524695e447f5 
+strip_trailing_ws      7aee3015cde0d5f2792cdb67f78ebcf010d6277ea570e717db648b01bc04a63a 
+strip_trailing_ws_lf   cad60f012936b314dd061e1ab68c2541eaaeefab237e511164b8fc51607ea997 
+add_trailing_nl        047028413415ac06ea1126c691c89a45cbbbbbe0f2f9261c9fc6e751a22c5ba3 
+add_trailing_nl_lf     bb494636077b85a6c23e10139350191754e24802318f2897b327f7663bf53d67 
+strip_final_nl         7aee3015cde0d5f2792cdb67f78ebcf010d6277ea570e717db648b01bc04a63a 
+strip_final_nl_lf      cad60f012936b314dd061e1ab68c2541eaaeefab237e511164b8fc51607ea997 
+manifest d4f6d19fab1a3cd728c44f24724fc21e17139a2ca277fcf92e3aa2c4ce88f5c3
+size 590
+blob_oid e27a17fc7bee71aacf2888afa538772c222db463
+history: 78b8394 test(b5b): record default-refusal and trusted/local isolation evidence pack

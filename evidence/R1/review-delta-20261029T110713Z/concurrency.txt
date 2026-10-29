@@ -1,0 +1,28 @@
+== review branch log ==
+5dcfaff 2026-10-29 18:59:17 +0800 PM-03 Reviewer review(r1-delta): F1 41/42 independent reproduction
+a92df4c 2026-10-29 18:57:58 +0800 PM-03 Reviewer review(r1-delta): scope audit evidence for 9d5f957
+
+== files added beyond candidate ==
+A	evidence/R1/review-delta-20261029T105055Z/b5b-reproduce.log
+A	evidence/R1/review-delta-20261029T105055Z/commands.jsonl
+A	evidence/R1/review-delta-20261029T105055Z/environment.txt
+A	evidence/R1/review-delta-20261029T105055Z/f1-crosscheck.txt
+A	evidence/R1/review-delta-20261029T105055Z/f1-readme-claims.txt
+A	evidence/R1/review-delta-20261029T105055Z/f1-reproduce.log
+A	evidence/R1/review-delta-20261029T105055Z/f1-reproduce.py
+A	evidence/R1/review-delta-20261029T105055Z/scope-b5b-integrity.txt
+A	evidence/R1/review-delta-20261029T105055Z/scope-commits.txt
+A	evidence/R1/review-delta-20261029T105055Z/scope-doc-diffs.txt
+A	evidence/R1/review-delta-20261029T105055Z/scope-name-status.txt
+A	evidence/R1/review-delta-20261029T105055Z/scope-stat.txt
+
+== product/test code diff 9d5f957..HEAD (excluding evidence/) ==
+(empty above = none)
+
+== untracked files in evidence dir (not committed by me) ==
+?? evidence/R1/review-delta-20261029T105055Z/env.txt
+?? evidence/R1/review-delta-20261029T105055Z/f2-python3-check.txt
+?? evidence/R1/review-delta-20261029T105055Z/pytest-default.log
+?? evidence/R1/review-delta-20261029T105055Z/pytest-delta.log
+?? evidence/R1/review-delta-20261029T105055Z/selfcheck-hashes.txt
+?? evidence/R1/review-delta-20261029T110713Z/

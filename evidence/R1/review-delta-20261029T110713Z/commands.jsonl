@@ -1,0 +1,16 @@
+{"seq":1,"cmd":"git fetch origin; git rev-list --parents -n 1 9d5f957; git rev-parse origin/fix/release-gates","exit":0,"note":"9d5f957 is a direct child of bb06037; remote fix/release-gates == 9d5f957"}
+{"seq":2,"cmd":"git diff --name-status/--stat/--numstat bb06037..9d5f957","exit":0,"note":"11 files: README.md, docs/OPERATIONS.zh-CN.md, evidence/B5B/README.md, evidence/R1/fix-20261029T104125Z/** (7), tasks/R1-fix1-handoff-*.md"}
+{"seq":3,"cmd":"git diff --name-only bb06037..9d5f957 -- '*.py' tests/** schema/** pyproject.toml CHANGELOG.md .gitattributes .github/** project_memory/** skill/**","exit":0,"note":"empty: no code/test/schema/version/attribute/workflow changes"}
+{"seq":4,"cmd":"git rev-parse bb06037:<ver files> vs 9d5f957:<ver files>","exit":0,"note":"project_memory/__init__.py, pyproject.toml, CHANGELOG.md, tasks/R1.md blobs identical; version stays 1.0.0"}
+{"seq":5,"cmd":"git ls-tree -r bb06037 -- evidence/B5B | sort; same for 9d5f957; diff","exit":1,"note":"44/44 files; only evidence/B5B/README.md blob changes (0b8e75b->28359ba); run-20261029T015035Z/** and all other historical files byte-identical"}
+{"seq":6,"cmd":"bash evidence/R1/fix-20261029T104125Z/reproduce-b5b.sh (evidence/R1/review-delta-20261029T110713Z/b5b-reproduce.log)","exit":0,"note":"total=42 raw=29 lf=17 blob=19 any=41/42; unique miss environment.txt (manifest d4f6d19f, raw 44c6eba7, lf/blob a78b12ed)"}
+{"seq":7,"cmd":"python independent cross-check of 42 manifest entries (f1-crosscheck.txt)","exit":0,"note":"same as seq 6 with an independent implementation"}
+{"seq":8,"cmd":"python environment.txt variants: raw/lf/crlf/BOM/trailing-ws/trailing-nl (f1-env-variants.txt)","exit":0,"note":"none match manifest d4f6d19f; blob oid e27a17fc; file last touched by 78b8394 (B5B), unchanged in R1 and delta"}
+{"seq":9,"cmd":"wc -c and tr -cd '\\000' | wc -c on the two NUL logs","exit":0,"note":"receipts/trusted/run.log 345B/42 NUL; receipts/trusted-host-attempt/run.log 443B/42 NUL"}
+{"seq":10,"cmd":"cd evidence/R1/fix-20261029T104125Z && sha256sum -c sha256sums.txt","exit":0,"note":"5/5 OK"}
+{"seq":11,"cmd":"sha256sum -c evidence/R1/fix-20261029T104125Z/changed-docs.sha256 (repo root, worktree bytes)","exit":1,"note":"3 FAILED on Windows autocrlf checkout (CRLF worktree vs LF manifest); documented LF/blob method passes 3/3"}
+{"seq":12,"cmd":"git cat-file blob HEAD:<doc> | sha256sum vs changed-docs.sha256","exit":0,"note":"README.md 77076cb4, docs/OPERATIONS.zh-CN.md d3f0a790, evidence/B5B/README.md 8d04fa68 all match"}
+{"seq":13,"cmd":"sha256sum -c evidence/R1/20261029T083252Z/sha256sums.txt (repo root)","exit":0,"note":"36/36 OK; historical R1 evidence intact"}
+{"seq":14,"cmd":"PYTHONUTF8=1 /c/SoftWare/Anconda/python.exe -m pytest -q -p no:cacheprovider","exit":0,"note":"253 passed, 2 skipped in 494.07s; 2 skips are rc3 symlink tests (tests/test_security_rc3.py skipTest)"}
+{"seq":15,"cmd":"command -v python3; ls -l target","exit":0,"note":"python3 and python both resolve to Microsoft Store AppInstallerPythonRedirector.exe; stub not executed by this session"}
+{"seq":16,"cmd":"git log --oneline 9d5f957..HEAD before final commit","exit":0,"note":"branch already contained 2 evidence-only commits (a92df4c, 5dcfaff) authored by another concurrent PM-03 session; product/test tree unchanged"}
