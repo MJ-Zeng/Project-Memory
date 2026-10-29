@@ -1,0 +1,28 @@
+collected_at_utc=2026-10-28T15:53:42Z
+host_os=Windows 10.0.26300 x64 (Git Bash)
+repo=git@github.com:MJ-Zeng/Project-Memory.git
+baseline_ddd9dba=ddd9dba28d518339348f55ebcc382aba070782d8
+candidate_code=85b1a4ecad13675a83cb8cf47b3e6cd7cf757672
+branch=fix/b5a-module-shadowing
+task_card_sha256=88e31661ac766b7963ec655eb13de0e448ca51fa2e235cffc24161a1ef9681b9
+windows_python=Python 3.12.4 (C:/SoftWare/Anconda/python.exe)
+pytest=pytest 9.1.1
+git=git version 2.56.0.windows.2
+--- WSL (raw -m / launcher / guard runs) ---
+wsl_distro=Ubuntu 26.04 LTS
+wsl_python=Python 3.14.4
+wsl_git=git version 2.53.0
+wsl_pip=absent (python3 -m pip and ensurepip unavailable; venv creation fails)
+--- fixtures (read-only, unmodified) ---
+fixture_root=C:/Documents/02_Research/Code/project-memory-verification-lab/fixtures/b5a
+sha256_e46bdb7ab621594f9d9cf6fc7a5bfa194328793a65d1540e214011e27bf3922d=shadow/project_memory/__init__.py
+sha256_e46bdb7ab621594f9d9cf6fc7a5bfa194328793a65d1540e214011e27bf3922d=cwd-shadow/project_memory/__init__.py
+sha256_4f72832f164f38de69d777d0d5e636960a456d3b6d11b4f4ff126ec6a5106f1e=shadow/project_memory/__main__.py
+sha256_4f72832f164f38de69d777d0d5e636960a456d3b6d11b4f4ff126ec6a5106f1e=cwd-shadow/project_memory/__main__.py
+--- checkouts / venvs used for the matrix ---
+baseline_checkout=C:/Users/ZMJ/AppData/Local/Temp/b5a-base-gb (git archive ddd9dba, no .git)
+candidate_checkout=C:/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-02
+windows_venv_candidate=/tmp/b5a-win-venv (pip install . --no-deps --no-build-isolation)
+windows_venv_baseline=/tmp/b5a-win-base-venv (pip install <baseline archive>)
+baseline_shadow_console_exit=1 (SHADOW_INIT executed, then ImportError: no project_memory.cli)
+notes=console-script cases run on Windows venv because WSL has no pip; raw -m, launcher-script and guard cases run in WSL and Windows pytest

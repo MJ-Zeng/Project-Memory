@@ -1,0 +1,20 @@
+ _project_memory_launcher.py              |  72 +++++++++++++
+ docs/OPERATIONS.zh-CN.md                 |  12 +++
+ docs/decisions/ADR-0005-cli-bootstrap.md | 120 ++++++++++++++++++++++
+ project_memory/__main__.py               |  66 +++++++++++-
+ project_memory/execution.py              |  14 ++-
+ pyproject.toml                           |   3 +-
+ tasks/B5A-context-recovery.md            |  29 ++++++
+ tests/test_security_b5a.py               | 169 +++++++++++++++++++++++++++++++
+ 8 files changed, 480 insertions(+), 5 deletions(-)
+--- files changed ---
+A	_project_memory_launcher.py
+M	docs/OPERATIONS.zh-CN.md
+A	docs/decisions/ADR-0005-cli-bootstrap.md
+M	project_memory/__main__.py
+M	project_memory/execution.py
+M	pyproject.toml
+A	tasks/B5A-context-recovery.md
+A	tests/test_security_b5a.py
+--- evidence commit ---
+evidence/ + tasks/B5A-handoff-* are committed separately (no code change)

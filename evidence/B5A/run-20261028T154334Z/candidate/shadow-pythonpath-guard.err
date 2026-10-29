@@ -1,0 +1,1 @@
+project-memory：检测到同名 project_memory 包位于不可信路径：/mnt/c/Documents/02_Research/Code/project-memory-verification-lab/fixtures/b5a/shadow/project_memory；拒绝以未隔离方式启动，请使用 project-memory 启动器

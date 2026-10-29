@@ -686,19 +686,24 @@ def _sensitive_env_name(name: str) -> bool:
     return any(token in upper for token in _SENSITIVE_ENV)
 
 
+_PYTHON_PATH_VARS = ('PYTHONPATH', 'PYTHONHOME', 'PYTHONSTARTUP', 'PYTHONUSERBASE',
+                     'PYTHONSAFEPATH', 'PYTHONNOUSERSITE')
+
+
 def _local_env(tree_dir: Path, extra_env: dict | None) -> dict:
     """Host environment minus credential-like names; extra_env is validated."""
     env = {}
     for key, value in os.environ.items():
-        if key in ('PYTHONPATH', 'PYTHONHOME') or _sensitive_env_name(key):
+        if key in _PYTHON_PATH_VARS or _sensitive_env_name(key):
             continue
         env[key] = value
     env.update({'PYTHONPATH': str(tree_dir), 'PYTHONDONTWRITEBYTECODE': '1',
+                'PYTHONSAFEPATH': '1', 'PYTHONNOUSERSITE': '1',
                 'PROJECT_MEMORY_EXECUTION_MODE': 'local_untrusted'})
     if extra_env:
         for key, value in extra_env.items():
             name = str(key)
-            if name in ('PYTHONPATH', 'PYTHONHOME') or _sensitive_env_name(name):
+            if name in _PYTHON_PATH_VARS or _sensitive_env_name(name):
                 raise PMError(f'本地执行不允许注入敏感或路径劫持变量：{name}')
             env[name] = str(value)
     return env
@@ -796,7 +801,10 @@ def run_command(repo: Path, command, commit_sha: str | None = None, *,
         trust_label = 'isolated_local_attestation'
     else:
         isolation = {'mode': 'none', 'os_isolation': False,
-                     'sandbox': 'plain-child-process', 'workspace': 'immutable-snapshot'}
+                     'sandbox': 'plain-child-process', 'workspace': 'immutable-snapshot',
+                     'python_env': {'path_source': 'snapshot-only', 'safepath': True,
+                                    'nousersite': True,
+                                    'stripped': list(_PYTHON_PATH_VARS)}}
         provenance = {
             'kind': 'local_untrusted', 'launcher': 'project_memory.execution',
             'attested': False, 'trusted': False,

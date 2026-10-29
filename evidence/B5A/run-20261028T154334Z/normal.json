@@ -1,0 +1,42 @@
+{
+  "threat": "正常调用",
+  "baseline_bare_module": {
+    "command_group": "baseline",
+    "case": "normal",
+    "exit_code": 0,
+    "marker_seen": false,
+    "help_seen": true,
+    "stdout_head": [
+      "用法：project-memory [-h]",
+      "                      {init,sync-tooling,start,handoff,finish,decision,new-doc,audit,graph,search,goal,run,verify,test-run,defect,reconcile} ...",
+      ""
+    ],
+    "stderr_head": []
+  },
+  "candidate_bare_module": {
+    "command_group": "candidate",
+    "case": "normal-bare",
+    "exit_code": 0,
+    "marker_seen": false,
+    "help_seen": true,
+    "stdout_head": [
+      "用法：project-memory [-h]",
+      "                      {init,sync-tooling,start,handoff,finish,decision,new-doc,audit,graph,search,goal,run,verify,test-run,defect,reconcile} ...",
+      ""
+    ],
+    "stderr_head": []
+  },
+  "candidate_console": {
+    "command_group": "candidate",
+    "case": "normal-console",
+    "exit_code": 0,
+    "marker_seen": false,
+    "help_seen": true,
+    "stdout_head": [
+      "用法：project-memory [-h]",
+      "                      {init,sync-tooling,start,handoff,finish,decision,new-doc,audit,graph,search,goal,run,verify,test-run,defect,reconcile}",
+      "                      ..."
+    ],
+    "stderr_head": []
+  }
+}

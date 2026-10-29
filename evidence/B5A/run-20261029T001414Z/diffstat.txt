@@ -1,0 +1,70 @@
+ .gitattributes                                     |   5 +
+ _project_memory_launcher.py                        |  79 ++++++
+ bin/project-memory                                 |  41 ++++
+ bin/project-memory.cmd                             |  35 +++
+ docs/OPERATIONS.zh-CN.md                           |  16 ++
+ docs/decisions/ADR-0005-cli-bootstrap.md           | 143 +++++++++++
+ evidence/B5A/run-20261028T154334Z/README.md        | 102 ++++++++
+ evidence/B5A/run-20261028T154334Z/b5a-pytest.log   |   2 +
+ .../B5A/run-20261028T154334Z/baseline/normal.err   |   0
+ .../B5A/run-20261028T154334Z/baseline/normal.exit  |   1 +
+ .../B5A/run-20261028T154334Z/baseline/normal.out   |  26 ++
+ .../baseline/shadow-console.err                    |   5 +
+ .../baseline/shadow-console.exit                   |   1 +
+ .../baseline/shadow-console.out                    |   1 +
+ .../run-20261028T154334Z/baseline/shadow-cwd.err   |   0
+ .../run-20261028T154334Z/baseline/shadow-cwd.exit  |   1 +
+ .../run-20261028T154334Z/baseline/shadow-cwd.out   |   2 +
+ .../baseline/shadow-pythonpath.err                 |   0
+ .../baseline/shadow-pythonpath.exit                |   1 +
+ .../baseline/shadow-pythonpath.out                 |   2 +
+ .../candidate/isolated-runpy.err                   |   0
+ .../candidate/isolated-runpy.exit                  |   1 +
+ .../candidate/isolated-runpy.out                   |  26 ++
+ .../run-20261028T154334Z/candidate/normal-bare.err |   0
+ .../candidate/normal-bare.exit                     |   1 +
+ .../run-20261028T154334Z/candidate/normal-bare.out |  26 ++
+ .../candidate/normal-console.err                   |   0
+ .../candidate/normal-console.exit                  |   1 +
+ .../candidate/normal-console.out                   |  27 ++
+ .../candidate/shadow-console-cwd.err               |   0
+ .../candidate/shadow-console-cwd.exit              |   1 +
+ .../candidate/shadow-console-cwd.out               |  27 ++
+ .../candidate/shadow-console.err                   |   0
+ .../candidate/shadow-console.exit                  |   1 +
+ .../candidate/shadow-console.out                   |  27 ++
+ .../candidate/shadow-cwd-launcher.err              |   0
+ .../candidate/shadow-cwd-launcher.exit             |   1 +
+ .../candidate/shadow-cwd-launcher.out              |  26 ++
+ .../candidate/shadow-pythonpath-bare.err           |   0
+ .../candidate/shadow-pythonpath-bare.exit          |   1 +
+ .../candidate/shadow-pythonpath-bare.out           |   2 +
+ .../candidate/shadow-pythonpath-guard.err          |   1 +
+ .../candidate/shadow-pythonpath-guard.exit         |   1 +
+ .../candidate/shadow-pythonpath-guard.out          |   0
+ .../candidate/shadow-pythonpath-launcher.err       |   0
+ .../candidate/shadow-pythonpath-launcher.exit      |   1 +
+ .../candidate/shadow-pythonpath-launcher.out       |  26 ++
+ .../B5A/run-20261028T154334Z/collect_evidence.py   |  55 +++++
+ evidence/B5A/run-20261028T154334Z/commands.jsonl   |  21 ++
+ evidence/B5A/run-20261028T154334Z/diffstat.txt     |  20 ++
+ evidence/B5A/run-20261028T154334Z/environment.txt  |  28 +++
+ .../B5A/run-20261028T154334Z/make_sha256sums.py    |  56 +++++
+ .../run-20261028T154334Z/matrix_console_windows.sh |  33 +++
+ evidence/B5A/run-20261028T154334Z/matrix_wsl.sh    |  36 +++
+ evidence/B5A/run-20261028T154334Z/normal.json      |  42 ++++
+ evidence/B5A/run-20261028T154334Z/pytest.log       |   5 +
+ evidence/B5A/run-20261028T154334Z/sha256sums.txt   |  62 +++++
+ .../B5A/run-20261028T154334Z/shadow-console.json   |  31 +++
+ evidence/B5A/run-20261028T154334Z/shadow-cwd.json  |  41 ++++
+ .../run-20261028T154334Z/shadow-pythonpath.json    |  64 +++++
+ .../B5A/run-20261028T154334Z/test-run-env.json     |  45 ++++
+ .../B5A/run-20261028T154334Z/test_run_env_probe.py |  96 ++++++++
+ evidence/B5A/run-20261028T154334Z/verify_hashes.py |  66 +++++
+ project_memory/__main__.py                         |  67 ++++-
+ project_memory/execution.py                        |  14 +-
+ pyproject.toml                                     |  12 +-
+ tasks/B5A-context-recovery.md                      |  29 +++
+ tasks/B5A-handoff-run-20261028T154334Z.md          | 124 ++++++++++
+ tests/test_security_b5a.py                         | 272 +++++++++++++++++++++
+ 69 files changed, 1873 insertions(+), 6 deletions(-)
