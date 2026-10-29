@@ -1,15 +1,22 @@
-"""Trusted CLI launcher: start Python isolated before importing ``project_memory``.
+"""Trusted CLI bootstrap: run isolated, then import ``project_memory`` from a
+trusted root only.
 
-A same-named package earlier on ``sys.path`` (cwd or ``PYTHONPATH``) executes
-before ``project_memory/__main__.py`` and before any console-script import.  The
-only place that can still win is a process started with an interpreter that is
-both isolated and safe-path, which is what this module does before touching the
-package.  See docs/decisions/ADR-0005-cli-bootstrap.md.
+This file is NOT an importable console-script target.  It is invoked BY ABSOLUTE
+PATH from a native OS wrapper (``bin/project-memory`` / ``bin/project-memory.cmd``)
+that has already started the interpreter with ``-I -P``.  A pip
+``module:function`` console_script instead resolves a top-level module name
+through the ambient ``sys.path`` BEFORE any isolation, so a same-named file on
+``PYTHONPATH``/cwd executes first and never reaches this code (B5A.1).  Running
+by absolute path under ``-I -P`` removes both preemption vectors: no name is
+resolved through ``sys.path``, and ``PYTHONPATH``/cwd/user-site are dropped.
 
-This module deliberately lives outside the package so that shadowing
-``project_memory`` does not shadow the launcher itself.  Shadowing this module
-name, rewriting it, or replacing the interpreter is equivalent to replacing the
-whole process and is outside what any in-process control can defend.
+Given isolation, this bootstrap locates the trusted root (its own directory) and
+(re)starts an interpreter that imports ``project_memory`` only from that root, so
+the CLI's signing, receipts and Goal state machine cannot be replaced by a
+same-named package.  See docs/decisions/ADR-0005-cli-bootstrap.md.
+
+Rewriting this file, the wrapper, or the interpreter is equivalent to replacing
+the whole process and is outside what any in-process control can defend.
 """
 from __future__ import annotations
 

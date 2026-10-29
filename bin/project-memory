@@ -1,0 +1,41 @@
+#!/bin/sh
+# project-memory trusted entry (POSIX).
+#
+# A pip "module:function" console_script resolves a top-level module through the
+# ambient sys.path BEFORE any isolation, so a same-named file on PYTHONPATH/cwd
+# runs first (B5A.1).  This native wrapper cannot be preempted that way: it
+# establishes interpreter isolation (-I -P) at the OS level, then runs the
+# launcher BY ABSOLUTE PATH -- never as an importable module name.
+#
+# See docs/decisions/ADR-0005-cli-bootstrap.md.
+set -eu
+
+_here=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+
+# Locate the launcher script: sibling (installed layout) or parent (checkout).
+if [ -f "$_here/_project_memory_launcher.py" ]; then
+    _launcher=$_here/_project_memory_launcher.py
+elif [ -f "$_here/../_project_memory_launcher.py" ]; then
+    _launcher=$_here/../_project_memory_launcher.py
+else
+    printf 'project-memory: cannot locate the trusted launcher script\n' >&2
+    exit 3
+fi
+
+# Choose a trusted interpreter: explicit override, then a venv sibling, then PATH.
+if [ -n "${PROJECT_MEMORY_PYTHON:-}" ]; then
+    _py=$PROJECT_MEMORY_PYTHON
+elif [ -x "$_here/python3" ]; then
+    _py=$_here/python3
+elif [ -x "$_here/python" ]; then
+    _py=$_here/python
+elif command -v python3 >/dev/null 2>&1; then
+    _py=$(command -v python3)
+elif command -v python >/dev/null 2>&1; then
+    _py=$(command -v python)
+else
+    printf 'project-memory: no Python interpreter found\n' >&2
+    exit 3
+fi
+
+exec "$_py" -I -P "$_launcher" "$@"

@@ -12,9 +12,16 @@ dependencies = []
 [project.optional-dependencies]
 semantic = ["sentence-transformers>=3"]
 
-[project.scripts]
-project-memory = "_project_memory_launcher:main"
+# NOTE: no [project.scripts] entry on purpose.  A pip "module:function"
+# console_script resolves a top-level module through the ambient sys.path BEFORE
+# any isolation, so PYTHONPATH/cwd can preempt it (B5A.1).  The trusted command
+# is a native OS wrapper that isolates the interpreter (-I -P) first and then
+# runs the launcher by absolute path.  See docs/decisions/ADR-0005-cli-bootstrap.md.
 
 [tool.setuptools]
 packages = ["project_memory"]
-py-modules = ["_project_memory_launcher"]
+script-files = [
+    "bin/project-memory",
+    "bin/project-memory.cmd",
+    "_project_memory_launcher.py",
+]

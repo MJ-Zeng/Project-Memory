@@ -2,7 +2,8 @@
 
 A same-named package earlier on ``sys.path`` runs before this module, so the
 checks below are defence in depth, not the primary control: the trusted entry is
-the ``project-memory`` console script / launcher (ADR-0005).
+the native ``project-memory`` wrapper (``bin/project-memory[.cmd]``) which runs
+the launcher by absolute path under ``-I -P`` (ADR-0005).
 """
 from __future__ import annotations
 
