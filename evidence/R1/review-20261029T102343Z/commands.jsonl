@@ -1,0 +1,30 @@
+{"step":"object.base_sha","command":"git -C pm-pilot-03 rev-parse 85bf6a0^{commit}","exit":0,"result":"85bf6a05542aa6bca3ab0d9ef51c6216f76b6080"}
+{"step":"object.candidate_sha","command":"git -C pm-pilot-03 rev-parse bb06037^{commit}","exit":0,"result":"bb06037c469b6586b95fbcd69b6965585f2c977e"}
+{"step":"object.ancestry","command":"git merge-base --is-ancestor 85bf6a0 bb06037","exit":0,"result":"candidate is descendant of base"}
+{"step":"object.task_card_hash","command":"sha256sum tasks/R1.md","exit":0,"result":"5949420f784feeb1484c8b8465cec40e7646931d5ff6c0a6af865113f13131f1"}
+{"step":"object.task_card_unchanged","command":"git diff --stat cf0da82..bb06037 -- tasks/R1.md","exit":0,"result":"empty (unchanged since task-card commit)"}
+{"step":"object.scope","command":"git diff --name-status 85bf6a0..bb06037 -- tasks/ evidence/B4/ evidence/B5B/","exit":0,"result":"A evidence/B5B/README.md; A tasks/R1-handoff-...; A tasks/R1.md; B4 untouched"}
+{"step":"static.no_tag","command":"git tag --points-at bb06037 (local)","exit":0,"result":"no local tag on candidate (remote tags NOT VERIFIED: no credentials)"}
+{"step":"4.1_4.2.vacuous_probe","command":"python evidence/R1/review-20261029T102343Z/probe-vacuous.py <out>","exit":0,"result":"toggle/delete fail closed; control=2; create guard=1"}
+{"step":"4.2.evaluate.toggle","command":"python -m project_memory goal evaluate --id G-TOGGLE","exit":0,"result":"satisfied=false; insufficient_evidence; no_required_criteria=true"}
+{"step":"4.2.evaluate.delete","command":"python -m project_memory goal evaluate --id G-DELETE","exit":0,"result":"satisfied=false; insufficient_evidence; no_required_criteria=true"}
+{"step":"4.1.show.toggle","command":"python -m project_memory goal show --id G-TOGGLE","exit":0,"result":"status_problems=[no_required_criteria]; effective_status=evaluating"}
+{"step":"4.1.transition.toggle","command":"python -m project_memory goal transition --id G-TOGGLE --to achieved --approved-by human-lead@example.com","exit":1,"result":"rejected; status stays evaluating; no head.request.json; audit rejected goal_achieved_unsatisfied"}
+{"step":"4.2.transition.delete","command":"python -m project_memory goal transition --id G-DELETE --to achieved --approved-by human-lead@example.com","exit":1,"result":"rejected; status stays evaluating; no head.request.json; audit rejected"}
+{"step":"4.2.control_unsatisfied","command":"python -m project_memory goal evaluate --id G-CONTROL","exit":2,"result":"normal unsatisfied still exits 2 (exit-0 not masking)"}
+{"step":"AC-4.create_guard","command":"python -m project_memory goal create --id G-EMPTY ... (no --criterion)","exit":1,"result":"rejected: Goal 至少需要一个必达的成功标准"}
+{"step":"4.3.openssl_missing_default","command":"PATH=C:/Windows/System32 pytest -q tests/test_security_b2.py ...","exit":0,"result":"37 skipped"}
+{"step":"4.3.openssl_missing_required","command":"PATH=C:/Windows/System32 PROJECT_MEMORY_REQUIRE_OPENSSL=1 pytest -q ...","exit":1,"result":"37 errors; message contains openssl + PROJECT_MEMORY_REQUIRE_OPENSSL"}
+{"step":"4.3.openssl_present_off","command":"pytest -q tests/test_security_b2.py tests/test_security_b3.py tests/test_security_b4.py","exit":0,"result":"37 passed (138.25s)"}
+{"step":"4.3.openssl_present_on","command":"PROJECT_MEMORY_REQUIRE_OPENSSL=1 pytest -q ... b2 b3 b4","exit":0,"result":"37 passed (184.93s)"}
+{"step":"4.4.pytest_default","command":"pytest -q -p no:cacheprovider -rs","exit":0,"result":"253 passed, 2 skipped (rc3 symlink 284/295)"}
+{"step":"4.4.pytest_require","command":"PROJECT_MEMORY_REQUIRE_OPENSSL=1 pytest -q -p no:cacheprovider -rs","exit":0,"result":"253 passed, 2 skipped (rc3 symlink 284/295)"}
+{"step":"4.4.regression","command":"pytest -q tests/test_security_b5b.py test_security_b5a.py b3 b2 b4","exit":0,"result":"57 passed"}
+{"step":"4.5.evidence_manifest","command":"tr -d '\\r' < evidence/R1/20261029T083252Z/sha256sums.txt | sha256sum -c -","exit":0,"result":"36/36 OK"}
+{"step":"4.5.hashobject_vs_head","command":"git hash-object --path=<p> <p> vs git rev-parse HEAD:<p> for evidence/R1/**","exit":0,"result":"37 files MATCH, 0 MISMATCH (byte-preserving commit)"}
+{"step":"4.5.b5b_only_readme","command":"git diff --name-status 85bf6a0..bb06037 -- evidence/B5B/","exit":0,"result":"A evidence/B5B/README.md only; existing B5B files unchanged"}
+{"step":"4.5.b5b_manifest_method","command":"per-file raw / LF-normalized / git-blob comparison of evidence/B5B run sha256sums.txt","exit":0,"result":"entries=42 raw=29 lf=17 blob=19 at_least_one=41 (environment.txt matches NONE) -> README claim 42/42 not reproduced"}
+{"step":"contract.dev_validate","command":"python evidence/R1/20261029T083252Z/schema-samples/validate.py","exit":0,"result":"5 B4 + 1 R1 + 2 checkpoint valid; 0 problem(s)"}
+{"step":"contract.self_validate","command":"jsonschema Draft202012Validator on PM-03 self-generated R1 refusal entry","exit":0,"result":"valid"}
+{"step":"4.6.docs_command_as_is","command":"PROJECT_MEMORY_REQUIRE_OPENSSL=1 python3 -m pytest -q","exit":49,"result":"python3 is Microsoft Store alias stub on this host (no output); ran with Anaconda interpreter instead -> pytest-require-openssl.log"}
+{"step":"static.schema_count","command":"ls skill/project-memory/assets/*.schema.json | wc -l","exit":0,"result":"21 (matches ARCHITECTURE §5 '共 21 份')"}

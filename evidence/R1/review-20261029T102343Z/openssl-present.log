@@ -1,0 +1,7 @@
+switch-off:
+37 passed in 138.25s (0:02:18)
+OFF EXIT=0
+
+switch-on:
+37 passed in 184.93s (0:03:04)
+ON EXIT=0

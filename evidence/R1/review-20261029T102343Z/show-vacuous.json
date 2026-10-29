@@ -1,0 +1,22 @@
+{
+  "toggle": {
+    "exit": 0,
+    "stderr": "",
+    "goal_readable": "G-TOGGLE",
+    "status_problems": [
+      "no_required_criteria"
+    ],
+    "effective_status": "evaluating",
+    "evaluation_no_required_criteria": true
+  },
+  "delete": {
+    "exit": 0,
+    "stderr": "",
+    "goal_readable": "G-DELETE",
+    "status_problems": [
+      "no_required_criteria"
+    ],
+    "effective_status": "evaluating",
+    "evaluation_no_required_criteria": true
+  }
+}

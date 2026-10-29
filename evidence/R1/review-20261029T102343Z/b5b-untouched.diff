@@ -1,0 +1,55 @@
+diff --git a/evidence/B5B/README.md b/evidence/B5B/README.md
+new file mode 100644
+index 0000000..0b8e75b
+--- /dev/null
++++ b/evidence/B5B/README.md
+@@ -0,0 +1,49 @@
++# B5B 证据包说明（不改写历史证据）
++
++本目录是 B5B（Issue #23，默认 `test-run` 拒绝未隔离代码）的冻结证据。**本说明只解释如何阅读和校验，不重写任何既有文件、清单或收据。** 重新生成会破坏“证据是当时生成的”这一前提；若需新证据，应在新的 run 目录产出。
++
++- 运行包：`run-20261029T015035Z/`
++- 清单：`run-20261029T015035Z/sha256sums.txt`（42 项，路径相对该 run 目录）
++- 场景与退出码：见 `run-20261029T015035Z/README.md` 和 `commands.jsonl`
++
++## 1. 混合行尾
++
++B5B 复核记录的现场观测是 **约 19 行 LF / 22 行 CRLF / 1 行两者都不是**，base 与候选检出结果一致。原因是证据由 Windows 上的不同步骤生成，且 `evidence/B5B/**` 没有 `text eol=lf` 属性：
++
++- 清单和多数 JSON/日志按平台换行写成 CRLF；
++- 部分文件由 Python/LF 写入；
++- 至少一个文件末尾没有换行。
++
++提交后 `core.autocrlf=true` 会把 CRLF 规范化为 LF 存入 blob，检出时再还原成 CRLF，所以**磁盘字节、git blob、生成时字节**三者可能不同。本次 R1 在 base 提交上复测的现状是：
++
++- 工作树 `sha256sums.txt`：42 行全部 CRLF（检出变换）；
++- `git cat-file blob HEAD:.../sha256sums.txt`：42 行全部 LF；
++- 清单中的哈希是**生成时**对文件字节计算的，因此直接 `sha256sum -c` 会因行尾表示不同而失败（本次复测 42 项中 29 项与工作树字节一致）。
++
++因此不要用单一 `tr -d '\r'` 覆盖全部文件：它只能匹配“生成时就是 LF”的子集（本次 17/42）。正确做法是**逐文件按字节核对，接受生成时的任一等价表示**：
++
++```bash
++cd evidence/B5B/run-20261029T015035Z
++# 对清单每一行，依次比较：
++#   1) 工作树原始字节
++#   2) 工作树 \r\n -> \n 后的字节
++#   3) git blob 字节（git cat-file blob HEAD:<path>）
++# 任一等价表示命中即该文件通过；三项都不命中的文件才需要人工解释。
++```
++
++本次复测结果：42/42 项至少命中一种表示（工作树 29、LF 归一化 17、git blob 19；部分文件同时命中）。这说明证据本身没有被改写，差异只来自行尾表示；**不要为了凑 `sha256sum -c` 而重写证据或清单**。
++
++## 2. 两个含 NUL 字节的日志
++
++以下两个文件来自 WSL 沙箱，WSL 的本地化 stderr 以混合宽字符/UTF-8 形式写入，包含 NUL 字节，文本工具会当成二进制：
++
++- `run-20261029T015035Z/receipts/trusted/run.log`（345 字节，42 个 NUL）
++- `run-20261029T015035Z/receipts/trusted-host-attempt/run.log`（443 字节，42 个 NUL）
++
++这两份日志记录的是沙箱内 `marker-command.py` 的 stdout/stderr 和 WSL 的 `localhost` 转发警告。校验时必须按**原始字节**计算 SHA-256，不要先按 UTF-8 解码或做文本替换；阅读时用 `grep -a` 或二进制查看器。它们出现在清单中，属于有意保留的原始日志。
++
++## 3. 校验边界
++
++- 本说明不改变任何哈希、收据或场景结论；如与 `run-20261029T015035Z/README.md` 冲突，以当时生成的 `commands.jsonl`、`*.exit`、`receipts/` 为准。
++- 不重签、不重算、不删除 NUL 日志，也不把工作树规范化后的字节写回清单。
++- 行尾问题只影响**自校验便利性**，不改变 B5B 的场景行为：默认拒绝、显式 local、trusted 隔离、trusted 不可用不 fallback 的结论仍由各自的退出码和收据支撑。

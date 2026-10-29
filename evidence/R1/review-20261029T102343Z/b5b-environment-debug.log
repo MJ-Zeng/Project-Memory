@@ -1,0 +1,10 @@
+worktree_raw                 44c6eba74e51fd726c607588d50f1bff5a6f6883dc495ea354cacd74fbc90a52 
+worktree_crlf_to_lf          a78b12ed17ebc4c613474c1102d44b794d04c554af837f3f88318e63710246c2 
+worktree_lf_to_crlf          44c6eba74e51fd726c607588d50f1bff5a6f6883dc495ea354cacd74fbc90a52 
+blob_raw                     a78b12ed17ebc4c613474c1102d44b794d04c554af837f3f88318e63710246c2 
+blob_crlf_to_lf              a78b12ed17ebc4c613474c1102d44b794d04c554af837f3f88318e63710246c2 
+blob_lf_to_crlf              44c6eba74e51fd726c607588d50f1bff5a6f6883dc495ea354cacd74fbc90a52 
+worktree_no_trailing_nl      7aee3015cde0d5f2792cdb67f78ebcf010d6277ea570e717db648b01bc04a63a 
+blob_no_trailing_nl          cad60f012936b314dd061e1ab68c2541eaaeefab237e511164b8fc51607ea997 
+worktree_lf_no_trailing      cad60f012936b314dd061e1ab68c2541eaaeefab237e511164b8fc51607ea997 
+target d4f6d19fab1a3cd728c44f24724fc21e17139a2ca277fcf92e3aa2c4ce88f5c3

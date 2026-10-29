@@ -1,0 +1,13 @@
+{
+  "probe": "control-unsatisfied",
+  "goal_id": "G-CONTROL",
+  "evaluate": {
+    "exit": 2,
+    "satisfied": false,
+    "evaluation_status": "insufficient_evidence",
+    "no_required_criteria": false,
+    "blocking": [
+      "C1"
+    ]
+  }
+}
