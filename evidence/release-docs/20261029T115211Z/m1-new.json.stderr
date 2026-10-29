@@ -1,0 +1,1 @@
+警告：本地执行没有操作系统隔离，收据标记为 local_untrusted；需要隔离时请使用 --trusted。

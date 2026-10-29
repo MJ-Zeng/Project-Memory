@@ -1,0 +1,86 @@
+# release-docs doc-fix verification
+utc=2026-10-29T11:52:40Z
+repo_root=/c/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-02
+Python 3.12.4
+git version 2.56.0.windows.2
+
+temp_repo=/tmp/tmp.sh7vujv8S8
+warning: in the working copy of 'test_ok.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'test_ok.py', LF will be replaced by CRLF the next time Git touches it
+temp_head=3d236341ffee109185a8512a27342b27af234ab5
+
+----- m1-old-no-mode-exit3
+$ C:/SoftWare/Anconda/python.exe -m project_memory test-run --repo . --command \"C:\\SoftWare\\Anconda\\python.exe\"\ -m\ unittest --agent qoder
+exit=3
+m1-old-no-mode-exit3 exit=3
+
+----- m1-new-local-mode
+$ C:/SoftWare/Anconda/python.exe -m project_memory test-run --repo . --command \"C:\\SoftWare\\Anconda\\python.exe\"\ -m\ unittest --agent qoder --allow-local-untrusted
+exit=0
+m1-new-local-mode exit=0
+
+----- m2-goal-create
+$ C:/SoftWare/Anconda/python.exe -m project_memory goal create --repo . --id G-BAD --title approved-by\ 格式验证 --outcome 文档示例可执行 --owner backend-team --criterion 示例命令可执行
+exit=0
+m2-goal-create exit=0
+
+----- m2-old-human-owner-exit1
+$ C:/SoftWare/Anconda/python.exe -m project_memory goal transition --repo . --id G-BAD --to approved --approved-by human-owner --reason 旧文档示例
+exit=1
+m2-old-human-owner-exit1 exit=1
+
+----- m2-goal-create-auth
+$ C:/SoftWare/Anconda/python.exe -m project_memory goal create --repo . --id G-AUTH --title 修复认证绕过 --outcome 未授权请求被拒绝 --owner backend-team --criterion 无令牌请求返回\ 401
+exit=0
+m2-goal-create-auth exit=0
+
+----- m2-new-email
+$ C:/SoftWare/Anconda/python.exe -m project_memory goal transition --repo . --id G-AUTH --to approved --approved-by owner@example.com --reason Grooming\ 通过
+exit=0
+m2-new-email exit=0
+
+----- m3-to-active
+$ C:/SoftWare/Anconda/python.exe -m project_memory goal transition --repo . --id G-AUTH --to active
+exit=0
+m3-to-active exit=0
+
+----- m3-to-evaluating
+$ C:/SoftWare/Anconda/python.exe -m project_memory goal transition --repo . --id G-AUTH --to evaluating
+exit=0
+m3-to-evaluating exit=0
+
+demoted criteria to required=False: 1
+exit=0
+
+----- m3-evaluate-empty-required
+$ C:/SoftWare/Anconda/python.exe -m project_memory goal evaluate --repo . --id G-AUTH
+exit=0
+m3-evaluate-empty-required exit=0
+
+M-3 structured fields:
+{"satisfied": false, "evaluation_status": "insufficient_evidence", "no_required_criteria": true, "status_problems": ["no_required_criteria"], "effective_status": "evaluating", "status_trusted": null}
+
+----- m3-transition-achieved-exit1
+$ C:/SoftWare/Anconda/python.exe -m project_memory goal transition --repo . --id G-AUTH --to achieved --approved-by owner@example.com --reason 空必达集合不应达成
+exit=1
+m3-transition-achieved-exit1 exit=1
+
+m3-transition stderr: project-memory: Goal 的成功标准尚未满足（insufficient_evidence）：无；不能仅凭 Issue 关闭或 Agent 声明标记 achieved
+
+receipts:
+<temp>/.project-memory/receipts/EXE-e37ef267664fa17ab094.json
+
+===== pytest (full default) =====
+pytest exit=0
+........................................................................ [ 28%]
+........................................................................ [ 56%]
+........................................................................ [ 84%]
+...................................ss..                                  [100%]
+253 passed, 2 skipped in 189.56s (0:03:09)
+
+===== doc diff (working tree) =====
+M	README.md
+M	docs/OPERATIONS.zh-CN.md
+M	skill/project-memory/references/workflows.md
+
+done

@@ -88,13 +88,18 @@ python3 -m project_memory verify --repo . \
 `test-run` 把提交导出到不可变快照后执行命令，并记录退出码、日志哈希和快照摘要：
 
 ```bash
-# 本地模式：普通子进程，没有操作系统隔离；收据标记为 local_untrusted
-python3 -m project_memory test-run --repo . --command 'python -m unittest' --agent qoder
+# 本地模式：普通子进程，没有操作系统隔离。必须显式加 --allow-local-untrusted，
+# 否则拒绝执行（exit 3）；收据标记为 local_untrusted。命令以当前用户权限直接在宿主
+# 上运行，不可信，仅在了解风险时使用；需要隔离时改用 --trusted。
+python3 -m project_memory test-run --repo . --command 'python -m unittest' \
+  --agent qoder --allow-local-untrusted
 
 # 可信模式：WSL2 user/mount/PID/network namespace，预检失败即 BLOCKED，不回退
 python3 -m project_memory test-run --repo . --command 'python3 -m unittest' \
   --agent qoder --trusted --timeout 900
 ```
+
+执行模式必须二选一：`--allow-local-untrusted`（宿主本地、无隔离）或 `--trusted`（WSL2 隔离）。两者都不给或同时给出都会被拒绝（exit 3，不建快照、不写收据）。
 
 可信模式会屏蔽 Windows 盘符、宿主 home、`/root`、`/var`、`/tmp` 和 `/etc/ssh` 等路径，只保留快照副本和显式环境变量 allowlist；命令在 `env -i` 下运行，无默认路由。收据的完整性可以重算，但收据本身位于仓库内、没有外部签名，所以只标为 `isolated_local_attestation`，不等于可信来源。
 
@@ -117,7 +122,7 @@ python3 -m project_memory goal evaluate --repo . --id G-AUTH
 python3 -m project_memory reconcile --repo . --fail-on high
 ```
 
-`goal evaluate` 满足时退出 0，未满足时退出 2（没有可信授权来源时始终属于未满足）；`verify` 未通过时退出 2；`run resume` 在 `needs_handoff`、`needs_human` 或 `stale_base` 时退出 2。`reconcile` 只报告，不自动改 canonical 文档，也不关闭任务。
+`goal evaluate` 满足时退出 0，未满足时退出 2（没有可信授权来源时始终属于未满足）；例外是必达标准集合为空（例如所有判据被改成可选或删除）：此时退出 0，但 `satisfied=false`、`evaluation_status=insufficient_evidence`、`status_problems` 含 `no_required_criteria`，自动化必须读 `satisfied`/`effective_status`/`status_trusted`/`status_problems` 而不是只看退出码；`verify` 未通过时退出 2；`run resume` 在 `needs_handoff`、`needs_human` 或 `stale_base` 时退出 2。`reconcile` 只报告，不自动改 canonical 文档，也不关闭任务。
 
 ## 两种审计范围
 
@@ -155,7 +160,7 @@ python3 -m project_memory init --repo /path/to/workspace --install none --profil
 | 登记执行 | `run start/checkpoint/finish/show/list` | 写 `.project-memory/runs/` 和 handoff |
 | 恢复执行 | `run resume --task 325 [--run-id run-1]` | 否 |
 | 独立验证 | `verify --target-run A --verifier-run B --standard '...' --verdict pass --evidence-level locally_observed --test-receipt .project-memory/receipts/EXE-*.json ...` | 写验证和缺陷记录 |
-| 快照执行 | `test-run --command '...' [--trusted] [--wsl-distro Ubuntu]` | 写快照、日志和收据 |
+| 快照执行 | `test-run --command '...' (--trusted \| --allow-local-untrusted) [--wsl-distro Ubuntu]`，执行模式必须二选一 | 写快照、日志和收据 |
 | 缺陷跟踪 | `defect list/show/update` | 更新缺陷状态 |
 | 知识对账 | `reconcile [--format markdown] [--fail-on high]` | 否，或写指定报告 |
 | 取任务上下文 | `start --issue 325 --slug ORG/REPO` 或 `start --task-file task.json` | 否 |

@@ -55,7 +55,7 @@ python3 -m project_memory goal create --repo . \
   --issue 325 --adr ADR-0001 --dry-run
 ```
 
-`--dry-run` 只返回将要写入的记录，不落盘；`goal create`、`goal transition` 和 `defect update` 都支持。`--status approved` 或 `--status active` 必须同时提供 `--approved-by`；HTTP/CLI 参数不是人工批准，批准人必须真实存在。
+`--dry-run` 只返回将要写入的记录，不落盘；`goal create`、`goal transition` 和 `defect update` 都支持。`--status approved` 或 `--status active` 必须同时提供 `--approved-by`；HTTP/CLI 参数不是人工批准，批准人必须真实存在。`--approved-by` 必须是邮箱格式（如 `owner@example.com`），只作追溯标识，不是认证：它记录谁声明了批准，不校验邮箱归属。
 
 查看、列出和评估：
 
@@ -65,7 +65,7 @@ python3 -m project_memory goal list --repo .
 python3 -m project_memory goal evaluate --repo . --id G-AUTH
 ```
 
-`evaluate` 只看证据，不看 Issue 是否关闭。未满足时退出码为 2，满足时为 0。评估结论有 caveat：它检查证据是否存在并绑定当前提交，不判断证据在语义上是否支持标准。
+`evaluate` 只看证据，不看 Issue 是否关闭。未满足时退出码为 2，满足时为 0。例外：必达标准集合为空（例如所有判据被改成可选或删除）时退出 0，但 `satisfied=false`、`evaluation_status=insufficient_evidence`、`status_problems` 含 `no_required_criteria`；自动化要读 `satisfied`/`effective_status`/`status_trusted`/`status_problems`，不要只看退出码。评估结论有 caveat：它检查证据是否存在并绑定当前提交，不判断证据在语义上是否支持标准。
 
 添加证据：
 
@@ -78,7 +78,7 @@ python3 -m project_memory goal evidence --repo . --id G-AUTH \
 
 python3 -m project_memory goal evidence --repo . --id G-AUTH \
   --criterion C2 --kind manual --ref 'review:https://...' \
-  --approved-by 'human-owner'
+  --approved-by 'owner@example.com'
 ```
 
 证据类型：
@@ -92,11 +92,11 @@ python3 -m project_memory goal evidence --repo . --id G-AUTH \
 
 ```bash
 python3 -m project_memory goal transition --repo . --id G-AUTH \
-  --to approved --approved-by 'human-owner' --reason 'Grooming 通过'
+  --to approved --approved-by 'owner@example.com' --reason 'Grooming 通过'
 python3 -m project_memory goal transition --repo . --id G-AUTH --to active
 python3 -m project_memory goal transition --repo . --id G-AUTH --to evaluating
 python3 -m project_memory goal transition --repo . --id G-AUTH \
-  --to achieved --approved-by 'human-owner' --reason 'C1-C3 均有独立验证'
+  --to achieved --approved-by 'owner@example.com' --reason 'C1-C3 均有独立验证'
 ```
 
 `blocked` 和 `cancelled` 必须提供 `--reason`。`achieved` 会先评估标准，未满足时拒绝。`evaluate` 给出 `achieved` 建议不等于批准，转换仍需要授权人。
