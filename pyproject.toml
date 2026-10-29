@@ -25,3 +25,8 @@ script-files = [
     "bin/project-memory.cmd",
     "_project_memory_launcher.py",
 ]
+
+[tool.pytest.ini_options]
+# 只收集正式测试；evidence/ 下的历史探针文件名也以 test_ 开头，
+# 根目录 pytest 会因同名模块冲突而收集失败（B5B F-2）。
+testpaths = ["tests"]
