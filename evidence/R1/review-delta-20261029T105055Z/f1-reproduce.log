@@ -1,0 +1,22 @@
+total=42
+raw_hits=29
+lf_hits=17
+blob_hits=19
+any_hit=41/42
+MISSES:
+  environment.txt
+    manifest=d4f6d19fab1a3cd728c44f24724fc21e17139a2ca277fcf92e3aa2c4ce88f5c3
+    raw=44c6eba74e51fd726c607588d50f1bff5a6f6883dc495ea354cacd74fbc90a52
+    lf_norm=a78b12ed17ebc4c613474c1102d44b794d04c554af837f3f88318e63710246c2
+    git_blob_sha256=a78b12ed17ebc4c613474c1102d44b794d04c554af837f3f88318e63710246c2
+    worktree_bom=56ff66e58e5a30023ff83ef8367231e79eb859e2495f2fa60c18f72fb7e4e35a
+    worktree_plus_lf=744f3812065e671d2ee56733d918da57a36c013038d76ad716df1dad71ff2713
+    cr_only_norm=44c6eba74e51fd726c607588d50f1bff5a6f6883dc495ea354cacd74fbc90a52
+    blob_oid=e27a17fc7bee71aacf2888afa538772c222db463
+    size=590
+    crlf_pairs=13 lone_cr=0
+NUL/size of flagged logs:
+  receipts/trusted/run.log: size=345 nul=42
+  receipts/trusted-host-attempt/run.log: size=443 nul=42
+Other sizes:
+  environment.txt: size=590 nul=0

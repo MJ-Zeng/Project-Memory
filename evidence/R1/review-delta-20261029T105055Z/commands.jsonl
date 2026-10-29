@@ -1,3 +1,6 @@
 {"seq":1,"cmd":"git rev-parse HEAD; git branch --show-current","exit":0,"note":"candidate sha and review branch confirmed"}
 {"seq":2,"cmd":"git diff --name-status/--stat/--numstat bb06037..9d5f957","exit":0,"note":"11 files, only allowed doc/evidence/task paths; no binary"}
 {"seq":3,"cmd":"git rev-parse <base>:evidence/B5B/run-20261029T015035Z vs <cand>:...","exit":0,"note":"both e6e61ba... identical tree; B5B run dir zero change"}
+{"seq":4,"cmd":"python f1-reproduce.py (independent 42-item raw/LF/blob compare)","exit":0,"note":"total=42 raw=29 lf=17 blob=19 any=41/42; miss=environment.txt"}
+{"seq":5,"cmd":"tr -cd '\000' < receipts/trusted/run.log | wc -c; sha256sum; git cat-file blob","exit":0,"note":"345B/42 NUL and 443B/42 NUL confirmed directly"}
+{"seq":6,"cmd":"sha256sum/tr -d '\r'/git cat-file for README.md,commands.jsonl,default-refused.exit","exit":0,"note":"manifest matches LF/blob; validates script logic"}
