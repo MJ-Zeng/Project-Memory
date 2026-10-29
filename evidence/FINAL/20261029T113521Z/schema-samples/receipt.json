@@ -1,0 +1,63 @@
+{
+  "schema_version": "1.1",
+  "kind": "execution_receipt",
+  "receipt_id": "EXE-f0191cea783d0a922b3f",
+  "repo_id": "16eee32574fcc2e3ed2fe1628b70fcf7ef8b55e956e45b24eaebc707caec1588",
+  "repo_identity": {
+    "schema": "1.1",
+    "kind": "root-only",
+    "remote": null,
+    "root_commits": [
+      "e0877c7b0f9a58a91e14f3594ed986e5b94d1e4d"
+    ]
+  },
+  "commit_sha": "e0877c7b0f9a58a91e14f3594ed986e5b94d1e4d",
+  "tree_sha": "6586b983eae3f754378436a6a6c72a339c794f4c",
+  "snapshot_id": "SNP-18807fc618f3b3a0",
+  "snapshot_sha256": "2a226cbf7e4de6fddebefc11ad4654fb98edc2abd9d892fb3eaa3edb21104290",
+  "command": "C:\\SoftWare\\Anconda\\python.exe -c import sys; print('1 passed'); sys.exit(0)",
+  "exit_code": 0,
+  "log_path": ".project-memory/logs/EXE-f0191cea783d0a922b3f.log",
+  "log_sha256": "fde54d9e41dbf0086bb961c3dfc5b8b623789695878d64c5fc307b56f5eed392",
+  "log_bytes": 278,
+  "started_at": "2026-10-29T11:43:47+00:00",
+  "finished_at": "2026-10-29T11:43:47+00:00",
+  "executed_by": "final-review",
+  "subject": "",
+  "executor": {
+    "name": "project-memory",
+    "mode": "local",
+    "python": "3.12.4",
+    "platform": "Windows-11-10.0.26300-SP0"
+  },
+  "isolation": {
+    "mode": "none",
+    "os_isolation": false,
+    "sandbox": "plain-child-process",
+    "workspace": "immutable-snapshot",
+    "python_env": {
+      "path_source": "snapshot-only",
+      "safepath": true,
+      "nousersite": true,
+      "stripped": [
+        "PYTHONPATH",
+        "PYTHONHOME",
+        "PYTHONSTARTUP",
+        "PYTHONUSERBASE",
+        "PYTHONSAFEPATH",
+        "PYTHONNOUSERSITE"
+      ]
+    }
+  },
+  "execution_provenance": {
+    "kind": "local_untrusted",
+    "launcher": "project_memory.execution",
+    "attested": false,
+    "trusted": false,
+    "reason": "普通子进程；宿主文件系统与网络可见，收据只能证明内容未被后续修改"
+  },
+  "trust": "local_untrusted",
+  "caveat": "收据只证明该命令在这个快照内以该退出码执行过；不证明测试语义覆盖了任何业务标准，也不证明来源可信。",
+  "content_sha256": "1ab5781f95ab4caced1f982cd43243d2a2325f896e745c0941afe729bf855322",
+  "execution_attestation_path": ".project-memory/attestations/ATT-E2E.json"
+}

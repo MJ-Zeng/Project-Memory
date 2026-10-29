@@ -1,0 +1,137 @@
+{
+  "schema_version": "1.2",
+  "kind": "verification_record",
+  "verification_id": "VER-e30f913422bf",
+  "task": "E2E",
+  "goal_id": "G-E2E",
+  "target_run": "run-target",
+  "verifier_run": "run-verifier",
+  "target_run_sha256": "92cb1acba448a22f12b0d1b31e4d882479036eda89031bb85deeaaaab62e8e9d",
+  "verifier_run_sha256": "894caa23b0532888d478b0ffaad7be7bdad118d03b886ff579bd4d60274cbe81",
+  "goal_criteria_sha256": "c13c299ac09f49001c728ac847dfc223eec5344c4d50ad0114c9847c6cb6f514",
+  "goal_criteria_legacy_sha256": "b17a716f397aba14c865cc834f38fb5f0c1976531199393d2b186271781e4127",
+  "verifier": {
+    "agent": "verifier-agent",
+    "model": {
+      "id": "verifier-model",
+      "provider": "qodercn"
+    },
+    "tool": "",
+    "session_id": ""
+  },
+  "independence": {
+    "distinct": true,
+    "basis": [
+      "agent",
+      "model"
+    ],
+    "note": "独立会话或不同模型只证明记录不同，不证明验证结论正确。"
+  },
+  "target_head_sha": "e0877c7b0f9a58a91e14f3594ed986e5b94d1e4d",
+  "current_head_sha": "e0877c7b0f9a58a91e14f3594ed986e5b94d1e4d",
+  "stale": false,
+  "standard": "acceptance",
+  "verdict": "pass",
+  "evidence_level": "locally_observed",
+  "trust_level": "locally_observed",
+  "status": "VERIFIED",
+  "mapping_status": "complete",
+  "criterion_evidence": [
+    {
+      "criterion_id": "C1",
+      "goal_id": "G-E2E",
+      "task_id": "E2E",
+      "criterion_description": "模块通过测试",
+      "target_repository": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\final-e2e-toq52gst\\repo",
+      "target_commit_sha": "e0877c7b0f9a58a91e14f3594ed986e5b94d1e4d",
+      "evidence_id": "EV-1",
+      "evidence_source": "test",
+      "evidence_command": "C:\\SoftWare\\Anconda\\python.exe -c import sys; print('1 passed'); sys.exit(0)",
+      "evidence_log": ".project-memory/logs/EXE-f0191cea783d0a922b3f.log",
+      "evidence_exit_code": 0,
+      "evidence_receipt": ".project-memory/receipts/EXE-f0191cea783d0a922b3f.json",
+      "receipt_id": "EXE-f0191cea783d0a922b3f",
+      "receipt_sha256": "1ab5781f95ab4caced1f982cd43243d2a2325f896e745c0941afe729bf855322",
+      "snapshot_id": "SNP-18807fc618f3b3a0",
+      "snapshot_sha256": "2a226cbf7e4de6fddebefc11ad4654fb98edc2abd9d892fb3eaa3edb21104290",
+      "execution_status": "passed",
+      "coverage_claim": "覆盖对应标准",
+      "coverage_review_status": "confirmed",
+      "human_review_claimed": false,
+      "independent_verifier": "verifier-agent",
+      "verification_result": "pass",
+      "description_match": true,
+      "observed_level": "locally_observed",
+      "receipt_integrity_valid": true,
+      "receipt_provenance": {
+        "kind": "local_untrusted",
+        "trusted": false,
+        "reason": "本地启动器；没有操作系统隔离，也没有外部签名来源"
+      },
+      "execution_trust": "local_untrusted",
+      "execution_verified": false,
+      "semantic_coverage_verified": false,
+      "evidence_state": "MANUAL_REVIEW_REQUIRED",
+      "coverage_confirmed": false,
+      "evidence_matched": true,
+      "problems": [
+        "语义覆盖未由可信人工来源确认（不是 VERIFIED）"
+      ]
+    }
+  ],
+  "covered_criteria": [],
+  "missing_criteria": [],
+  "verified": true,
+  "checks": {
+    "tests": {
+      "command": "C:\\SoftWare\\Anconda\\python.exe -c import sys; print('1 passed'); sys.exit(0)",
+      "exit_code": 0,
+      "log": ".project-memory/logs/EXE-f0191cea783d0a922b3f.log",
+      "log_exists": true,
+      "log_content_sha256": "fde54d9e41dbf0086bb961c3dfc5b8b623789695878d64c5fc307b56f5eed392",
+      "worktree_dirty_at_verification": false,
+      "tracked_changes_at_verification": "",
+      "tracked_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "receipt": ".project-memory/receipts/EXE-f0191cea783d0a922b3f.json",
+      "receipt_id": "EXE-f0191cea783d0a922b3f",
+      "receipt_sha256": "1ab5781f95ab4caced1f982cd43243d2a2325f896e745c0941afe729bf855322",
+      "snapshot_id": "SNP-18807fc618f3b3a0",
+      "snapshot_sha256": "2a226cbf7e4de6fddebefc11ad4654fb98edc2abd9d892fb3eaa3edb21104290",
+      "receipt_integrity_valid": true,
+      "execution_trust": "local_untrusted",
+      "execution_provenance": {
+        "kind": "local_untrusted",
+        "trusted": false,
+        "reason": "本地启动器；没有操作系统隔离，也没有外部签名来源"
+      }
+    },
+    "ci": {
+      "url": "",
+      "status": "not_provided",
+      "provenance": "none"
+    },
+    "review": {
+      "url": "",
+      "state": "not_provided",
+      "provenance": "none"
+    }
+  },
+  "findings": [],
+  "created_at": "2026-10-29T11:43:47+00:00",
+  "revision": 1,
+  "authority_evaluation": {
+    "trusted": false,
+    "status": "unconfigured",
+    "reason": "未配置受保护的信任锚（PROJECT_MEMORY_TRUST_ANCHOR）",
+    "anchor_id": null,
+    "issuer": null
+  },
+  "authority": {
+    "status": "trusted",
+    "anchor_id": "final-review-test-anchor",
+    "issuer": "final-review-test-signer",
+    "algorithm": "rsa-sha256",
+    "signed_payload_sha256": "16325634b77da9eee3251579508f7d1fd4288341704095b864031ef739f2db57",
+    "signature_b64": "IY1SKqaKlLIiNshoowSpMhA+0Wb9sNYywKWRu0LjY74vBCf2fHLK/o/Xtcgkq1o2+mhfQzHH2uypI+sxZav/NTTBCLaHEtnED+XahOVkEF0v4IdYm5nReK5JOo8i3ix7lWUfUr78C+pOVdJExL3Jp4mrferxwxZ+Sz8Ay3SYcwJ+YEifpobbmthteZ/UBP/QnZKytdsP/OyUXr7M4DeFMlxpTqUHvufccsIJpvj5peZWicbsnuoqixDdaqAgr/VVvi09xUJ6EcCYLUdV73yfIS8USDg8/I3iOg7zwbz1jfRpGPX9efkRhOd4fahXCnWqtcCSVtplwjTEm3LGrFnynw=="
+  }
+}

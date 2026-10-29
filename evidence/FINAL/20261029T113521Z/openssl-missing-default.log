@@ -1,0 +1,6 @@
+sssssssssssssssssssssssssssssssssssss                                    [100%]
+=========================== short test summary info ===========================
+SKIPPED [13] ..\..\..\..\..\..\..\..\Users\ZMJ\AppData\Roaming\Python\Python312\site-packages\_pytest\unittest.py:523: 找不到 openssl；B2 签名测试需要测试期签名者；设置 PROJECT_MEMORY_REQUIRE_OPENSSL=1 可要求失败
+SKIPPED [10] ..\..\..\..\..\..\..\..\Users\ZMJ\AppData\Roaming\Python\Python312\site-packages\_pytest\unittest.py:523: 找不到 openssl；B3 签名测试需要测试期签名者；设置 PROJECT_MEMORY_REQUIRE_OPENSSL=1 可要求失败
+SKIPPED [14] ..\..\..\..\..\..\..\..\Users\ZMJ\AppData\Roaming\Python\Python312\site-packages\_pytest\unittest.py:523: 找不到 openssl；B4 签名测试需要测试期签名者；设置 PROJECT_MEMORY_REQUIRE_OPENSSL=1 可要求失败
+37 skipped in 0.07s

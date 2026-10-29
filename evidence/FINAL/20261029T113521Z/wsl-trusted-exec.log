@@ -1,0 +1,8 @@
+rootdir: C:\Documents\02_Research\Code\project-memory-verification-lab\import-workspace\pm-pilot-03\.pilot\final-v1
+configfile: pyproject.toml
+plugins: anyio-4.15.1
+collected 1 item
+
+tests\test_security_b5b.py .                                             [100%]
+
+============================== 1 passed in 2.70s ==============================

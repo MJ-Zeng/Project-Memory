@@ -1,0 +1,177 @@
+{
+  "worktree": "C:\\Documents\\02_Research\\Code\\project-memory-verification-lab\\import-workspace\\pm-pilot-03\\.pilot\\final-v1",
+  "temp_repo": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\final-e2e-toq52gst\\repo",
+  "base_commit": "e0877c7b0f9a58a91e14f3594ed986e5b94d1e4d",
+  "anchor": {
+    "anchor_id": "final-review-test-anchor",
+    "issuer": "final-review-test-signer",
+    "algorithm": "rsa-sha256",
+    "note": "test-only RSA key generated for this run; load_anchor patched"
+  },
+  "steps": [
+    {
+      "step": "cli-init",
+      "argv": [
+        "init",
+        "--install",
+        "none",
+        "--profile",
+        "overlay"
+      ],
+      "exit_code": 0,
+      "created": true,
+      "stderr": ""
+    },
+    {
+      "step": "cli-goal-create",
+      "exit_code": 0,
+      "goal_file": true,
+      "stderr": ""
+    },
+    {
+      "step": "cli-goal-evaluate-empty",
+      "exit_code": 2,
+      "satisfied": false,
+      "stderr": ""
+    },
+    {
+      "step": "receipt-and-attestation",
+      "receipt_path": ".project-memory/receipts/EXE-f0191cea783d0a922b3f.json",
+      "log": ".project-memory/logs/EXE-f0191cea783d0a922b3f.log",
+      "exit_code": 0,
+      "attestation": ".project-memory/attestations/ATT-E2E.json"
+    },
+    {
+      "step": "verified-and-satisfied",
+      "verification": ".project-memory\\verifications\\E2E\\VER-e30f913422bf.json",
+      "satisfied": true,
+      "evaluation_status": "satisfied"
+    },
+    {
+      "step": "cli-goal-evaluate-satisfied",
+      "exit_code": 0,
+      "satisfied": true,
+      "stderr": ""
+    },
+    {
+      "step": "cli-transition-approved",
+      "exit_code": 0,
+      "stderr": ""
+    },
+    {
+      "step": "cli-transition-active",
+      "exit_code": 0,
+      "stderr": ""
+    },
+    {
+      "step": "cli-transition-evaluating",
+      "exit_code": 0,
+      "stderr": ""
+    },
+    {
+      "step": "cli-transition-achieved",
+      "exit_code": 0,
+      "status": "achieved",
+      "checkpoint_request": {
+        "kind": "audit_checkpoint_request_result",
+        "path": ".project-memory/audit/head.request.json",
+        "payload": {
+          "approved_by": "lead@example.com",
+          "at": "2026-10-29T11:43:48+00:00",
+          "chain_head": "487a50f190fc9fb8db8685e1fa17c977731add23535e00593d2479babb51f1a3",
+          "chain_length": 5,
+          "checkpoint_id": "CKPT-c763dba88fae",
+          "evidence_sha256": "17c50c95018c8e5c0eca1c746383434d64b1c19ff541ac803b041dc2b0f5370a",
+          "goal_id": "G-E2E",
+          "kind": "audit_checkpoint",
+          "migration_sha256": null,
+          "schema_version": "1.3",
+          "status": "achieved"
+        },
+        "payload_sha256": "c2e906e075f80139f7186c301155209bb5ea11c43e4abef212e2659ff03174b5",
+        "requires": "由仓库外 anchor 私钥对 payload 的 canonical JSON 字节签名，再运行 audit checkpoint-attach；Agent 不能自行签名",
+        "schema_version": "1.3"
+      },
+      "stderr": ""
+    },
+    {
+      "step": "cli-checkpoint-request",
+      "exit_code": 0,
+      "request_exists": true,
+      "request_goal": "G-E2E",
+      "request_status": "achieved",
+      "request_chain_length": 5,
+      "stderr": ""
+    },
+    {
+      "step": "attach-unconfigured-anchor",
+      "result": "无法验证 checkpoint：未配置受保护的信任锚",
+      "head_exists": false
+    },
+    {
+      "step": "attach-foreign-key",
+      "result": "checkpoint 签名无效（untrusted）：签名验证失败",
+      "head_exists": false
+    },
+    {
+      "step": "attach-legit-and-verify",
+      "trusted": true,
+      "status": "valid",
+      "valid": true,
+      "authoritative": true,
+      "head": "487a50f190fc9fb8db8685e1fa17c977731add23535e00593d2479babb51f1a3",
+      "checkpoint_chain_head": "487a50f190fc9fb8db8685e1fa17c977731add23535e00593d2479babb51f1a3",
+      "checkpoint_goal": "G-E2E",
+      "checkpoint_status": "achieved",
+      "checkpoint_chain_length": 5
+    },
+    {
+      "step": "goal-show-achieved",
+      "effective_status": "achieved",
+      "status_trusted": true,
+      "status_problems": [],
+      "status_authority": "anchor_signed_checkpoint"
+    },
+    {
+      "step": "cli-audit-verify-test-anchor",
+      "exit_code": 0,
+      "status": "valid",
+      "authoritative": true
+    },
+    {
+      "step": "cli-audit-verify-no-anchor",
+      "exit_code": 2,
+      "status": "invalid",
+      "valid": false,
+      "problems": [
+        "checkpoint_untrusted"
+      ]
+    },
+    {
+      "step": "tamper-rebuilt-chain",
+      "valid": false,
+      "problems": [
+        "checkpoint_chain_mismatch"
+      ],
+      "effective_status": "achieved_unverified",
+      "status_trusted": false
+    },
+    {
+      "step": "unsigned-checkpoint",
+      "valid": false,
+      "authoritative": false,
+      "problems": [
+        "checkpoint_untrusted"
+      ],
+      "effective_status": "achieved_unverified",
+      "status_trusted": false
+    },
+    {
+      "step": "restored-authoritative",
+      "status": "valid",
+      "authoritative": true,
+      "effective_status": "achieved",
+      "status_trusted": true
+    }
+  ]
+}

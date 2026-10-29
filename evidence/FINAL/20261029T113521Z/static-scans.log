@@ -1,0 +1,39 @@
+== require-openssl switch occurrences ==
+./tests/openssl_support.py:4:must not treat that skip as a pass.  Set ``PROJECT_MEMORY_REQUIRE_OPENSSL=1``
+./tests/openssl_support.py:12:REQUIRE_ENV = 'PROJECT_MEMORY_REQUIRE_OPENSSL'
+./tests/test_security_r1.py:10:but ``PROJECT_MEMORY_REQUIRE_OPENSSL`` must turn that skip into a failure.
+
+== 'openssl' inside runtime package ==
+(none)
+
+== private key blocks in repo ==
+(none)
+
+== likely secrets patterns ==
+./tests/test_project_memory.py:1722:                GitHubReader('a/repo', token='super-secret-token').issue(1)
+
+== dangerous constructs in runtime ==
+(none)
+
+== subprocess call sites ==
+8
+
+== shell=True sites ==
+
+== version fields ==
+7:version = "1.0.0"
+9:requires-python = ">=3.11"
+10:dependencies = []
+2:__version__='1.0.0'
+# Changelog
+
+本项目遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 的结构；版本号从 1.0.0 起表示本试点的首个发布门槛。历史以 Git 提交为准。
+
+## [1.0.0] — 2026-10-29
+
+
+== local tags ==
+0
+== HEAD ==
+f79a85f49cbdf3d0e2804c3485c1ca630a226ec1
+?? evidence/FINAL/

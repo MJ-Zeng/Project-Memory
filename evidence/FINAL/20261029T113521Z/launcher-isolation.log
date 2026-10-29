@@ -1,0 +1,33 @@
+== 1) cmd wrapper with explicit interpreter ==
+exit=0
+1
+== 2) cmd wrapper, no interpreter on PATH ==
+exit=3
+project-memory: no Python interpreter found 
+== 3) sh wrapper with explicit interpreter ==
+exit=0
+1
+== 4) sh wrapper, no interpreter on PATH ==
+exit=127
+env: ‘sh’: No such file or directory
+== 5) sh wrapper under PYTHONPATH shadow ==
+exit=0
+/tmp/final-launch-GRib/5.out:0
+/tmp/final-launch-GRib/5.err:0
+MARKER_ABSENT
+== 6) bare python -m with contaminated PYTHONPATH ==
+exit=0
+== 7) wrapper copied without launcher ==
+exit=3
+project-memory: cannot locate the trusted launcher script 
+== 4b) sh wrapper, POSIX PATH without python ==
+exit=3
+project-memory: no Python interpreter found
+== 6b) bare -m from repo root with shadow on PYTHONPATH ==
+exit=3
+同名
+0
+== 6c) bare -m with shadow FIRST (cwd outside repo) ==
+exit=0
+SHADOW_INIT
+SHADOW_MAIN

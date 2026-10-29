@@ -1,0 +1,24 @@
+ evidence/FINAL/20261029T113521Z/commands.jsonl     |  14 +
+ evidence/FINAL/20261029T113521Z/e2e-run.log        |  21 +
+ evidence/FINAL/20261029T113521Z/e2e-summary.json   | 177 ++++
+ evidence/FINAL/20261029T113521Z/e2e_run.py         | 384 ++++++++
+ evidence/FINAL/20261029T113521Z/environment.txt    |  14 +
+ .../FINAL/20261029T113521Z/launcher-isolation.log  |  33 +
+ .../20261029T113521Z/openssl-missing-default.log   |   6 +
+ .../20261029T113521Z/openssl-missing-required.log  | 966 +++++++++++++++++++++
+ evidence/FINAL/20261029T113521Z/pytest-default.log |   5 +
+ .../20261029T113521Z/pytest-require-openssl.log    |   8 +
+ .../FINAL/20261029T113521Z/r1-gates-summary.json   |  96 ++
+ evidence/FINAL/20261029T113521Z/r1-gates.log       |   6 +
+ evidence/FINAL/20261029T113521Z/r1_gates.py        | 153 ++++
+ .../regression-security-targeted.log               |   2 +
+ .../schema-samples/audit-entry-first.json          |   1 +
+ .../schema-samples/checkpoint-head.json            |  21 +
+ .../schema-samples/checkpoint-request.json         |   1 +
+ .../20261029T113521Z/schema-samples/receipt.json   |  63 ++
+ .../schema-samples/verification-record.json        | 137 +++
+ evidence/FINAL/20261029T113521Z/sha256sums.txt     |  21 +
+ evidence/FINAL/20261029T113521Z/static-scans.log   |  39 +
+ .../FINAL/20261029T113521Z/wsl-trusted-exec.log    |   8 +
+ review/FINAL/REVIEW-FINAL.md                       | 183 ++++
+ 23 files changed, 2359 insertions(+)
