@@ -1,0 +1,19 @@
+utc=2026-10-29T11:12:08Z
+head=41fd6041c2fb477ee88c2d956581cb4408477f24
+remote=41fd6041c2fb477ee88c2d956581cb4408477f24
+== commits 9d5f957..HEAD ==
+41fd604 review(r1-delta): corroborate 9d5f957 review; direct python3 exit-49 measurement
+278bda2 review(r1-delta): independent PM-03 delta review of 9d5f957 (PASS)
+5dcfaff review(r1-delta): F1 41/42 independent reproduction
+a92df4c review(r1-delta): scope audit evidence for 9d5f957
+== non evidence/review changes since candidate (expect empty) ==
+[end]
+== tags at HEAD (expect empty) ==
+[end]
+== canonical report unchanged since 278bda2 ==
+at278bda2=d116e8d460d16a1c814c9a087f31530956c7295e5d1d49495a33b84474f21dae
+atHEAD   =d116e8d460d16a1c814c9a087f31530956c7295e5d1d49495a33b84474f21dae
+== untracked residue ==
+?? evidence/R1/review-delta-20261029T105055Z/env.txt
+?? evidence/R1/review-delta-20261029T105055Z/final-state.txt
+?? evidence/R1/review-delta-20261029T105055Z/pytest-default.log
