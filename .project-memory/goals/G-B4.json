@@ -1,0 +1,87 @@
+{
+  "adrs": [],
+  "approved_by": null,
+  "background": "Goal.status 可直接编辑为 achieved；_audit_attempt 只是无链 JSONL；删除/重写/重建审计不可检测；没有 audit verify/checkpoint。",
+  "constraints": [
+    "不删除/跳过既有测试",
+    "不放宽 authority/签名/来源门禁",
+    "不只加 hash 而不验证"
+  ],
+  "created_at": "2026-10-29T02:40:44+00:00",
+  "history": [
+    {
+      "at": "2026-10-29T02:40:44+00:00",
+      "by": "PM-01",
+      "from": null,
+      "reason": "created",
+      "to": "proposed"
+    }
+  ],
+  "id": "G-B4",
+  "issues": [],
+  "kind": "goal",
+  "outcome": "Goal 状态有可信/有效判定；审计链防删除/重写/重建；关键转换有可验证 checkpoint；Agent 不能自动签；合法流程可用。",
+  "owner": "PM-01",
+  "prs": [],
+  "revision": 1,
+  "schema_version": "1.2",
+  "status": "proposed",
+  "success_criteria": [
+    {
+      "evidence": [],
+      "id": "C1",
+      "required": true,
+      "statement": "直接改 Goal status 不被信任"
+    },
+    {
+      "evidence": [],
+      "id": "C2",
+      "required": true,
+      "statement": "删除 audit 行可检测"
+    },
+    {
+      "evidence": [],
+      "id": "C3",
+      "required": true,
+      "statement": "重写 audit 行可检测"
+    },
+    {
+      "evidence": [],
+      "id": "C4",
+      "required": true,
+      "statement": "整文件重建可检测"
+    },
+    {
+      "evidence": [],
+      "id": "C5",
+      "required": true,
+      "statement": "合法 transition/audit/checkpoint 通过"
+    },
+    {
+      "evidence": [],
+      "id": "C6",
+      "required": true,
+      "statement": "Agent 不能生成有效 checkpoint"
+    },
+    {
+      "evidence": [],
+      "id": "C7",
+      "required": true,
+      "statement": "空/缺 audit 不被当通过"
+    },
+    {
+      "evidence": [],
+      "id": "C8",
+      "required": true,
+      "statement": "既有 233 项与新增测试全绿"
+    },
+    {
+      "evidence": [],
+      "id": "C9",
+      "required": true,
+      "statement": "B5B/B5A/B3 不回归"
+    }
+  ],
+  "title": "B4 审计与 Goal 状态可验证、防篡改",
+  "updated_at": "2026-10-29T02:40:44+00:00"
+}
