@@ -1,0 +1,13 @@
+captured_at_utc: 2026-10-29T01:55:45Z
+candidate_sha: 89a14af60a0d4fa30ded850af610ee80ad7e9915
+base_sha: bb536ec1ff67a855e9207cc59de53851a0722f60
+branch: fix/b5b-test-run-isolation
+python_exe: C:/SoftWare/Anconda/python.exe
+python: 3.12.4 | packaged by Anaconda, Inc. | (main, Jun 18 2024, 15:03:56) [MSC v.1929 64 bit (AMD64)]
+platform: Windows-11-10.0.26300-SP0
+wsl_exe: /c/WINDOWS/System32/wsl.exe
+wsl_available: (True, 'ok')
+--- wsl --list --verbose ---
+  NAME              STATE           VERSION
+* Ubuntu            Running         2
+  docker-desktop    Stopped         2

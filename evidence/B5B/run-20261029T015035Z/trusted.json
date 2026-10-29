@@ -1,0 +1,13 @@
+{
+  "scenario": "trusted",
+  "exit_code": 0,
+  "host_marker": "absent",
+  "mode": "trusted",
+  "isolation_mode": "wsl2-user-mount-pid-net-namespace",
+  "os_isolation": true,
+  "provenance": "trusted_launcher",
+  "trust": "isolated_local_attestation",
+  "attestation_path": ".project-memory/attest/EXE-ed8d384a9d4beee5021e/attest.json",
+  "inner_exit_code": 0,
+  "receipt": ".project-memory/receipts/EXE-ed8d384a9d4beee5021e.json"
+}

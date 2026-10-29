@@ -1,0 +1,9 @@
+ docs/ARCHITECTURE.zh-CN.md                    |   2 +-
+ docs/OPERATIONS.zh-CN.md                      |   2 +-
+ docs/decisions/ADR-0006-test-run-isolation.md | 104 +++++++++++
+ fixtures/b5b/marker-command.py                |  22 +++
+ project_memory/cli.py                         |  11 ++
+ tasks/B5B-context-recovery.md                 |  24 +++
+ tests/test_project_memory.py                  |   2 +-
+ tests/test_security_b5b.py                    | 245 ++++++++++++++++++++++++++
+ 8 files changed, 409 insertions(+), 3 deletions(-)

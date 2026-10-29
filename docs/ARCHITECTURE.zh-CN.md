@@ -180,7 +180,7 @@ Agent Run 记录 Goal、任务、Agent、模型 provider/id、工具、会话 ID
 
 因此本地记录最多是 `MANUAL_REVIEW_REQUIRED`，`verified` 恒为 `false`；`goal evidence` 会拒绝自报 `status: VERIFIED` 的记录。信任锚通过仓库外的 `PROJECT_MEMORY_TRUST_ANCHOR` 配置，用 OpenSSL 验证 detached signature；未配置时一律 fail-closed。
 
-`test-run` 有两种模式。`local` 是普通子进程，收据标 `local_untrusted`，只用于本地开发。`trusted` 只在 WSL2 可用时进入 user/mount/PID/network namespace：把快照复制到 tmpfs，屏蔽 Windows 盘符、宿主 home、`/root`、`/var`、`/tmp`、`/run` 和 `/etc/ssh`，挂载新的 `/proc`，用 `env -i` allowlist 执行，并在沙箱内写 attestation。预检失败返回 `BLOCKED`，不回退普通子进程；attestation 在仓库内且无外部签名，所以只代表隔离事实，不代表来源可信。
+`test-run` 必须显式选择模式，默认不执行（无 `--trusted`/`--allow-local-untrusted` 即 exit 3）。`local`（`--allow-local-untrusted`）是普通子进程，收据标 `local_untrusted`，只用于本地开发。`trusted`（`--trusted`）只在 WSL2 可用时进入 user/mount/PID/network namespace：把快照复制到 tmpfs，屏蔽 Windows 盘符、宿主 home、`/root`、`/var`、`/tmp`、`/run` 和 `/etc/ssh`，挂载新的 `/proc`，用 `env -i` allowlist 执行，并在沙箱内写 attestation。预检失败返回 `BLOCKED`，不回退普通子进程；attestation 在仓库内且无外部签名，所以只代表隔离事实，不代表来源可信。
 
 pass 条件还要求没有 high 级发现、目标 head 未变化、验证记录属于同一 Goal。验证绑定 `target_head_sha`；代码变化后旧验证不自动有效。pass 把目标执行置为 `verified`，fail 置为 `failed`。
 
