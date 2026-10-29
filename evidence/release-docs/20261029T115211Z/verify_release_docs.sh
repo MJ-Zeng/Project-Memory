@@ -8,7 +8,9 @@ REPO_ROOT="$(cd "$OUT/../../.." && pwd)"
 PY="C:/SoftWare/Anconda/python.exe"
 CMD='"C:\SoftWare\Anconda\python.exe" -m unittest'
 
-exec > >(tee -a "$OUT/verification.log") 2>&1
+# Truncate the log instead of appending: tee -a can hash a half-written log.
+exec 3>&1 4>&2
+exec > "$OUT/verification.log" 2>&1
 
 echo "# release-docs doc-fix verification"
 echo "utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
@@ -133,3 +135,25 @@ echo "===== doc diff (working tree) ====="
 git -C "$REPO_ROOT" diff --name-status
 echo
 echo "done"
+
+# Stop writing the log before hashing it.
+exec 1>&3 2>&4
+echo "log_closed_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$OUT/verification.log"
+
+# Python writes CRLF to redirected stdout on Windows; .gitattributes stores this
+# directory as LF, so normalize before hashing or the manifest will not match a
+# fresh checkout.
+find "$OUT" -maxdepth 1 -type f ! -name sha256sums.txt -exec sed -i 's/\r$//' {} +
+
+(
+  cd "$OUT" || exit 1
+  find . -maxdepth 1 -type f ! -name sha256sums.txt -printf '%P\0' \
+    | LC_ALL=C sort -z \
+    | xargs -0 -r sha256sum -b > sha256sums.txt
+)
+
+echo "===== self-check (sha256sum -c) ====="
+( cd "$OUT" && sha256sum -c sha256sums.txt )
+CHECK_RC=$?
+echo "sha256sum -c exit=$CHECK_RC"
+exit "$CHECK_RC"

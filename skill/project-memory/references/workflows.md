@@ -77,7 +77,8 @@ python3 -m project_memory goal evidence --repo . --id G-AUTH \
   --criterion C2 --kind test --ref artifacts/tests-auth.log --exit-code 0
 
 python3 -m project_memory goal evidence --repo . --id G-AUTH \
-  --criterion C2 --kind manual --ref 'review:https://...' \
+  --criterion C2 --kind manual \
+  --ref 'https://github.com/example/repo/pull/12#pullrequestreview-1' \
   --approved-by 'owner@example.com'
 ```
 

@@ -19,14 +19,14 @@
     "sandbox": "plain-child-process",
     "workspace": "immutable-snapshot"
   },
-  "log": ".project-memory/logs/EXE-e37ef267664fa17ab094.log",
+  "log": ".project-memory/logs/EXE-643433b5dfc8b1408558.log",
   "mode": "local",
-  "path": ".project-memory/receipts/EXE-e37ef267664fa17ab094.json",
+  "path": ".project-memory/receipts/EXE-643433b5dfc8b1408558.json",
   "receipt": {
     "caveat": "收据只证明该命令在这个快照内以该退出码执行过；不证明测试语义覆盖了任何业务标准，也不证明来源可信。",
     "command": "\"C:\\SoftWare\\Anconda\\python.exe\" -m unittest",
-    "commit_sha": "3d236341ffee109185a8512a27342b27af234ab5",
-    "content_sha256": "cf7ffe3b5b3755c91f86fd08c83212d0f76fcd5b37bb877365fac708ba4a6291",
+    "commit_sha": "2ed896d70ba4fb1a0885dc3628b862b9493e8ea2",
+    "content_sha256": "c338b0fb213f9e87f6ebdb35981e26c680c2acec9f2376b7da1acf6027ad8cf4",
     "executed_by": "qoder",
     "execution_provenance": {
       "attested": false,
@@ -42,7 +42,7 @@
       "python": "3.12.4"
     },
     "exit_code": 0,
-    "finished_at": "2026-10-29T11:52:43+00:00",
+    "finished_at": "2026-10-29T12:13:05+00:00",
     "isolation": {
       "mode": "none",
       "os_isolation": false,
@@ -64,29 +64,29 @@
     },
     "kind": "execution_receipt",
     "log_bytes": 330,
-    "log_path": ".project-memory/logs/EXE-e37ef267664fa17ab094.log",
-    "log_sha256": "bbfbf87e67b0e7ec0395e39086be736765caee64930d5506142f91eae0254dda",
-    "receipt_id": "EXE-e37ef267664fa17ab094",
-    "repo_id": "3c63441135bb81a29571c967ca7d36a43dade71ef75adeb6c3af0ceccc6bf6b2",
+    "log_path": ".project-memory/logs/EXE-643433b5dfc8b1408558.log",
+    "log_sha256": "9446c453f271f6ef3411dc63023354474a176a426289c3cd22b1ff6b5837ecff",
+    "receipt_id": "EXE-643433b5dfc8b1408558",
+    "repo_id": "1efc649fefd7136fdeb14ea661dadd4679b8005f552915a9f6030ca3aae56cc8",
     "repo_identity": {
       "kind": "root-only",
       "remote": null,
       "root_commits": [
-        "8386b9a8892580dc8b06f08f04f80e320619b442"
+        "f3f62f5214af74c2c6039dcd73ca0bebde2fb1df"
       ],
       "schema": "1.1"
     },
     "schema_version": "1.1",
-    "snapshot_id": "SNP-9bc470bf8cbd64bd",
-    "snapshot_sha256": "de71f57d484c26911bdda2ef5f935bcd2496feb1e99d277ea99b961a88752534",
-    "started_at": "2026-10-29T11:52:42+00:00",
+    "snapshot_id": "SNP-23bd2bfbd4b0b1fa",
+    "snapshot_sha256": "c4af285b4db046d18115321ed4c49e912f7c8a7ccd26824f72ba73066dfc7def",
+    "started_at": "2026-10-29T12:13:05+00:00",
     "subject": "",
-    "tree_sha": "546769c6029b52be3ae01dcd4bb07a0fd5e413cd",
+    "tree_sha": "1393cd0b7af18d9452ec8c760ada3ce4518205e4",
     "trust": "local_untrusted"
   },
   "snapshot": {
-    "commit_sha": "3d236341ffee109185a8512a27342b27af234ab5",
-    "created_at": "2026-10-29T11:52:42+00:00",
+    "commit_sha": "2ed896d70ba4fb1a0885dc3628b862b9493e8ea2",
+    "created_at": "2026-10-29T12:13:05+00:00",
     "file_count": 56,
     "files": {
       "docs/CURRENT_STATE.md": "1aa9695fc2597518475b498f944949d2770a7e28376c98a5d0ebb29d988f39b7",
@@ -142,14 +142,14 @@
       "project-memory/tooling/skill/project-memory/references/document-authoring.md": "6b3912040bd5e9a19bd9aebfc4a8039f41c14f57980da7a2d570780df0054260",
       "project-memory/tooling/skill/project-memory/references/governance.md": "2ba4ee7942d00339209c053da7e289c0b386199c765fb5b0805a2c2b6951cd73",
       "project-memory/tooling/skill/project-memory/references/onboarding.md": "762a8ab760736d1e03457f6fd90dd5da6ef8916978a42c8a7b37c6b89eed64d2",
-      "project-memory/tooling/skill/project-memory/references/workflows.md": "62c2d34421768e872e263e447fcdfd0fd9305c82e92ca037ed23cd4da41189dc",
+      "project-memory/tooling/skill/project-memory/references/workflows.md": "41c4887d5fa6fce6e0bb6a7f6f93b7060cab6dc11f119c69770ac44701056077",
       "project-memory/tooling/skill/project-memory/scripts/pm.sh": "d4fa2126e67a81e2be0d5ab0a20274cfa6465ca04cd4d3ab87ccead0a14e8216",
       "test_ok.py": "a89d757eee1613d670cd6cbcd12fcabf1bcc9ad7f5ae18fd1bdaee533d000e2a"
     },
     "kind": "execution_snapshot",
     "schema_version": "1.1",
-    "snapshot_id": "SNP-9bc470bf8cbd64bd",
-    "snapshot_sha256": "de71f57d484c26911bdda2ef5f935bcd2496feb1e99d277ea99b961a88752534",
-    "tree_sha": "546769c6029b52be3ae01dcd4bb07a0fd5e413cd"
+    "snapshot_id": "SNP-23bd2bfbd4b0b1fa",
+    "snapshot_sha256": "c4af285b4db046d18115321ed4c49e912f7c8a7ccd26824f72ba73066dfc7def",
+    "tree_sha": "1393cd0b7af18d9452ec8c760ada3ce4518205e4"
   }
 }

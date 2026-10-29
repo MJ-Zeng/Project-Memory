@@ -63,3 +63,19 @@
 - 未跑 `PROJECT_MEMORY_REQUIRE_OPENSSL=1` 全量（本轮仅文档，默认全量已足够证明未误改代码）。
 - 未复核生产 anchor、ACL、POSIX 安装等 REVIEW-FINAL §5 既有未验证项。
 - 文档示例在 Windows 上用 Anaconda 绝对路径替代 `python3`（README 已注明 Store 桩问题）；sh 包装器场景未重跑。
+
+## 8. 订正（2026-10-29，F-1/F-2 证据自校验）
+
+§6 的“工作树字节”自校验缺少行尾前提，原清单混用 CRLF 工作树字节与 LF 字节，且 `verification.log` 记录的是陈旧哈希，因此在提交后检出中不成立。现已修正：
+
+- `.gitattributes` 增加 `evidence/release-docs/** text eol=lf`（与 `evidence/B4/**`、`evidence/R1/**` 同款）。
+- `sha256sums.txt` 从 LF 字节重新生成：`sha256sum -b`、`LC_ALL=C` 排序、排除清单自身，覆盖目录内除自身外的全部文件。
+- `verify_release_docs.sh` 改为截断写 `verification.log`（不再 `tee -a` 追加），结束时把证据文件行尾统一为 LF、重生成清单并执行 `sha256sum -c`。脚本重跑会改写证据包，**重跑后必须一并提交证据文件与清单**。
+
+正确的自校验（在干净检出中执行，行尾为 LF，工作树字节等于提交 blob）：
+
+```bash
+cd evidence/release-docs/20261029T115211Z && sha256sum -c sha256sums.txt
+```
+
+前提是 `.gitattributes` 中的 `evidence/release-docs/** text eol=lf` 生效；若在旧检出上直接跑，`core.autocrlf=true` 可能留下 CRLF 字节，需重新检出该目录。
