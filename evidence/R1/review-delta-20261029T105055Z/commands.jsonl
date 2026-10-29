@@ -4,3 +4,8 @@
 {"seq":4,"cmd":"python f1-reproduce.py (independent 42-item raw/LF/blob compare)","exit":0,"note":"total=42 raw=29 lf=17 blob=19 any=41/42; miss=environment.txt"}
 {"seq":5,"cmd":"tr -cd '\000' < receipts/trusted/run.log | wc -c; sha256sum; git cat-file blob","exit":0,"note":"345B/42 NUL and 443B/42 NUL confirmed directly"}
 {"seq":6,"cmd":"sha256sum/tr -d '\r'/git cat-file for README.md,commands.jsonl,default-refused.exit","exit":0,"note":"manifest matches LF/blob; validates script logic"}
+{"seq":7,"cmd":"sha256sum -c sha256sums.txt (fix dir); changed-docs vs worktree vs git blob","exit":0,"note":"5/5 OK; blob 3/3 OK; worktree 3 FAILED due autocrlf CRLF (disclosed)"}
+{"seq":8,"cmd":"python3 --version; python --version; Anaconda python --version","exit":0,"note":"stubs exit 49 (no output); Anaconda Python 3.12.4"}
+{"seq":9,"cmd":"PYTHONUTF8=1 Anaconda python -m pytest -q -p no:cacheprovider -rs","exit":0,"note":"253 passed, 2 skipped in 493.40s"}
+{"seq":10,"cmd":"git tag --points-at HEAD; git log base..HEAD; git check-attr text eol; git config core.autocrlf","exit":0,"note":"no tag; evidence/B5B attr unspecified; autocrlf=true"}
+{"seq":11,"cmd":"observed concurrent PM-03 commit 278bda2; ran its sha256sums selfcheck","exit":0,"note":"other session report+evidence committed/pushed; its selfcheck 10/10 OK; product diff empty"}

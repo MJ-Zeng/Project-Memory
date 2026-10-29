@@ -1,0 +1,16 @@
+which python3:
+/c/Users/ZMJ/AppData/Local/Microsoft/WindowsApps/python3
+which python:
+/c/Users/ZMJ/AppData/Local/Microsoft/WindowsApps/python
+/c/SoftWare/Anconda/python
+--- python3 --version (store stub check) ---
+python3 exit=49
+stdout: 
+stderr: 
+--- python --version ---
+python exit=49
+stdout: 
+stderr: 
+--- real interpreter ---
+Python 3.12.4
+anaconda exit=0

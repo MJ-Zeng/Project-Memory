@@ -1,0 +1,31 @@
+== git status ==
+?? evidence/R1/review-delta-20261029T105055Z/env.txt
+?? evidence/R1/review-delta-20261029T105055Z/f2-python3-check.txt
+?? evidence/R1/review-delta-20261029T105055Z/posttest-checks.txt
+?? evidence/R1/review-delta-20261029T105055Z/pytest-default.log
+?? evidence/R1/review-delta-20261029T105055Z/pytest-delta.log
+?? evidence/R1/review-delta-20261029T105055Z/selfcheck-hashes.txt
+?? evidence/R1/review-delta-20261029T110713Z/
+== tags at HEAD ==
+(end)
+== commits base..HEAD ==
+5dcfaff review(r1-delta): F1 41/42 independent reproduction
+a92df4c review(r1-delta): scope audit evidence for 9d5f957
+9d5f957 docs(r1): correct B5B coverage count to 41/42 and note Windows python3
+== .gitattributes ==
+exists
+2:pilot/** text eol=lf
+3:tasks/** text eol=lf
+4:.project-memory/** text eol=lf
+5:docs/decisions/** text eol=lf
+6:evidence/B4/** text eol=lf
+7:evidence/R1/** text eol=lf
+11:bin/project-memory text eol=lf
+12:bin/project-memory.cmd text eol=crlf
+== check-attr evidence/B5B run dir ==
+evidence/B5B/run-20261029T015035Z/environment.txt: text: unspecified
+evidence/B5B/run-20261029T015035Z/environment.txt: eol: unspecified
+== crlf config ==
+true
+== pycache tracked? ==
+2

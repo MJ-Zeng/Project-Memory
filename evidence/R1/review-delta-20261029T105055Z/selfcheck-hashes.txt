@@ -1,0 +1,24 @@
+== self-check sha256sums.txt (cwd=fix dir) ==
+README.md: OK
+commands.jsonl: OK
+reproduce-b5b.sh: OK
+b5b-recheck.log: OK
+pytest-default.log: OK
+exit=0
+
+== changed-docs vs worktree (cwd=repo root) ==
+README.md: FAILED
+docs/OPERATIONS.zh-CN.md: FAILED
+evidence/B5B/README.md: FAILED
+sha256sum: WARNING: 3 computed checksums did NOT match
+exit=1
+
+== changed-docs vs git blob HEAD (LF bytes) ==
+OK  README.md
+OK  docs/OPERATIONS.zh-CN.md
+OK  evidence/B5B/README.md
+
+== worktree file hash vs LF-normalized ==
+README.md raw=6fec81ee70ceaf18634785f5723eb8510629d771eaa71cb385f78ef96cd14ba4 lf=77076cb4f800788d64252df46805c9af05ba8ef4a487585169f1b58087bd565e
+docs/OPERATIONS.zh-CN.md raw=bfd0e71a19c7a955db3fbdb5952215d0689239ec738519502b2ff8630efc732f lf=d3f0a790f619ebf7e73df5b54f26ed677e8fab133e7cf318603634856ba85dcb
+evidence/B5B/README.md raw=3219aef9ec5cb1dfa6eed2097b0caad59d5af39d12ac544742c9be3303df94eb lf=8d04fa68e6b98613b6c24cbfc05e5a1265da6a5530461f5530c70a0172cc9317

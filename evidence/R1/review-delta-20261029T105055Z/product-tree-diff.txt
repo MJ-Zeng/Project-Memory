@@ -1,0 +1,28 @@
+== product/test tree diff 9d5f957..HEAD (exclude evidence/review/tasks) ==
+[end]
+== all files changed 9d5f957..HEAD ==
+A	evidence/R1/review-delta-20261029T105055Z/b5b-reproduce.log
+A	evidence/R1/review-delta-20261029T105055Z/commands.jsonl
+A	evidence/R1/review-delta-20261029T105055Z/environment.txt
+A	evidence/R1/review-delta-20261029T105055Z/f1-crosscheck.txt
+A	evidence/R1/review-delta-20261029T105055Z/f1-readme-claims.txt
+A	evidence/R1/review-delta-20261029T105055Z/f1-reproduce.log
+A	evidence/R1/review-delta-20261029T105055Z/f1-reproduce.py
+A	evidence/R1/review-delta-20261029T105055Z/scope-b5b-integrity.txt
+A	evidence/R1/review-delta-20261029T105055Z/scope-commits.txt
+A	evidence/R1/review-delta-20261029T105055Z/scope-doc-diffs.txt
+A	evidence/R1/review-delta-20261029T105055Z/scope-name-status.txt
+A	evidence/R1/review-delta-20261029T105055Z/scope-stat.txt
+A	evidence/R1/review-delta-20261029T110713Z/b5b-reproduce.log
+A	evidence/R1/review-delta-20261029T110713Z/commands.jsonl
+A	evidence/R1/review-delta-20261029T110713Z/concurrency.txt
+A	evidence/R1/review-delta-20261029T110713Z/env.txt
+A	evidence/R1/review-delta-20261029T110713Z/f1-crosscheck.txt
+A	evidence/R1/review-delta-20261029T110713Z/f1-env-variants.txt
+A	evidence/R1/review-delta-20261029T110713Z/f2-python3.txt
+A	evidence/R1/review-delta-20261029T110713Z/pytest-default.log
+A	evidence/R1/review-delta-20261029T110713Z/scope.txt
+A	evidence/R1/review-delta-20261029T110713Z/selfcheck.txt
+A	evidence/R1/review-delta-20261029T110713Z/sha256sums.txt
+A	review/R1/PR-COMMENT-DELTA.md
+A	review/R1/REVIEW-R1-DELTA.md
