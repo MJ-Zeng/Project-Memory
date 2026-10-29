@@ -1,0 +1,75 @@
+{
+  "adrs": [],
+  "approved_by": null,
+  "background": "test-run 默认 mode=local，只有快照+环境清理，无 OS 隔离；CLI 只 warning 仍执行；Agent 可跑任意宿主代码。RC3 B5。",
+  "constraints": [
+    "不删除/跳过既有测试",
+    "不放宽 authority/签名/来源门禁",
+    "不只改 warning/文档"
+  ],
+  "created_at": "2026-10-29T01:35:53+00:00",
+  "history": [
+    {
+      "at": "2026-10-29T01:35:53+00:00",
+      "by": "PM-01",
+      "from": null,
+      "reason": "created",
+      "to": "proposed"
+    }
+  ],
+  "id": "G-B5B",
+  "issues": [],
+  "kind": "goal",
+  "outcome": "默认拒绝未隔离执行；显式 local/trusted 二选一；trusted 不可用 fail closed；收据不撒谎；B5A 不回归。",
+  "owner": "PM-01",
+  "prs": [],
+  "revision": 1,
+  "schema_version": "1.2",
+  "status": "proposed",
+  "success_criteria": [
+    {
+      "evidence": [],
+      "id": "C1",
+      "required": true,
+      "statement": "无模式 flag 时默认拒绝执行且无收据"
+    },
+    {
+      "evidence": [],
+      "id": "C2",
+      "required": true,
+      "statement": "显式 allow-local-untrusted 可执行且收据 local_untrusted"
+    },
+    {
+      "evidence": [],
+      "id": "C3",
+      "required": true,
+      "statement": "trusted 可用时隔离执行"
+    },
+    {
+      "evidence": [],
+      "id": "C4",
+      "required": true,
+      "statement": "trusted 不可用时 fail closed，不 fallback local"
+    },
+    {
+      "evidence": [],
+      "id": "C5",
+      "required": true,
+      "statement": "收据 isolation/provenance 与实际一致"
+    },
+    {
+      "evidence": [],
+      "id": "C6",
+      "required": true,
+      "statement": "B5A 包装器与环境清理不回归"
+    },
+    {
+      "evidence": [],
+      "id": "C7",
+      "required": true,
+      "statement": "既有 226 项与新增测试全绿"
+    }
+  ],
+  "title": "B5B 默认 test-run 不得静默执行未隔离代码",
+  "updated_at": "2026-10-29T01:35:53+00:00"
+}
