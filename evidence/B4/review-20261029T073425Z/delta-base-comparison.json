@@ -1,0 +1,52 @@
+{
+  "run": "review-20261029T073425Z",
+  "manifest": "evidence/B5B/run-20261029T015035Z/sha256sums.txt",
+  "shas": {
+    "base": "f7c91333bbc999626e87eb29555b2c7c1ccb1a8f",
+    "reviewed": "9fa14f853ed1fa8f473238ca1a0765b733711d65",
+    "delta": "e731a292cdba232f87c6bf86948d8d6a0d32ea75"
+  },
+  "note": "Profile computed as manifest_record vs (blob-as-is | LF->CRLF of blob). Identical across all three commits => B5B manifest mixed-EOL defect pre-exists and is not attributable to the .gitattributes change.",
+  "per_worktree": {
+    "base": {
+      "commit": "f7c91333bbc999626e87eb29555b2c7c1ccb1a8f",
+      "form_profile": {
+        "lf": 19,
+        "crlf": 22,
+        "neither": 1
+      },
+      "records_matching_working_tree": 29,
+      "add_noop_equal": "43/43",
+      "neither": [
+        "evidence/B5B/run-20261029T015035Z/environment.txt"
+      ]
+    },
+    "reviewed": {
+      "commit": "9fa14f853ed1fa8f473238ca1a0765b733711d65",
+      "form_profile": {
+        "lf": 19,
+        "crlf": 22,
+        "neither": 1
+      },
+      "records_matching_working_tree": 19,
+      "add_noop_equal": "41/43",
+      "neither": [
+        "evidence/B5B/run-20261029T015035Z/environment.txt"
+      ]
+    },
+    "delta": {
+      "commit": "e731a292cdba232f87c6bf86948d8d6a0d32ea75",
+      "form_profile": {
+        "lf": 19,
+        "crlf": 22,
+        "neither": 1
+      },
+      "records_matching_working_tree": 29,
+      "add_noop_equal": "43/43",
+      "neither": [
+        "evidence/B5B/run-20261029T015035Z/environment.txt"
+      ]
+    }
+  },
+  "profiles_identical": true
+}

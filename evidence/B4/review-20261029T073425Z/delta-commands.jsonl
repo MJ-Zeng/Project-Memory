@@ -1,0 +1,36 @@
+{"seq":1,"phase":"preflight","cmd":"git status --porcelain=v1 -b","exit":0,"observed":"## dev/v1.0...origin/dev/v1.0; clean"}
+{"seq":2,"phase":"preflight","cmd":"git rev-parse HEAD","exit":0,"observed":"f7c91333bbc999626e87eb29555b2c7c1ccb1a8f"}
+{"seq":3,"phase":"fetch","cmd":"git fetch origin --prune","exit":0,"observed":"9fa14f8..e731a29 fix/b4-audit-integrity -> origin/fix/b4-audit-integrity"}
+{"seq":4,"phase":"identify","cmd":"git rev-parse e731a292cdba232f87c6bf86948d8d6a0d32ea75^{commit}","exit":0,"observed":"e731a292cdba232f87c6bf86948d8d6a0d32ea75"}
+{"seq":5,"phase":"identify","cmd":"git rev-parse 9fa14f853ed1fa8f473238ca1a0765b733711d65^{commit}","exit":0,"observed":"9fa14f853ed1fa8f473238ca1a0765b733711d65"}
+{"seq":6,"phase":"identify","cmd":"git merge-base --is-ancestor 9fa14f853ed1fa8f473238ca1a0765b733711d65 e731a292cdba232f87c6bf86948d8d6a0d32ea75","exit":0,"observed":"ancestor YES"}
+{"seq":7,"phase":"identify","cmd":"git merge-base --is-ancestor f7c91333bbc999626e87eb29555b2c7c1ccb1a8f e731a292cdba232f87c6bf86948d8d6a0d32ea75","exit":0,"observed":"ancestor YES"}
+{"seq":8,"phase":"delta-scope","cmd":"git diff --name-status 9fa14f85..e731a292","exit":0,"observed":"M .gitattributes (only path)"}
+{"seq":9,"phase":"delta-scope","cmd":"git diff --numstat 9fa14f85..e731a292","exit":0,"observed":"1 1 .gitattributes"}
+{"seq":10,"phase":"delta-scope","cmd":"git diff 9fa14f85..e731a292","exit":0,"observed":"-evidence/** text eol=lf / +evidence/B4/** text eol=lf"}
+{"seq":11,"phase":"delta-scope","cmd":"git log 9fa14f85..e731a292","exit":0,"observed":"e731a29 fix(b4): scope LF evidence attribute to B4 only"}
+{"seq":12,"phase":"task-card","cmd":"sha256sum tasks/B4.md","exit":0,"observed":"3fcce10bb9b03293358a4beab40c0466bd3e40b59d7c0596d7fb8086d71649eb"}
+{"seq":13,"phase":"task-card","cmd":"git show e731a29:tasks/B4.md | sha256sum","exit":0,"observed":"3fcce10bb9b03293358a4beab40c0466bd3e40b59d7c0596d7fb8086d71649eb"}
+{"seq":14,"phase":"env","cmd":"git config --show-origin core.autocrlf","exit":0,"observed":"file:C:/Users/ZMJ/.gitconfig true"}
+{"seq":15,"phase":"env","cmd":"git config --show-origin core.eol","exit":1,"observed":"unset"}
+{"seq":16,"phase":"worktrees","cmd":"git worktree add .pilot/b4d-base f7c91333","exit":0,"observed":"detached at f7c9133"}
+{"seq":17,"phase":"worktrees","cmd":"git worktree add .pilot/b4d-reviewed 9fa14f85","exit":0,"observed":"detached at 9fa14f8"}
+{"seq":18,"phase":"worktrees","cmd":"git worktree add -b review/b4-e731a29 .pilot/b4d-delta e731a29","exit":0,"observed":"new branch review/b4-e731a29 at e731a29"}
+{"seq":19,"phase":"status","cmd":"git -C .pilot/b4d-base status --porcelain","exit":0,"observed":"empty"}
+{"seq":20,"phase":"status","cmd":"git -C .pilot/b4d-reviewed status --porcelain","exit":0,"observed":"M receipts/trusted-host-attempt/run.log; M receipts/trusted/run.log (F-1 reproduced)"}
+{"seq":21,"phase":"status","cmd":"git -C .pilot/b4d-delta status --porcelain","exit":0,"observed":"empty"}
+{"seq":22,"phase":"attr","cmd":"git -C .pilot/b4d-reviewed check-attr text eol -- .../trusted/run.log","exit":0,"observed":"text: set; eol: lf"}
+{"seq":23,"phase":"attr","cmd":"git -C .pilot/b4d-delta check-attr text eol -- .../trusted/run.log","exit":0,"observed":"text: unspecified; eol: unspecified"}
+{"seq":24,"phase":"attr","cmd":"git -C .pilot/b4d-delta check-attr text eol -- evidence/B4/20261029T031257Z/sha256sums.txt","exit":0,"observed":"text: set; eol: lf"}
+{"seq":25,"phase":"add-noop","cmd":"python .pilot/scripts/add_noop.py .pilot/b4d-delta evidence/B5B","exit":0,"observed":"43/43 equal"}
+{"seq":26,"phase":"add-noop","cmd":"python .pilot/scripts/add_noop.py .pilot/b4d-reviewed evidence/B5B","exit":0,"observed":"41/43 equal; mismatches trusted/run.log + trusted-host-attempt/run.log"}
+{"seq":27,"phase":"add-noop","cmd":"python .pilot/scripts/add_noop.py .pilot/b4d-base evidence/B5B","exit":0,"observed":"43/43 equal"}
+{"seq":28,"phase":"nul-logs","cmd":"sha256sum evidence/B5B/.../receipts/*/run.log (delta worktree)","exit":0,"observed":"trusted=d4b0a4e9...; trusted-host-attempt=2b999512...; baseline-local=436a73ea...; local-explicit=3e1ec1f9..."}
+{"seq":29,"phase":"b4-manifest","cmd":"cd evidence/B4/20261029T031257Z && sha256sum -c sha256sums.txt","exit":0,"observed":"22 OK (22/22)"}
+{"seq":30,"phase":"cleanliness","cmd":"git -C .pilot/b4d-delta checkout -- <two logs>; git status --porcelain","exit":0,"observed":"empty; hashes unchanged"}
+{"seq":31,"phase":"cleanliness","cmd":"git -C .pilot/b4d-delta update-index --refresh","exit":0,"observed":"rc=0; status empty"}
+{"seq":32,"phase":"base-compare","cmd":"python .pilot/scripts/manifest_modes.py {base,reviewed,delta} evidence/B5B/.../sha256sums.txt","exit":0,"observed":"lf/crlf/neither = 19/22/1 in all three; neither=environment.txt"}
+{"seq":33,"phase":"base-compare","cmd":"git ls-files --eol evidence/B5B/.../receipts/*/run.log (base,reviewed,delta)","exit":0,"observed":"delta/base w/crlf or w/-text; reviewed w/lf or attr/text eol=lf"}
+{"seq":34,"phase":"base-compare","cmd":"python .pilot/scripts/byte_inspect.py (b4d-reviewed|b4d-delta) receipts/trusted/run.log","exit":0,"observed":"reviewed hash-object=90340432 != HEAD 4f21112e; delta hash-object=4f21112e == HEAD"}
+{"seq":35,"phase":"artifacts","cmd":"python .pilot/scripts/generate_artifacts.py .pilot .pilot/out review-20261029T073425Z","exit":0,"observed":"profiles identical True; delta add-noop 43/43"}
+{"seq":36,"phase":"artifacts","cmd":"cd evidence/B4/20261029T031257Z && sha256sum -c sha256sums.txt > review-20261029T073425Z/b4-manifest.log","exit":0,"observed":"22 OK"}

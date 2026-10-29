@@ -1,0 +1,26 @@
+{
+  "base": {
+    "commit": "f7c91333bbc999626e87eb29555b2c7c1ccb1a8f",
+    "count": 43,
+    "equal_count": 43,
+    "all_equal": true,
+    "mismatches": []
+  },
+  "reviewed": {
+    "commit": "9fa14f853ed1fa8f473238ca1a0765b733711d65",
+    "count": 43,
+    "equal_count": 41,
+    "all_equal": false,
+    "mismatches": [
+      "evidence/B5B/run-20261029T015035Z/receipts/trusted-host-attempt/run.log",
+      "evidence/B5B/run-20261029T015035Z/receipts/trusted/run.log"
+    ]
+  },
+  "delta": {
+    "commit": "e731a292cdba232f87c6bf86948d8d6a0d32ea75",
+    "count": 43,
+    "equal_count": 43,
+    "all_equal": true,
+    "mismatches": []
+  }
+}

@@ -1,0 +1,807 @@
+{
+  "run": "review-20261029T073425Z",
+  "manifest": "evidence/B5B/run-20261029T015035Z/sha256sums.txt",
+  "worktrees": {
+    "base": {
+      "commit": "f7c91333bbc999626e87eb29555b2c7c1ccb1a8f",
+      "records": 42,
+      "form_profile": {
+        "lf": 19,
+        "crlf": 22,
+        "neither": 1
+      },
+      "records_matching_working_tree": 29,
+      "neither": [
+        "evidence/B5B/run-20261029T015035Z/environment.txt"
+      ],
+      "rows": [
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/README.md",
+          "form": "lf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/baseline-default.err",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/baseline-default.exit",
+          "form": "lf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/baseline-default.out",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/both-flags.err",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/both-flags.exit",
+          "form": "lf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/both-flags.out",
+          "form": "lf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/commands.jsonl",
+          "form": "lf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/default-executed-BASELINE.json",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/default-refused.err",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/default-refused.exit",
+          "form": "lf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/default-refused.json",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/default-refused.out",
+          "form": "lf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/diffstat.txt",
+          "form": "lf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/environment.txt",
+          "form": "neither",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/local-explicit.err",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/local-explicit.exit",
+          "form": "lf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/local-explicit.json",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/local-explicit.out",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/pytest.log",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/receipts/baseline-local/receipt.json",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/receipts/baseline-local/run.log",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/receipts/local-explicit/receipt.json",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/receipts/local-explicit/run.log",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/receipts/trusted-host-attempt/attestation.json",
+          "form": "lf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/receipts/trusted-host-attempt/receipt.json",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/receipts/trusted-host-attempt/run.log",
+          "form": "lf",
+          "matches_working_tree": true,
+          "blob_nul": 42
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/receipts/trusted/attestation.json",
+          "form": "lf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/receipts/trusted/receipt.json",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/receipts/trusted/run.log",
+          "form": "lf",
+          "matches_working_tree": true,
+          "blob_nul": 42
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/trusted-host-attempt.err",
+          "form": "lf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/trusted-host-attempt.exit",
+          "form": "lf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/trusted-host-attempt.json",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/trusted-host-attempt.out",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/trusted-unavailable.err",
+          "form": "lf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/trusted-unavailable.exit",
+          "form": "lf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/trusted-unavailable.json",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/trusted-unavailable.out",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/trusted.err",
+          "form": "lf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/trusted.exit",
+          "form": "lf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/trusted.json",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/trusted.out",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        }
+      ]
+    },
+    "reviewed": {
+      "commit": "9fa14f853ed1fa8f473238ca1a0765b733711d65",
+      "records": 42,
+      "form_profile": {
+        "lf": 19,
+        "crlf": 22,
+        "neither": 1
+      },
+      "records_matching_working_tree": 19,
+      "neither": [
+        "evidence/B5B/run-20261029T015035Z/environment.txt"
+      ],
+      "rows": [
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/README.md",
+          "form": "lf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/baseline-default.err",
+          "form": "crlf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/baseline-default.exit",
+          "form": "lf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/baseline-default.out",
+          "form": "crlf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/both-flags.err",
+          "form": "crlf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/both-flags.exit",
+          "form": "lf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/both-flags.out",
+          "form": "lf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/commands.jsonl",
+          "form": "lf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/default-executed-BASELINE.json",
+          "form": "crlf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/default-refused.err",
+          "form": "crlf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/default-refused.exit",
+          "form": "lf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/default-refused.json",
+          "form": "crlf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/default-refused.out",
+          "form": "lf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/diffstat.txt",
+          "form": "lf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/environment.txt",
+          "form": "neither",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/local-explicit.err",
+          "form": "crlf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/local-explicit.exit",
+          "form": "lf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/local-explicit.json",
+          "form": "crlf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/local-explicit.out",
+          "form": "crlf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/pytest.log",
+          "form": "crlf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/receipts/baseline-local/receipt.json",
+          "form": "crlf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/receipts/baseline-local/run.log",
+          "form": "crlf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/receipts/local-explicit/receipt.json",
+          "form": "crlf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/receipts/local-explicit/run.log",
+          "form": "crlf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/receipts/trusted-host-attempt/attestation.json",
+          "form": "lf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/receipts/trusted-host-attempt/receipt.json",
+          "form": "crlf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/receipts/trusted-host-attempt/run.log",
+          "form": "lf",
+          "matches_working_tree": true,
+          "blob_nul": 42
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/receipts/trusted/attestation.json",
+          "form": "lf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/receipts/trusted/receipt.json",
+          "form": "crlf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/receipts/trusted/run.log",
+          "form": "lf",
+          "matches_working_tree": true,
+          "blob_nul": 42
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/trusted-host-attempt.err",
+          "form": "lf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/trusted-host-attempt.exit",
+          "form": "lf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/trusted-host-attempt.json",
+          "form": "crlf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/trusted-host-attempt.out",
+          "form": "crlf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/trusted-unavailable.err",
+          "form": "lf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/trusted-unavailable.exit",
+          "form": "lf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/trusted-unavailable.json",
+          "form": "crlf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/trusted-unavailable.out",
+          "form": "crlf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/trusted.err",
+          "form": "lf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/trusted.exit",
+          "form": "lf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/trusted.json",
+          "form": "crlf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/trusted.out",
+          "form": "crlf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        }
+      ]
+    },
+    "delta": {
+      "commit": "e731a292cdba232f87c6bf86948d8d6a0d32ea75",
+      "records": 42,
+      "form_profile": {
+        "lf": 19,
+        "crlf": 22,
+        "neither": 1
+      },
+      "records_matching_working_tree": 29,
+      "neither": [
+        "evidence/B5B/run-20261029T015035Z/environment.txt"
+      ],
+      "rows": [
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/README.md",
+          "form": "lf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/baseline-default.err",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/baseline-default.exit",
+          "form": "lf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/baseline-default.out",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/both-flags.err",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/both-flags.exit",
+          "form": "lf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/both-flags.out",
+          "form": "lf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/commands.jsonl",
+          "form": "lf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/default-executed-BASELINE.json",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/default-refused.err",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/default-refused.exit",
+          "form": "lf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/default-refused.json",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/default-refused.out",
+          "form": "lf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/diffstat.txt",
+          "form": "lf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/environment.txt",
+          "form": "neither",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/local-explicit.err",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/local-explicit.exit",
+          "form": "lf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/local-explicit.json",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/local-explicit.out",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/pytest.log",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/receipts/baseline-local/receipt.json",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/receipts/baseline-local/run.log",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/receipts/local-explicit/receipt.json",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/receipts/local-explicit/run.log",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/receipts/trusted-host-attempt/attestation.json",
+          "form": "lf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/receipts/trusted-host-attempt/receipt.json",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/receipts/trusted-host-attempt/run.log",
+          "form": "lf",
+          "matches_working_tree": true,
+          "blob_nul": 42
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/receipts/trusted/attestation.json",
+          "form": "lf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/receipts/trusted/receipt.json",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/receipts/trusted/run.log",
+          "form": "lf",
+          "matches_working_tree": true,
+          "blob_nul": 42
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/trusted-host-attempt.err",
+          "form": "lf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/trusted-host-attempt.exit",
+          "form": "lf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/trusted-host-attempt.json",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/trusted-host-attempt.out",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/trusted-unavailable.err",
+          "form": "lf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/trusted-unavailable.exit",
+          "form": "lf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/trusted-unavailable.json",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/trusted-unavailable.out",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/trusted.err",
+          "form": "lf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/trusted.exit",
+          "form": "lf",
+          "matches_working_tree": false,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/trusted.json",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        },
+        {
+          "path": "evidence/B5B/run-20261029T015035Z/trusted.out",
+          "form": "crlf",
+          "matches_working_tree": true,
+          "blob_nul": 0
+        }
+      ]
+    }
+  }
+}

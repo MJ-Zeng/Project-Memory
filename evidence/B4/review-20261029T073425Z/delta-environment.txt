@@ -1,0 +1,55 @@
+PM-03 Independent Reviewer — B4 DELTA review environment
+run: review-20261029T073425Z
+generated_utc: 2026-10-29T07:34:25Z
+
+workspace      : C:/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-03
+task           : B4 (Issue #28), tasks/B4.md
+task_card_sha256: 3fcce10bb9b03293358a4beab40c0466bd3e40b59d7c0596d7fb8086d71649eb (verified in working tree and at HEAD:e731a29)
+base_sha       : f7c91333bbc999626e87eb29555b2c7c1ccb1a8f
+reviewed_sha   : 9fa14f853ed1fa8f473238ca1a0765b733711d65  (prior PASS, review-20261029T065012Z)
+delta_sha      : e731a292cdba232f87c6bf86948d8d6a0d32ea75  (PR #30 new head)
+pr             : https://github.com/MJ-Zeng/Project-Memory/pull/30
+
+git_version    : git version 2.56.0.windows.2 (MINGW64)
+core.autocrlf  : true   (origin: file:C:/Users/ZMJ/.gitconfig)
+core.eol       : (unset)
+python         : 3.12.4 (Anaconda) at C:\SoftWare\Anconda\python.exe
+os             : Windows 10.0.26300 x64 (MINGW64_NT-10.0-26300 3.6.10), shell Git Bash
+
+ancestry check : 9fa14f853ed1fa8f473238ca1a0765b733711d65 is ancestor of e731a292cdba232f87c6bf86948d8d6a0d32ea75 -> YES
+                 f7c91333bbc999626e87eb29555b2c7c1ccb1a8f is ancestor of e731a292cdba232f87c6bf86948d8d6a0d32ea75 -> YES
+delta patch    : 9fa14f85..e731a292 -> 1 file changed, 1 insertion(+), 1 deletion(-)
+                 only .gitattributes: `evidence/** text eol=lf` -> `evidence/B4/** text eol=lf`
+                 no code / test / fixture / evidence byte changes.
+
+worktrees (pristine, created for this review):
+  .pilot/b4d-base      f7c91333bbc999626e87eb29555b2c7c1ccb1a8f (detached)
+  .pilot/b4d-reviewed  9fa14f853ed1fa8f473238ca1a0765b733711d65 (detached)
+  .pilot/b4d-delta     e731a292cdba232f87c6bf86948d8d6a0d32ea75 (branch review/b4-e731a29)
+
+.gitattributes effective tail per commit:
+  base     : (no evidence rule)
+  reviewed : evidence/** text eol=lf
+  delta    : evidence/B4/** text eol=lf
+
+git ls-files --eol on B5B run.log (i/=index, w/=worktree, attr):
+  base
+    i/lf    w/crlf  attr/                  receipts/baseline-local/run.log
+    i/lf    w/crlf  attr/                  receipts/local-explicit/run.log
+    i/-text w/-text attr/                  receipts/trusted-host-attempt/run.log
+    i/-text w/-text attr/                  receipts/trusted/run.log
+  reviewed (9fa14f8)
+    i/lf    w/lf    attr/text eol=lf       receipts/baseline-local/run.log
+    i/lf    w/lf    attr/text eol=lf       receipts/local-explicit/run.log
+    i/-text w/-text attr/text eol=lf       receipts/trusted-host-attempt/run.log
+    i/-text w/-text attr/text eol=lf       receipts/trusted/run.log
+  delta (e731a29)
+    i/lf    w/crlf  attr/                  receipts/baseline-local/run.log
+    i/lf    w/crlf  attr/                  receipts/local-explicit/run.log
+    i/-text w/-text attr/                  receipts/trusted-host-attempt/run.log
+    i/-text w/-text attr/                  receipts/trusted/run.log
+
+interpretation: at 9fa14f8 the `text eol=lf` rule reaches B5B. The two NUL-bearing
+run.logs are stored as un-normalized CRLF blobs (binary, -text) yet the explicit
+`text` attribute forces a CRLF->LF clean filter on `git add`, changing their blob
+identity (F-1). At e731a29 the rule is confined to evidence/B4, B5B is untouched.
