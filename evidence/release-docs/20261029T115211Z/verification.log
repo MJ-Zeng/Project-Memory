@@ -1,0 +1,110 @@
+# release-docs doc-fix verification
+utc=2026-10-29T12:13:03Z
+repo_root=/c/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-02
+Python 3.12.4
+git version 2.56.0.windows.2
+
+temp_repo=/tmp/tmp.HplPbz6NZE
+warning: in the working copy of 'test_ok.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'test_ok.py', LF will be replaced by CRLF the next time Git touches it
+temp_head=2ed896d70ba4fb1a0885dc3628b862b9493e8ea2
+
+----- m1-old-no-mode-exit3
+$ C:/SoftWare/Anconda/python.exe -m project_memory test-run --repo . --command \"C:\\SoftWare\\Anconda\\python.exe\"\ -m\ unittest --agent qoder
+exit=3
+m1-old-no-mode-exit3 exit=3
+
+----- m1-new-local-mode
+$ C:/SoftWare/Anconda/python.exe -m project_memory test-run --repo . --command \"C:\\SoftWare\\Anconda\\python.exe\"\ -m\ unittest --agent qoder --allow-local-untrusted
+exit=0
+m1-new-local-mode exit=0
+
+----- m2-goal-create
+$ C:/SoftWare/Anconda/python.exe -m project_memory goal create --repo . --id G-BAD --title approved-by\ 格式验证 --outcome 文档示例可执行 --owner backend-team --criterion 示例命令可执行
+exit=0
+m2-goal-create exit=0
+
+----- m2-old-human-owner-exit1
+$ C:/SoftWare/Anconda/python.exe -m project_memory goal transition --repo . --id G-BAD --to approved --approved-by human-owner --reason 旧文档示例
+exit=1
+m2-old-human-owner-exit1 exit=1
+
+----- m2-goal-create-auth
+$ C:/SoftWare/Anconda/python.exe -m project_memory goal create --repo . --id G-AUTH --title 修复认证绕过 --outcome 未授权请求被拒绝 --owner backend-team --criterion 无令牌请求返回\ 401
+exit=0
+m2-goal-create-auth exit=0
+
+----- m2-new-email
+$ C:/SoftWare/Anconda/python.exe -m project_memory goal transition --repo . --id G-AUTH --to approved --approved-by owner@example.com --reason Grooming\ 通过
+exit=0
+m2-new-email exit=0
+
+----- m3-to-active
+$ C:/SoftWare/Anconda/python.exe -m project_memory goal transition --repo . --id G-AUTH --to active
+exit=0
+m3-to-active exit=0
+
+----- m3-to-evaluating
+$ C:/SoftWare/Anconda/python.exe -m project_memory goal transition --repo . --id G-AUTH --to evaluating
+exit=0
+m3-to-evaluating exit=0
+
+demoted criteria to required=False: 1
+exit=0
+
+----- m3-evaluate-empty-required
+$ C:/SoftWare/Anconda/python.exe -m project_memory goal evaluate --repo . --id G-AUTH
+exit=0
+m3-evaluate-empty-required exit=0
+
+M-3 structured fields:
+{"satisfied": false, "evaluation_status": "insufficient_evidence", "no_required_criteria": true, "status_problems": ["no_required_criteria"], "effective_status": "evaluating", "status_trusted": null}
+
+----- m3-transition-achieved-exit1
+$ C:/SoftWare/Anconda/python.exe -m project_memory goal transition --repo . --id G-AUTH --to achieved --approved-by owner@example.com --reason 空必达集合不应达成
+exit=1
+m3-transition-achieved-exit1 exit=1
+
+m3-transition stderr: project-memory: Goal 的成功标准尚未满足（insufficient_evidence）：无；不能仅凭 Issue 关闭或 Agent 声明标记 achieved
+
+receipts:
+<temp>/.project-memory/receipts/EXE-643433b5dfc8b1408558.json
+
+===== pytest (full default) =====
+pytest exit=0
+........................................................................ [ 28%]
+........................................................................ [ 56%]
+........................................................................ [ 84%]
+...................................ss..                                  [100%]
+253 passed, 2 skipped in 162.96s (0:02:42)
+
+===== doc diff (working tree) =====
+warning: in the working copy of 'evidence/release-docs/20261029T115211Z/m1-new.json', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'evidence/release-docs/20261029T115211Z/m1-new.json.stderr', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'evidence/release-docs/20261029T115211Z/m1-old.json.stderr', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'evidence/release-docs/20261029T115211Z/m2-goal-create-auth.json', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'evidence/release-docs/20261029T115211Z/m2-goal-create.json', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'evidence/release-docs/20261029T115211Z/m2-new.json', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'evidence/release-docs/20261029T115211Z/m2-old.json.stderr', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'evidence/release-docs/20261029T115211Z/m3-active.json', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'evidence/release-docs/20261029T115211Z/m3-evaluate.json', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'evidence/release-docs/20261029T115211Z/m3-evaluating.json', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'evidence/release-docs/20261029T115211Z/m3-transition.json.stderr', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'evidence/release-docs/20261029T115211Z/pytest-default.log', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'evidence/release-docs/20261029T115211Z/verification.log', CRLF will be replaced by LF the next time Git touches it
+M	.gitattributes
+M	evidence/release-docs/20261029T115211Z/m1-new.json
+M	evidence/release-docs/20261029T115211Z/m2-goal-create-auth.json
+M	evidence/release-docs/20261029T115211Z/m2-goal-create.json
+M	evidence/release-docs/20261029T115211Z/m2-new.json
+M	evidence/release-docs/20261029T115211Z/m3-active.json
+M	evidence/release-docs/20261029T115211Z/m3-evaluate.json
+M	evidence/release-docs/20261029T115211Z/m3-evaluating.json
+M	evidence/release-docs/20261029T115211Z/pytest-default.log
+M	evidence/release-docs/20261029T115211Z/verification.log
+M	evidence/release-docs/20261029T115211Z/verify_release_docs.sh
+M	skill/project-memory/references/workflows.md
+M	tasks/release-docs-handoff-20261029T115211Z.md
+
+done
+log_closed_utc=2026-10-29T12:15:51Z

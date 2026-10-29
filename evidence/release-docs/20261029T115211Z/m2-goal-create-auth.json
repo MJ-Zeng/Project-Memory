@@ -1,0 +1,42 @@
+{
+  "created": true,
+  "dry_run": false,
+  "goal": {
+    "adrs": [],
+    "approved_by": null,
+    "background": "",
+    "constraints": [],
+    "created_at": "2026-10-29T12:13:05+00:00",
+    "history": [
+      {
+        "at": "2026-10-29T12:13:05+00:00",
+        "by": "backend-team",
+        "from": null,
+        "reason": "created",
+        "to": "proposed"
+      }
+    ],
+    "id": "G-AUTH",
+    "issues": [],
+    "kind": "goal",
+    "outcome": "未授权请求被拒绝",
+    "owner": "backend-team",
+    "prs": [],
+    "revision": 1,
+    "schema_version": "1.2",
+    "status": "proposed",
+    "success_criteria": [
+      {
+        "evidence": [],
+        "id": "C1",
+        "required": true,
+        "statement": "无令牌请求返回 401"
+      }
+    ],
+    "title": "修复认证绕过",
+    "updated_at": "2026-10-29T12:13:05+00:00"
+  },
+  "kind": "goal_create_result",
+  "path": ".project-memory/goals/G-AUTH.json",
+  "schema_version": "1.2"
+}

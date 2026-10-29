@@ -77,10 +77,12 @@ PYTHONPATH=.project-memory/tooling python3 -m project_memory goal create --repo 
 
 ```bash
 PYTHONPATH=.project-memory/tooling python3 -m project_memory goal transition --repo . \
-  --id G-AUTH --to approved --approved-by 'human-owner' --reason 'Grooming 通过'
+  --id G-AUTH --to approved --approved-by 'owner@example.com' --reason 'Grooming 通过'
 PYTHONPATH=.project-memory/tooling python3 -m project_memory goal transition --repo . \
   --id G-AUTH --to active
 ```
+
+`--approved-by` 必须是邮箱格式（如 `owner@example.com`），否则命令以 exit 1 拒绝。该值只是追溯标识，不是认证：它记录谁声明了这次批准，不校验邮箱归属，也不代替 GitHub 审查或分支保护。
 
 每次执行单独登记，模型 ID 写实际值：
 
@@ -146,6 +148,8 @@ PYTHONPATH=.project-memory/tooling python3 -m project_memory reconcile --repo . 
 
 `goal evaluate` 未满足时退出 2；`verify` 未通过时退出 2；`run resume` 在阻断状态退出 2；`reconcile --fail-on high` 有 high 时退出 2。`reconcile` 只报告，不自动改文档，也不关闭任务。
 
+例外：必达标准集合为空（例如所有判据被改成可选或删除）时，`goal evaluate` 退出 0，但 `satisfied=false`、`evaluation_status=insufficient_evidence`、`status_problems` 含 `no_required_criteria`。自动化不要只看退出码，要读 `satisfied`/`effective_status`/`status_trusted`/`status_problems`；需要纯退出码门禁时，后续版本再提供显式 `--strict`，本版没有。
+
 ## 审计链与 Goal 状态可信度
 
 `.project-memory/audit/verification_attempts.jsonl` 是哈希链账本，每条记录带 `seq`、`prev_hash`、`entry_hash`；首条 `prev_hash` 为 64 个 `0`。`audit verify` 从 genesis 逐条重算，任何删除、改写或顺序调整都会报出精确的 `*_at` 位置。哈希链只能证明内部自洽，不能证明记录来自谁：整链重建后依然自洽，所以还需要 checkpoint。
@@ -167,7 +171,7 @@ PYTHONPATH=.project-memory/tooling python3 -m project_memory audit migrate --rep
 ```bash
 # 1. 由 CLI 写出待签名载荷（要求 Goal 当前为 achieved 且标准已满足）
 PYTHONPATH=.project-memory/tooling python3 -m project_memory audit checkpoint-request --repo . \
-  --goal G-AUTH --approved-by 'human-owner'
+  --goal G-AUTH --approved-by 'owner@example.com'
 # 2. 人类/CI 对 .project-memory/audit/head.request.json 的规范字节签名后
 PYTHONPATH=.project-memory/tooling python3 -m project_memory audit checkpoint-attach --repo . \
   --signature /secure/path/head.sig
@@ -178,7 +182,7 @@ PYTHONPATH=.project-memory/tooling python3 -m project_memory audit checkpoint-at
 - `raw_status`：文件里写的状态，只是声明；
 - `effective_status`：`achieved` 仅在被签名 checkpoint 覆盖、标准满足且链完整时为 `achieved`，否则为 `achieved_unverified`；
 - `status_trusted`：`effective_status` 是否来自可信 checkpoint；
-- `status_problems`：具体缺什么，如 `audit_missing`、`audit_chain_invalid`、`checkpoint_missing`、`checkpoint_untrusted`、`checkpoint_chain_mismatch`、`status_history_mismatch`。
+- `status_problems`：具体缺什么，如 `audit_missing`、`audit_chain_invalid`、`checkpoint_missing`、`checkpoint_untrusted`、`checkpoint_chain_mismatch`、`status_history_mismatch`、`no_required_criteria`。
 
 自动化脚本请消费 `effective_status`/`status_trusted`，不要 grep `status`。审计目录为空或缺失一律 `invalid`，不会因为“没有记录”而被当作干净。checkpoint 私钥丢失或签名人不可用时，`achieved` 停在 `achieved_unverified` 是预期的 fail-closed 结果。
 

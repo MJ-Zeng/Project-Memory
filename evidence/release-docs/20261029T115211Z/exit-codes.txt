@@ -1,0 +1,10 @@
+m1-old-no-mode-exit3 exit=3
+m1-new-local-mode exit=0
+m2-goal-create exit=0
+m2-old-human-owner-exit1 exit=1
+m2-goal-create-auth exit=0
+m2-new-email exit=0
+m3-to-active exit=0
+m3-to-evaluating exit=0
+m3-evaluate-empty-required exit=0
+m3-transition-achieved-exit1 exit=1
