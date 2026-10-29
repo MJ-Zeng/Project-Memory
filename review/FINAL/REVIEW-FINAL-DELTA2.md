@@ -172,3 +172,17 @@ sha256sum -c exit=0
 3. 未复核生产 anchor、ACL、POSIX 安装、WSL2 attestation 真实性等 `REVIEW-FINAL` §5 既有未验证项。
 4. 未联网查询 tag/Release；未合并、未 Approve、未打 tag、未建 PR；未修改 `pm-pilot-02`。
 5. 本报告不构成 v1.0 GO；发布决定属人类审批者。
+
+## 11. N-1 收尾确认（`e752f5c`）
+
+PM-02 收尾提交 `e752f5c69b995cd3d6ebd7fac045b6010c6d9ad7`（父 `5158908`）仅改交接文档。机械复核（日志 `evidence/FINAL/review-docs-fix-20261029T122642Z/09-n1-closure-e752f5c.txt`）：
+
+- **范围**：`git diff --name-status 5158908..e752f5c` 仅 `M tasks/release-docs-handoff-20261029T115211Z.md`；`3 insertions(+), 3 deletions(-)`，无删除/重命名，`evidence/` 树未变。
+- **三哈希实算 vs §6 声明**（`git cat-file blob e752f5c:<path> | sha256sum`）逐字相同：
+  - `README.md` `b05fcf10571b0ff61173d07589522fd040e2663385f5016ab70daaa849a0bd41`（与 `5158908` 同 blob）
+  - `docs/OPERATIONS.zh-CN.md` `59218738bf9f8e03eda189c62e2088eb3f43d67ca8dbc6aede6e2940487e04c1`（同 blob）
+  - `skill/project-memory/references/workflows.md` `6d9ab3f709b5c8e04d38fc0a91e1e567f06879d4cf1cdca82eb457388340032f`（N-1 已更新）
+- **表述**：§6 标题改为“`5158908` 之后的提交，LF 字节 = 提交 blob”；自校验改为指向 §8 并写明 `text eol=lf` / 干净检出前提；文中不再有无条件的“工作树字节”自校验声明（其余出现均在 §8 的订正语境中且带前提）。
+- **干净检出复算**：`.pilot/docs-fix3`（detached `e752f5c`，检出后 `git status --short` 为空）`cd evidence/release-docs/20261029T115211Z && sha256sum -c sha256sums.txt` → **24/24 OK，exit 0**（证据包本提交未变，结果与 `5158908` 一致）。
+
+**N-1 已消除。本轮判定仍为 DOCS_VERDICT: PASS**（范围仅 1 个文档文件；F-1/F-2/D-1 结论不变）。

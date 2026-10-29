@@ -15,5 +15,6 @@ Produced by PM-03 in isolated worktrees; nothing here modifies the reviewed comm
 | `06-handoff-hash.txt` | Handoff §6 declared hashes vs actual blobs (N-1 stale workflows.md hash) |
 | `07-environment.txt` | Host, Python, Git, autocrlf, OpenSSL |
 | `08-openssl-pytest.txt` | Optional `PROJECT_MEMORY_REQUIRE_OPENSSL=1` full pytest run |
+| `09-n1-closure-e752f5c.txt` | N-1 closure: `e752f5c` scope, declared-vs-actual hashes, clean-checkout 24/24 |
 
 Worktrees: `.pilot/docs-fix2-f1` (pristine F-1), `.pilot/docs-fix2` (F-2 rerun), `.pilot/docs-fix2-out` (this report).

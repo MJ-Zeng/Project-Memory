@@ -1,0 +1,80 @@
+# N-1 closure check: 5158908 -> e752f5c
+utc=2026-10-29T12:32:19Z
+
+## parent of e752f5c
+e752f5c69b995cd3d6ebd7fac045b6010c6d9ad7 51589083e4c0d012f7006b2528a579104c0532cf
+
+## git diff --name-status 5158908..e752f5c
+M	tasks/release-docs-handoff-20261029T115211Z.md
+
+## deletions/renames (expect none)
+(end)
+
+## git diff --stat 5158908..e752f5c
+ tasks/release-docs-handoff-20261029T115211Z.md | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+## full diff
+diff --git a/tasks/release-docs-handoff-20261029T115211Z.md b/tasks/release-docs-handoff-20261029T115211Z.md
+index 4811d1a..b51d40b 100644
+--- a/tasks/release-docs-handoff-20261029T115211Z.md
++++ b/tasks/release-docs-handoff-20261029T115211Z.md
+@@ -49,13 +49,13 @@
+ - `A evidence/release-docs/20261029T115211Z/**`
+ - `A tasks/release-docs-handoff-20261029T115211Z.md`
+ 
+-## 6. SHA-256（LF 字节，等于提交 blob）
++## 6. SHA-256（`5158908` 之后的提交，LF 字节 = 提交 blob）
+ 
+ - `README.md` `b05fcf10571b0ff61173d07589522fd040e2663385f5016ab70daaa849a0bd41`
+ - `docs/OPERATIONS.zh-CN.md` `59218738bf9f8e03eda189c62e2088eb3f43d67ca8dbc6aede6e2940487e04c1`
+-- `skill/project-memory/references/workflows.md` `2ad150192970c3e5a74b1f4293be700e3a5d83de6ef7bba93d086c4b98893334`
++- `skill/project-memory/references/workflows.md` `6d9ab3f709b5c8e04d38fc0a91e1e567f06879d4cf1cdca82eb457388340032f`
+ 
+-证据目录自校验：`cd evidence/release-docs/20261029T115211Z && sha256sum -c sha256sums.txt`（工作树字节）。
++证据目录自校验见 §8：`cd evidence/release-docs/20261029T115211Z && sha256sum -c sha256sums.txt`；成立前提是 `.gitattributes` 的 `evidence/release-docs/** text eol=lf` 生效，即干净检出中工作树字节等于提交 blob。
+ 
+ ## 7. 未验证 / 边界
+ 
+
+## computed blob sha256 @e752f5c vs §6 declared
+README.md b05fcf10571b0ff61173d07589522fd040e2663385f5016ab70daaa849a0bd41
+docs/OPERATIONS.zh-CN.md 59218738bf9f8e03eda189c62e2088eb3f43d67ca8dbc6aede6e2940487e04c1
+skill/project-memory/references/workflows.md 6d9ab3f709b5c8e04d38fc0a91e1e567f06879d4cf1cdca82eb457388340032f
+
+## README/OPERATIONS blob unchanged vs 5158908
+README.md SAME
+docs/OPERATIONS.zh-CN.md SAME
+
+## evidence/ tree unchanged vs 5158908 (expect no output)
+(end)
+
+## clean worktree .pilot/docs-fix3 (detached e752f5c) self-check
+head=e752f5c69b995cd3d6ebd7fac045b6010c6d9ad7
+status_short:
+(end status)
+exit-codes.txt: OK
+m1-new.json: OK
+m1-new.json.stderr: OK
+m1-old.json: OK
+m1-old.json.stderr: OK
+m2-goal-create-auth.json: OK
+m2-goal-create-auth.json.stderr: OK
+m2-goal-create.json: OK
+m2-goal-create.json.stderr: OK
+m2-new.json: OK
+m2-new.json.stderr: OK
+m2-old.json: OK
+m2-old.json.stderr: OK
+m3-active.json: OK
+m3-active.json.stderr: OK
+m3-evaluate.json: OK
+m3-evaluate.json.stderr: OK
+m3-evaluating.json: OK
+m3-evaluating.json.stderr: OK
+m3-transition.json: OK
+m3-transition.json.stderr: OK
+pytest-default.log: OK
+verification.log: OK
+verify_release_docs.sh: OK
+SHA256SUM_C_EXIT=0
