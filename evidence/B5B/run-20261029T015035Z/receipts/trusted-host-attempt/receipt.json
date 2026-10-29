@@ -1,0 +1,52 @@
+{
+  "schema_version": "1.1",
+  "kind": "execution_receipt",
+  "receipt_id": "EXE-57ae941ea58ea0e11fd6",
+  "repo_id": "6d372b4c9fc56b2a479d8671044a834e285caedb14aaf49d030beaa33dc9e8f6",
+  "repo_identity": {
+    "schema": "1.1",
+    "kind": "remote+root",
+    "remote": "github.com/MJ-Zeng/Project-Memory",
+    "root_commits": [
+      "c86124aadc567a88abb7bcd6752c88dec98a31aa"
+    ]
+  },
+  "commit_sha": "89a14af60a0d4fa30ded850af610ee80ad7e9915",
+  "tree_sha": "e9500b6dee976bb3445b5a8b68c1bc4e9cd5f56b",
+  "snapshot_id": "SNP-7d4f30f8cc70b12f",
+  "snapshot_sha256": "285f6f2b70747985f14f6828022bf61e0a918183303755ff994854bbe1314580",
+  "command": "python3 fixtures/b5b/marker-command.py /mnt/c/Users/ZMJ/AppData/Local/Temp/b5b-host-marker",
+  "exit_code": 1,
+  "log_path": ".project-memory/logs/EXE-57ae941ea58ea0e11fd6.log",
+  "log_sha256": "2b99951295f409941be7971bb2f8378c850904cc965ebc5bf1dd4c7fb0ac2cca",
+  "log_bytes": 443,
+  "started_at": "2026-10-29T01:56:04+00:00",
+  "finished_at": "2026-10-29T01:56:09+00:00",
+  "executed_by": "evidence-agent",
+  "subject": "",
+  "executor": {
+    "name": "project-memory",
+    "mode": "trusted",
+    "python": "3.12.4",
+    "platform": "Windows-11-10.0.26300-SP0"
+  },
+  "isolation": {
+    "mode": "wsl2-user-mount-pid-net-namespace",
+    "os_isolation": true,
+    "sandbox": "wsl2-user-mount-pid-net-namespace",
+    "distro": "default",
+    "snapshot_wsl": "/mnt/c/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-02/.project-memory/snapshots/SNP-7d4f30f8cc70b12f/tree"
+  },
+  "execution_provenance": {
+    "kind": "trusted_launcher",
+    "launcher": "project_memory.trusted_exec",
+    "attested": true,
+    "trusted": false,
+    "reason": "隔离由启动器 attestation 记录，但 attestation 位于仓库内，没有外部签名来源；不能证明收据未被同权限 Agent 改写"
+  },
+  "trust": "isolated_local_attestation",
+  "caveat": "收据只证明该命令在这个快照内以该退出码执行过；不证明测试语义覆盖了任何业务标准，也不证明来源可信。",
+  "attestation_path": ".project-memory/attest/EXE-57ae941ea58ea0e11fd6/attest.json",
+  "attestation_sha256": "3af557f462218b7928447e21e4a2237454cc7cafd1694c944961ce7b96019610",
+  "content_sha256": "46e07a608660b00d1657384805dbd32313191c5164ee2d0b100fabf35a17c19e"
+}

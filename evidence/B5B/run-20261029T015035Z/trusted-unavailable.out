@@ -1,0 +1,8 @@
+{
+  "error": "可信执行不可用（fail-closed，不回退普通子进程）：已通过 PROJECT_MEMORY_DISABLE_WSL=1 禁用",
+  "kind": "test_run_result",
+  "mode": "trusted",
+  "receipt": null,
+  "schema_version": "1.2",
+  "status": "BLOCKED"
+}

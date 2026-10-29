@@ -1,0 +1,10 @@
+{
+  "scenario": "local-explicit",
+  "exit_code": 0,
+  "marker": "present",
+  "mode": "local",
+  "isolation_mode": "none",
+  "provenance": "local_untrusted",
+  "trust": "local_untrusted",
+  "receipt": ".project-memory/receipts/EXE-0a847c261c323506f398.json"
+}

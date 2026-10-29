@@ -1,0 +1,9 @@
+{
+  "scenario": "trusted-unavailable",
+  "exit_code": 3,
+  "marker": "absent",
+  "fallback_to_local": false,
+  "status": "BLOCKED",
+  "receipt": null,
+  "error": "可信执行不可用（fail-closed，不回退普通子进程）：已通过 PROJECT_MEMORY_DISABLE_WSL=1 禁用"
+}

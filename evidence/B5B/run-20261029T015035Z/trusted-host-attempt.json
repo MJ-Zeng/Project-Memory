@@ -1,0 +1,9 @@
+{
+  "scenario": "trusted-host-attempt",
+  "exit_code": 0,
+  "host_marker": "absent",
+  "isolation_mode": "wsl2-user-mount-pid-net-namespace",
+  "trust": "isolated_local_attestation",
+  "inner_exit_code": 1,
+  "receipt": ".project-memory/receipts/EXE-57ae941ea58ea0e11fd6.json"
+}

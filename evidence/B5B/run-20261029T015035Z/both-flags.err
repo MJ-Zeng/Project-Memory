@@ -1,0 +1,1 @@
+project-memory: 拒绝执行：test-run 必须且只能选择一种执行模式，--trusted 与 --allow-local-untrusted 不能同时使用。

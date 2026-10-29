@@ -1,0 +1,13 @@
+{"ok":true,
+"mode":"wsl2-user-mount-pid-net-namespace",
+"receipt_id":"EXE-ed8d384a9d4beee5021e",
+"snapshot":"/mnt/c/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-02/.project-memory/snapshots/SNP-7d4f30f8cc70b12f/tree",
+"canary":"/mnt/c/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-02/.git/HEAD",
+"uid":0,
+"pid":1,
+"pid_ns_levels":1,
+"env_count":8,
+"command_sha256":"3f4bb89c47b89ff28400a4f0fe3b33ed7e2b9011d6e4c1956b7e87bad2772cb0",
+"kernel":"6.18.33.2-microsoft-standard-WSL2",
+"distro":"default",
+"created_at":"2026-10-29T01:56:03Z"}

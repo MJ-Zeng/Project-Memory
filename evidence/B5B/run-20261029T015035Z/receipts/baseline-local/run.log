@@ -1,0 +1,8 @@
+$ "C:/SoftWare/Anconda/python.exe" "C:/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-02/fixtures/b5b/marker-command.py" "C:/Users/ZMJ/AppData/Local/Temp/b5b-host-marker"
+[cwd=C:\Documents\02_Research\Code\project-memory-verification-lab\import-workspace\pm-pilot-02\.project-memory\snapshots\SNP-daa93c2cf5d4aca0\tree (local, no isolation)]
+--- stdout ---
+marker-written: C:\Users\ZMJ\AppData\Local\Temp\b5b-host-marker
+
+--- stderr ---
+
+[exit_code=0]

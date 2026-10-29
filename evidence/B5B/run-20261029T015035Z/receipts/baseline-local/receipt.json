@@ -1,0 +1,62 @@
+{
+  "schema_version": "1.1",
+  "kind": "execution_receipt",
+  "receipt_id": "EXE-5f6fe31e9da9f0f3e54d",
+  "repo_id": "6d372b4c9fc56b2a479d8671044a834e285caedb14aaf49d030beaa33dc9e8f6",
+  "repo_identity": {
+    "schema": "1.1",
+    "kind": "remote+root",
+    "remote": "github.com/MJ-Zeng/Project-Memory",
+    "root_commits": [
+      "c86124aadc567a88abb7bcd6752c88dec98a31aa"
+    ]
+  },
+  "commit_sha": "bb536ec1ff67a855e9207cc59de53851a0722f60",
+  "tree_sha": "9b9b597622c1a59c8e6b154b6a875c0ccf4a4df4",
+  "snapshot_id": "SNP-daa93c2cf5d4aca0",
+  "snapshot_sha256": "43599d559d3c1a12f36c7910f885ce6f7fd80882fca332a8f53a13ae303d6bab",
+  "command": "\"C:/SoftWare/Anconda/python.exe\" \"C:/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-02/fixtures/b5b/marker-command.py\" \"C:/Users/ZMJ/AppData/Local/Temp/b5b-host-marker\"",
+  "exit_code": 0,
+  "log_path": ".project-memory/logs/EXE-5f6fe31e9da9f0f3e54d.log",
+  "log_sha256": "436a73ea0bb1117f8a6b0a7297dab7e8680e1a34f811ad2877d60ccc8d4f4bfb",
+  "log_bytes": 498,
+  "started_at": "2026-10-29T01:51:10+00:00",
+  "finished_at": "2026-10-29T01:51:10+00:00",
+  "executed_by": "unknown-agent",
+  "subject": "",
+  "executor": {
+    "name": "project-memory",
+    "mode": "local",
+    "python": "3.12.4",
+    "platform": "Windows-11-10.0.26300-SP0"
+  },
+  "isolation": {
+    "mode": "none",
+    "os_isolation": false,
+    "sandbox": "plain-child-process",
+    "workspace": "immutable-snapshot",
+    "python_env": {
+      "path_source": "snapshot-only",
+      "safepath": true,
+      "nousersite": true,
+      "stripped": [
+        "PYTHONPATH",
+        "PYTHONHOME",
+        "PYTHONSTARTUP",
+        "PYTHONUSERBASE",
+        "PYTHONSAFEPATH",
+        "PYTHONNOUSERSITE"
+      ]
+    }
+  },
+  "execution_provenance": {
+    "kind": "local_untrusted",
+    "launcher": "project_memory.execution",
+    "attested": false,
+    "trusted": false,
+    "reason": "普通子进程；宿主文件系统与网络可见，收据只能证明内容未被后续修改"
+  },
+  "trust": "local_untrusted",
+  "caveat": "收据只证明该命令在这个快照内以该退出码执行过；不证明测试语义覆盖了任何业务标准，也不证明来源可信。",
+  "content_sha256": "72a2fd95283fa3978663ff25d8c0f2d4319b3d80977cd70f619e8125e20d0581"
+}
