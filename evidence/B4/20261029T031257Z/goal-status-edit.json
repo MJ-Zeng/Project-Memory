@@ -1,0 +1,29 @@
+{
+  "scenario": "hand edited status=achieved with no evidence/checkpoint",
+  "goal_show": {
+    "raw_status": "achieved",
+    "effective_status": "achieved_unverified",
+    "status_trusted": false,
+    "status_problems": [
+      "goal_not_satisfied",
+      "audit_missing",
+      "checkpoint_missing",
+      "status_history_mismatch"
+    ],
+    "status_authority": "local_untrusted"
+  },
+  "evaluate": {
+    "satisfied": false,
+    "recorded_status": "achieved",
+    "recorded_status_consistent": false,
+    "effective_status": "achieved_unverified",
+    "status_trusted": false,
+    "status_problems": [
+      "goal_not_satisfied",
+      "audit_missing",
+      "checkpoint_missing",
+      "status_history_mismatch"
+    ],
+    "recommendation": "checkpoint_required"
+  }
+}

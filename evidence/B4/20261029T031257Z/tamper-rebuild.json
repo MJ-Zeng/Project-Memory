@@ -1,0 +1,46 @@
+{
+  "scenario": "rebuilt an internally consistent chain without a new checkpoint",
+  "verify": {
+    "schema_version": "1.3",
+    "kind": "audit_chain_verification",
+    "status": "invalid",
+    "valid": false,
+    "authoritative": false,
+    "entries": 5,
+    "head": "9a13c3278012f124ddc291c7bf86976d204d084ed8538f7d21c936f2ef9f7ed3",
+    "chain_problems": [],
+    "migration": null,
+    "migration_sha256": null,
+    "checkpoint": {
+      "present": true,
+      "trusted": true,
+      "matches": false,
+      "path": ".project-memory/audit/head.json",
+      "reason": "signature verified",
+      "authority_status": "trusted",
+      "checkpoint_id": "CKPT-11aa89405ce9",
+      "goal_id": "G-B4",
+      "status": "achieved",
+      "chain_head": "25d4b299e2aeb7d444005a23516a5906da809dd149254c479ad35df28d3f29e1",
+      "chain_length": 5,
+      "at": "2026-10-29T03:13:57+00:00",
+      "approved_by": "lead@example.com",
+      "evidence_sha256": "9407bf9a391a769481359a1537c23a7d5ca2f2b2851029e88a503a6464768a8f",
+      "migration_sha256": null,
+      "anchored_head": "9a13c3278012f124ddc291c7bf86976d204d084ed8538f7d21c936f2ef9f7ed3"
+    },
+    "problems": [
+      "checkpoint_chain_mismatch"
+    ],
+    "caveat": "valid_unanchored 只证明链自洽，不证明历史未被重建；achieved 需要 anchor 签名的 checkpoint。"
+  },
+  "evaluate": {
+    "satisfied": true,
+    "effective_status": "achieved_unverified",
+    "status_trusted": false,
+    "status_problems": [
+      "checkpoint_chain_mismatch"
+    ]
+  },
+  "detected": true
+}

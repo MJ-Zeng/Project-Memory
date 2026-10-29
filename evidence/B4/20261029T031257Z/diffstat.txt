@@ -1,0 +1,16 @@
+# diffstat vs base f7c91333bbc999626e87eb29555b2c7c1ccb1a8f
+
+## modified tracked files
+
+docs/OPERATIONS.zh-CN.md       |  45 +++-
+ project_memory/authority.py    |  19 ++
+ project_memory/cli.py          |  34 ++-
+ project_memory/coordination.py | 496 +++++++++++++++++++++++++++++++++++++++--
+ 4 files changed, 579 insertions(+), 15 deletions(-)
+
+## new files (untracked at base)
+
+docs/decisions/ADR-0007-audit-integrity.md: 273 lines
+tests/test_security_b4.py: 484 lines
+tasks/B4-context-recovery.md: 32 lines
+evidence/B4/20261029T031257Z/probe.py: 492 lines

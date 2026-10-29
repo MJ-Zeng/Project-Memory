@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import copy
+import base64
 import hashlib
 import json
 import re
@@ -13,7 +14,10 @@ from .knowledge import (audit, iter_docs, load_config, load_doc, log_problem,
                         valid_http_url)
 from .workflows import handoff as write_handoff
 from .workflows import task_id_of
-from .authority import canonical_digest, untrusted_envelope, verification_authority
+from . import authority
+from .authority import (canonical_bytes, canonical_digest,
+                        signed_record_authority, untrusted_envelope,
+                        verification_authority)
 from .execution import (repo_identity, verify_execution_provenance,
                         verify_receipt)
 
@@ -63,6 +67,17 @@ APPROVAL_REF = re.compile(r'(?:https?://\S+|#\d+|(?:PR|pr|Issue|issue|Review|rev
 AGENT_SELF_PATTERNS = {'agent-self', 'agent', 'auto', 'system', 'self', 'bot', 'ai', 'automated'}
 # R-1 Fix: approved_by must look like a verifiable human identity (email or known reviewer)
 HUMAN_IDENTITY_PATTERN = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+
+# B4: execution audit ledger + signed checkpoint.  See ADR-0007.
+AUDIT_SCHEMA = '1.3'
+AUDIT_GENESIS = '0' * 64
+AUDIT_FILE = 'verification_attempts.jsonl'
+AUDIT_CHECKPOINT_FILE = 'head.json'
+AUDIT_REQUEST_FILE = 'head.request.json'
+AUDIT_MIGRATION_FILE = 'migration.json'
+AUDIT_BACKUP_FILE = 'verification_attempts.pre-chain.jsonl'
+# Statuses whose transition must be anchored by a signed checkpoint.
+AUDITED_GOAL_STATUSES = {'achieved'}
 
 
 def _safe_key(value: str, label: str) -> str:
@@ -352,14 +367,421 @@ def _log_problem(repo: Path, ref: str | None) -> str | None:
     return log_problem(repo, ref)
 
 
-def _audit_attempt(repo: Path, **fields) -> None:
-    """T-05: persist every verification attempt, including rejected ones."""
-    entry = {'schema_version': '1.2', 'kind': 'verification_attempt',
-             'timestamp': utc_now(), **fields}
-    audit_dir = _root(repo, 'audit')
-    audit_dir.mkdir(parents=True, exist_ok=True)
-    with open(audit_dir / 'verification_attempts.jsonl', 'a', encoding='utf-8') as handle:
-        handle.write(json.dumps(entry, ensure_ascii=False) + '\n')
+def _audit_dir(repo: Path) -> Path:
+    return _root(repo, 'audit')
+
+
+def _audit_path(repo: Path) -> Path:
+    return _audit_dir(repo) / AUDIT_FILE
+
+
+def _audit_checkpoint_path(repo: Path) -> Path:
+    return _audit_dir(repo) / AUDIT_CHECKPOINT_FILE
+
+
+def _audit_request_path(repo: Path) -> Path:
+    return _audit_dir(repo) / AUDIT_REQUEST_FILE
+
+
+def _audit_migration_path(repo: Path) -> Path:
+    return _audit_dir(repo) / AUDIT_MIGRATION_FILE
+
+
+def _audit_entry_hash(entry: dict) -> str:
+    """Hash of one audit entry, excluding its own ``entry_hash`` field."""
+    return canonical_digest({key: value for key, value in entry.items()
+                             if key != 'entry_hash'})
+
+
+def _is_chained(entry: dict) -> bool:
+    return (isinstance(entry.get('seq'), int)
+            and isinstance(entry.get('prev_hash'), str)
+            and isinstance(entry.get('entry_hash'), str))
+
+
+def _read_audit_entries(path: Path) -> list[dict]:
+    if not path.is_file():
+        return []
+    entries = []
+    for number, line in enumerate(path.read_text(encoding='utf-8').splitlines(), 1):
+        if not line.strip():
+            continue
+        try:
+            entry = json.loads(line)
+        except ValueError as exc:
+            raise ValueError(f'第 {number} 行不是合法 JSON：{exc}') from exc
+        if not isinstance(entry, dict):
+            raise ValueError(f'第 {number} 行不是 JSON 对象')
+        entries.append(entry)
+    return entries
+
+
+def _migration_summary(repo: Path) -> dict | None:
+    path = _audit_migration_path(repo)
+    if not path.is_file():
+        return None
+    try:
+        value = safe_json(path)
+    except PMError as exc:
+        return {'invalid': str(exc)}
+    return value if isinstance(value, dict) else {'invalid': 'migration 不是 JSON 对象'}
+
+
+def _migration_sha256(repo: Path) -> str | None:
+    info = _migration_summary(repo)
+    if not isinstance(info, dict) or info.get('invalid'):
+        return None
+    value = info.get('source_sha256')
+    return value if isinstance(value, str) and value else None
+
+
+def _audit_chain(repo: Path) -> dict:
+    """Recompute the audit hash chain from genesis; never trust the stored head."""
+    result = {'exists': False, 'entries': [], 'head': None, 'length': 0,
+              'problems': [], 'legacy': False,
+              'migration': _migration_summary(repo),
+              'migration_sha256': _migration_sha256(repo)}
+    path = _audit_path(repo)
+    if not path.is_file():
+        result['problems'].append('audit_missing')
+        return result
+    result['exists'] = True
+    try:
+        entries = _read_audit_entries(path)
+    except (OSError, ValueError) as exc:
+        result['problems'].append(f'audit_unparsable: {exc}')
+        return result
+    if not entries:
+        result['problems'].append('audit_empty')
+        return result
+    if any(not _is_chained(entry) for entry in entries):
+        result['legacy'] = True
+        result['problems'].append('legacy_entries_without_chain')
+        return result
+    previous = AUDIT_GENESIS
+    for index, entry in enumerate(entries, 1):
+        if entry.get('seq') != index:
+            result['problems'].append(f'seq_mismatch_at:{index}')
+            break
+        if entry.get('prev_hash') != previous:
+            result['problems'].append(f'prev_hash_mismatch_at:{index}')
+            break
+        try:
+            digest = _audit_entry_hash(entry)
+        except (TypeError, ValueError) as exc:
+            result['problems'].append(f'entry_hash_uncomputable_at:{index}: {exc}')
+            break
+        if entry.get('entry_hash') != digest:
+            result['problems'].append(f'entry_hash_mismatch_at:{index}')
+            break
+        previous = digest
+    result['entries'] = entries
+    result['length'] = len(entries)
+    if not result['problems']:
+        result['head'] = previous
+    return result
+
+
+def _load_checkpoint(repo: Path) -> dict | None:
+    path = _audit_checkpoint_path(repo)
+    if not path.is_file():
+        return None
+    try:
+        value = safe_json(path)
+    except PMError:
+        return None
+    return value if isinstance(value, dict) else None
+
+
+def _checkpoint_summary(repo: Path, chain: dict) -> dict:
+    summary = {'present': False, 'trusted': False, 'matches': False,
+               'path': relpath(repo, _audit_checkpoint_path(repo)),
+               'reason': 'checkpoint_missing'}
+    record = _load_checkpoint(repo)
+    if record is None:
+        return summary
+    summary['present'] = True
+    authority = signed_record_authority(repo, record, '审计 checkpoint')
+    summary['trusted'] = bool(authority.get('trusted'))
+    summary['authority_status'] = authority.get('status')
+    summary['reason'] = authority.get('reason')
+    for key in ('checkpoint_id', 'goal_id', 'status', 'chain_head', 'chain_length',
+                'at', 'approved_by', 'evidence_sha256', 'migration_sha256'):
+        summary[key] = record.get(key)
+    length = record.get('chain_length')
+    anchored = None
+    if isinstance(length, int) and 0 < length <= chain['length'] and chain['head']:
+        anchored = chain['entries'][length - 1].get('entry_hash')
+    summary['anchored_head'] = anchored
+    summary['matches'] = bool(
+        anchored and anchored == record.get('chain_head')
+        and record.get('migration_sha256') == chain['migration_sha256'])
+    return summary
+
+
+def audit_verify(repo: Path) -> dict:
+    """Verify the execution audit ledger from genesis and check the checkpoint."""
+    chain = _audit_chain(repo)
+    checkpoint = _checkpoint_summary(repo, chain)
+    problems = list(chain['problems'])
+    valid = authoritative = False
+    status = 'invalid'
+    if not problems:
+        if checkpoint['present']:
+            if checkpoint['trusted'] and checkpoint['matches']:
+                valid = authoritative = True
+                status = 'valid'
+            else:
+                if not checkpoint['trusted']:
+                    problems.append('checkpoint_untrusted')
+                if not checkpoint['matches']:
+                    problems.append('checkpoint_chain_mismatch')
+        else:
+            valid = True
+            status = 'valid_unanchored'
+    return {'schema_version': AUDIT_SCHEMA, 'kind': 'audit_chain_verification',
+            'status': status, 'valid': valid, 'authoritative': authoritative,
+            'entries': chain['length'], 'head': chain['head'],
+            'chain_problems': list(chain['problems']),
+            'migration': chain['migration'],
+            'migration_sha256': chain['migration_sha256'],
+            'checkpoint': checkpoint, 'problems': problems,
+            'caveat': ('valid_unanchored 只证明链自洽，不证明历史未被重建；'
+                       'achieved 需要 anchor 签名的 checkpoint。')}
+
+
+def _append_audit_entry(repo: Path, fields: dict) -> dict:
+    path = _audit_path(repo)
+    entries = []
+    if path.is_file():
+        try:
+            entries = _read_audit_entries(path)
+        except (OSError, ValueError) as exc:
+            raise PMError(f'审计账本不可读：{exc}') from exc
+        if any(not _is_chained(entry) for entry in entries):
+            audit_migrate(repo)
+            entries = _read_audit_entries(path)
+    previous = entries[-1]['entry_hash'] if entries else AUDIT_GENESIS
+    entry = {'schema_version': AUDIT_SCHEMA, 'kind': 'verification_attempt',
+             'seq': len(entries) + 1, 'timestamp': utc_now()}
+    entry.update(fields)
+    entry['prev_hash'] = previous
+    entry['entry_hash'] = _audit_entry_hash(entry)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    text = ''.join(json.dumps(item, ensure_ascii=False, sort_keys=True) + '\n'
+                   for item in entries + [entry])
+    atomic_replace(path, text)
+    return entry
+
+
+def _audit_attempt(repo: Path, **fields) -> dict:
+    """T-05 + B4: persist every attempt as a hash-chained ledger entry."""
+    return _append_audit_entry(repo, fields)
+
+
+def audit_migrate(repo: Path) -> dict:
+    """Give pre-1.3 unhashed audit lines a chain.  Migration is not a trust anchor."""
+    path = _audit_path(repo)
+    if not path.is_file():
+        raise PMError('没有可迁移的审计账本')
+    raw = path.read_text(encoding='utf-8')
+    try:
+        entries = _read_audit_entries(path)
+    except (OSError, ValueError) as exc:
+        raise PMError(f'审计账本不可读：{exc}') from exc
+    if entries and all(_is_chained(entry) for entry in entries):
+        return {'schema_version': AUDIT_SCHEMA, 'kind': 'audit_migration_result',
+                'changed': False, 'entries': len(entries), 'path': relpath(repo, path)}
+    if not entries:
+        raise PMError('审计账本为空；空账本不能迁移为有效历史')
+    source_sha256 = hashlib.sha256(raw.encode('utf-8')).hexdigest()
+    backup = path.parent / AUDIT_BACKUP_FILE
+    if not backup.exists():
+        write_new(backup, raw)
+    chained, previous = [], AUDIT_GENESIS
+    for index, entry in enumerate(entries, 1):
+        item = {key: value for key, value in entry.items()
+                if key not in ('seq', 'prev_hash', 'entry_hash')}
+        item['schema_version'] = AUDIT_SCHEMA
+        item['seq'] = index
+        item['prev_hash'] = previous
+        item['entry_hash'] = _audit_entry_hash(item)
+        chained.append(item)
+        previous = item['entry_hash']
+    text = ''.join(json.dumps(item, ensure_ascii=False, sort_keys=True) + '\n'
+                   for item in chained)
+    atomic_replace(path, text)
+    migration = {'schema_version': AUDIT_SCHEMA, 'kind': 'audit_migration',
+                 'at': utc_now(), 'source_sha256': source_sha256,
+                 'entries': len(chained), 'head': previous,
+                 'backup': relpath(repo, backup),
+                 'note': '迁移本身不是信任锚；只有 anchor 签名的 checkpoint 才能使其权威'}
+    atomic_replace(_audit_migration_path(repo), json_text(migration))
+    return {'schema_version': AUDIT_SCHEMA, 'kind': 'audit_migration_result',
+            'changed': True, 'entries': len(chained), 'head': previous,
+            'source_sha256': source_sha256, 'path': relpath(repo, path),
+            'migration': migration}
+
+
+def _goal_evidence_digest(goal: dict, evaluation: dict) -> str:
+    satisfying = []
+    for criterion in evaluation.get('criteria') or []:
+        for item in criterion.get('evidence') or []:
+            if item.get('satisfies'):
+                satisfying.append({'criterion_id': criterion.get('id'),
+                                   'kind': item.get('kind'),
+                                   'ref': item.get('ref')})
+    satisfying.sort(key=lambda item: (str(item['criterion_id']), str(item['kind']),
+                                      str(item['ref'])))
+    return canonical_digest({
+        'goal_id': goal.get('id'),
+        'criteria_definition_sha256': _criteria_definition_digest(
+            goal.get('success_criteria', [])),
+        'satisfying': satisfying})
+
+
+def _checkpoint_payload(repo: Path, goal: dict, evaluation: dict,
+                        approved_by: str | None) -> dict:
+    chain = _audit_chain(repo)
+    if chain['problems']:
+        raise PMError('审计链不完整，不能生成 checkpoint 请求：'
+                      + '；'.join(chain['problems']))
+    if not chain['length']:
+        raise PMError('没有审计条目，不能生成 checkpoint 请求')
+    at = utc_now()
+    checkpoint_id = 'CKPT-' + canonical_digest(
+        {'goal_id': goal.get('id'), 'chain_head': chain['head'],
+         'chain_length': chain['length'], 'at': at})[:12]
+    return {'schema_version': AUDIT_SCHEMA, 'kind': 'audit_checkpoint',
+            'checkpoint_id': checkpoint_id,
+            'goal_id': goal.get('id'), 'status': 'achieved',
+            'chain_head': chain['head'], 'chain_length': chain['length'],
+            'at': at, 'approved_by': approved_by or goal.get('approved_by'),
+            'evidence_sha256': _goal_evidence_digest(goal, evaluation),
+            'migration_sha256': chain['migration_sha256']}
+
+
+def write_audit_checkpoint_request(repo: Path, goal_id: str,
+                                   approved_by: str | None = None,
+                                   status: str = 'achieved') -> dict:
+    """Stage an unsigned checkpoint payload for an external anchor signature."""
+    if status not in AUDITED_GOAL_STATUSES:
+        raise PMError(f'{status} 不是需要 checkpoint 的关键状态')
+    goal = load_goal(repo, goal_id)
+    if goal.get('status') != status:
+        raise PMError(f'Goal {goal_id} 当前状态是 {goal.get("status")}，'
+                      f'不能为 {status} 生成 checkpoint 请求')
+    evaluation = evaluate_goal(repo, goal_id)
+    if not evaluation['satisfied']:
+        raise PMError('成功标准尚未满足，不能生成 achieved checkpoint 请求')
+    payload = _checkpoint_payload(repo, goal, evaluation, approved_by)
+    path = _audit_request_path(repo)
+    atomic_replace(path, canonical_bytes(payload).decode('utf-8'))
+    return {'schema_version': AUDIT_SCHEMA,
+            'kind': 'audit_checkpoint_request_result',
+            'path': relpath(repo, path), 'payload': payload,
+            'payload_sha256': canonical_digest(payload),
+            'requires': ('由仓库外 anchor 私钥对 payload 的 canonical JSON 字节签名，'
+                         '再运行 audit checkpoint-attach；Agent 不能自行签名')}
+
+
+def attach_audit_checkpoint(repo: Path, signature_path) -> dict:
+    """Attach an externally produced signature; verify it in-process first."""
+    request_path = _audit_request_path(repo)
+    if not request_path.is_file():
+        raise PMError('没有 checkpoint 请求；先运行 audit checkpoint-request 或 goal transition')
+    try:
+        payload = json.loads(request_path.read_text(encoding='utf-8'))
+    except ValueError as exc:
+        raise PMError(f'checkpoint 请求不是合法 JSON：{exc}') from exc
+    if not isinstance(payload, dict) or payload.get('kind') != 'audit_checkpoint':
+        raise PMError('checkpoint 请求格式不正确')
+    goal_id = payload.get('goal_id')
+    load_goal(repo, goal_id)
+    signature_file = Path(signature_path)
+    if not signature_file.is_file():
+        raise PMError(f'签名文件不存在：{signature_file}')
+    signature = signature_file.read_bytes()
+    if not signature:
+        raise PMError('签名为空')
+    anchor, anchor_reason = authority.load_anchor(repo)
+    if anchor is None:
+        raise PMError(f'无法验证 checkpoint：{anchor_reason}')
+    record = {**payload, 'authority': {
+        'status': 'trusted', 'anchor_id': anchor['anchor_id'],
+        'issuer': anchor['issuer'], 'algorithm': anchor['algorithm'],
+        'signed_payload_sha256': canonical_digest(payload),
+        'signature_b64': base64.b64encode(signature).decode('ascii')}}
+    verdict = signed_record_authority(repo, record, '审计 checkpoint')
+    if not verdict.get('trusted'):
+        raise PMError(f'checkpoint 签名无效（{verdict.get("status")}）：'
+                      f'{verdict.get("reason")}')
+    chain = _audit_chain(repo)
+    if chain['problems']:
+        raise PMError('审计链不完整，拒绝附加 checkpoint：'
+                      + '；'.join(chain['problems']))
+    length = payload.get('chain_length')
+    if not isinstance(length, int) or not 0 < length <= chain['length']:
+        raise PMError('checkpoint 请求的链长度与当前账本不一致')
+    if chain['entries'][length - 1].get('entry_hash') != payload.get('chain_head'):
+        raise PMError('checkpoint 请求的链头与当前账本不一致（账本已被改写或重建）')
+    if payload.get('migration_sha256') != chain['migration_sha256']:
+        raise PMError('checkpoint 请求的迁移摘要与当前账本不一致')
+    path = _audit_checkpoint_path(repo)
+    atomic_replace(path, json_text(record))
+    return {'schema_version': AUDIT_SCHEMA, 'kind': 'audit_checkpoint_attach_result',
+            'path': relpath(repo, path), 'checkpoint': record, 'trusted': True,
+            'anchor_id': anchor['anchor_id'], 'chain_head': payload.get('chain_head'),
+            'chain_length': length}
+
+
+def audit_head(repo: Path) -> dict:
+    report = audit_verify(repo)
+    return {'schema_version': AUDIT_SCHEMA, 'kind': 'audit_head_result',
+            'status': report['status'], 'head': report['head'],
+            'entries': report['entries'], 'authoritative': report['authoritative'],
+            'checkpoint': report['checkpoint'], 'problems': report['problems'],
+            'migration': report['migration']}
+
+
+def _achieved_status(repo: Path, goal: dict, satisfied: bool, evaluation: dict,
+                     audit_report: dict) -> tuple[str, bool | None, list[str]]:
+    """Derive the status a consumer may act on; raw ``achieved`` is only a claim."""
+    raw = goal.get('status')
+    if raw != 'achieved':
+        return raw, None, []
+    problems = []
+    if not satisfied:
+        problems.append('goal_not_satisfied')
+    for problem in audit_report.get('chain_problems') or []:
+        if problem.startswith('audit_missing'):
+            problems.append('audit_missing')
+        elif problem.startswith('audit_empty'):
+            problems.append('audit_empty')
+        else:
+            problems.append('audit_chain_invalid')
+    checkpoint = audit_report.get('checkpoint') or {}
+    if not checkpoint.get('present'):
+        problems.append('checkpoint_missing')
+    else:
+        if not checkpoint.get('trusted'):
+            problems.append('checkpoint_untrusted')
+        if not checkpoint.get('matches'):
+            problems.append('checkpoint_chain_mismatch')
+        record = _load_checkpoint(repo) or {}
+        if record.get('goal_id') != goal.get('id'):
+            problems.append('checkpoint_goal_mismatch')
+        if record.get('status') != 'achieved':
+            problems.append('checkpoint_status_mismatch')
+        if record.get('evidence_sha256') != _goal_evidence_digest(goal, evaluation):
+            problems.append('checkpoint_evidence_mismatch')
+    history = goal.get('history')
+    if not isinstance(history, list) or not history or history[-1].get('to') != raw:
+        problems.append('status_history_mismatch')
+    problems = list(dict.fromkeys(problems))
+    if problems:
+        return 'achieved_unverified', False, problems
+    return 'achieved', True, []
 
 
 def _approval_problem(ref: str | None) -> str | None:
@@ -998,7 +1420,8 @@ def evaluate_goal(repo: Path, goal_id: str) -> dict:
         state = 'insufficient_evidence'
         recommendation = 'insufficient_evidence'
     satisfied = state == 'satisfied'
-    return {
+    audit_report = audit_verify(repo)
+    result = {
         'schema_version': '1.2', 'kind': 'goal_evaluation', 'goal_id': goal_id,
         'goal_status': goal['status'], 'satisfied': satisfied,
         'recorded_status': goal['status'],
@@ -1008,10 +1431,31 @@ def evaluate_goal(repo: Path, goal_id: str) -> dict:
         'blocking': blocking, 'partial': partial,
         'open_high_defects': [d['defect_id'] for d in open_high],
         'recommendation': recommendation,
+        'audit': audit_verify_summary(audit_report),
         'caveat': ('只接受带 criterion evidence mapping 且 coverage 经独立复核的证据；'
                    '直接 test/commit 证据和旧验证记录可读，但不能单独证明标准已达成。'
                    'CLI 不能判断语义相关性，仍需人工审查。'),
     }
+    effective, trusted, status_problems = _achieved_status(
+        repo, goal, satisfied, result, audit_report)
+    result['raw_status'] = goal['status']
+    result['effective_status'] = effective
+    result['status_trusted'] = trusted
+    result['status_problems'] = status_problems
+    if effective == 'achieved':
+        result['status_authority'] = 'anchor_signed_checkpoint'
+    if goal['status'] == 'achieved' and effective != 'achieved':
+        result['recommendation'] = 'checkpoint_required'
+    return result
+
+
+def audit_verify_summary(report: dict) -> dict:
+    return {'status': report.get('status'), 'valid': report.get('valid'),
+            'authoritative': report.get('authoritative'),
+            'entries': report.get('entries'), 'head': report.get('head'),
+            'problems': list(report.get('problems') or []),
+            'migration_sha256': report.get('migration_sha256'),
+            'checkpoint': report.get('checkpoint')}
 
 
 def add_goal_evidence(repo: Path, goal_id: str, criterion_id: str, kind: str, ref: str,
@@ -1091,8 +1535,24 @@ def transition_goal(repo: Path, goal_id: str, target: str, approved_by: str | No
                                                'by': approved_by or goal.get('owner'), 'reason': reason})
         return goal
     updated = mutate(copy.deepcopy(current)) if dry_run else _mutate(_goal_path(repo, goal_id), mutate)
-    return {'schema_version': '1.2', 'kind': 'goal_transition_result', 'goal': updated,
-            'changed': True, 'evaluation': evaluation, 'dry_run': dry_run}
+    result = {'schema_version': '1.2', 'kind': 'goal_transition_result', 'goal': updated,
+              'changed': True, 'evaluation': evaluation, 'dry_run': dry_run}
+    if dry_run:
+        return result
+    try:
+        _audit_attempt(repo, outcome='applied', reason='goal_transition',
+                       goal_id=goal_id, from_status=source, to_status=target,
+                       approved_by=approved_by, goal_revision=updated.get('revision'))
+    except PMError as exc:
+        result['audit_error'] = str(exc)
+    if target in AUDITED_GOAL_STATUSES:
+        try:
+            result['checkpoint_request'] = write_audit_checkpoint_request(
+                repo, goal_id, approved_by, target)
+        except PMError as exc:
+            result['checkpoint_request'] = {'error': str(exc),
+                                            'requires': 'achieved 在 anchor 签名 checkpoint 前不生效'}
+    return result
 
 
 def goal_show(repo: Path, goal_id: str) -> dict:
@@ -1119,8 +1579,13 @@ def goal_show(repo: Path, goal_id: str) -> dict:
             'defects': len(defects),
             'open_defects': len(open_defects),
         },
-        'status_authority': 'local_untrusted',
+        'status_authority': evaluation['status_authority'],
         'status_consistent': evaluation['recorded_status_consistent'],
+        'raw_status': goal['status'],
+        'effective_status': evaluation['effective_status'],
+        'status_trusted': evaluation['status_trusted'],
+        'status_problems': evaluation['status_problems'],
+        'audit': evaluation['audit'],
         'evaluation': evaluation,
         'runs': runs,
         'verifications': verifications,
@@ -1942,6 +2407,11 @@ def reconcile(repo: Path, config: dict | None = None, format: str = 'json') -> d
         if goal.get('status') == 'achieved' and not evaluation['satisfied']:
             add('high', 'achieved_goal_unsatisfied', f'Goal {gid} 已标记 achieved，但成功标准未满足',
                 [gid, *evaluation['blocking']], '重新评估或降级 Goal 状态')
+        if goal.get('status') == 'achieved' and evaluation.get('status_trusted') is False:
+            add('high', 'achieved_goal_untrusted',
+                f'Goal {gid} 已标记 achieved，但没有可验证的审计链/签名 checkpoint',
+                [gid, *evaluation.get('status_problems', [])],
+                '由 anchor 签署 audit checkpoint；在此之前按 achieved_unverified 处理')
         if (evaluation['evaluation_status'] in ('needs_review', 'partial', 'insufficient_evidence')
                 and goal.get('status') in ('active', 'evaluating')):
             add('medium', 'goal_evidence_needs_review',

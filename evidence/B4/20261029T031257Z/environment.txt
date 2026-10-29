@@ -1,0 +1,12 @@
+python_version: 3.12.4 | packaged by Anaconda, Inc. | (main, Jun 18 2024, 15:03:56) [MSC v.1929 64 bit (AMD64)]
+python_executable: C:\SoftWare\Anconda\python.exe
+pytest_version: pytest 9.1.1
+git_version: git version 2.56.0.windows.2
+platform: Windows-11-10.0.26300-SP0
+openssl: OpenSSL 3.5.9 29 Sep 2026 (Library: OpenSSL 3.5.9 29 Sep 2026)
+repo_base_sha: f7c91333bbc999626e87eb29555b2c7c1ccb1a8f
+branch: fix/b4-audit-integrity
+anchor_mode: test RSA key + in-process authority.load_anchor stub
+production_anchor_used: false
+production_key_read: false
+pythonioencoding: utf-8

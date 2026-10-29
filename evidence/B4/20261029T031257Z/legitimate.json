@@ -1,0 +1,72 @@
+{
+  "scenario": "legit transition + audit chain + externally signed checkpoint (test RSA key; in-process anchor stub)",
+  "checkpoint_request_sha256": "ba1f36a203afa77b5e1248c5d9ba69e3b5dafb3caaa0655c25c3d12963677132",
+  "attach": {
+    "trusted": true,
+    "chain_head": "25d4b299e2aeb7d444005a23516a5906da809dd149254c479ad35df28d3f29e1",
+    "chain_length": 5
+  },
+  "agent_checkpoint_attempts": [
+    {
+      "case": "missing signature file",
+      "rejected": true,
+      "error": "PMError: 签名文件不存在：C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b4-evidence-legit-5h1hz99e\\no-such.sig"
+    },
+    {
+      "case": "signed by untrusted key",
+      "rejected": true,
+      "error": "PMError: checkpoint 签名无效（untrusted）：签名验证失败"
+    },
+    {
+      "case": "no protected anchor configured",
+      "rejected": true,
+      "error": "PMError: 无法验证 checkpoint：evidence: anchor disabled"
+    }
+  ],
+  "audit_verify": {
+    "schema_version": "1.3",
+    "kind": "audit_chain_verification",
+    "status": "valid",
+    "valid": true,
+    "authoritative": true,
+    "entries": 5,
+    "head": "25d4b299e2aeb7d444005a23516a5906da809dd149254c479ad35df28d3f29e1",
+    "chain_problems": [],
+    "migration": null,
+    "migration_sha256": null,
+    "checkpoint": {
+      "present": true,
+      "trusted": true,
+      "matches": true,
+      "path": ".project-memory/audit/head.json",
+      "reason": "signature verified",
+      "authority_status": "trusted",
+      "checkpoint_id": "CKPT-11aa89405ce9",
+      "goal_id": "G-B4",
+      "status": "achieved",
+      "chain_head": "25d4b299e2aeb7d444005a23516a5906da809dd149254c479ad35df28d3f29e1",
+      "chain_length": 5,
+      "at": "2026-10-29T03:13:57+00:00",
+      "approved_by": "lead@example.com",
+      "evidence_sha256": "9407bf9a391a769481359a1537c23a7d5ca2f2b2851029e88a503a6464768a8f",
+      "migration_sha256": null,
+      "anchored_head": "25d4b299e2aeb7d444005a23516a5906da809dd149254c479ad35df28d3f29e1"
+    },
+    "problems": [],
+    "caveat": "valid_unanchored 只证明链自洽，不证明历史未被重建；achieved 需要 anchor 签名的 checkpoint。"
+  },
+  "goal_show": {
+    "effective_status": "achieved",
+    "status_trusted": true,
+    "status_problems": [],
+    "status_authority": "anchor_signed_checkpoint"
+  },
+  "evaluate": {
+    "satisfied": true,
+    "effective_status": "achieved",
+    "status_trusted": true,
+    "recommendation": "achieved"
+  },
+  "chain_head": "25d4b299e2aeb7d444005a23516a5906da809dd149254c479ad35df28d3f29e1",
+  "checkpoint_chain_head": "25d4b299e2aeb7d444005a23516a5906da809dd149254c479ad35df28d3f29e1"
+}

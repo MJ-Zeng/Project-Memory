@@ -26,7 +26,7 @@
 8. 另一个执行记录用 `verify` 独立检查目标提交；发现转成缺陷，修复后复验。
 9. 把 PR 的测试证据带进 `finish`，对照真实的 GitHub 审查状态看一眼。
 10. 每次合并前跑 `audit --scope current --fail-on high` 和 `reconcile --fail-on high`。每周再跑一次全量 `audit`，把历史、镜像和证据区的高价值发现转成 Issue，由人决定整改还是忽略。
-11. Goal 标准全部满足后，由授权人转 `achieved`。Agent 的评估建议不等于批准。
+11. Goal 标准全部满足后，由授权人转 `achieved`。Agent 的评估建议不等于批准。写入的 `achieved` 只是声明；只有仓库外信任锚签名的 checkpoint 覆盖当前审计链时，`effective_status` 才等于 `achieved`。
 12. 需要了解知识关系时运行 `graph` 和 `search`。索引不是新的事实来源。
 
 ## 可信启动入口（B5A / B5A.1）
@@ -128,6 +128,42 @@ PYTHONPATH=.project-memory/tooling python3 -m project_memory reconcile --repo . 
 
 `goal evaluate` 未满足时退出 2；`verify` 未通过时退出 2；`run resume` 在阻断状态退出 2；`reconcile --fail-on high` 有 high 时退出 2。`reconcile` 只报告，不自动改文档，也不关闭任务。
 
+## 审计链与 Goal 状态可信度
+
+`.project-memory/audit/verification_attempts.jsonl` 是哈希链账本，每条记录带 `seq`、`prev_hash`、`entry_hash`；首条 `prev_hash` 为 64 个 `0`。`audit verify` 从 genesis 逐条重算，任何删除、改写或顺序调整都会报出精确的 `*_at` 位置。哈希链只能证明内部自洽，不能证明记录来自谁：整链重建后依然自洽，所以还需要 checkpoint。
+
+`.project-memory/audit/head.json` 是 checkpoint，由仓库外的受保护主体的私钥对 `chain_head`、`chain_length`、`goal_id`、`status`、证据摘要和迁移摘要做分离签名。checkpoint 绑定的是**前缀**而不是最新 head，之后新增审计记录不会让已签名的 `achieved` 失效。
+
+```bash
+# 只读检查：valid / valid_unanchored / invalid
+PYTHONPATH=.project-memory/tooling python3 -m project_memory audit verify --repo .
+PYTHONPATH=.project-memory/tooling python3 -m project_memory audit head --repo .
+# 旧版无哈希账本一次性迁移（写备份 verification_attempts.pre-chain.jsonl）
+PYTHONPATH=.project-memory/tooling python3 -m project_memory audit migrate --repo .
+```
+
+`valid_unanchored` 表示链自洽但没有可信 checkpoint，退出 0 只说明结构没问题，不足以支撑任何 `achieved`。`audit verify` 在 `invalid` 时退出 2；`audit head` 只在 `valid`/`valid_unanchored` 时退出 0。
+
+`achieved` 的签名由 PM-01/人类在仓库外完成；Agent 只有请求和附加两步，且 `checkpoint-attach` 只验签，不生成私钥、不产生签名：
+
+```bash
+# 1. 由 CLI 写出待签名载荷（要求 Goal 当前为 achieved 且标准已满足）
+PYTHONPATH=.project-memory/tooling python3 -m project_memory audit checkpoint-request --repo . \
+  --goal G-AUTH --approved-by 'human-owner'
+# 2. 人类/CI 对 .project-memory/audit/head.request.json 的规范字节签名后
+PYTHONPATH=.project-memory/tooling python3 -m project_memory audit checkpoint-attach --repo . \
+  --signature /secure/path/head.sig
+```
+
+`goal show` 与 `goal evaluate` 不再把 JSON 里的 `status` 当结论，而是同时给出：
+
+- `raw_status`：文件里写的状态，只是声明；
+- `effective_status`：`achieved` 仅在被签名 checkpoint 覆盖、标准满足且链完整时为 `achieved`，否则为 `achieved_unverified`；
+- `status_trusted`：`effective_status` 是否来自可信 checkpoint；
+- `status_problems`：具体缺什么，如 `audit_missing`、`audit_chain_invalid`、`checkpoint_missing`、`checkpoint_untrusted`、`checkpoint_chain_mismatch`、`status_history_mismatch`。
+
+自动化脚本请消费 `effective_status`/`status_trusted`，不要 grep `status`。审计目录为空或缺失一律 `invalid`，不会因为“没有记录”而被当作干净。checkpoint 私钥丢失或签名人不可用时，`achieved` 停在 `achieved_unverified` 是预期的 fail-closed 结果。
+
 ## 写文档
 
 先 `search` 查重。能改现有文档，就不要新建一份平行摘要。设计决策用 `decision`，不写普通文档；调查记录用 `kind: evidence`；不再有效的结论标 `superseded` 或 `historical`，不要删除。
@@ -175,6 +211,8 @@ PYTHONPATH=.project-memory/tooling python3 -m project_memory handoff \
 PYTHONPATH=.project-memory/tooling python3 -m project_memory audit \
   --repo . --scope current --fail-on high
 PYTHONPATH=.project-memory/tooling python3 -m project_memory audit --repo .
+PYTHONPATH=.project-memory/tooling python3 -m project_memory audit verify --repo .
+PYTHONPATH=.project-memory/tooling python3 -m project_memory audit head --repo .
 PYTHONPATH=.project-memory/tooling python3 -m project_memory goal list --repo .
 PYTHONPATH=.project-memory/tooling python3 -m project_memory run list --repo .
 PYTHONPATH=.project-memory/tooling python3 -m project_memory reconcile \
@@ -213,6 +251,11 @@ Windows 上用 Git Bash 时，先 `export PYTHONUTF8=1`，并把 `python3` 换�
 | 单测 | 缺陷生命周期 | fixed 必须绑定 SHA，verified 只能由复验产生，修复提交必须在被验证历史中 |
 | 单测 | Goal 未满足 | evaluate 返回 2，achieved 转换被拒绝 |
 | 单测 | Goal 已达成但证据过期 | 对账报 high/medium，不自动改状态 |
+| 单测 | 手改 Goal `status=achieved` | `effective_status=achieved_unverified`，`status_trusted=false` |
+| 安全 | 审计记录删除/改写/整链重建 | `audit verify` 为 invalid 并给出行号；checkpoint 不匹配 |
+| 安全 | 审计目录缺失或为空 | invalid，不视为干净 |
+| 安全 | Agent 或错误密钥签 checkpoint | 拒绝附加，`achieved` 不生效 |
+| 集成 | 合法流程 + 受信 checkpoint | `audit verify` valid，`effective_status=achieved` |
 | 单测 | 文档断链和冲突 | Finding 带精确位置和 code |
 | 单测 | 中英混合检索 | 返回源路径、分数和原文片段 |
 | 集成 | Git 快照前后变动 | Context 的 base SHA 反映最新提交 |

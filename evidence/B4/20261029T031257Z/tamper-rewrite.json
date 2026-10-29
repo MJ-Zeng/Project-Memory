@@ -1,0 +1,54 @@
+{
+  "scenario": "rewrote one audit field, then rehashed that row only",
+  "without_rehash": {
+    "schema_version": "1.3",
+    "kind": "audit_chain_verification",
+    "status": "invalid",
+    "valid": false,
+    "authoritative": false,
+    "entries": 3,
+    "head": null,
+    "chain_problems": [
+      "entry_hash_mismatch_at:2"
+    ],
+    "migration": null,
+    "migration_sha256": null,
+    "checkpoint": {
+      "present": false,
+      "trusted": false,
+      "matches": false,
+      "path": ".project-memory/audit/head.json",
+      "reason": "checkpoint_missing"
+    },
+    "problems": [
+      "entry_hash_mismatch_at:2"
+    ],
+    "caveat": "valid_unanchored 只证明链自洽，不证明历史未被重建；achieved 需要 anchor 签名的 checkpoint。"
+  },
+  "with_rehash": {
+    "schema_version": "1.3",
+    "kind": "audit_chain_verification",
+    "status": "invalid",
+    "valid": false,
+    "authoritative": false,
+    "entries": 3,
+    "head": null,
+    "chain_problems": [
+      "prev_hash_mismatch_at:3"
+    ],
+    "migration": null,
+    "migration_sha256": null,
+    "checkpoint": {
+      "present": false,
+      "trusted": false,
+      "matches": false,
+      "path": ".project-memory/audit/head.json",
+      "reason": "checkpoint_missing"
+    },
+    "problems": [
+      "prev_hash_mismatch_at:3"
+    ],
+    "caveat": "valid_unanchored 只证明链自洽，不证明历史未被重建；achieved 需要 anchor 签名的 checkpoint。"
+  },
+  "detected": true
+}

@@ -1,0 +1,77 @@
+{
+  "scenario": "legacy unchained audit lines migrated",
+  "before": {
+    "schema_version": "1.3",
+    "kind": "audit_chain_verification",
+    "status": "invalid",
+    "valid": false,
+    "authoritative": false,
+    "entries": 0,
+    "head": null,
+    "chain_problems": [
+      "legacy_entries_without_chain"
+    ],
+    "migration": null,
+    "migration_sha256": null,
+    "checkpoint": {
+      "present": false,
+      "trusted": false,
+      "matches": false,
+      "path": ".project-memory/audit/head.json",
+      "reason": "checkpoint_missing"
+    },
+    "problems": [
+      "legacy_entries_without_chain"
+    ],
+    "caveat": "valid_unanchored 只证明链自洽，不证明历史未被重建；achieved 需要 anchor 签名的 checkpoint。"
+  },
+  "migration": {
+    "schema_version": "1.3",
+    "kind": "audit_migration_result",
+    "changed": true,
+    "entries": 2,
+    "head": "62cf838e82b023608d9ccc5853ec6b44ef04583d1780faa7e9726421e8ab9b87",
+    "source_sha256": "6bc46223e74c2144c66d145c789d43504b8bf53ca3d24460bc6f8eab5719088e",
+    "path": ".project-memory/audit/verification_attempts.jsonl",
+    "migration": {
+      "schema_version": "1.3",
+      "kind": "audit_migration",
+      "at": "2026-10-29T03:14:02+00:00",
+      "source_sha256": "6bc46223e74c2144c66d145c789d43504b8bf53ca3d24460bc6f8eab5719088e",
+      "entries": 2,
+      "head": "62cf838e82b023608d9ccc5853ec6b44ef04583d1780faa7e9726421e8ab9b87",
+      "backup": ".project-memory/audit/verification_attempts.pre-chain.jsonl",
+      "note": "迁移本身不是信任锚；只有 anchor 签名的 checkpoint 才能使其权威"
+    }
+  },
+  "after": {
+    "schema_version": "1.3",
+    "kind": "audit_chain_verification",
+    "status": "valid_unanchored",
+    "valid": true,
+    "authoritative": false,
+    "entries": 2,
+    "head": "62cf838e82b023608d9ccc5853ec6b44ef04583d1780faa7e9726421e8ab9b87",
+    "chain_problems": [],
+    "migration": {
+      "at": "2026-10-29T03:14:02+00:00",
+      "backup": ".project-memory/audit/verification_attempts.pre-chain.jsonl",
+      "entries": 2,
+      "head": "62cf838e82b023608d9ccc5853ec6b44ef04583d1780faa7e9726421e8ab9b87",
+      "kind": "audit_migration",
+      "note": "迁移本身不是信任锚；只有 anchor 签名的 checkpoint 才能使其权威",
+      "schema_version": "1.3",
+      "source_sha256": "6bc46223e74c2144c66d145c789d43504b8bf53ca3d24460bc6f8eab5719088e"
+    },
+    "migration_sha256": "6bc46223e74c2144c66d145c789d43504b8bf53ca3d24460bc6f8eab5719088e",
+    "checkpoint": {
+      "present": false,
+      "trusted": false,
+      "matches": false,
+      "path": ".project-memory/audit/head.json",
+      "reason": "checkpoint_missing"
+    },
+    "problems": [],
+    "caveat": "valid_unanchored 只证明链自洽，不证明历史未被重建；achieved 需要 anchor 签名的 checkpoint。"
+  }
+}

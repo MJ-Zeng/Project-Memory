@@ -557,3 +557,22 @@ def verify_execution_attestation_authority(repo: Path, record: dict) -> dict:
 def verify_execution_exception_authority(repo: Path, record: dict) -> dict:
     """Return the authority status of a signed human exception."""
     return _execution_record_authority(repo, record, '人类例外')
+
+
+def signed_record_payload(record: dict) -> bytes:
+    """Signed payload for any detached-signature record (excludes ``authority``)."""
+    return execution_record_payload(record)
+
+
+def signed_record_digest(record: dict) -> str:
+    return execution_record_digest(record)
+
+
+def signed_record_authority(repo: Path, record: dict, label: str = '签名记录') -> dict:
+    """Verify a detached anchor signature over ``record`` minus ``authority``.
+
+    This is the generic entry point used by audit checkpoints.  It performs the
+    same fail-closed checks as verification/execution records and never accepts a
+    self-declared ``authority.status``.
+    """
+    return _execution_record_authority(repo, record, label)

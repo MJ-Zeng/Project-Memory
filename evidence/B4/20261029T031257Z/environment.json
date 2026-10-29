@@ -1,0 +1,9 @@
+{
+  "python": "3.12.4 | packaged by Anaconda, Inc. | (main, Jun 18 2024, 15:03:56) [MSC v.1929 64 bit (AMD64)]",
+  "executable": "C:\\SoftWare\\Anconda\\python.exe",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "openssl": "OpenSSL 3.5.9 29 Sep 2026 (Library: OpenSSL 3.5.9 29 Sep 2026)",
+  "repo_head": "f7c91333bbc999626e87eb29555b2c7c1ccb1a8f",
+  "anchor": "test-time RSA key + in-process load_anchor stub",
+  "production_anchor_used": false
+}
