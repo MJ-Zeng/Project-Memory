@@ -1,0 +1,12 @@
+ README.md                                          |  2 +
+ docs/OPERATIONS.zh-CN.md                           |  2 +
+ evidence/B5B/README.md                             |  2 +-
+ evidence/R1/fix-20261029T104125Z/README.md         | 66 ++++++++++++++++++++++
+ evidence/R1/fix-20261029T104125Z/b5b-recheck.log   | 16 ++++++
+ .../R1/fix-20261029T104125Z/changed-docs.sha256    |  3 +
+ evidence/R1/fix-20261029T104125Z/commands.jsonl    |  6 ++
+ .../R1/fix-20261029T104125Z/pytest-default.log     |  6 ++
+ evidence/R1/fix-20261029T104125Z/reproduce-b5b.sh  | 38 +++++++++++++
+ evidence/R1/fix-20261029T104125Z/sha256sums.txt    |  5 ++
+ tasks/R1-fix1-handoff-20261029T104125Z.md          | 52 +++++++++++++++++
+ 11 files changed, 197 insertions(+), 1 deletion(-)

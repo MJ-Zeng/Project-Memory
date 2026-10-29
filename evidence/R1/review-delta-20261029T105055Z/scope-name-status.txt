@@ -1,0 +1,11 @@
+M	README.md
+M	docs/OPERATIONS.zh-CN.md
+M	evidence/B5B/README.md
+A	evidence/R1/fix-20261029T104125Z/README.md
+A	evidence/R1/fix-20261029T104125Z/b5b-recheck.log
+A	evidence/R1/fix-20261029T104125Z/changed-docs.sha256
+A	evidence/R1/fix-20261029T104125Z/commands.jsonl
+A	evidence/R1/fix-20261029T104125Z/pytest-default.log
+A	evidence/R1/fix-20261029T104125Z/reproduce-b5b.sh
+A	evidence/R1/fix-20261029T104125Z/sha256sums.txt
+A	tasks/R1-fix1-handoff-20261029T104125Z.md

@@ -1,0 +1,39 @@
+diff --git a/README.md b/README.md
+index dda5722..7ada4ed 100644
+--- a/README.md
++++ b/README.md
+@@ -38,6 +38,8 @@ PROJECT_MEMORY_REQUIRE_OPENSSL=1 python3 -m pytest -q
+ python3 -m pytest -q
+ ```
+ 
++Windows 上 `python3` 可能是 Microsoft Store 的别名桩（exit 49），请改用实际解释器（如 `python`、venv 或 Anaconda 路径）执行上述命令。
++
+ 开关取值为 `1`、`true`、`yes`（大小写不敏感）。详见 `docs/OPERATIONS.zh-CN.md`。
+ 
+ ## 目标、执行与独立验证
+diff --git a/docs/OPERATIONS.zh-CN.md b/docs/OPERATIONS.zh-CN.md
+index 50ac2e6..9fe01d0 100644
+--- a/docs/OPERATIONS.zh-CN.md
++++ b/docs/OPERATIONS.zh-CN.md
+@@ -61,6 +61,8 @@ PROJECT_MEMORY_REQUIRE_OPENSSL=1 python3 -m pytest -q
+ python3 -m pytest -q
+ ```
+ 
++Windows 上 `python3` 可能是 Microsoft Store 的别名桩（exit 49），请改用实际解释器（如 `python`、venv 或 Anaconda 路径）执行上述命令。
++
+ ## 目标、执行与验证
+ 
+ Goal 至少有一条必达成功标准。标准要能用提交、测试日志、验证记录或人工批准判断：
+diff --git a/evidence/B5B/README.md b/evidence/B5B/README.md
+index 0b8e75b..28359ba 100644
+--- a/evidence/B5B/README.md
++++ b/evidence/B5B/README.md
+@@ -31,7 +31,7 @@ cd evidence/B5B/run-20261029T015035Z
+ # 任一等价表示命中即该文件通过；三项都不命中的文件才需要人工解释。
+ ```
+ 
+-本次复测结果：42/42 项至少命中一种表示（工作树 29、LF 归一化 17、git blob 19；部分文件同时命中）。这说明证据本身没有被改写，差异只来自行尾表示；**不要为了凑 `sha256sum -c` 而重写证据或清单**。
++本次复测结果：**41/42** 项至少命中一种表示（工作树 29、LF 归一化 17、git blob 19；部分文件同时命中）。唯一三项都不命中的是 `run-20261029T015035Z/environment.txt`（清单哈希 `d4f6d19f…`）：工作树原始字节、LF 归一化、git blob 均不匹配，行尾变体、BOM、尾随换行也不命中，按上文规则属于**需人工解释项**，其清单与文件字节均保持原样。除该项外其余文件都能在某一等价表示下复现，说明证据本身没有被改写，差异只来自行尾表示；**不要为了凑 `sha256sum -c` 而重写证据或清单**。
+ 
+ ## 2. 两个含 NUL 字节的日志
+ 

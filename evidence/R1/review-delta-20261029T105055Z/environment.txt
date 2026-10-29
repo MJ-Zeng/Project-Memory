@@ -1,0 +1,11 @@
+review: PM-03 R1 delta review (resumed session)
+utc: 2026-10-29T10:57:40Z
+host_os: MINGW64_NT-10.0-26300 3.6.10-5a1665c8.x86_64
+bash: 5.3.15(2)-release
+git: git version 2.56.0.windows.2
+worktree: /c/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-03/.pilot/r1d-delta
+branch: review/r1-9d5f957
+head: 9d5f957e65faf536be4dc763cb97d50e815bdd91
+base: bb06037c469b6586b95fbcd69b6965585f2c977e
+main_checkout_head: 5c22d4f7d8e9186b256a829e64be59d4f1211a36 (review/r1-bb06037)
+preexisting_log: b5b-reproduce.log (prior session residue, contains NUL, NOT read this session; size: 378 bytes)

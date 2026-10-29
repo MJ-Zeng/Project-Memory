@@ -1,0 +1,20 @@
+== tree object: evidence/B5B/run-20261029T015035Z ==
+base:      e6e61ba163fe6c115946c494d9c4e7ae0cead91b
+candidate: e6e61ba163fe6c115946c494d9c4e7ae0cead91b
+== tree object: evidence/B5B (whole) ==
+base:      145a04596b45b0f99904556603378d6ffd481415
+candidate: 93eb8082b8d6b9ab64393d903efe3d63b98469af
+== diff limited to B5B run dir (expect empty) ==
+[exit 0]
+== numstat (binary shows '-') ==
+2	0	README.md
+2	0	docs/OPERATIONS.zh-CN.md
+1	1	evidence/B5B/README.md
+66	0	evidence/R1/fix-20261029T104125Z/README.md
+16	0	evidence/R1/fix-20261029T104125Z/b5b-recheck.log
+3	0	evidence/R1/fix-20261029T104125Z/changed-docs.sha256
+6	0	evidence/R1/fix-20261029T104125Z/commands.jsonl
+6	0	evidence/R1/fix-20261029T104125Z/pytest-default.log
+38	0	evidence/R1/fix-20261029T104125Z/reproduce-b5b.sh
+5	0	evidence/R1/fix-20261029T104125Z/sha256sums.txt
+52	0	tasks/R1-fix1-handoff-20261029T104125Z.md
