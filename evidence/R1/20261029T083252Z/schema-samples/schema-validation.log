@@ -1,0 +1,10 @@
+R1 refusal audit entry: valid
+audit entry seq=1: valid
+audit entry seq=2: valid
+audit entry seq=3: valid
+audit entry seq=4: valid
+audit entry seq=5: valid
+checkpoint-head.json: valid
+checkpoint-request.json: valid
+checked 5 B4 audit entries + 1 R1 refusal entry + 2 checkpoint records; 0 problem(s)
+EXIT=0

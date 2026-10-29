@@ -26,6 +26,20 @@ PYTHONPATH=.project-memory/tooling python3 -m project_memory search --repo . '�
 
 Windows 上用 Git Bash 时，先设置 `PYTHONUTF8=1`，并把 `python3` 换成实际可用的解释器路径。
 
+### 测试期 openssl 要求
+
+openssl 只在测试期用于生成测试密钥和签名，**不是运行时依赖**；CLI 的验签在进程内完成。缺少 openssl 时，B2/B3/B4 签名测试默认 `SkipTest`，本地仍可跑其余测试。发布和 CI **必须**设置开关，让缺 openssl 直接失败，避免把 skip 当成通过：
+
+```bash
+# 发布/CI：缺 openssl 时签名测试 failed/error，不再 skip
+PROJECT_MEMORY_REQUIRE_OPENSSL=1 python3 -m pytest -q
+
+# 本地默认：缺 openssl 时跳过签名测试
+python3 -m pytest -q
+```
+
+开关取值为 `1`、`true`、`yes`（大小写不敏感）。详见 `docs/OPERATIONS.zh-CN.md`。
+
 ## 目标、执行与独立验证
 
 目标用可衡量的成功标准描述，不把 Issue 关闭当成完成：

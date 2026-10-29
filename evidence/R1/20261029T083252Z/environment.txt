@@ -1,0 +1,18 @@
+run_id: 20261029T083252Z
+captured_utc: 2026-10-29T08:34:50Z
+local: 2026-10-29T16:34:50+0800
+os: MINGW64_NT-10.0-26300 LAPTOP-KNMD5U8F 3.6.10-5a1665c8.x86_64 2026-09-28 10:40 UTC x86_64 Msys
+shell: 5.3.15(2)-release
+python: Python 3.12.4
+pytest: pytest 9.1.1
+git: git version 2.56.0.windows.2
+openssl: OpenSSL 3.5.9 29 Sep 2026 (Library: OpenSSL 3.5.9 29 Sep 2026)
+which_openssl: /ucrt64/bin/openssl
+core.autocrlf: true
+eol_attr_evidence_b5b: evidence/B5B/run-20261029T015035Z/sha256sums.txt: eol: unspecified
+branch: fix/release-gates
+head: cf0da825a47e3f0f7949b1bd3e6b18d3f3af7e14
+base: cf0da825a47e3f0f7949b1bd3e6b18d3f3af7e14
+task_card_sha256: 5949420f784feeb1484c8b8465cec40e7646931d5ff6c0a6af865113f13131f1
+PROJECT_MEMORY_REQUIRE_OPENSSL: <unset>
+PROJECT_MEMORY_DISABLE_WSL: <unset>

@@ -25,6 +25,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
+from openssl_support import require_openssl
 from project_memory import authority, execution, trusted_exec
 from project_memory.common import PMError, git_sha
 from project_memory.coordination import (_verification_ok, add_goal_evidence,
@@ -38,9 +39,7 @@ CRITERION = '模块通过测试'
 class B2ExecutionProvenanceTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.openssl = shutil.which('openssl')
-        if not cls.openssl:
-            raise unittest.SkipTest('找不到 openssl；B2 签名测试需要测试期签名者')
+        cls.openssl = require_openssl('B2 签名测试需要测试期签名者')
         cls.keydir = tempfile.TemporaryDirectory()
         work = Path(cls.keydir.name)
         cls.key = work / 'test-key.pem'

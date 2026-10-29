@@ -1,0 +1,13 @@
+{
+  "approved_by": "lead@example.com",
+  "at": "2026-10-29T03:13:57+00:00",
+  "chain_head": "25d4b299e2aeb7d444005a23516a5906da809dd149254c479ad35df28d3f29e1",
+  "chain_length": 5,
+  "checkpoint_id": "CKPT-11aa89405ce9",
+  "evidence_sha256": "9407bf9a391a769481359a1537c23a7d5ca2f2b2851029e88a503a6464768a8f",
+  "goal_id": "G-B4",
+  "kind": "audit_checkpoint",
+  "migration_sha256": null,
+  "schema_version": "1.3",
+  "status": "achieved"
+}

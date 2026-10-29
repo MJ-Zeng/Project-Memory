@@ -1,0 +1,59 @@
+{
+  "changed": true,
+  "dry_run": false,
+  "evaluation": null,
+  "goal": {
+    "adrs": [],
+    "approvals": [
+      {
+        "approval_authority": "claimed_unverified",
+        "at": "2026-10-29T09:14:44+00:00",
+        "by": "human-lead@example.com",
+        "from": "proposed",
+        "reason": "",
+        "to": "approved"
+      }
+    ],
+    "approved_by": "human-lead@example.com",
+    "background": "",
+    "constraints": [],
+    "created_at": "2026-10-29T09:14:43+00:00",
+    "history": [
+      {
+        "at": "2026-10-29T09:14:43+00:00",
+        "by": "owner@example.com",
+        "from": null,
+        "reason": "created",
+        "to": "proposed"
+      },
+      {
+        "at": "2026-10-29T09:14:44+00:00",
+        "by": "human-lead@example.com",
+        "from": "proposed",
+        "reason": "",
+        "to": "approved"
+      }
+    ],
+    "id": "G-R1PROBE",
+    "issues": [],
+    "kind": "goal",
+    "outcome": "fail closed",
+    "owner": "owner@example.com",
+    "prs": [],
+    "revision": 2,
+    "schema_version": "1.2",
+    "status": "approved",
+    "success_criteria": [
+      {
+        "evidence": [],
+        "id": "C1",
+        "required": false,
+        "statement": "模块通过测试"
+      }
+    ],
+    "title": "vacuous probe",
+    "updated_at": "2026-10-29T09:14:44+00:00"
+  },
+  "kind": "goal_transition_result",
+  "schema_version": "1.2"
+}
