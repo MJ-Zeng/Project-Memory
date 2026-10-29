@@ -1,0 +1,23 @@
+# Handoff §6 declared SHA-256 vs actual blobs at 5158908
+utc=2026-10-29T12:27:27Z
+
+declared (from tasks/release-docs-handoff-20261029T115211Z.md §6):
+- `README.md` `b05fcf10571b0ff61173d07589522fd040e2663385f5016ab70daaa849a0bd41`
+- `docs/OPERATIONS.zh-CN.md` `59218738bf9f8e03eda189c62e2088eb3f43d67ca8dbc6aede6e2940487e04c1`
+- `skill/project-memory/references/workflows.md` `2ad150192970c3e5a74b1f4293be700e3a5d83de6ef7bba93d086c4b98893334`
+
+actual blob sha256 @5158908:
+README.md b05fcf10571b0ff61173d07589522fd040e2663385f5016ab70daaa849a0bd41
+docs/OPERATIONS.zh-CN.md 59218738bf9f8e03eda189c62e2088eb3f43d67ca8dbc6aede6e2940487e04c1
+skill/project-memory/references/workflows.md 6d9ab3f709b5c8e04d38fc0a91e1e567f06879d4cf1cdca82eb457388340032f
+
+## verdict per file: declared == actual ?
+README.md MATCH
+docs/OPERATIONS.zh-CN.md MATCH
+skill/project-memory/references/workflows.md STALE declared=2ad150192970c3e5a74b1f4293be700e3a5d83de6ef7bba93d086c4b98893334 actual=6d9ab3f709b5c8e04d38fc0a91e1e567f06879d4cf1cdca82eb457388340032f
+
+## workflows.md changed in this commit?
+skill/project-memory/references/workflows.md
+
+## workflows.md blob sha @dbc858d (where the declared hash came from)
+2ad150192970c3e5a74b1f4293be700e3a5d83de6ef7bba93d086c4b98893334 *-

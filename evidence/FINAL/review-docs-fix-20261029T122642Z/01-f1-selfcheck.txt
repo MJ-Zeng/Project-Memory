@@ -1,0 +1,59 @@
+# F-1 evidence bundle self-check in a fresh clean worktree
+utc=2026-10-29T12:26:46Z
+worktree=/c/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-03/.pilot/docs-fix2-f1
+HEAD=51589083e4c0d012f7006b2528a579104c0532cf  (detached)
+head_subject=fix(release-docs): make evidence bundle self-verifying (F-1/F-2)
+
+## git status --short (must be empty)
+(end status)
+
+## .gitattributes rule for evidence/release-docs
+evidence/release-docs/20261029T115211Z/sha256sums.txt: text: set
+evidence/release-docs/20261029T115211Z/sha256sums.txt: eol: lf
+
+## CR bytes in evidence dir (expect none)
+(crlf_search_exit=1; 1 = none found)
+
+## file count vs manifest lines
+all_files=25
+files_excluding_manifest=24
+manifest_lines=24
+
+## stale hash da5bd554 present? (expect 0)
+0
+
+## cd evidence/release-docs/20261029T115211Z && sha256sum -c sha256sums.txt
+exit-codes.txt: OK
+m1-new.json: OK
+m1-new.json.stderr: OK
+m1-old.json: OK
+m1-old.json.stderr: OK
+m2-goal-create-auth.json: OK
+m2-goal-create-auth.json.stderr: OK
+m2-goal-create.json: OK
+m2-goal-create.json.stderr: OK
+m2-new.json: OK
+m2-new.json.stderr: OK
+m2-old.json: OK
+m2-old.json.stderr: OK
+m3-active.json: OK
+m3-active.json.stderr: OK
+m3-evaluate.json: OK
+m3-evaluate.json.stderr: OK
+m3-evaluating.json: OK
+m3-evaluating.json.stderr: OK
+m3-transition.json: OK
+m3-transition.json.stderr: OK
+pytest-default.log: OK
+verification.log: OK
+verify_release_docs.sh: OK
+SHA256SUM_C_EXIT=0
+
+## byte-compare every worktree file vs its committed blob (HEAD:path)
+compared=24 mismatches=0
+manifest_worktree_sha=9cf3672deb3bbd11c787b9b554b724fb17f5a554e8034f24c1989bc424c79088
+manifest_blob_sha=9cf3672deb3bbd11c787b9b554b724fb17f5a554e8034f24c1989bc424c79088
+
+## reconstruct manifest solely from committed blobs (sorted C) and diff
+RECONSTRUCT_DIFF_EXIT=0
+reconstructed_lines=24

@@ -1,0 +1,13 @@
+# Environment
+utc=2026-10-29T12:27:33Z
+host_os=MINGW64_NT-10.0-26300 LAPTOP-KNMD5U8F 3.6.10-5a1665c8.x86_64 2026-09-28 10:40 UTC x86_64 Msys
+bash=5.3.15(2)-release
+python=Python 3.12.4
+python_path=C:/SoftWare/Anconda/python.exe
+git=git version 2.56.0.windows.2
+core.autocrlf=true
+core.eol=(unset)
+openssl=OpenSSL 3.5.9 29 Sep 2026 (Library: OpenSSL 3.5.9 29 Sep 2026)
+PYTHONIOENCODING=utf-8 PYTHONUTF8=1 (set for reruns)
+reviewed_commit=51589083e4c0d012f7006b2528a579104c0532cf
+base_commit=dbc858d2a3cf8144b24bf9e1523a509cd93cfce6

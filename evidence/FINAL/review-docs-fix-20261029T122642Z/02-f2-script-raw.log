@@ -1,0 +1,27 @@
+===== self-check (sha256sum -c) =====
+exit-codes.txt: OK
+m1-new.json: OK
+m1-new.json.stderr: OK
+m1-old.json: OK
+m1-old.json.stderr: OK
+m2-goal-create-auth.json: OK
+m2-goal-create-auth.json.stderr: OK
+m2-goal-create.json: OK
+m2-goal-create.json.stderr: OK
+m2-new.json: OK
+m2-new.json.stderr: OK
+m2-old.json: OK
+m2-old.json.stderr: OK
+m3-active.json: OK
+m3-active.json.stderr: OK
+m3-evaluate.json: OK
+m3-evaluate.json.stderr: OK
+m3-evaluating.json: OK
+m3-evaluating.json.stderr: OK
+m3-transition.json: OK
+m3-transition.json.stderr: OK
+pytest-default.log: OK
+verification.log: OK
+verify_release_docs.sh: OK
+sha256sum -c exit=0
+SCRIPT_EXIT=0

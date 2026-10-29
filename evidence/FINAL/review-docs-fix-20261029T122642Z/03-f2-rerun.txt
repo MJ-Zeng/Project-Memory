@@ -1,0 +1,55 @@
+# F-2 script rerun in isolated clean worktree
+utc=2026-10-29T12:27:08Z
+worktree=/c/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-03/.pilot/docs-fix2 (detached 5158908)
+command: PYTHONIOENCODING=utf-8 PYTHONUTF8=1 bash evidence/release-docs/20261029T115211Z/verify_release_docs.sh
+
+## exit
+SCRIPT_EXIT=0
+sha256sum_ok_lines=24
+sha256sum -c exit=0
+
+## scenario exit codes from rerun (expected 3/0/0/1/0/0/0/0/0/1)
+m1-old-no-mode-exit3 exit=3
+m1-new-local-mode exit=0
+m2-goal-create exit=0
+m2-old-human-owner-exit1 exit=1
+m2-goal-create-auth exit=0
+m2-new-email exit=0
+m3-to-active exit=0
+m3-to-evaluating exit=0
+m3-evaluate-empty-required exit=0
+m3-transition-achieved-exit1 exit=1
+
+## exit-codes.txt identical to committed version?
+diff_quiet_exit=0 (0=identical)
+
+## pytest tail (full default)
+........................................................................ [ 84%]
+...................................ss..                                  [100%]
+253 passed, 2 skipped in 158.72s (0:02:38)
+
+## post-rerun state: verification.log truncated (not appended)
+verification_log_lines=106
+log_closed_markers=1
+
+## manifest rebuilt, not stale
+manifest_lines=24
+files_excluding_manifest=24
+ evidence/release-docs/20261029T115211Z/sha256sums.txt | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
+independent_post_rerun_check_exit=0
+CR present after normalize? (1=exit none)
+
+## git status --short in worktree after rerun (dirty files must be committed together)
+ M evidence/release-docs/20261029T115211Z/m1-new.json
+ M evidence/release-docs/20261029T115211Z/m2-goal-create-auth.json
+ M evidence/release-docs/20261029T115211Z/m2-goal-create.json
+ M evidence/release-docs/20261029T115211Z/m2-new.json
+ M evidence/release-docs/20261029T115211Z/m3-active.json
+ M evidence/release-docs/20261029T115211Z/m3-evaluate.json
+ M evidence/release-docs/20261029T115211Z/m3-evaluating.json
+ M evidence/release-docs/20261029T115211Z/pytest-default.log
+ M evidence/release-docs/20261029T115211Z/sha256sums.txt
+ M evidence/release-docs/20261029T115211Z/verification.log
+?? .f2-run.out
+?? .openssl-pytest.log

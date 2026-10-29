@@ -1,0 +1,44 @@
+# Scope audit: dbc858d..5158908
+utc=2026-10-29T12:27:03Z
+
+## parents of 5158908
+51589083e4c0d012f7006b2528a579104c0532cf dbc858d2a3cf8144b24bf9e1523a509cd93cfce6
+
+## git diff --name-status dbc858d..5158908
+M	.gitattributes
+M	evidence/release-docs/20261029T115211Z/m1-new.json
+M	evidence/release-docs/20261029T115211Z/m2-goal-create-auth.json
+M	evidence/release-docs/20261029T115211Z/m2-goal-create.json
+M	evidence/release-docs/20261029T115211Z/m2-new.json
+M	evidence/release-docs/20261029T115211Z/m3-active.json
+M	evidence/release-docs/20261029T115211Z/m3-evaluate.json
+M	evidence/release-docs/20261029T115211Z/m3-evaluating.json
+M	evidence/release-docs/20261029T115211Z/pytest-default.log
+M	evidence/release-docs/20261029T115211Z/sha256sums.txt
+M	evidence/release-docs/20261029T115211Z/verification.log
+M	evidence/release-docs/20261029T115211Z/verify_release_docs.sh
+M	skill/project-memory/references/workflows.md
+M	tasks/release-docs-handoff-20261029T115211Z.md
+
+## deletions / renames (expect none)
+(end)
+
+## forbidden-path filter (project_memory|tests|evidence/B4|evidence/R1|evidence/B5B|pyproject|CHANGELOG)
+(none)
+
+## full stat summary
+ .gitattributes                                     |  1 +
+ evidence/release-docs/20261029T115211Z/m1-new.json | 40 +++++++++++-----------
+ .../20261029T115211Z/m2-goal-create-auth.json      |  6 ++--
+ .../20261029T115211Z/m2-goal-create.json           |  6 ++--
+ evidence/release-docs/20261029T115211Z/m2-new.json | 10 +++---
+ .../release-docs/20261029T115211Z/m3-active.json   | 12 +++----
+ .../release-docs/20261029T115211Z/m3-evaluate.json |  2 +-
+ .../20261029T115211Z/m3-evaluating.json            | 14 ++++----
+ .../20261029T115211Z/pytest-default.log            |  2 +-
+ .../release-docs/20261029T115211Z/sha256sums.txt   | 28 +++++++--------
+ .../release-docs/20261029T115211Z/verification.log | 38 ++++++++++++++++----
+ .../20261029T115211Z/verify_release_docs.sh        | 26 +++++++++++++-
+ skill/project-memory/references/workflows.md       |  3 +-
+ tasks/release-docs-handoff-20261029T115211Z.md     | 16 +++++++++
+ 14 files changed, 135 insertions(+), 69 deletions(-)

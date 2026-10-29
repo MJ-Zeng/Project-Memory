@@ -1,0 +1,74 @@
+# Evidence semantics: dbc858d -> 5158908 (committed blobs)
+utc=2026-10-29T12:27:21Z
+
+## m1-new.json diff (lines changed)
+<   "log": ".project-memory/logs/EXE-<id>.log",
+>   "log": ".project-memory/logs/EXE-<id>.log",
+<   "path": ".project-memory/receipts/EXE-<id>.json",
+>   "path": ".project-memory/receipts/EXE-<id>.json",
+<     "commit_sha": "<sha>",
+<     "content_sha256": "cf7ffe3b5b3755c91f86fd08c83212d0f76fcd5b37bb877365fac708ba4a6291",
+>     "commit_sha": "<sha>",
+>     "content_sha256": "c338b0fb213f9e87f6ebdb35981e26c680c2acec9f2376b7da1acf6027ad8cf4",
+<     "finished_at": "<ts>",
+>     "finished_at": "<ts>",
+<     "log_path": ".project-memory/logs/EXE-<id>.log",
+<     "log_sha256": "bbfbf87e67b0e7ec0395e39086be736765caee64930d5506142f91eae0254dda",
+<     "receipt_id": "EXE-<id>",
+<     "repo_id": "3c63441135bb81a29571c967ca7d36a43dade71ef75adeb6c3af0ceccc6bf6b2",
+>     "log_path": ".project-memory/logs/EXE-<id>.log",
+>     "log_sha256": "9446c453f271f6ef3411dc63023354474a176a426289c3cd22b1ff6b5837ecff",
+>     "receipt_id": "EXE-<id>",
+>     "repo_id": "1efc649fefd7136fdeb14ea661dadd4679b8005f552915a9f6030ca3aae56cc8",
+<         "<sha>"
+>         "<sha>"
+(changed_lines=40)
+
+## m2-new.json diff (lines changed)
+<         "at": "<ts>",
+>         "at": "<ts>",
+<     "created_at": "<ts>",
+>     "created_at": "<ts>",
+<         "at": "<ts>",
+>         "at": "<ts>",
+<         "at": "<ts>",
+>         "at": "<ts>",
+<     "updated_at": "<ts>"
+>     "updated_at": "<ts>"
+(changed_lines=10)
+
+## m3-evaluate.json diff (lines changed)
+<     "head": "80e6dc454b4ff1d4341fc47edefdad4efe090c25d0126b0e2cb7c1ab4e7297b1",
+>     "head": "a065e6c5c8d98c4c00e532982c8c67e3ea9b55c650fc0c6aa7b3436350ed0da0",
+(changed_lines=2)
+
+## m3-transition.json diff (lines changed)
+(changed_lines=0)
+
+## m3-evaluate.json key fields @5158908
+{"satisfied": false, "evaluation_status": "insufficient_evidence", "no_required_criteria": true, "status_problems": ["no_required_criteria"], "effective_status": "evaluating", "status_trusted": null}
+
+## m1-new.json trust/isolation @5158908
+{"trust": "local_untrusted", "isolation_mode": "none", "os_isolation": false}
+
+## m2-new.json approval @5158908
+{"status": "approved", "approved_by": "owner@example.com", "approval_authority": "claimed_unverified"}
+
+## m3-transition.json (size) and stderr @5158908
+size_bytes=0
+project-memory: Goal 的成功标准尚未满足（insufficient_evidence）：无；不能仅凭 Issue 关闭或 Agent 声明标记 achieved
+
+## m1-old rejection stderr @5158908
+project-memory: 拒绝执行：test-run 默认不执行未隔离代码。请显式选择 --trusted（WSL2 隔离）或 --allow-local-untrusted（宿主本地执行，无隔离）。
+
+## exit-codes committed @5158908
+m1-old-no-mode-exit3 exit=3
+m1-new-local-mode exit=0
+m2-goal-create exit=0
+m2-old-human-owner-exit1 exit=1
+m2-goal-create-auth exit=0
+m2-new-email exit=0
+m3-to-active exit=0
+m3-to-evaluating exit=0
+m3-evaluate-empty-required exit=0
+m3-transition-achieved-exit1 exit=1

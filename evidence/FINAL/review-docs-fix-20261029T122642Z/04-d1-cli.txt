@@ -1,0 +1,26 @@
+# D-1: workflows.md manual-evidence --ref example
+utc=2026-10-29T12:27:15Z
+temp_repo=/tmp/tmp.nNycjHznop
+PYTHONPATH=/c/Documents/02_Research/Code/project-memory-verification-lab/import-workspace/pm-pilot-03/.pilot/docs-fix2-f1
+
+## create goal with two criteria
+goal_create_exit=0
+
+## NEW example (exact text from workflows.md):
+--ref 'https://github.com/example/repo/pull/12#pullrequestreview-1'
+new_ref_exit=0
+stderr:
+stored_ref:
+https://github.com/example/repo/pull/12#pullrequestreview-1
+
+## OLD example (pre-fix): --ref 'review:https://...'
+old_ref_exit=1
+stderr:
+project-memory: 证据无效：manual 证据的 ref 必须是批准链接、PR/Issue 编号或 40 位提交 SHA
+
+## also old variant 'review:https://example.com/review/1'
+old_ref2_exit=1
+project-memory: 证据无效：manual 证据的 ref 必须是批准链接、PR/Issue 编号或 40 位提交 SHA
+
+## ref regex (coordination.py:65)
+65:APPROVAL_REF = re.compile(r'(?:https?://\S+|#\d+|(?:PR|pr|Issue|issue|Review|review)\s*#?\d+|[0-9a-f]{40})')
