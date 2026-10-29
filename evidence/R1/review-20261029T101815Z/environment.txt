@@ -1,0 +1,12 @@
+PM-03 R1 independent review
+Date: 2026-10-29T10:47:13Z
+OS: Windows 10.0.26300
+Python: C:/SoftWare/Anconda/python.exe (3.12.4)
+pytest: 9.1.1
+git: 2.56.0.windows.2
+openssl: /ucrt64/bin/openssl (OpenSSL 3.5.9)
+core.autocrlf: true
+Base SHA: 85bf6a05542aa6bca3ab0d9ef51c6216f76b6080
+Candidate SHA: bb06037c469b6586b95fbcd69b6965585f2c977e
+Task card SHA-256: 5949420f784feeb1484c8b8465cec40e7646931d5ff6c0a6af865113f13131f1
+Review branch: review/r1-bb06037

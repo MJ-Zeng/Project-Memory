@@ -1,0 +1,12 @@
+{
+  "probe": "delete",
+  "exit": 0,
+  "raw_status": "evaluating",
+  "effective_status": "evaluating",
+  "status_trusted": null,
+  "status_problems": [
+    "no_required_criteria"
+  ],
+  "goal_status": "evaluating",
+  "evaluation_no_required_criteria": true
+}

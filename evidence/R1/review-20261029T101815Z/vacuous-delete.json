@@ -1,0 +1,28 @@
+{
+  "probe": "delete",
+  "goal_status_before_evaluate": "evaluating",
+  "evaluate": {
+    "exit": 0,
+    "satisfied": false,
+    "evaluation_status": "insufficient_evidence",
+    "no_required_criteria": true,
+    "blocking": [],
+    "recommendation": "insufficient_evidence",
+    "status_problems": [
+      "no_required_criteria"
+    ],
+    "effective_status": "evaluating",
+    "raw_status": "evaluating",
+    "recorded_status_consistent": true
+  },
+  "show": {
+    "exit": 0,
+    "goal_readable": "G-DELETE",
+    "raw_status": "evaluating",
+    "effective_status": "evaluating",
+    "status_trusted": null,
+    "status_problems": [
+      "no_required_criteria"
+    ]
+  }
+}

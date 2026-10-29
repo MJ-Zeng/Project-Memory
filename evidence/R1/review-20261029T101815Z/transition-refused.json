@@ -1,0 +1,24 @@
+{
+  "probe": "delete",
+  "exit": 1,
+  "stderr": "project-memory: Goal 的成功标准尚未满足（insufficient_evidence）：无；不能仅凭 Issue 关闭或 Agent 声明标记 achieved",
+  "goal_status_after": "evaluating",
+  "checkpoint_request_exists": false,
+  "audit_last_entry": {
+    "blocking": [],
+    "detail": "local Goal status cannot be authoritative without signed evidence",
+    "entry_hash": "ba160a8b794add550d68eb246e8577af9386e07fdb8231d6866250662e97060c",
+    "evaluation_status": "insufficient_evidence",
+    "goal_id": "G-DELETE",
+    "kind": "verification_attempt",
+    "no_required_criteria": true,
+    "outcome": "rejected",
+    "prev_hash": "bcd58f7835be3bf73a7189f30d27da67bbc59299afb216fea31ffd79da56967a",
+    "reason": "goal_achieved_unsatisfied",
+    "schema_version": "1.3",
+    "seq": 4,
+    "timestamp": "2026-10-29T10:20:50+00:00",
+    "verified": false
+  },
+  "audit_entry_count": 4
+}

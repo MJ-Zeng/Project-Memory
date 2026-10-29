@@ -1,0 +1,20 @@
+{"cmd":"git rev-parse 85bf6a0^{commit}","exit":0,"note":"baseline OK"}
+{"cmd":"git rev-parse bb06037^{commit}","exit":0,"note":"candidate OK"}
+{"cmd":"git merge-base --is-ancestor 85bf6a0 bb06037","exit":0,"note":"candidate descends from baseline"}
+{"cmd":"sha256sum tasks/R1.md (on candidate)","exit":0,"note":"5949420f…13131f1 matches"}
+{"cmd":"git diff --stat cf0da82..bb06037 -- tasks/R1.md","exit":0,"note":"empty; task card unchanged"}
+{"cmd":"git diff --name-status 85bf6a0..bb06037 -- tasks/ evidence/B4/ evidence/B5B/","exit":0,"note":"only R1.md/handoff added; B4 untouched; B5B README added"}
+{"cmd":"bash r1_review_probe.sh toggle","exit":0,"note":"path A: required=false; evaluate exit 0 satisfied=false no_required_criteria=true; transition refused exit 1; no checkpoint request"}
+{"cmd":"bash r1_review_probe.sh delete","exit":0,"note":"path B: delete all required; same fail-closed behavior"}
+{"cmd":"goal create (no --criterion)","exit":1,"note":"rejected with 必达 error"}
+{"cmd":"goal evaluate G-CTRL (required but unmet)","exit":2,"note":"unsatisfied with required criteria still exit 2"}
+{"cmd":"PATH=System32 pytest b2 b3 b4","exit":0,"note":"37 skipped"}
+{"cmd":"PATH=System32 PROJECT_MEMORY_REQUIRE_OPENSSL=1 pytest b2 b3 b4","exit":1,"note":"37 errors, message mentions openssl and switch"}
+{"cmd":"pytest b2 b3 b4 (openssl present)","exit":0,"note":"37 passed"}
+{"cmd":"PROJECT_MEMORY_REQUIRE_OPENSSL=1 pytest b2 b3 b4 (openssl present)","exit":0,"note":"37 passed"}
+{"cmd":"pytest -q (default)","exit":0,"note":"253 passed, 2 skipped"}
+{"cmd":"PROJECT_MEMORY_REQUIRE_OPENSSL=1 pytest -q","exit":0,"note":"253 passed, 2 skipped"}
+{"cmd":"pytest -q tests/test_security_rc3.py","exit":0,"note":"18 passed, 2 skipped (symlink cases)"}
+{"cmd":"tr -d CR < evidence/R1/.../sha256sums.txt | sha256sum -c","exit":0,"note":"R1 manifest verified"}
+{"cmd":"git hash-object vs git rev-parse HEAD for evidence/R1/**","exit":0,"note":"all match; git add did not rewrite bytes"}
+{"cmd":"B5B README verification method test","exit":0,"note":"LF-normalized bytes match manifest"}
