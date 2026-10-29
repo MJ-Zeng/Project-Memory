@@ -1,0 +1,36 @@
+{
+  "backup_exists": true,
+  "migration": {
+    "changed": true,
+    "entries": 2,
+    "head": "b31a513374b2fda97ad12d116df194c732ce99d6686149d0ddcff5417e621e5b",
+    "kind": "audit_migration_result",
+    "migration": {
+      "at": "2026-10-29T06:59:35+00:00",
+      "backup": ".project-memory/audit/verification_attempts.pre-chain.jsonl",
+      "entries": 2,
+      "head": "b31a513374b2fda97ad12d116df194c732ce99d6686149d0ddcff5417e621e5b",
+      "kind": "audit_migration",
+      "note": "迁移本身不是信任锚；只有 anchor 签名的 checkpoint 才能使其权威",
+      "schema_version": "1.3",
+      "source_sha256": "93a376e4ae7fcda1be1ef872b4ac171c3d3eb70bb42af25105077efb273474de"
+    },
+    "path": ".project-memory/audit/verification_attempts.jsonl",
+    "schema_version": "1.3",
+    "source_sha256": "93a376e4ae7fcda1be1ef872b4ac171c3d3eb70bb42af25105077efb273474de"
+  },
+  "migration_json": true,
+  "post": {
+    "authoritative": false,
+    "problems": [],
+    "status": "valid_unanchored",
+    "valid": true
+  },
+  "pre": {
+    "problems": [
+      "legacy_entries_without_chain"
+    ],
+    "status": "invalid",
+    "valid": false
+  }
+}

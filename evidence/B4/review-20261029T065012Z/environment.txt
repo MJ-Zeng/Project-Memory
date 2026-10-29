@@ -1,0 +1,14 @@
+review run: 20261029T065012Z
+reviewer session: PM-03 independent (separate clone/worktree)
+candidate: 9fa14f853ed1fa8f473238ca1a0765b733711d65
+impl commit: 544b6d9b0cb59ad19b198b04d9f72e40b234005b
+base: f7c91333bbc999626e87eb29555b2c7c1ccb1a8f
+task card sha256: 3fcce10bb9b03293358a4beab40c0466bd3e40b59d7c0596d7fb8086d71649eb
+remote fix/b4-audit-integrity: 9fa14f853ed1fa8f473238ca1a0765b733711d65
+---
+Python 3.12.4
+pytest 9.1.1
+OpenSSL 3.5.9 29 Sep 2026 (Library: OpenSSL 3.5.9 29 Sep 2026)
+git version 2.56.0.windows.2
+platform: Windows-11-10.0.26300-SP0
+anchor mode: test RSA key + in-process authority.load_anchor stub (production anchor NOT read)

@@ -1,0 +1,133 @@
+{
+  "attach": {
+    "anchor_id": "review-test-anchor",
+    "chain_head": "1731e005c586ed181b2905ed7e4120d1590cddb79353f9f917459503ec6694cf",
+    "chain_length": 5,
+    "checkpoint": {
+      "approved_by": "lead@example.com",
+      "at": "2026-10-29T06:59:00+00:00",
+      "authority": {
+        "algorithm": "rsa-sha256",
+        "anchor_id": "review-test-anchor",
+        "issuer": "review-test-signer",
+        "signature_b64": "j2DWX4tbhbhqTHRO6puZSvJ9slhmOc2HTXhHn//x2Es3zT73PWVjnbzDGtaWhNl2neqSeIz0wwbztx/DQyFEJsUn29/TK/tboZ0SLxnyscZs0V7pw+QL/FtD+74HqDxa5w15pIZa88BypXg6fGSs3j4BFO+bVJaS7/0v6yvf3e40AaqVriVhNcfSpbnlqNie5jwuA6fFGVVelEdohoC274z2ub9cUcHBWan3kM3pp3DLqBdKtgNKVFoMPDCiCmHkOlW4gGEczYoGjeXnsHmDfFKJlGVYrg1ReEL6VIt++MDeq65axYmt70fhK7g9qmu3Aavs5XoFJtyUWIaxepHx8w==",
+        "signed_payload_sha256": "7912577f914f7d56ba469a33ce2dc0364a4ced1b54c0ca9807d80c4039630b17",
+        "status": "trusted"
+      },
+      "chain_head": "1731e005c586ed181b2905ed7e4120d1590cddb79353f9f917459503ec6694cf",
+      "chain_length": 5,
+      "checkpoint_id": "CKPT-42f372df4d56",
+      "evidence_sha256": "e98b82538397bc11830d8cc94d7992aacd2f9bfaff299b30275d917ce0311ebb",
+      "goal_id": "G-B4",
+      "kind": "audit_checkpoint",
+      "migration_sha256": null,
+      "schema_version": "1.3",
+      "status": "achieved"
+    },
+    "kind": "audit_checkpoint_attach_result",
+    "path": ".project-memory/audit/head.json",
+    "schema_version": "1.3",
+    "trusted": true
+  },
+  "chain_entries": 5,
+  "evaluate_satisfied": true,
+  "goal_show": {
+    "audit": {
+      "authoritative": true,
+      "checkpoint": {
+        "anchored_head": "1731e005c586ed181b2905ed7e4120d1590cddb79353f9f917459503ec6694cf",
+        "approved_by": "lead@example.com",
+        "at": "2026-10-29T06:59:00+00:00",
+        "authority_status": "trusted",
+        "chain_head": "1731e005c586ed181b2905ed7e4120d1590cddb79353f9f917459503ec6694cf",
+        "chain_length": 5,
+        "checkpoint_id": "CKPT-42f372df4d56",
+        "evidence_sha256": "e98b82538397bc11830d8cc94d7992aacd2f9bfaff299b30275d917ce0311ebb",
+        "goal_id": "G-B4",
+        "matches": true,
+        "migration_sha256": null,
+        "path": ".project-memory/audit/head.json",
+        "present": true,
+        "reason": "signature verified",
+        "status": "achieved",
+        "trusted": true
+      },
+      "entries": 5,
+      "head": "1731e005c586ed181b2905ed7e4120d1590cddb79353f9f917459503ec6694cf",
+      "migration_sha256": null,
+      "problems": [],
+      "status": "valid",
+      "valid": true
+    },
+    "effective_status": "achieved",
+    "evaluation": {
+      "effective_status": "achieved",
+      "recommendation": "achieved",
+      "satisfied": true,
+      "status_authority": "anchor_signed_checkpoint",
+      "status_problems": [],
+      "status_trusted": true
+    },
+    "raw_status": "achieved",
+    "status_authority": "anchor_signed_checkpoint",
+    "status_consistent": true,
+    "status_problems": [],
+    "status_trusted": true
+  },
+  "head": {
+    "authoritative": false,
+    "checkpoint": {
+      "matches": false,
+      "path": ".project-memory/audit/head.json",
+      "present": false,
+      "reason": "checkpoint_missing",
+      "trusted": false
+    },
+    "entries": 5,
+    "head": "1731e005c586ed181b2905ed7e4120d1590cddb79353f9f917459503ec6694cf",
+    "kind": "audit_head_result",
+    "migration": null,
+    "problems": [],
+    "schema_version": "1.3",
+    "status": "valid_unanchored"
+  },
+  "pre_attach_authoritative": false,
+  "pre_attach_effective": "achieved_unverified",
+  "pre_attach_problems": [
+    "checkpoint_missing"
+  ],
+  "pre_attach_trusted": false,
+  "pre_attach_verify_status": "valid_unanchored",
+  "verify": {
+    "authoritative": true,
+    "caveat": "valid_unanchored 只证明链自洽，不证明历史未被重建；achieved 需要 anchor 签名的 checkpoint。",
+    "chain_problems": [],
+    "checkpoint": {
+      "anchored_head": "1731e005c586ed181b2905ed7e4120d1590cddb79353f9f917459503ec6694cf",
+      "approved_by": "lead@example.com",
+      "at": "2026-10-29T06:59:00+00:00",
+      "authority_status": "trusted",
+      "chain_head": "1731e005c586ed181b2905ed7e4120d1590cddb79353f9f917459503ec6694cf",
+      "chain_length": 5,
+      "checkpoint_id": "CKPT-42f372df4d56",
+      "evidence_sha256": "e98b82538397bc11830d8cc94d7992aacd2f9bfaff299b30275d917ce0311ebb",
+      "goal_id": "G-B4",
+      "matches": true,
+      "migration_sha256": null,
+      "path": ".project-memory/audit/head.json",
+      "present": true,
+      "reason": "signature verified",
+      "status": "achieved",
+      "trusted": true
+    },
+    "entries": 5,
+    "head": "1731e005c586ed181b2905ed7e4120d1590cddb79353f9f917459503ec6694cf",
+    "kind": "audit_chain_verification",
+    "migration": null,
+    "migration_sha256": null,
+    "problems": [],
+    "schema_version": "1.3",
+    "status": "valid",
+    "valid": true
+  }
+}

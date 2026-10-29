@@ -1,0 +1,17 @@
+{
+ "key_dir_matched": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b4-keys-g4pev3gf",
+ "original": {
+  "effective": "achieved",
+  "trusted": true
+ },
+ "replayed_goal_id": {
+  "effective": "achieved_unverified",
+  "problems": [
+   "goal_not_satisfied",
+   "checkpoint_goal_mismatch",
+   "checkpoint_evidence_mismatch"
+  ],
+  "raw": "achieved",
+  "trusted": false
+ }
+}

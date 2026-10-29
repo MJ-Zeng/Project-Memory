@@ -1,0 +1,18 @@
+{
+  "after_append": {
+    "authoritative": true,
+    "checkpoint_length": 5,
+    "effective": "achieved",
+    "entries": 6,
+    "status": "valid",
+    "trusted": true
+  },
+  "after_tail_delete": {
+    "authoritative": true,
+    "effective": "achieved",
+    "entries": 5,
+    "status": "valid",
+    "trusted": true
+  },
+  "note": "tail entries after the checkpoint are outside the signed prefix (ADR §7.4)"
+}

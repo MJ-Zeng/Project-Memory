@@ -1,0 +1,13 @@
+{
+  "after_effective": "achieved_unverified",
+  "after_trusted": false,
+  "attempts": {
+    "missing_signature": "rejected: 签名文件不存在：C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b4-review-8y7uw2i5\\does-not-exist.sig",
+    "no_anchor": "rejected: 无法验证 checkpoint：unconfigured: 未配置信任锚",
+    "untrusted_key": "rejected: checkpoint 签名无效（untrusted）：签名验证失败"
+  },
+  "before_effective": "achieved_unverified",
+  "before_trusted": false,
+  "head_json_exists": false,
+  "request_present": true
+}

@@ -1,0 +1,22 @@
+{
+  "authoritative": false,
+  "chain_problems": [],
+  "checkpoint": {
+    "chain_head": "07022c02e38a6738c675cb034a2a50307868a37fc4800d7619eb5bf037c711a9",
+    "chain_length": 5,
+    "matches": false,
+    "present": true,
+    "trusted": true
+  },
+  "effective": "achieved_unverified",
+  "evaluate_satisfied": true,
+  "problems": [
+    "checkpoint_chain_mismatch"
+  ],
+  "status": "invalid",
+  "status_problems": [
+    "checkpoint_chain_mismatch"
+  ],
+  "status_trusted": false,
+  "valid": false
+}

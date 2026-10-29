@@ -1,0 +1,12 @@
+{
+  "effective_status": "achieved_unverified",
+  "evaluate_effective": "achieved_unverified",
+  "evaluate_recommendation": "checkpoint_required",
+  "evaluate_satisfied": true,
+  "raw_status": "achieved",
+  "status_problems": [
+    "checkpoint_missing",
+    "status_history_mismatch"
+  ],
+  "status_trusted": false
+}

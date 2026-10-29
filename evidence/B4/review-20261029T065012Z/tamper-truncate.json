@@ -1,0 +1,20 @@
+{
+  "raw_truncate": {
+    "effective": "achieved_unverified",
+    "problems": [
+      "checkpoint_chain_mismatch"
+    ],
+    "status": "invalid",
+    "valid": false
+  },
+  "rebuilt_truncate": {
+    "chain_problems": [],
+    "effective": "achieved_unverified",
+    "problems": [
+      "checkpoint_chain_mismatch"
+    ],
+    "status": "invalid",
+    "trusted": false,
+    "valid": false
+  }
+}

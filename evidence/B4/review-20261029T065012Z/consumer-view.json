@@ -1,0 +1,43 @@
+{
+  "audit": {
+    "authoritative": true,
+    "checkpoint": {
+      "anchored_head": "1731e005c586ed181b2905ed7e4120d1590cddb79353f9f917459503ec6694cf",
+      "approved_by": "lead@example.com",
+      "at": "2026-10-29T06:59:00+00:00",
+      "authority_status": "trusted",
+      "chain_head": "1731e005c586ed181b2905ed7e4120d1590cddb79353f9f917459503ec6694cf",
+      "chain_length": 5,
+      "checkpoint_id": "CKPT-42f372df4d56",
+      "evidence_sha256": "e98b82538397bc11830d8cc94d7992aacd2f9bfaff299b30275d917ce0311ebb",
+      "goal_id": "G-B4",
+      "matches": true,
+      "migration_sha256": null,
+      "path": ".project-memory/audit/head.json",
+      "present": true,
+      "reason": "signature verified",
+      "status": "achieved",
+      "trusted": true
+    },
+    "entries": 5,
+    "head": "1731e005c586ed181b2905ed7e4120d1590cddb79353f9f917459503ec6694cf",
+    "migration_sha256": null,
+    "problems": [],
+    "status": "valid",
+    "valid": true
+  },
+  "effective_status": "achieved",
+  "evaluation": {
+    "effective_status": "achieved",
+    "recommendation": "achieved",
+    "satisfied": true,
+    "status_authority": "anchor_signed_checkpoint",
+    "status_problems": [],
+    "status_trusted": true
+  },
+  "raw_status": "achieved",
+  "status_authority": "anchor_signed_checkpoint",
+  "status_consistent": true,
+  "status_problems": [],
+  "status_trusted": true
+}

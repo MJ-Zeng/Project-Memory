@@ -1,0 +1,9 @@
+{
+  "effective": "achieved_unverified",
+  "problems": [
+    "audit_empty"
+  ],
+  "status": "invalid",
+  "trusted": false,
+  "valid": false
+}

@@ -1,0 +1,11 @@
+{
+  "AC1_raw_status_untrusted": true,
+  "AC2_delete_detected": true,
+  "AC3_rewrite_detected": true,
+  "AC4_rebuild_detected": true,
+  "AC4b_truncate_detected": true,
+  "AC5_legitimate": true,
+  "AC6_agent_cannot_sign": true,
+  "AC7_empty_missing_rejected": true,
+  "CLI_compat": true
+}

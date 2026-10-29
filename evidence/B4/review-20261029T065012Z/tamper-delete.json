@@ -1,0 +1,12 @@
+{
+  "chain_problems": [
+    "seq_mismatch_at:2"
+  ],
+  "entries_after": 3,
+  "entries_before": 5,
+  "problems": [
+    "seq_mismatch_at:2"
+  ],
+  "status": "invalid",
+  "valid": false
+}

@@ -1,0 +1,16 @@
+{"argv": ["python", "-m", "project_memory", "audit"], "exit": 0, "cwd": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b4-review-8y7uw2i5\\cli-_p9qiv_n"}
+{"argv": ["python", "-m", "project_memory", "audit", "verify"], "exit": 0, "cwd": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b4-review-8y7uw2i5\\cli-unanchored-ta1yw3it"}
+{"argv": ["python", "-m", "project_memory", "audit", "head"], "exit": 0, "cwd": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b4-review-8y7uw2i5\\cli-unanchored-ta1yw3it"}
+{"argv": ["python", "-m", "project_memory", "audit", "verify"], "exit": 2, "cwd": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b4-review-8y7uw2i5\\cli-_p9qiv_n"}
+{"argv": ["python", "-m", "project_memory", "audit", "migrate"], "exit": 0, "cwd": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b4-review-8y7uw2i5\\cli-unanchored-ta1yw3it"}
+{"argv": ["python", "-m", "project_memory", "goal", "show", "--id", "G-B4"], "exit": 0, "cwd": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b4-review-8y7uw2i5\\cli-_p9qiv_n"}
+{"argv": ["python", "-m", "project_memory", "audit", "verify"], "exit": 2, "cwd": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b4-review-8y7uw2i5\\cli-missing-ub3ef6_h"}
+{"argv": ["python", "-m", "project_memory", "audit", "checkpoint-request", "--goal", "G-B4", "--approved-by", "human@example.com"], "exit": 1, "cwd": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b4-review-8y7uw2i5\\cli-req-b8p8mots"}
+{"argv": ["python", "-m", "project_memory", "audit", "checkpoint-attach", "--signature", "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b4-review-8y7uw2i5\\tmpmt8nxdu9\\cli.sig"], "exit": 1, "cwd": "C:\\Users\\ZMJ\\AppData\\Local\\Temp\\b4-review-8y7uw2i5\\cli-req-b8p8mots"}
+{"argv": ["git", "diff", "--name-status", "f7c91333..9fa14f85"], "exit": 0}
+{"argv": ["git", "rev-parse", "origin/fix/b4-audit-integrity"], "exit": 0}
+{"argv": ["sha256sum", "-c", "sha256sums.txt"], "exit": 0, "cwd": "evidence/B4/20261029T031257Z"}
+{"argv": ["python", "-m", "pytest", "tests/", "-q", "-p", "no:cacheprovider"], "exit": 0, "note": "baseline worktree: 233 passed, 2 skipped"}
+{"argv": ["python", "-m", "pytest", "tests/", "-q", "-rs", "-p", "no:cacheprovider"], "exit": 0, "note": "candidate: 247 passed, 2 skipped (rc3 symlink)"}
+{"argv": ["python", "-m", "pytest", "tests/test_security_b5b.py", "tests/test_security_b5a.py", "tests/test_security_b3.py", "tests/test_security_b2.py", "tests/test_security_rc3.py", "-q", "-rs"], "exit": 0, "note": "61 passed, 2 skipped"}
+{"argv": ["python", "evidence/B4/review-20261029T065012Z/review_probe.py"], "exit": 0, "note": "all scenarios green"}

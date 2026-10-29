@@ -1,0 +1,10 @@
+{
+  "chain_problems": [
+    "prev_hash_mismatch_at:3"
+  ],
+  "problems": [
+    "prev_hash_mismatch_at:3"
+  ],
+  "status": "invalid",
+  "valid": false
+}
