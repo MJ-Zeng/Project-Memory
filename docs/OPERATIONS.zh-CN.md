@@ -45,6 +45,24 @@
 
 `test-run` 子进程固定使用快照树作为 `PYTHONPATH`，并设置 `PYTHONSAFEPATH=1`/`PYTHONNOUSERSITE=1`；收据的 `isolation.python_env` 记录该清理状态。自动化脚本请使用原生包装器 `project-memory` 或带 `-I -P` 的入口，不要用裸 `python -m`。
 
+## 测试期 openssl 与发布门禁（R1）
+
+openssl 只由测试使用（生成测试 RSA 密钥、对测试载荷签名），**不是运行时依赖**：CLI 的验签由 `authority.py` 在进程内完成，不调用外部 openssl。
+
+- 默认：找不到 openssl 时，B2/B3/B4 签名测试以 `SkipTest` 跳过，本地仍可运行其他测试；skip 只表示“未执行”，**不等于通过**。
+- 发布/CI：必须设置 `PROJECT_MEMORY_REQUIRE_OPENSSL=1`（也接受 `true`/`yes`，大小写不敏感）。此时找不到 openssl 会让签名测试 failed/error，命令以非零退出，消息同时包含 `openssl` 和 `PROJECT_MEMORY_REQUIRE_OPENSSL`。
+- 开关只影响测试，不改变运行时行为、信任根或验签路径，也不新增运行时依赖。
+
+```bash
+# 发布门禁（openssl 缺失时不得 skip）
+PROJECT_MEMORY_REQUIRE_OPENSSL=1 python3 -m pytest -q
+
+# 本机默认（允许 skip，仅用于开发）
+python3 -m pytest -q
+```
+
+Windows 上 `python3` 可能是 Microsoft Store 的别名桩（exit 49），请改用实际解释器（如 `python`、venv 或 Anaconda 路径）执行上述命令。
+
 ## 目标、执行与验证
 
 Goal 至少有一条必达成功标准。标准要能用提交、测试日志、验证记录或人工批准判断：

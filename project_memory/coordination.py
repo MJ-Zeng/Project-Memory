@@ -1403,8 +1403,15 @@ def evaluate_goal(repo: Path, goal_id: str) -> dict:
                              'required': criterion.get('required', True), 'status': status,
                              'evidence': evidence_out})
     required = [c for c in criteria_out if c.get('required')]
-    required_satisfied = all(c['status'] == 'satisfied' for c in required)
-    if open_high:
+    # R1 (#19): an empty required set is not a vacuous success.  A hand-edited
+    # Goal can flip every criterion to optional or delete them; ``all([])`` must
+    # never be read as "satisfied".  Fail closed with a machine-readable marker.
+    no_required_criteria = not required
+    required_satisfied = bool(required) and all(c['status'] == 'satisfied' for c in required)
+    if no_required_criteria:
+        state = 'insufficient_evidence'
+        recommendation = 'insufficient_evidence'
+    elif open_high:
         state = 'blocked_by_defect'
         recommendation = 'fix_defects'
     elif required_satisfied:
@@ -1428,6 +1435,7 @@ def evaluate_goal(repo: Path, goal_id: str) -> dict:
         'recorded_status_consistent': goal['status'] != 'achieved' or satisfied,
         'status_authority': 'local_untrusted',
         'evaluation_status': state, 'criteria': criteria_out,
+        'no_required_criteria': no_required_criteria,
         'blocking': blocking, 'partial': partial,
         'open_high_defects': [d['defect_id'] for d in open_high],
         'recommendation': recommendation,
@@ -1439,6 +1447,9 @@ def evaluate_goal(repo: Path, goal_id: str) -> dict:
     effective, trusted, status_problems = _achieved_status(
         repo, goal, satisfied, result, audit_report)
     result['raw_status'] = goal['status']
+    if no_required_criteria:
+        status_problems = list(dict.fromkeys(
+            [*status_problems, 'no_required_criteria']))
     result['effective_status'] = effective
     result['status_trusted'] = trusted
     result['status_problems'] = status_problems
@@ -1519,6 +1530,7 @@ def transition_goal(repo: Path, goal_id: str, target: str, approved_by: str | No
             detail = '、'.join(evaluation['blocking']) or '无'
             _audit_attempt(repo, outcome='rejected', reason='goal_achieved_unsatisfied',
                            goal_id=goal_id, evaluation_status=evaluation['evaluation_status'],
+                           no_required_criteria=evaluation.get('no_required_criteria', False),
                            blocking=evaluation['blocking'], verified=False,
                            detail='local Goal status cannot be authoritative without signed evidence')
             raise PMError(f'Goal 的成功标准尚未满足（{evaluation["evaluation_status"]}）：{detail}；'

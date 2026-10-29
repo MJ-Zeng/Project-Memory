@@ -24,6 +24,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
+from openssl_support import require_openssl
 from project_memory import authority, execution, trusted_exec
 from project_memory.common import PMError, git_sha, sha256_file
 from project_memory.coordination import (_audit_attempt, add_goal_evidence,
@@ -41,9 +42,7 @@ GOAL = 'G-B4'
 class B4IntegrityTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.openssl = shutil.which('openssl')
-        if not cls.openssl:
-            raise unittest.SkipTest('找不到 openssl；B4 签名测试需要测试期签名者')
+        cls.openssl = require_openssl('B4 签名测试需要测试期签名者')
         cls.keydir = tempfile.TemporaryDirectory()
         work = Path(cls.keydir.name)
         cls.key = work / 'test-key.pem'

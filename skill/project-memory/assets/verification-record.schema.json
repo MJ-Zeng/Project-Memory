@@ -83,6 +83,7 @@
       "pattern": "^[a-f0-9]{64}$"
     },
     "goal_criteria_sha256": {
+      "description": "SHA-256 of the criterion definitions (id, statement, required) in canonical JSON. Evidence arrays are excluded so appending evidence does not invalidate a signed record. Legacy records that hashed the full success_criteria list, or that list with evidence=[], remain current while the definitions are unchanged (ADR-0004).",
       "type": "string",
       "pattern": "^[a-f0-9]{64}$"
     },

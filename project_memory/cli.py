@@ -464,6 +464,11 @@ def run(args):
         elif args.goal_command == 'evaluate':
             result = evaluate_goal(repo, args.id)
             emit(result)
+            # R1: a vacuous required set is a structured configuration fault,
+            # not a "deep" evaluation verdict; keep 0 so callers can read the
+            # JSON marker without treating it as a candidate-success signal.
+            if result.get('no_required_criteria'):
+                return 0
             return 0 if result['satisfied'] else 2
         elif args.goal_command == 'evidence':
             emit(add_goal_evidence(repo, args.id, args.criterion, args.kind, args.ref,

@@ -195,8 +195,10 @@ pass 条件还要求没有 high 级发现、目标 head 未变化、验证记录
 ## 五、数据与引用契约
 
 - 结构化输出都带 `schema_version` 和 `kind`。新记录使用 `1.2`；通用 handoff 兼容 `1.1`，完成报告仍是 `1.1` 并增加 `evidence_levels`。下游拒绝未知主版本，忽略额外字段。
-- JSON Schema（Draft 2020-12）放在 `skill/project-memory/assets/`，共 19 份：Task Context、Handoff、Completion、Audit、Graph、Config、Init、ADR proposal/metadata、Search results、Issue/PR snapshot、Document draft，以及 Goal、Agent Run、Run Checkpoint、Verification Record、Defect、Knowledge Reconciliation。当前只验证 JSON 能解析，还没有接入 Draft 2020-12 实例校验器。
-- Goal 记录成功标准和证据，状态为 `proposed`、`approved`、`active`、`evaluating`、`achieved`、`blocked`、`cancelled`；`approved` 和 `achieved` 需要 `approved_by`。
+- JSON Schema（Draft 2020-12）放在 `skill/project-memory/assets/`，共 21 份：Task Context、Handoff、Completion、Audit、Graph、Config、Init、ADR proposal/metadata、Search results、Issue/PR snapshot、Document draft、Criterion Evidence、Audit Ledger，以及 Goal、Agent Run、Run Checkpoint、Verification Record、Defect、Knowledge Reconciliation。当前只验证 JSON 能解析，还没有接入 Draft 2020-12 实例校验器。
+- Goal 记录成功标准和证据，状态为 `proposed`、`approved`、`active`、`evaluating`、`achieved`、`blocked`、`cancelled`；`approved` 和 `achieved` 需要 `approved_by`。必达判据集合为空（手改 `required=false` 或删除全部必达判据）时，评估返回 `satisfied=false`、`evaluation_status=insufficient_evidence` 和机器可读的 `no_required_criteria`，`goal show` 仍可读但 `effective_status` 不会成为 `achieved`。
+- `verification-record.goal_criteria_sha256` 覆盖判据**定义**（`id`、`statement`、`required`），不包含 `evidence` 数组；追加证据不会使签名失效。B3 之前的记录可能保存整份 `success_criteria` 或 `evidence=[]` 的旧摘要，校验时按不变判据继续接受（见 ADR-0004）。
+- 执行审计使用 1.3 账本：每条记录带 `seq`、`prev_hash`、`entry_hash`，从 genesis 重算；`achieved` 另需 anchor 签名的 checkpoint（`audit/head.json`）。审计条目与 checkpoint 的字段契约见 `skill/project-memory/assets/audit-ledger.schema.json`，设计与威胁边界见 ADR-0007。
 - Agent Run 记录模型 provider/id、工具、会话、base/head SHA、分支、授权范围、角色和状态。检查点不可变；handoff 1.2 增加模型、head、提交、测试和下一步。
 - Verification Record 独立于执行，绑定 `target_head_sha`，证据级别为 `agent_claimed`、`locally_observed`、`externally_verified`、`human_approved`。Defect 记录位置、复现、严重度和修复提交。
 - ADR frontmatter 使用 `id`、`kind`、`title`、`topic`、`status`、`owner`、`updated_at`、`related_issues`、`supersedes`、`approved_by` 等键。脚本只支持受限 YAML 子集。

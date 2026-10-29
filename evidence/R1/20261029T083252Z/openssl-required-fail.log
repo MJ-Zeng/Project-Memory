@@ -1,0 +1,967 @@
+EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE                                    [100%]
+=================================== ERRORS ====================================
+_ ERROR at setup of B2ExecutionProvenanceTest.test_attestation_commit_edit_breaks_signature _
+
+cls = <class 'test_security_b2.B2ExecutionProvenanceTest'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.openssl = require_openssl('B2 签名测试需要测试期签名者')
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_security_b2.py:42: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+purpose = 'B2 签名测试需要测试期签名者'
+
+    def require_openssl(purpose: str) -> str:
+        path = openssl_path()
+        if path:
+            return path
+        if openssl_required():
+>           raise AssertionError(
+                f'找不到 openssl：{purpose}；{REQUIRE_ENV} 已开启，'
+                '发布/CI 不允许跳过签名测试')
+E           AssertionError: 找不到 openssl：B2 签名测试需要测试期签名者；PROJECT_MEMORY_REQUIRE_OPENSSL 已开启，发布/CI 不允许跳过签名测试
+
+tests\openssl_support.py:29: AssertionError
+_ ERROR at setup of B2ExecutionProvenanceTest.test_attestation_from_another_receipt_is_rejected _
+
+cls = <class 'test_security_b2.B2ExecutionProvenanceTest'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.openssl = require_openssl('B2 签名测试需要测试期签名者')
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_security_b2.py:42: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+purpose = 'B2 签名测试需要测试期签名者'
+
+    def require_openssl(purpose: str) -> str:
+        path = openssl_path()
+        if path:
+            return path
+        if openssl_required():
+>           raise AssertionError(
+                f'找不到 openssl：{purpose}；{REQUIRE_ENV} 已开启，'
+                '发布/CI 不允许跳过签名测试')
+E           AssertionError: 找不到 openssl：B2 签名测试需要测试期签名者；PROJECT_MEMORY_REQUIRE_OPENSSL 已开启，发布/CI 不允许跳过签名测试
+
+tests\openssl_support.py:29: AssertionError
+_ ERROR at setup of B2ExecutionProvenanceTest.test_claimed_trusted_boolean_without_attestation_is_rejected _
+
+cls = <class 'test_security_b2.B2ExecutionProvenanceTest'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.openssl = require_openssl('B2 签名测试需要测试期签名者')
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_security_b2.py:42: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+purpose = 'B2 签名测试需要测试期签名者'
+
+    def require_openssl(purpose: str) -> str:
+        path = openssl_path()
+        if path:
+            return path
+        if openssl_required():
+>           raise AssertionError(
+                f'找不到 openssl：{purpose}；{REQUIRE_ENV} 已开启，'
+                '发布/CI 不允许跳过签名测试')
+E           AssertionError: 找不到 openssl：B2 签名测试需要测试期签名者；PROJECT_MEMORY_REQUIRE_OPENSSL 已开启，发布/CI 不允许跳过签名测试
+
+tests\openssl_support.py:29: AssertionError
+_ ERROR at setup of B2ExecutionProvenanceTest.test_exception_out_of_scope_is_rejected _
+
+cls = <class 'test_security_b2.B2ExecutionProvenanceTest'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.openssl = require_openssl('B2 签名测试需要测试期签名者')
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_security_b2.py:42: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+purpose = 'B2 签名测试需要测试期签名者'
+
+    def require_openssl(purpose: str) -> str:
+        path = openssl_path()
+        if path:
+            return path
+        if openssl_required():
+>           raise AssertionError(
+                f'找不到 openssl：{purpose}；{REQUIRE_ENV} 已开启，'
+                '发布/CI 不允许跳过签名测试')
+E           AssertionError: 找不到 openssl：B2 签名测试需要测试期签名者；PROJECT_MEMORY_REQUIRE_OPENSSL 已开启，发布/CI 不允许跳过签名测试
+
+tests\openssl_support.py:29: AssertionError
+_ ERROR at setup of B2ExecutionProvenanceTest.test_handwritten_untrusted_receipt_with_valid_signature_is_rejected _
+
+cls = <class 'test_security_b2.B2ExecutionProvenanceTest'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.openssl = require_openssl('B2 签名测试需要测试期签名者')
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_security_b2.py:42: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+purpose = 'B2 签名测试需要测试期签名者'
+
+    def require_openssl(purpose: str) -> str:
+        path = openssl_path()
+        if path:
+            return path
+        if openssl_required():
+>           raise AssertionError(
+                f'找不到 openssl：{purpose}；{REQUIRE_ENV} 已开启，'
+                '发布/CI 不允许跳过签名测试')
+E           AssertionError: 找不到 openssl：B2 签名测试需要测试期签名者；PROJECT_MEMORY_REQUIRE_OPENSSL 已开启，发布/CI 不允许跳过签名测试
+
+tests\openssl_support.py:29: AssertionError
+_ ERROR at setup of B2ExecutionProvenanceTest.test_local_untrusted_receipt_is_rejected_by_default _
+
+cls = <class 'test_security_b2.B2ExecutionProvenanceTest'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.openssl = require_openssl('B2 签名测试需要测试期签名者')
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_security_b2.py:42: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+purpose = 'B2 签名测试需要测试期签名者'
+
+    def require_openssl(purpose: str) -> str:
+        path = openssl_path()
+        if path:
+            return path
+        if openssl_required():
+>           raise AssertionError(
+                f'找不到 openssl：{purpose}；{REQUIRE_ENV} 已开启，'
+                '发布/CI 不允许跳过签名测试')
+E           AssertionError: 找不到 openssl：B2 签名测试需要测试期签名者；PROJECT_MEMORY_REQUIRE_OPENSSL 已开启，发布/CI 不允许跳过签名测试
+
+tests\openssl_support.py:29: AssertionError
+_ ERROR at setup of B2ExecutionProvenanceTest.test_provenance_edit_with_recomputed_hash_is_rejected _
+
+cls = <class 'test_security_b2.B2ExecutionProvenanceTest'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.openssl = require_openssl('B2 签名测试需要测试期签名者')
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_security_b2.py:42: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+purpose = 'B2 签名测试需要测试期签名者'
+
+    def require_openssl(purpose: str) -> str:
+        path = openssl_path()
+        if path:
+            return path
+        if openssl_required():
+>           raise AssertionError(
+                f'找不到 openssl：{purpose}；{REQUIRE_ENV} 已开启，'
+                '发布/CI 不允许跳过签名测试')
+E           AssertionError: 找不到 openssl：B2 签名测试需要测试期签名者；PROJECT_MEMORY_REQUIRE_OPENSSL 已开启，发布/CI 不允许跳过签名测试
+
+tests\openssl_support.py:29: AssertionError
+_ ERROR at setup of B2ExecutionProvenanceTest.test_self_written_launcher_attestation_is_not_execution_proof _
+
+cls = <class 'test_security_b2.B2ExecutionProvenanceTest'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.openssl = require_openssl('B2 签名测试需要测试期签名者')
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_security_b2.py:42: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+purpose = 'B2 签名测试需要测试期签名者'
+
+    def require_openssl(purpose: str) -> str:
+        path = openssl_path()
+        if path:
+            return path
+        if openssl_required():
+>           raise AssertionError(
+                f'找不到 openssl：{purpose}；{REQUIRE_ENV} 已开启，'
+                '发布/CI 不允许跳过签名测试')
+E           AssertionError: 找不到 openssl：B2 签名测试需要测试期签名者；PROJECT_MEMORY_REQUIRE_OPENSSL 已开启，发布/CI 不允许跳过签名测试
+
+tests\openssl_support.py:29: AssertionError
+_ ERROR at setup of B2ExecutionProvenanceTest.test_signed_attestation_is_accepted_and_goal_evidence_succeeds _
+
+cls = <class 'test_security_b2.B2ExecutionProvenanceTest'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.openssl = require_openssl('B2 签名测试需要测试期签名者')
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_security_b2.py:42: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+purpose = 'B2 签名测试需要测试期签名者'
+
+    def require_openssl(purpose: str) -> str:
+        path = openssl_path()
+        if path:
+            return path
+        if openssl_required():
+>           raise AssertionError(
+                f'找不到 openssl：{purpose}；{REQUIRE_ENV} 已开启，'
+                '发布/CI 不允许跳过签名测试')
+E           AssertionError: 找不到 openssl：B2 签名测试需要测试期签名者；PROJECT_MEMORY_REQUIRE_OPENSSL 已开启，发布/CI 不允许跳过签名测试
+
+tests\openssl_support.py:29: AssertionError
+_ ERROR at setup of B2ExecutionProvenanceTest.test_signed_attestation_satisfies_bound_criterion _
+
+cls = <class 'test_security_b2.B2ExecutionProvenanceTest'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.openssl = require_openssl('B2 签名测试需要测试期签名者')
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_security_b2.py:42: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+purpose = 'B2 签名测试需要测试期签名者'
+
+    def require_openssl(purpose: str) -> str:
+        path = openssl_path()
+        if path:
+            return path
+        if openssl_required():
+>           raise AssertionError(
+                f'找不到 openssl：{purpose}；{REQUIRE_ENV} 已开启，'
+                '发布/CI 不允许跳过签名测试')
+E           AssertionError: 找不到 openssl：B2 签名测试需要测试期签名者；PROJECT_MEMORY_REQUIRE_OPENSSL 已开启，发布/CI 不允许跳过签名测试
+
+tests\openssl_support.py:29: AssertionError
+_ ERROR at setup of B2ExecutionProvenanceTest.test_signed_human_exception_allows_local_execution _
+
+cls = <class 'test_security_b2.B2ExecutionProvenanceTest'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.openssl = require_openssl('B2 签名测试需要测试期签名者')
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_security_b2.py:42: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+purpose = 'B2 签名测试需要测试期签名者'
+
+    def require_openssl(purpose: str) -> str:
+        path = openssl_path()
+        if path:
+            return path
+        if openssl_required():
+>           raise AssertionError(
+                f'找不到 openssl：{purpose}；{REQUIRE_ENV} 已开启，'
+                '发布/CI 不允许跳过签名测试')
+E           AssertionError: 找不到 openssl：B2 签名测试需要测试期签名者；PROJECT_MEMORY_REQUIRE_OPENSSL 已开启，发布/CI 不允许跳过签名测试
+
+tests\openssl_support.py:29: AssertionError
+_ ERROR at setup of B2ExecutionProvenanceTest.test_swapping_the_receipt_is_rejected _
+
+cls = <class 'test_security_b2.B2ExecutionProvenanceTest'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.openssl = require_openssl('B2 签名测试需要测试期签名者')
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_security_b2.py:42: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+purpose = 'B2 签名测试需要测试期签名者'
+
+    def require_openssl(purpose: str) -> str:
+        path = openssl_path()
+        if path:
+            return path
+        if openssl_required():
+>           raise AssertionError(
+                f'找不到 openssl：{purpose}；{REQUIRE_ENV} 已开启，'
+                '发布/CI 不允许跳过签名测试')
+E           AssertionError: 找不到 openssl：B2 签名测试需要测试期签名者；PROJECT_MEMORY_REQUIRE_OPENSSL 已开启，发布/CI 不允许跳过签名测试
+
+tests\openssl_support.py:29: AssertionError
+_ ERROR at setup of B2ExecutionProvenanceTest.test_unsigned_exception_is_rejected _
+
+cls = <class 'test_security_b2.B2ExecutionProvenanceTest'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.openssl = require_openssl('B2 签名测试需要测试期签名者')
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_security_b2.py:42: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+purpose = 'B2 签名测试需要测试期签名者'
+
+    def require_openssl(purpose: str) -> str:
+        path = openssl_path()
+        if path:
+            return path
+        if openssl_required():
+>           raise AssertionError(
+                f'找不到 openssl：{purpose}；{REQUIRE_ENV} 已开启，'
+                '发布/CI 不允许跳过签名测试')
+E           AssertionError: 找不到 openssl：B2 签名测试需要测试期签名者；PROJECT_MEMORY_REQUIRE_OPENSSL 已开启，发布/CI 不允许跳过签名测试
+
+tests\openssl_support.py:29: AssertionError
+_ ERROR at setup of B3CriteriaDigestTest.test_appending_a_second_evidence_item_keeps_new_record_current _
+
+cls = <class 'test_security_b3.B3CriteriaDigestTest'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.openssl = require_openssl('B3 签名测试需要测试期签名者')
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_security_b3.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+purpose = 'B3 签名测试需要测试期签名者'
+
+    def require_openssl(purpose: str) -> str:
+        path = openssl_path()
+        if path:
+            return path
+        if openssl_required():
+>           raise AssertionError(
+                f'找不到 openssl：{purpose}；{REQUIRE_ENV} 已开启，'
+                '发布/CI 不允许跳过签名测试')
+E           AssertionError: 找不到 openssl：B3 签名测试需要测试期签名者；PROJECT_MEMORY_REQUIRE_OPENSSL 已开启，发布/CI 不允许跳过签名测试
+
+tests\openssl_support.py:29: AssertionError
+_ ERROR at setup of B3CriteriaDigestTest.test_claimed_trusted_boolean_is_still_rejected _
+
+cls = <class 'test_security_b3.B3CriteriaDigestTest'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.openssl = require_openssl('B3 签名测试需要测试期签名者')
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_security_b3.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+purpose = 'B3 签名测试需要测试期签名者'
+
+    def require_openssl(purpose: str) -> str:
+        path = openssl_path()
+        if path:
+            return path
+        if openssl_required():
+>           raise AssertionError(
+                f'找不到 openssl：{purpose}；{REQUIRE_ENV} 已开启，'
+                '发布/CI 不允许跳过签名测试')
+E           AssertionError: 找不到 openssl：B3 签名测试需要测试期签名者；PROJECT_MEMORY_REQUIRE_OPENSSL 已开启，发布/CI 不允许跳过签名测试
+
+tests\openssl_support.py:29: AssertionError
+_ ERROR at setup of B3CriteriaDigestTest.test_criterion_id_change_invalidates _
+
+cls = <class 'test_security_b3.B3CriteriaDigestTest'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.openssl = require_openssl('B3 签名测试需要测试期签名者')
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_security_b3.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+purpose = 'B3 签名测试需要测试期签名者'
+
+    def require_openssl(purpose: str) -> str:
+        path = openssl_path()
+        if path:
+            return path
+        if openssl_required():
+>           raise AssertionError(
+                f'找不到 openssl：{purpose}；{REQUIRE_ENV} 已开启，'
+                '发布/CI 不允许跳过签名测试')
+E           AssertionError: 找不到 openssl：B3 签名测试需要测试期签名者；PROJECT_MEMORY_REQUIRE_OPENSSL 已开启，发布/CI 不允许跳过签名测试
+
+tests\openssl_support.py:29: AssertionError
+_ ERROR at setup of B3CriteriaDigestTest.test_handwritten_untrusted_receipt_is_still_rejected _
+
+cls = <class 'test_security_b3.B3CriteriaDigestTest'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.openssl = require_openssl('B3 签名测试需要测试期签名者')
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_security_b3.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+purpose = 'B3 签名测试需要测试期签名者'
+
+    def require_openssl(purpose: str) -> str:
+        path = openssl_path()
+        if path:
+            return path
+        if openssl_required():
+>           raise AssertionError(
+                f'找不到 openssl：{purpose}；{REQUIRE_ENV} 已开启，'
+                '发布/CI 不允许跳过签名测试')
+E           AssertionError: 找不到 openssl：B3 签名测试需要测试期签名者；PROJECT_MEMORY_REQUIRE_OPENSSL 已开启，发布/CI 不允许跳过签名测试
+
+tests\openssl_support.py:29: AssertionError
+_ ERROR at setup of B3CriteriaDigestTest.test_legacy_full_digest_record_survives_evidence_append _
+
+cls = <class 'test_security_b3.B3CriteriaDigestTest'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.openssl = require_openssl('B3 签名测试需要测试期签名者')
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_security_b3.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+purpose = 'B3 签名测试需要测试期签名者'
+
+    def require_openssl(purpose: str) -> str:
+        path = openssl_path()
+        if path:
+            return path
+        if openssl_required():
+>           raise AssertionError(
+                f'找不到 openssl：{purpose}；{REQUIRE_ENV} 已开启，'
+                '发布/CI 不允许跳过签名测试')
+E           AssertionError: 找不到 openssl：B3 签名测试需要测试期签名者；PROJECT_MEMORY_REQUIRE_OPENSSL 已开启，发布/CI 不允许跳过签名测试
+
+tests\openssl_support.py:29: AssertionError
+_ ERROR at setup of B3CriteriaDigestTest.test_new_record_binds_definitions_not_evidence _
+
+cls = <class 'test_security_b3.B3CriteriaDigestTest'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.openssl = require_openssl('B3 签名测试需要测试期签名者')
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_security_b3.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+purpose = 'B3 签名测试需要测试期签名者'
+
+    def require_openssl(purpose: str) -> str:
+        path = openssl_path()
+        if path:
+            return path
+        if openssl_required():
+>           raise AssertionError(
+                f'找不到 openssl：{purpose}；{REQUIRE_ENV} 已开启，'
+                '发布/CI 不允许跳过签名测试')
+E           AssertionError: 找不到 openssl：B3 签名测试需要测试期签名者；PROJECT_MEMORY_REQUIRE_OPENSSL 已开启，发布/CI 不允许跳过签名测试
+
+tests\openssl_support.py:29: AssertionError
+_ ERROR at setup of B3CriteriaDigestTest.test_new_record_satisfies_after_evidence_and_bytes_unchanged _
+
+cls = <class 'test_security_b3.B3CriteriaDigestTest'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.openssl = require_openssl('B3 签名测试需要测试期签名者')
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_security_b3.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+purpose = 'B3 签名测试需要测试期签名者'
+
+    def require_openssl(purpose: str) -> str:
+        path = openssl_path()
+        if path:
+            return path
+        if openssl_required():
+>           raise AssertionError(
+                f'找不到 openssl：{purpose}；{REQUIRE_ENV} 已开启，'
+                '发布/CI 不允许跳过签名测试')
+E           AssertionError: 找不到 openssl：B3 签名测试需要测试期签名者；PROJECT_MEMORY_REQUIRE_OPENSSL 已开启，发布/CI 不允许跳过签名测试
+
+tests\openssl_support.py:29: AssertionError
+_ ERROR at setup of B3CriteriaDigestTest.test_replacing_evidence_keeps_new_record_current _
+
+cls = <class 'test_security_b3.B3CriteriaDigestTest'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.openssl = require_openssl('B3 签名测试需要测试期签名者')
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_security_b3.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+purpose = 'B3 签名测试需要测试期签名者'
+
+    def require_openssl(purpose: str) -> str:
+        path = openssl_path()
+        if path:
+            return path
+        if openssl_required():
+>           raise AssertionError(
+                f'找不到 openssl：{purpose}；{REQUIRE_ENV} 已开启，'
+                '发布/CI 不允许跳过签名测试')
+E           AssertionError: 找不到 openssl：B3 签名测试需要测试期签名者；PROJECT_MEMORY_REQUIRE_OPENSSL 已开启，发布/CI 不允许跳过签名测试
+
+tests\openssl_support.py:29: AssertionError
+___ ERROR at setup of B3CriteriaDigestTest.test_required_change_invalidates ___
+
+cls = <class 'test_security_b3.B3CriteriaDigestTest'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.openssl = require_openssl('B3 签名测试需要测试期签名者')
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_security_b3.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+purpose = 'B3 签名测试需要测试期签名者'
+
+    def require_openssl(purpose: str) -> str:
+        path = openssl_path()
+        if path:
+            return path
+        if openssl_required():
+>           raise AssertionError(
+                f'找不到 openssl：{purpose}；{REQUIRE_ENV} 已开启，'
+                '发布/CI 不允许跳过签名测试')
+E           AssertionError: 找不到 openssl：B3 签名测试需要测试期签名者；PROJECT_MEMORY_REQUIRE_OPENSSL 已开启，发布/CI 不允许跳过签名测试
+
+tests\openssl_support.py:29: AssertionError
+__ ERROR at setup of B3CriteriaDigestTest.test_statement_change_invalidates ___
+
+cls = <class 'test_security_b3.B3CriteriaDigestTest'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.openssl = require_openssl('B3 签名测试需要测试期签名者')
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_security_b3.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+purpose = 'B3 签名测试需要测试期签名者'
+
+    def require_openssl(purpose: str) -> str:
+        path = openssl_path()
+        if path:
+            return path
+        if openssl_required():
+>           raise AssertionError(
+                f'找不到 openssl：{purpose}；{REQUIRE_ENV} 已开启，'
+                '发布/CI 不允许跳过签名测试')
+E           AssertionError: 找不到 openssl：B3 签名测试需要测试期签名者；PROJECT_MEMORY_REQUIRE_OPENSSL 已开启，发布/CI 不允许跳过签名测试
+
+tests\openssl_support.py:29: AssertionError
+___ ERROR at setup of B4IntegrityTest.test_agent_cannot_attach_a_checkpoint ___
+
+cls = <class 'test_security_b4.B4IntegrityTest'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.openssl = require_openssl('B4 签名测试需要测试期签名者')
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_security_b4.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+purpose = 'B4 签名测试需要测试期签名者'
+
+    def require_openssl(purpose: str) -> str:
+        path = openssl_path()
+        if path:
+            return path
+        if openssl_required():
+>           raise AssertionError(
+                f'找不到 openssl：{purpose}；{REQUIRE_ENV} 已开启，'
+                '发布/CI 不允许跳过签名测试')
+E           AssertionError: 找不到 openssl：B4 签名测试需要测试期签名者；PROJECT_MEMORY_REQUIRE_OPENSSL 已开启，发布/CI 不允许跳过签名测试
+
+tests\openssl_support.py:29: AssertionError
+__ ERROR at setup of B4IntegrityTest.test_audit_head_reports_missing_ledger ___
+
+cls = <class 'test_security_b4.B4IntegrityTest'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.openssl = require_openssl('B4 签名测试需要测试期签名者')
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_security_b4.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+purpose = 'B4 签名测试需要测试期签名者'
+
+    def require_openssl(purpose: str) -> str:
+        path = openssl_path()
+        if path:
+            return path
+        if openssl_required():
+>           raise AssertionError(
+                f'找不到 openssl：{purpose}；{REQUIRE_ENV} 已开启，'
+                '发布/CI 不允许跳过签名测试')
+E           AssertionError: 找不到 openssl：B4 签名测试需要测试期签名者；PROJECT_MEMORY_REQUIRE_OPENSSL 已开启，发布/CI 不允许跳过签名测试
+
+tests\openssl_support.py:29: AssertionError
+_ ERROR at setup of B4IntegrityTest.test_checkpoint_for_another_goal_is_not_trusted _
+
+cls = <class 'test_security_b4.B4IntegrityTest'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.openssl = require_openssl('B4 签名测试需要测试期签名者')
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_security_b4.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+purpose = 'B4 签名测试需要测试期签名者'
+
+    def require_openssl(purpose: str) -> str:
+        path = openssl_path()
+        if path:
+            return path
+        if openssl_required():
+>           raise AssertionError(
+                f'找不到 openssl：{purpose}；{REQUIRE_ENV} 已开启，'
+                '发布/CI 不允许跳过签名测试')
+E           AssertionError: 找不到 openssl：B4 签名测试需要测试期签名者；PROJECT_MEMORY_REQUIRE_OPENSSL 已开启，发布/CI 不允许跳过签名测试
+
+tests\openssl_support.py:29: AssertionError
+____ ERROR at setup of B4IntegrityTest.test_deleted_audit_row_is_detected _____
+
+cls = <class 'test_security_b4.B4IntegrityTest'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.openssl = require_openssl('B4 签名测试需要测试期签名者')
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_security_b4.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+purpose = 'B4 签名测试需要测试期签名者'
+
+    def require_openssl(purpose: str) -> str:
+        path = openssl_path()
+        if path:
+            return path
+        if openssl_required():
+>           raise AssertionError(
+                f'找不到 openssl：{purpose}；{REQUIRE_ENV} 已开启，'
+                '发布/CI 不允许跳过签名测试')
+E           AssertionError: 找不到 openssl：B4 签名测试需要测试期签名者；PROJECT_MEMORY_REQUIRE_OPENSSL 已开启，发布/CI 不允许跳过签名测试
+
+tests\openssl_support.py:29: AssertionError
+_ ERROR at setup of B4IntegrityTest.test_empty_and_missing_audit_fail_closed __
+
+cls = <class 'test_security_b4.B4IntegrityTest'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.openssl = require_openssl('B4 签名测试需要测试期签名者')
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_security_b4.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+purpose = 'B4 签名测试需要测试期签名者'
+
+    def require_openssl(purpose: str) -> str:
+        path = openssl_path()
+        if path:
+            return path
+        if openssl_required():
+>           raise AssertionError(
+                f'找不到 openssl：{purpose}；{REQUIRE_ENV} 已开启，'
+                '发布/CI 不允许跳过签名测试')
+E           AssertionError: 找不到 openssl：B4 签名测试需要测试期签名者；PROJECT_MEMORY_REQUIRE_OPENSSL 已开启，发布/CI 不允许跳过签名测试
+
+tests\openssl_support.py:29: AssertionError
+_ ERROR at setup of B4IntegrityTest.test_hand_edited_achieved_is_not_trusted __
+
+cls = <class 'test_security_b4.B4IntegrityTest'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.openssl = require_openssl('B4 签名测试需要测试期签名者')
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_security_b4.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+purpose = 'B4 签名测试需要测试期签名者'
+
+    def require_openssl(purpose: str) -> str:
+        path = openssl_path()
+        if path:
+            return path
+        if openssl_required():
+>           raise AssertionError(
+                f'找不到 openssl：{purpose}；{REQUIRE_ENV} 已开启，'
+                '发布/CI 不允许跳过签名测试')
+E           AssertionError: 找不到 openssl：B4 签名测试需要测试期签名者；PROJECT_MEMORY_REQUIRE_OPENSSL 已开启，发布/CI 不允许跳过签名测试
+
+tests\openssl_support.py:29: AssertionError
+_ ERROR at setup of B4IntegrityTest.test_hand_edited_achieved_with_real_evidence_still_untrusted _
+
+cls = <class 'test_security_b4.B4IntegrityTest'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.openssl = require_openssl('B4 签名测试需要测试期签名者')
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_security_b4.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+purpose = 'B4 签名测试需要测试期签名者'
+
+    def require_openssl(purpose: str) -> str:
+        path = openssl_path()
+        if path:
+            return path
+        if openssl_required():
+>           raise AssertionError(
+                f'找不到 openssl：{purpose}；{REQUIRE_ENV} 已开启，'
+                '发布/CI 不允许跳过签名测试')
+E           AssertionError: 找不到 openssl：B4 签名测试需要测试期签名者；PROJECT_MEMORY_REQUIRE_OPENSSL 已开启，发布/CI 不允许跳过签名测试
+
+tests\openssl_support.py:29: AssertionError
+___ ERROR at setup of B4IntegrityTest.test_legacy_audit_requires_migration ____
+
+cls = <class 'test_security_b4.B4IntegrityTest'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.openssl = require_openssl('B4 签名测试需要测试期签名者')
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_security_b4.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+purpose = 'B4 签名测试需要测试期签名者'
+
+    def require_openssl(purpose: str) -> str:
+        path = openssl_path()
+        if path:
+            return path
+        if openssl_required():
+>           raise AssertionError(
+                f'找不到 openssl：{purpose}；{REQUIRE_ENV} 已开启，'
+                '发布/CI 不允许跳过签名测试')
+E           AssertionError: 找不到 openssl：B4 签名测试需要测试期签名者；PROJECT_MEMORY_REQUIRE_OPENSSL 已开启，发布/CI 不允许跳过签名测试
+
+tests\openssl_support.py:29: AssertionError
+_ ERROR at setup of B4IntegrityTest.test_legitimate_transition_audit_and_checkpoint_verify _
+
+cls = <class 'test_security_b4.B4IntegrityTest'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.openssl = require_openssl('B4 签名测试需要测试期签名者')
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_security_b4.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+purpose = 'B4 签名测试需要测试期签名者'
+
+    def require_openssl(purpose: str) -> str:
+        path = openssl_path()
+        if path:
+            return path
+        if openssl_required():
+>           raise AssertionError(
+                f'找不到 openssl：{purpose}；{REQUIRE_ENV} 已开启，'
+                '发布/CI 不允许跳过签名测试')
+E           AssertionError: 找不到 openssl：B4 签名测试需要测试期签名者；PROJECT_MEMORY_REQUIRE_OPENSSL 已开启，发布/CI 不允许跳过签名测试
+
+tests\openssl_support.py:29: AssertionError
+_ ERROR at setup of B4IntegrityTest.test_prefix_anchor_survives_a_later_audit_append _
+
+cls = <class 'test_security_b4.B4IntegrityTest'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.openssl = require_openssl('B4 签名测试需要测试期签名者')
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_security_b4.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+purpose = 'B4 签名测试需要测试期签名者'
+
+    def require_openssl(purpose: str) -> str:
+        path = openssl_path()
+        if path:
+            return path
+        if openssl_required():
+>           raise AssertionError(
+                f'找不到 openssl：{purpose}；{REQUIRE_ENV} 已开启，'
+                '发布/CI 不允许跳过签名测试')
+E           AssertionError: 找不到 openssl：B4 签名测试需要测试期签名者；PROJECT_MEMORY_REQUIRE_OPENSSL 已开启，发布/CI 不允许跳过签名测试
+
+tests\openssl_support.py:29: AssertionError
+_ ERROR at setup of B4IntegrityTest.test_rebuilt_selfconsistent_chain_without_new_checkpoint_is_detected _
+
+cls = <class 'test_security_b4.B4IntegrityTest'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.openssl = require_openssl('B4 签名测试需要测试期签名者')
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_security_b4.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+purpose = 'B4 签名测试需要测试期签名者'
+
+    def require_openssl(purpose: str) -> str:
+        path = openssl_path()
+        if path:
+            return path
+        if openssl_required():
+>           raise AssertionError(
+                f'找不到 openssl：{purpose}；{REQUIRE_ENV} 已开启，'
+                '发布/CI 不允许跳过签名测试')
+E           AssertionError: 找不到 openssl：B4 签名测试需要测试期签名者；PROJECT_MEMORY_REQUIRE_OPENSSL 已开启，发布/CI 不允许跳过签名测试
+
+tests\openssl_support.py:29: AssertionError
+___ ERROR at setup of B4IntegrityTest.test_rewritten_audit_row_is_detected ____
+
+cls = <class 'test_security_b4.B4IntegrityTest'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.openssl = require_openssl('B4 签名测试需要测试期签名者')
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_security_b4.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+purpose = 'B4 签名测试需要测试期签名者'
+
+    def require_openssl(purpose: str) -> str:
+        path = openssl_path()
+        if path:
+            return path
+        if openssl_required():
+>           raise AssertionError(
+                f'找不到 openssl：{purpose}；{REQUIRE_ENV} 已开启，'
+                '发布/CI 不允许跳过签名测试')
+E           AssertionError: 找不到 openssl：B4 签名测试需要测试期签名者；PROJECT_MEMORY_REQUIRE_OPENSSL 已开启，发布/CI 不允许跳过签名测试
+
+tests\openssl_support.py:29: AssertionError
+_ ERROR at setup of B4IntegrityTest.test_tampered_checkpoint_signature_is_rejected _
+
+cls = <class 'test_security_b4.B4IntegrityTest'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.openssl = require_openssl('B4 签名测试需要测试期签名者')
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_security_b4.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+purpose = 'B4 签名测试需要测试期签名者'
+
+    def require_openssl(purpose: str) -> str:
+        path = openssl_path()
+        if path:
+            return path
+        if openssl_required():
+>           raise AssertionError(
+                f'找不到 openssl：{purpose}；{REQUIRE_ENV} 已开启，'
+                '发布/CI 不允许跳过签名测试')
+E           AssertionError: 找不到 openssl：B4 签名测试需要测试期签名者；PROJECT_MEMORY_REQUIRE_OPENSSL 已开启，发布/CI 不允许跳过签名测试
+
+tests\openssl_support.py:29: AssertionError
+_ ERROR at setup of B4IntegrityTest.test_unconfigured_anchor_rejects_checkpoint _
+
+cls = <class 'test_security_b4.B4IntegrityTest'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.openssl = require_openssl('B4 签名测试需要测试期签名者')
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_security_b4.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+purpose = 'B4 签名测试需要测试期签名者'
+
+    def require_openssl(purpose: str) -> str:
+        path = openssl_path()
+        if path:
+            return path
+        if openssl_required():
+>           raise AssertionError(
+                f'找不到 openssl：{purpose}；{REQUIRE_ENV} 已开启，'
+                '发布/CI 不允许跳过签名测试')
+E           AssertionError: 找不到 openssl：B4 签名测试需要测试期签名者；PROJECT_MEMORY_REQUIRE_OPENSSL 已开启，发布/CI 不允许跳过签名测试
+
+tests\openssl_support.py:29: AssertionError
+=========================== short test summary info ===========================
+ERROR tests/test_security_b2.py::B2ExecutionProvenanceTest::test_attestation_commit_edit_breaks_signature
+ERROR tests/test_security_b2.py::B2ExecutionProvenanceTest::test_attestation_from_another_receipt_is_rejected
+ERROR tests/test_security_b2.py::B2ExecutionProvenanceTest::test_claimed_trusted_boolean_without_attestation_is_rejected
+ERROR tests/test_security_b2.py::B2ExecutionProvenanceTest::test_exception_out_of_scope_is_rejected
+ERROR tests/test_security_b2.py::B2ExecutionProvenanceTest::test_handwritten_untrusted_receipt_with_valid_signature_is_rejected
+ERROR tests/test_security_b2.py::B2ExecutionProvenanceTest::test_local_untrusted_receipt_is_rejected_by_default
+ERROR tests/test_security_b2.py::B2ExecutionProvenanceTest::test_provenance_edit_with_recomputed_hash_is_rejected
+ERROR tests/test_security_b2.py::B2ExecutionProvenanceTest::test_self_written_launcher_attestation_is_not_execution_proof
+ERROR tests/test_security_b2.py::B2ExecutionProvenanceTest::test_signed_attestation_is_accepted_and_goal_evidence_succeeds
+ERROR tests/test_security_b2.py::B2ExecutionProvenanceTest::test_signed_attestation_satisfies_bound_criterion
+ERROR tests/test_security_b2.py::B2ExecutionProvenanceTest::test_signed_human_exception_allows_local_execution
+ERROR tests/test_security_b2.py::B2ExecutionProvenanceTest::test_swapping_the_receipt_is_rejected
+ERROR tests/test_security_b2.py::B2ExecutionProvenanceTest::test_unsigned_exception_is_rejected
+ERROR tests/test_security_b3.py::B3CriteriaDigestTest::test_appending_a_second_evidence_item_keeps_new_record_current
+ERROR tests/test_security_b3.py::B3CriteriaDigestTest::test_claimed_trusted_boolean_is_still_rejected
+ERROR tests/test_security_b3.py::B3CriteriaDigestTest::test_criterion_id_change_invalidates
+ERROR tests/test_security_b3.py::B3CriteriaDigestTest::test_handwritten_untrusted_receipt_is_still_rejected
+ERROR tests/test_security_b3.py::B3CriteriaDigestTest::test_legacy_full_digest_record_survives_evidence_append
+ERROR tests/test_security_b3.py::B3CriteriaDigestTest::test_new_record_binds_definitions_not_evidence
+ERROR tests/test_security_b3.py::B3CriteriaDigestTest::test_new_record_satisfies_after_evidence_and_bytes_unchanged
+ERROR tests/test_security_b3.py::B3CriteriaDigestTest::test_replacing_evidence_keeps_new_record_current
+ERROR tests/test_security_b3.py::B3CriteriaDigestTest::test_required_change_invalidates
+ERROR tests/test_security_b3.py::B3CriteriaDigestTest::test_statement_change_invalidates
+ERROR tests/test_security_b4.py::B4IntegrityTest::test_agent_cannot_attach_a_checkpoint
+ERROR tests/test_security_b4.py::B4IntegrityTest::test_audit_head_reports_missing_ledger
+ERROR tests/test_security_b4.py::B4IntegrityTest::test_checkpoint_for_another_goal_is_not_trusted
+ERROR tests/test_security_b4.py::B4IntegrityTest::test_deleted_audit_row_is_detected
+ERROR tests/test_security_b4.py::B4IntegrityTest::test_empty_and_missing_audit_fail_closed
+ERROR tests/test_security_b4.py::B4IntegrityTest::test_hand_edited_achieved_is_not_trusted
+ERROR tests/test_security_b4.py::B4IntegrityTest::test_hand_edited_achieved_with_real_evidence_still_untrusted
+ERROR tests/test_security_b4.py::B4IntegrityTest::test_legacy_audit_requires_migration
+ERROR tests/test_security_b4.py::B4IntegrityTest::test_legitimate_transition_audit_and_checkpoint_verify
+ERROR tests/test_security_b4.py::B4IntegrityTest::test_prefix_anchor_survives_a_later_audit_append
+ERROR tests/test_security_b4.py::B4IntegrityTest::test_rebuilt_selfconsistent_chain_without_new_checkpoint_is_detected
+ERROR tests/test_security_b4.py::B4IntegrityTest::test_rewritten_audit_row_is_detected
+ERROR tests/test_security_b4.py::B4IntegrityTest::test_tampered_checkpoint_signature_is_rejected
+ERROR tests/test_security_b4.py::B4IntegrityTest::test_unconfigured_anchor_rejects_checkpoint
+37 errors in 1.38s
+required_no_openssl_exit=1

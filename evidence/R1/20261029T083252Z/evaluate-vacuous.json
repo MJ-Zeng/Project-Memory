@@ -1,0 +1,48 @@
+{
+  "audit": {
+    "authoritative": false,
+    "checkpoint": {
+      "matches": false,
+      "path": ".project-memory/audit/head.json",
+      "present": false,
+      "reason": "checkpoint_missing",
+      "trusted": false
+    },
+    "entries": 3,
+    "head": "cbaa09be112533f3f80f3537edc92381ad8bef734f3175ce6a08459f00493f23",
+    "migration_sha256": null,
+    "problems": [],
+    "status": "valid_unanchored",
+    "valid": true
+  },
+  "blocking": [],
+  "caveat": "只接受带 criterion evidence mapping 且 coverage 经独立复核的证据；直接 test/commit 证据和旧验证记录可读，但不能单独证明标准已达成。CLI 不能判断语义相关性，仍需人工审查。",
+  "criteria": [
+    {
+      "evidence": [],
+      "id": "C1",
+      "required": false,
+      "statement": "模块通过测试",
+      "status": "insufficient_evidence"
+    }
+  ],
+  "effective_status": "evaluating",
+  "evaluation_status": "insufficient_evidence",
+  "goal_id": "G-R1PROBE",
+  "goal_status": "evaluating",
+  "kind": "goal_evaluation",
+  "no_required_criteria": true,
+  "open_high_defects": [],
+  "partial": [],
+  "raw_status": "evaluating",
+  "recommendation": "insufficient_evidence",
+  "recorded_status": "evaluating",
+  "recorded_status_consistent": true,
+  "satisfied": false,
+  "schema_version": "1.2",
+  "status_authority": "local_untrusted",
+  "status_problems": [
+    "no_required_criteria"
+  ],
+  "status_trusted": null
+}

@@ -1,0 +1,155 @@
+{
+  "audit": {
+    "authoritative": false,
+    "checkpoint": {
+      "matches": false,
+      "path": ".project-memory/audit/head.json",
+      "present": false,
+      "reason": "checkpoint_missing",
+      "trusted": false
+    },
+    "entries": 3,
+    "head": "cbaa09be112533f3f80f3537edc92381ad8bef734f3175ce6a08459f00493f23",
+    "migration_sha256": null,
+    "problems": [],
+    "status": "valid_unanchored",
+    "valid": true
+  },
+  "caveat": "Goal 进度是关联记录的数量；Goal 是否达成只看成功标准，不看 Issue 是否关闭。",
+  "defects": [],
+  "effective_status": "evaluating",
+  "evaluation": {
+    "audit": {
+      "authoritative": false,
+      "checkpoint": {
+        "matches": false,
+        "path": ".project-memory/audit/head.json",
+        "present": false,
+        "reason": "checkpoint_missing",
+        "trusted": false
+      },
+      "entries": 3,
+      "head": "cbaa09be112533f3f80f3537edc92381ad8bef734f3175ce6a08459f00493f23",
+      "migration_sha256": null,
+      "problems": [],
+      "status": "valid_unanchored",
+      "valid": true
+    },
+    "blocking": [],
+    "caveat": "只接受带 criterion evidence mapping 且 coverage 经独立复核的证据；直接 test/commit 证据和旧验证记录可读，但不能单独证明标准已达成。CLI 不能判断语义相关性，仍需人工审查。",
+    "criteria": [
+      {
+        "evidence": [],
+        "id": "C1",
+        "required": false,
+        "statement": "模块通过测试",
+        "status": "insufficient_evidence"
+      }
+    ],
+    "effective_status": "evaluating",
+    "evaluation_status": "insufficient_evidence",
+    "goal_id": "G-R1PROBE",
+    "goal_status": "evaluating",
+    "kind": "goal_evaluation",
+    "no_required_criteria": true,
+    "open_high_defects": [],
+    "partial": [],
+    "raw_status": "evaluating",
+    "recommendation": "insufficient_evidence",
+    "recorded_status": "evaluating",
+    "recorded_status_consistent": true,
+    "satisfied": false,
+    "schema_version": "1.2",
+    "status_authority": "local_untrusted",
+    "status_problems": [
+      "no_required_criteria"
+    ],
+    "status_trusted": null
+  },
+  "goal": {
+    "adrs": [],
+    "approvals": [
+      {
+        "approval_authority": "claimed_unverified",
+        "at": "2026-10-29T09:14:44+00:00",
+        "by": "human-lead@example.com",
+        "from": "proposed",
+        "reason": "",
+        "to": "approved"
+      }
+    ],
+    "approved_by": "human-lead@example.com",
+    "background": "",
+    "constraints": [],
+    "created_at": "2026-10-29T09:14:43+00:00",
+    "history": [
+      {
+        "at": "2026-10-29T09:14:43+00:00",
+        "by": "owner@example.com",
+        "from": null,
+        "reason": "created",
+        "to": "proposed"
+      },
+      {
+        "at": "2026-10-29T09:14:44+00:00",
+        "by": "human-lead@example.com",
+        "from": "proposed",
+        "reason": "",
+        "to": "approved"
+      },
+      {
+        "at": "2026-10-29T09:14:44+00:00",
+        "by": "owner@example.com",
+        "from": "approved",
+        "reason": "",
+        "to": "active"
+      },
+      {
+        "at": "2026-10-29T09:14:44+00:00",
+        "by": "owner@example.com",
+        "from": "active",
+        "reason": "",
+        "to": "evaluating"
+      }
+    ],
+    "id": "G-R1PROBE",
+    "issues": [],
+    "kind": "goal",
+    "outcome": "fail closed",
+    "owner": "owner@example.com",
+    "prs": [],
+    "revision": 4,
+    "schema_version": "1.2",
+    "status": "evaluating",
+    "success_criteria": [
+      {
+        "evidence": [],
+        "id": "C1",
+        "required": false,
+        "statement": "模块通过测试"
+      }
+    ],
+    "title": "vacuous probe",
+    "updated_at": "2026-10-29T09:14:44+00:00"
+  },
+  "kind": "goal_show_result",
+  "progress": {
+    "claimed_verified_verifications": 0,
+    "defects": 0,
+    "open_defects": 0,
+    "runs": {},
+    "tasks": [],
+    "verifications": 0,
+    "verified_verifications": 0
+  },
+  "raw_status": "evaluating",
+  "runs": [],
+  "schema_version": "1.2",
+  "status_authority": "local_untrusted",
+  "status_consistent": true,
+  "status_problems": [
+    "no_required_criteria"
+  ],
+  "status_trusted": null,
+  "verifications": []
+}
