@@ -49,13 +49,13 @@
 - `A evidence/release-docs/20261029T115211Z/**`
 - `A tasks/release-docs-handoff-20261029T115211Z.md`
 
-## 6. SHA-256（LF 字节，等于提交 blob）
+## 6. SHA-256（`5158908` 之后的提交，LF 字节 = 提交 blob）
 
 - `README.md` `b05fcf10571b0ff61173d07589522fd040e2663385f5016ab70daaa849a0bd41`
 - `docs/OPERATIONS.zh-CN.md` `59218738bf9f8e03eda189c62e2088eb3f43d67ca8dbc6aede6e2940487e04c1`
-- `skill/project-memory/references/workflows.md` `2ad150192970c3e5a74b1f4293be700e3a5d83de6ef7bba93d086c4b98893334`
+- `skill/project-memory/references/workflows.md` `6d9ab3f709b5c8e04d38fc0a91e1e567f06879d4cf1cdca82eb457388340032f`
 
-证据目录自校验：`cd evidence/release-docs/20261029T115211Z && sha256sum -c sha256sums.txt`（工作树字节）。
+证据目录自校验见 §8：`cd evidence/release-docs/20261029T115211Z && sha256sum -c sha256sums.txt`；成立前提是 `.gitattributes` 的 `evidence/release-docs/** text eol=lf` 生效，即干净检出中工作树字节等于提交 blob。
 
 ## 7. 未验证 / 边界
 
