@@ -108,7 +108,7 @@ marker-write-failed: [Errno 2] No such file or directory: '/mnt/c/.../host-marke
 
 ## 8. 残余风险 / NOT VERIFIED
 
-- **NOT VERIFIED**：PR 描述与评论——仓库私有，无 gh/token，网页返回 404；本复核仅依据 commit、分支、任务卡、代码与自建证据。
+- PR 描述与现有评论：已通过认证 GitHub API 读取（PR body、1 条 PM-01 门禁核对评论；无 review、无行内评论）。PR body 与 Handoff 自报一致。
 - **NOT VERIFIED**：真实无 WSL 的 Linux/CI 主机行为；仅用 `PROJECT_MEMORY_DISABLE_WSL=1` 确定性模拟。
 - **NOT VERIFIED**：自定义额外挂载点的遮蔽；沿用 `trusted_exec` 既有 canary 范围。
 - 残余风险：trusted 启动器/`wsl.exe`/发行版工具被替换；WSL 内核缺陷；attestation 非来源证明；显式 local 滥用。
