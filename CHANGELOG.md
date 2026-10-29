@@ -10,7 +10,7 @@
 - 测试期 openssl 开关：缺失 openssl 时默认仍可 skip；设置 `PROJECT_MEMORY_REQUIRE_OPENSSL=1`（`true`/`yes` 亦可）后签名测试直接失败，发布/CI 必须开启。
 - 契约同步：`docs/ARCHITECTURE.zh-CN.md` §5 的 schema 计数与说明、`verification-record.schema.json` 的 `goal_criteria_sha256` 描述、新增 `audit-ledger.schema.json`。
 - 新增 `fixtures/b5b/README.md` 与 `evidence/B5B/README.md`（混合行尾、NUL 日志、校验方法；不重写历史证据）。
-- 版本号改为 `1.0.0`。本版本**不打 tag、不建 Release**。
+- 版本号改为 `1.0.0`。`v1.0.0` tag 与 GitHub Release 由发布者在人类 GO 后创建。
 
 ### B0 — 可移植仓库身份（ADR-0001，合并 `a70ad19`）
 
