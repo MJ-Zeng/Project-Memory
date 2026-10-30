@@ -315,5 +315,5 @@ GET https://api.github.com/repos/MJ-Zeng/Project-Memory/rulesets                
 ## 8. 本报告提交
 
 - 分支：`review/docs-ci`
-- 报告正文提交：`{{REPORT_COMMIT}}`
-- 仅在本行回填该 SHA 的后续提交构成分支顶点（见 PM-03 交付消息）
+- 报告正文提交：`0ddd77f798a6251e5fb1e1c1eedfe39b9921f8dc`
+- 其后仅回填本行，回填提交即分支顶点（SHA 见 PM-03 交付消息）
