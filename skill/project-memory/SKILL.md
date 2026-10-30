@@ -107,8 +107,7 @@ overlay 不写 GitHub 模板，也不写 INDEX、CURRENT_STATE 和架构占位�
 2. 选择证据级别：
    - `agent_claimed`：只能记录声明，不能给出 pass。
    - `locally_observed`：必须先运行 `test-run` 并传 `--test-receipt`；收据包含命令、整数退出码、日志哈希和快照摘要。手写日志不算执行证据。
-   - `externally_verified`：需要 `--ci-url` 和 `--ci-status passed`。CLI 不联网抓取，记录为 `declared_unfetched`。
-   - `human_approved`：需要 `--review-url` 和 `--review-state approved`。CLI 不认证审批人，仍属调用方声明。
+   - `externally_verified` / `human_approved`：描述外部证据的类别，但 `verify --evidence-level` **只接受** `agent_claimed` 与 `locally_observed`；传这两个值会参数错误（R-1 的有意收紧）。
    证据级别是声明，不是通行证；最终可信度取声明级别与实际可观察证据的较小值。
 3. 用 `--expected-sha` 固定被验证提交。当前 HEAD 已经变化时，不能对旧提交给出 pass，必须先对齐并复验。
 4. pass 必须提供 `--criterion-evidence` JSON，为每个必达标准记录：`criterion_id`、`goal_id`、`task_id`、`criterion_description`、`target_repository`、`target_commit_sha`、`evidence_id`、`evidence_source`、`evidence_command`、`evidence_log`、`evidence_exit_code`、`execution_status`、`coverage_claim`、`coverage_review_status`、`independent_verifier`、`verification_result`。映射必须覆盖全部必达标准，绑定同一个 `target_commit_sha`，coverage 由独立 verifier 复核为 `confirmed`。字段模板见 `assets/criterion-evidence.schema.json`。

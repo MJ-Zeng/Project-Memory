@@ -208,6 +208,8 @@ python3 -m project_memory verify --repo . \
 | `externally_verified` | CI URL 和 `--ci-status passed` | 可以，但记录是 `declared_unfetched` |
 | `human_approved` | review URL 和 `--review-state approved`；CLI 不认证审批人 | 可以，但仍是调用方声明 |
 
+CLI 的 `verify --evidence-level` 只接受 `agent_claimed` 与 `locally_observed`；`externally_verified` / `human_approved` 仅作概念与历史记录对照，不能通过 CLI 提交。
+
 CLI 离线运行，不联网核对 CI 或 review；`externally_verified` 和 `human_approved` 是声明，不是已抓取的外部事实。验证拒绝的情况：自己验证自己、验证者不是 `role=verifier`、agent/model/session 三项都相同、目标执行还没结束、当前 HEAD 已变化、`--expected-sha` 与目标 head 不一致、有 high 级发现时要求 pass。验证记录绑定 `target_head_sha`；事后改代码不会自动让旧验证继续有效。验证记录只能用于同一 Goal 的证据，不能跨 Goal 复用。
 
 本地 CLI 写出的记录最多是 `MANUAL_REVIEW_REQUIRED`，`verified=false`，不会把执行升级为 `verified`，也不能满足 Goal；只有仓库外受保护信任锚对记录签名并通过 `PROJECT_MEMORY_TRUST_ANCHOR` 验证后，才可能成为 `VERIFIED`。没有配置信任锚时，这是预期的 fail-closed 结果。

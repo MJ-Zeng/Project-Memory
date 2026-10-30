@@ -203,6 +203,8 @@ queued -> running -> submitted -> verified
 | `externally_verified` | 2 | CI URL、`ci_status=passed`；记录标记 `provenance: declared_unfetched` |
 | `human_approved` | 3 | review URL、`review_state=approved`；记录标记 `provenance: declared_unfetched` |
 
+CLI 的 `verify --evidence-level` 只接受 `agent_claimed` 与 `locally_observed`；`externally_verified` / `human_approved` 仅作概念与历史记录对照，不能通过 CLI 提交。
+
 `evidence_level` 是调用方声明。`trust_level` 取声明级别与实际可观察证据级别的较小值；手工提高声明不会提高 `trust_level`。即使 `trust_level` 较高，没有受保护信任锚签名的记录仍然不能被 `goal evidence` 当作达成依据。
 
 规则：
