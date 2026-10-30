@@ -4,6 +4,7 @@
 - 执行者：PM-02（独立克隆 `pm-pilot-02`）
 - 分支：`docs/adr-metadata-20261030`（本地，未 push）
 - 基线：`f033a6c517cfde3eebb586b07f770d94b2d2c3b7`（`origin/dev/v1.0` 与本卡一致）
+- 基线 `f033a6c`；`dev/v1.0` 合并头 `86892b4`（PR #35），本分支未 rebase，文件无重叠
 - 变更提交：`342676478864ee91cdc9ae887fb9f34bfa3ef273`
 - 提交时间（UTC）：2026-10-30T01:33:47Z
 
