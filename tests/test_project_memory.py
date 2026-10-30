@@ -1800,6 +1800,90 @@ class CoordinationTest(unittest.TestCase):
         self.assertNotEqual(resumed['status'], 'verified')
 
 
+    def _prepare_verify_runs(self):
+        (self.repo / 'test.log').write_text('ok\n', encoding='utf-8')
+        self.cli('init', '--install', 'none')
+        self.cli('goal', 'create', '--id', 'G-PATH', '--title', 'path goal', '--outcome', 'works',
+                 '--owner', 'owner', '--criterion', '路径按仓库解析')
+        self.cli('goal', 'transition', '--id', 'G-PATH', '--to', 'approved',
+                 '--approved-by', 'human@example.com')
+        self.cli('goal', 'transition', '--id', 'G-PATH', '--to', 'active')
+        self.cli('run', 'start', '--goal', 'G-PATH', '--task', '325', '--run-id', 'run-target',
+                 '--agent', 'dev-agent', '--model-provider', 'qodercn', '--model-id', 'auto',
+                 '--base-sha', self.base)
+        self.cli('run', 'finish', '--task', '325', '--run-id', 'run-target',
+                 '--completed', 'implemented', '--remaining', 'verify',
+                 '--test-command', 'pytest', '--test-exit', '0', '--test-log', 'test.log',
+                 '--head-sha', self.base)
+        self.cli('run', 'start', '--goal', 'G-PATH', '--task', '325', '--run-id', 'run-verifier',
+                 '--agent', 'verifier-agent', '--model-provider', 'qodercn',
+                 '--model-id', 'qwen3.8-flash', '--role', 'verifier', '--base-sha', self.base)
+        command = f'"{sys.executable}" -c "import sys; print(\'1 passed\'); sys.exit(0)"'
+        run_out = self.cli('test-run', '--command', command, '--commit', self.base,
+                           '--agent', 'verifier-agent', '--allow-local-untrusted')
+        receipt = run_out['receipt']
+        mapping = {'criteria': [{
+            'criterion_id': 'C1', 'goal_id': 'G-PATH', 'task_id': '325',
+            'criterion_description': '路径按仓库解析',
+            'target_repository': str(self.repo),
+            'target_commit_sha': self.base,
+            'evidence_id': 'EV-PATH',
+            'evidence_source': 'test',
+            'evidence_command': receipt['command'],
+            'evidence_log': run_out['log'],
+            'evidence_exit_code': 0,
+            'evidence_receipt': run_out['path'],
+            'execution_status': 'passed',
+            'coverage_claim': 'path test covers the criterion',
+            'coverage_review_status': 'confirmed',
+            'independent_verifier': 'verifier-agent',
+            'verification_result': 'pass',
+        }]}
+        (self.repo / 'criterion-evidence.json').write_text(
+            json.dumps(mapping, ensure_ascii=False), encoding='utf-8')
+        return run_out
+
+    def _cli_outside_repo(self, cwd, *args):
+        env = os.environ.copy()
+        env['PYTHONPATH'] = str(ROOT)
+        env['PYTHONUTF8'] = '1'
+        return subprocess.run([sys.executable, '-m', 'project_memory', *args,
+                               '--repo', str(self.repo)],
+                              cwd=cwd, env=env, capture_output=True, text=True,
+                              encoding='utf-8')
+
+    def test_cli_relative_criterion_evidence_resolves_against_repo(self):
+        run_out = self._prepare_verify_runs()
+        with tempfile.TemporaryDirectory() as outside:
+            result = self._cli_outside_repo(
+                outside, 'verify', '--target-run', 'run-target',
+                '--verifier-run', 'run-verifier', '--standard', 'relative path',
+                '--verdict', 'pass', '--evidence-level', 'locally_observed',
+                '--test-receipt', run_out['path'],
+                '--criterion-evidence', 'criterion-evidence.json')
+            self.assertEqual(result.returncode, 2, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertTrue(payload['verification']['criterion_evidence'])
+            self.assertFalse((Path(outside) / 'criterion-evidence.json').exists())
+
+    def test_cli_absolute_findings_file_unchanged(self):
+        run_out = self._prepare_verify_runs()
+        with tempfile.TemporaryDirectory() as outside:
+            findings_path = Path(outside) / 'findings.json'
+            findings_path.write_text('[]', encoding='utf-8')
+            result = self._cli_outside_repo(
+                outside, 'verify', '--target-run', 'run-target',
+                '--verifier-run', 'run-verifier', '--standard', 'absolute path',
+                '--verdict', 'pass', '--evidence-level', 'locally_observed',
+                '--test-receipt', run_out['path'],
+                '--findings-file', str(findings_path),
+                '--criterion-evidence', str(self.repo / 'criterion-evidence.json'))
+            self.assertEqual(result.returncode, 2, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertFalse(payload['verified'])
+            self.assertEqual(payload['status'], 'MANUAL_REVIEW_REQUIRED')
+
+
     # ---------------------------------------------------------------- R-1 counterexamples
 
     def test_r1_self_approval_rejected(self):

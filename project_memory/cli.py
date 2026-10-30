@@ -17,6 +17,12 @@ from .coordination import (create_goal, goal_list, goal_show, evaluate_goal, add
 from .gh import GitHubReader
 
 
+def repo_path(repo: Path, value: Path | None) -> Path | None:
+    if value is None or value.is_absolute():
+        return value
+    return repo / value
+
+
 class _Parser(argparse.ArgumentParser):
     def __init__(self, *args, **kwargs):
         kwargs['add_help'] = False
@@ -510,8 +516,8 @@ def run(args):
             emit({'schema_version': '1.2', 'kind': 'run_list_result',
                   'runs': iter_runs(repo, task=args.task, goal=args.goal)})
     elif args.command == 'verify':
-        findings = safe_json(args.findings_file) if args.findings_file else []
-        mapping = safe_json(args.criterion_evidence) if args.criterion_evidence else None
+        findings = safe_json(repo_path(repo, args.findings_file)) if args.findings_file else []
+        mapping = safe_json(repo_path(repo, args.criterion_evidence)) if args.criterion_evidence else None
         result = verify_run(repo, args.target_run, args.verifier_run, args.standard,
                             args.verdict, args.evidence_level, args.test_command, args.test_exit,
                             args.test_log, args.ci_url, args.ci_status, args.review_url,

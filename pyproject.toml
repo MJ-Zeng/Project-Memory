@@ -11,6 +11,7 @@ dependencies = []
 
 [project.optional-dependencies]
 semantic = ["sentence-transformers>=3"]
+dev = ["pytest==9.1.1"]
 
 # NOTE: no [project.scripts] entry on purpose.  A pip "module:function"
 # console_script resolves a top-level module through the ambient sys.path BEFORE
