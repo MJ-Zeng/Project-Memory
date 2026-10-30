@@ -1855,6 +1855,8 @@ class CoordinationTest(unittest.TestCase):
     def test_cli_relative_criterion_evidence_resolves_against_repo(self):
         run_out = self._prepare_verify_runs()
         with tempfile.TemporaryDirectory() as outside:
+            decoy = Path(outside) / 'criterion-evidence.json'
+            decoy.write_text('{"criteria": []}', encoding='utf-8')
             result = self._cli_outside_repo(
                 outside, 'verify', '--target-run', 'run-target',
                 '--verifier-run', 'run-verifier', '--standard', 'relative path',
@@ -1864,7 +1866,7 @@ class CoordinationTest(unittest.TestCase):
             self.assertEqual(result.returncode, 2, result.stderr)
             payload = json.loads(result.stdout)
             self.assertTrue(payload['verification']['criterion_evidence'])
-            self.assertFalse((Path(outside) / 'criterion-evidence.json').exists())
+            self.assertEqual(json.loads(decoy.read_text(encoding='utf-8')), {'criteria': []})
 
     def test_cli_absolute_findings_file_unchanged(self):
         run_out = self._prepare_verify_runs()
