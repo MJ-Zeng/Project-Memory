@@ -1,3 +1,10 @@
+---
+id: "ADR-0002"
+status: "proposed"
+owner: "MJ-Zeng"
+related_issues: [1]
+---
+
 # ADR-0002：签名验签器进程内化（不再由 PATH / 环境变量选择验签器）
 
 - 状态：`proposed`（Agent 起草；接受需人类批准，见 `docs/decisions/README.md`）

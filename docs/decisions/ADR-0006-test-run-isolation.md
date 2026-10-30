@@ -1,3 +1,10 @@
+---
+id: "ADR-0006"
+status: "proposed"
+owner: "MJ-Zeng"
+related_issues: [23]
+---
+
 # ADR-0006：默认 `test-run` 不得静默执行未隔离代码（B5B）
 
 - 状态：`proposed`（Agent 起草；接受需人类批准，见 `docs/decisions/README.md`）

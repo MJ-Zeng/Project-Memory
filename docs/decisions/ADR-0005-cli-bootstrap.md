@@ -1,3 +1,10 @@
+---
+id: "ADR-0005"
+status: "proposed"
+owner: "MJ-Zeng"
+related_issues: [20]
+---
+
 # ADR-0005：CLI 启动引导与同名包顶替防护（B5A）
 
 - 状态：`proposed`（Agent 起草；接受需人类批准，见 `docs/decisions/README.md`）
