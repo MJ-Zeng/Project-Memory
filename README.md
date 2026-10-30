@@ -11,7 +11,7 @@
 ```bash
 # 在分发目录运行测试
 cd project-memory-mvp
-python3 -m unittest discover -s tests -v
+python3 -m pytest -q
 
 # 初始化一个已经建好的 Git 仓库；只补缺失文件，不覆盖
 python3 -m project_memory init --repo /path/to/git/repo --install both
@@ -129,6 +129,8 @@ python3 -m project_memory reconcile --repo . --fail-on high
 `--scope current` 只审当前知识：canonical 根下状态为 `current`、`draft`、`in_flight`、`unclassified` 的文档，加上全部 ADR。镜像、历史、证据和已归档文档不参与。它适合放在合并门禁里。
 
 默认的 `audit`（`--scope all`）会扫 canonical、镜像和历史目录，用来做周期复核。镜像和历史里的问题通常不在这次改动范围内，不应为了把数字清零去改旧文档。
+
+`audit` 是本地防篡改检测与文档一致性提示，不构成对外可采信的审计留痕。
 
 ## 入口文档与新鲜度
 
