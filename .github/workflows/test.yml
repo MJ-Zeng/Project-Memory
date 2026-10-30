@@ -1,0 +1,39 @@
+name: test
+
+on:
+  pull_request:
+    branches: [dev/v1.0]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pytest:
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install test dependency
+        run: python -m pip install --disable-pip-version-check "pytest==9.1.1"
+      - name: Default gate
+        shell: bash
+        run: python -m pytest -q
+      - name: OpenSSL gate
+        shell: bash
+        run: |
+          if command -v openssl >/dev/null 2>&1; then
+            echo "openssl available: $(openssl version)"
+            PROJECT_MEMORY_REQUIRE_OPENSSL=1 python -m pytest -q
+          else
+            echo "openssl not found on runner; PROJECT_MEMORY_REQUIRE_OPENSSL gate SKIPPED (not passed)"
+          fi
