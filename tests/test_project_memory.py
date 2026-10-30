@@ -1868,6 +1868,50 @@ class CoordinationTest(unittest.TestCase):
             self.assertTrue(payload['verification']['criterion_evidence'])
             self.assertEqual(json.loads(decoy.read_text(encoding='utf-8')), {'criteria': []})
 
+    def test_cli_relative_criterion_evidence_ignores_nonempty_cwd_decoy(self):
+        run_out = self._prepare_verify_runs()
+        repo_mapping = json.loads((self.repo / 'criterion-evidence.json').read_text(encoding='utf-8'))
+        decoy_mapping = json.loads(json.dumps(repo_mapping))
+        decoy_mapping['criteria'][0]['evidence_id'] = 'EV-DECOY'
+        with tempfile.TemporaryDirectory() as outside:
+            decoy = Path(outside) / 'criterion-evidence.json'
+            decoy.write_text(json.dumps(decoy_mapping, ensure_ascii=False), encoding='utf-8')
+            result = self._cli_outside_repo(
+                outside, 'verify', '--target-run', 'run-target',
+                '--verifier-run', 'run-verifier', '--standard', 'equivalent decoy',
+                '--verdict', 'pass', '--evidence-level', 'locally_observed',
+                '--test-receipt', run_out['path'],
+                '--criterion-evidence', 'criterion-evidence.json')
+            self.assertEqual(result.returncode, 2, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertEqual(
+                payload['verification']['criterion_evidence'][0]['evidence_id'], 'EV-PATH')
+            self.assertEqual(json.loads(decoy.read_text(encoding='utf-8')), decoy_mapping)
+
+    def test_cli_relative_findings_file_ignores_cwd_decoy(self):
+        run_out = self._prepare_verify_runs()
+        repo_findings = [{'severity': 'low', 'file': 'tests/test_project_memory.py',
+                          'line': 1, 'summary': 'repo finding'}]
+        (self.repo / 'findings.json').write_text(
+            json.dumps(repo_findings, ensure_ascii=False), encoding='utf-8')
+        with tempfile.TemporaryDirectory() as outside:
+            decoy = Path(outside) / 'findings.json'
+            decoy.write_text(json.dumps(
+                [{'severity': 'low', 'file': 'decoy.py', 'line': 1,
+                  'summary': 'cwd decoy finding'}], ensure_ascii=False), encoding='utf-8')
+            result = self._cli_outside_repo(
+                outside, 'verify', '--target-run', 'run-target',
+                '--verifier-run', 'run-verifier', '--standard', 'relative findings',
+                '--verdict', 'pass', '--evidence-level', 'locally_observed',
+                '--test-receipt', run_out['path'],
+                '--findings-file', 'findings.json',
+                '--criterion-evidence', str(self.repo / 'criterion-evidence.json'))
+            self.assertEqual(result.returncode, 2, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertEqual([d['summary'] for d in payload['defects']], ['repo finding'])
+            self.assertEqual(
+                json.loads(decoy.read_text(encoding='utf-8'))[0]['summary'], 'cwd decoy finding')
+
     def test_cli_absolute_findings_file_unchanged(self):
         run_out = self._prepare_verify_runs()
         with tempfile.TemporaryDirectory() as outside:
