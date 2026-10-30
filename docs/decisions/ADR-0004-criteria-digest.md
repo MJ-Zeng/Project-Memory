@@ -1,3 +1,10 @@
+---
+id: "ADR-0004"
+status: "proposed"
+owner: "MJ-Zeng"
+related_issues: [16]
+---
+
 # ADR-0004：判据定义摘要与证据分离（B3）
 
 - 状态：`proposed`（Agent 起草；接受需人类批准，见 `docs/decisions/README.md`）

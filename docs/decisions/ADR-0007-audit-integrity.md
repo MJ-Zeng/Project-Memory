@@ -1,3 +1,10 @@
+---
+id: "ADR-0007"
+status: "proposed"
+owner: "MJ-Zeng"
+related_issues: [28]
+---
+
 # ADR-0007：审计账本与 Goal 状态的可验证性（B4）
 
 - 状态：`proposed`（Agent 起草；接受需人类批准，见 `docs/decisions/README.md`）

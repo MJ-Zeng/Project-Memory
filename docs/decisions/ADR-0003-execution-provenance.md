@@ -1,3 +1,10 @@
+---
+id: "ADR-0003"
+status: "proposed"
+owner: "MJ-Zeng"
+related_issues: [12]
+---
+
 # ADR-0003：执行来源与内容完整性分离（B2）
 
 - 状态：`proposed`（Agent 起草；接受需人类批准，见 `docs/decisions/README.md`）

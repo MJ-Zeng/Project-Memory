@@ -1,3 +1,10 @@
+---
+id: "ADR-0001"
+status: "proposed"
+owner: "MJ-Zeng"
+related_issues: [3]
+---
+
 # ADR-0001：可移植的仓库身份（执行收据不再绑定绝对路径）
 
 - 状态：`proposed`（Agent 起草；接受需人类批准，见 `docs/decisions/README.md`）
