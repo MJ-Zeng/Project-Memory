@@ -72,3 +72,13 @@ PROJECT_MEMORY_PYTHON=/c/SoftWare/Anconda/python ./bin/project-memory reconcile 
 - 分支：`docs/hygiene-20261030`，提交 `6d85016`，基线 `f033a6c`。
 - 复核命令：`git diff f033a6c..6d85016`；`git diff --stat f033a6c..6d85016`（应恰为本文所列 4 个文件，含本 handoff 的后续提交）；重跑第 2、5 条验收命令。
 - 本 handoff 只是执行事实记录，不构成 PASS；是否接受 84→82 的偏差由人类决定。
+
+## 7. 更正（PM-01 验收后）
+
+PM-01 验收指出入口文档第 34 行两处事实错误：把加入前的 84 条写成当前值；并把 7 条 medium 的 provenance 缺失并入 14 条 high。已按任务卡范围只改该行文字，frontmatter 与其他文件未动。
+
+- 更正提交：`6889ec692b501f62e7504b87ca4bf5850db218cc`（`docs(hygiene): correct finding count and severity attribution`），新建提交，未 amend、未 rebase。
+- 改动行原文：`- 当前知识审计有 82 条 findings（本文件加入前为 84；减少的 2 条是引用本文件的坏链消解）；其中 14 条 high 为 7 个 ADR 的 id 与 status 不合规，另有 7 条 provenance 缺失属 medium。本轮不修。`
+- 复查 `audit --scope current`（更正前 `13dd717` 与更正后 `6889ec6` 各跑一次）：两次均为 **82** 条（high 14 / medium 23 / low 45），exit 0；`(severity, code, location)` 三元组新增 0、减少 0；`location == docs/CURRENT_STATE.md` 的 finding 为 0。
+- 本条未重跑测试及原因：改动仅为 `docs/CURRENT_STATE.md` 的一行文字，不涉及 `project_memory/`、`tests/`、`bin/`、`skill/` 或配置，审计计数也未变化；上一轮两门槛结果（253 passed / 2 skipped，exit 0）仍对应该代码基线。
+- 仍未 push、未建 PR，未改动其他文件，两份旧未跟踪文件保持原样。
