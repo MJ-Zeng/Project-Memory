@@ -91,7 +91,30 @@ python3 -m project_memory verify --repo . \
   --expected-sha <被验证执行的head SHA>
 ```
 
-`agent_claimed` 不能产生 pass；`locally_observed` 需要 `test-run` 生成的执行收据，手写日志不再算执行证据；外部 CI 需要 URL 和 passed 状态，但 CLI 不联网抓取；人工批准需要 review URL 和 approved 状态，但 CLI 不认证审批人。验证绑定提交 SHA，代码变化后旧验证只作为历史证据，且不能跨 Goal 复用。
+`agent_claimed` 不能产生 pass；`locally_observed` 需要 `test-run` 生成的执行收据，手写日志不再算执行证据；外部 CI 需要 URL 和 passed 状态，默认只是声明；人工批准需要 review URL 和 approved 状态，但 CLI 不认证审批人。验证绑定提交 SHA，代码变化后旧验证只作为历史证据，且不能跨 Goal 复用。
+
+### 外部取证（--pr）
+
+`verify` 加 `--pr` 并设置 `GITHUB_REPOSITORY`（`owner/repo`）后，会通过 GitHub API 读取该 PR head 提交的 check runs，把“人肉看 CI 绿”换成机器判定：
+
+```bash
+export GITHUB_TOKEN="<你的令牌>"      # 只读仓库即可
+export GITHUB_REPOSITORY="owner/repo"
+
+python3 -m project_memory verify --repo . \
+  --target-run run-dev-1 --verifier-run run-verify-1 \
+  --standard 'CI 与凭据审查' --verdict pass --evidence-level externally_verified \
+  --pr 42 --criterion-evidence criterion-evidence.json
+```
+
+判定规则（fail-closed）：
+
+- 仅当所有 check run 完成且结论均为 `success`、且 PR head SHA 等于被验证执行的 head SHA 时，criterion mapping 中 `evidence_source: ci` 的证据才记为 `externally_verified`；记录 `trust_level` 也才能到 `externally_verified`（仅 `pass` 路径；非 `pass` 根本不会抓取）。
+- CI 失败、仍有进行中的任务、没有 check run、head SHA 不匹配、缺少 `GITHUB_REPOSITORY`、网络或 API 错误，都降级为 `agent_claimed`，不阻塞命令。
+- 即使 CI 全绿，记录仍然最多是 `MANUAL_REVIEW_REQUIRED`、`verified` 恒为 `false`：CI 成功只证明该提交的构建事实，不证明语义覆盖。
+- 声明 `--evidence-level externally_verified` 必须同时给 `--pr`；不给 `--pr` 时该等级会被直接拒绝。该等级只适用于 `pass`，`fail`/`inconclusive` 声明它会被拒绝。
+
+`checks.ci.provenance` 会从 `declared_unfetched` 变成 `github_api`，并记录 `head_sha`、`head_sha_matches_target` 和每个 run 的结论，便于复核。`checks.ci.repository` 记录尝试读取的仓库 slug（未发起抓取或缺少配置时为空串；仓库格式非法时保留原值便于排查），`checks.ci.fetch` 记录抓取结果类别：`not_requested`（未请求）、`ok`（成功）、`missing_repository` / `invalid_repository`（仓库配置问题）、`invalid_pr`、`api_error`（网络或 API 错误）、`shape_error`（响应结构异常）。这些字段只含类别与 slug，不含令牌、请求头或响应体。
 
 ### 执行收据与隔离
 
@@ -171,7 +194,7 @@ python3 -m project_memory init --repo /path/to/workspace --install none --profil
 | 定义与评估目标 | `goal create/show/list/evaluate/evidence/transition` | 写 `.project-memory/goals/` |
 | 登记执行 | `run start/checkpoint/finish/show/list` | 写 `.project-memory/runs/` 和 handoff |
 | 恢复执行 | `run resume --task 325 [--run-id run-1]` | 否 |
-| 独立验证 | `verify --target-run A --verifier-run B --standard '...' --verdict pass --evidence-level locally_observed --test-receipt .project-memory/receipts/EXE-*.json ...` | 写验证和缺陷记录 |
+| 独立验证 | `verify --target-run A --verifier-run B --standard '...' --verdict pass --evidence-level locally_observed --test-receipt .project-memory/receipts/EXE-*.json ...`；外部取证时加 `--pr 42 --evidence-level externally_verified` | 写验证和缺陷记录 |
 | 快照执行 | `test-run --command '...' (--trusted \| --allow-local-untrusted) [--wsl-distro Ubuntu]`，执行模式必须二选一 | 写快照、日志和收据 |
 | 缺陷跟踪 | `defect list/show/update` | 更新缺陷状态 |
 | 知识对账 | `reconcile [--format markdown] [--fail-on high]` | 否，或写指定报告 |
@@ -189,7 +212,7 @@ python3 -m project_memory init --repo /path/to/workspace --install none --profil
 
 ## 凭据与权限
 
-只有 `start` 和 `finish` 会访问 GitHub API，而且只调只读接口。凭据从环境变量 `GITHUB_TOKEN` 读取，不放在命令行参数里。建议使用 GitHub App 安装令牌，或限制到具体仓库的 fine-grained token。
+只有 `start`、`finish` 和 `verify --pr` 会访问 GitHub API，而且只调只读接口。凭据从环境变量 `GITHUB_TOKEN` 读取，不放在命令行参数里。建议使用 GitHub App 安装令牌，或限制到具体仓库的 fine-grained token。`verify --pr` 还需要 `GITHUB_REPOSITORY`（`owner/repo`）指定读取哪个仓库。
 
 `decision`、`goal`、`run`、`verify`、`test-run`、`defect`、`reconcile`、`handoff` 和 `init` 只写本地文件，不推送、不合并、不审批、不关闭 Issue、不部署。`--reviewed-by` 和 `--test-evidence` 是声明，不是独立验证；真正的权限仍由 GitHub 规则和 CI 决定。`test-run --trusted` 只在 WSL2 可用时执行，隔离预检失败会返回 BLOCKED，不会退回普通子进程。
 
