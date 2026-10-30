@@ -31,7 +31,7 @@ v1.0.0 可以用于团队内部的记忆记录与跨会话交接；不能作为�
 - `approved_by` 只是邮箱声明，记录为 `claimed_unverified`。
 - 执行证据与收据只证明内容完整性，不证明由谁生成、由谁提交。
 - 沙箱执行依赖 `wsl.exe`，它可被环境变量或 PATH 替换。
-- 当前知识审计有 84 条 findings，其中 14 条 high 来自 ADR 元数据（id、status、provenance 不合规）；本轮不修。
+- 当前知识审计有 82 条 findings（本文件加入前为 84；减少的 2 条是引用本文件的坏链消解）；其中 14 条 high 为 7 个 ADR 的 id 与 status 不合规，另有 7 条 provenance 缺失属 medium。本轮不修。
 
 ## 历史提示
 
