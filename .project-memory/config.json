@@ -5,7 +5,7 @@
   "doc_roots": [
     "docs"
   ],
-  "entry_doc": null,
+  "entry_doc": "docs/CURRENT_STATE.md",
   "legacy_roots": [],
   "max_search_results": 6,
   "max_verified_age_days": 90,
