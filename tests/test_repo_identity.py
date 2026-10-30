@@ -143,8 +143,14 @@ class RepoIdentityTest(unittest.TestCase):
     def test_relative_and_absolute_paths_agree(self):
         out = self.make_receipt()
         # verify_receipt resolves the repo, so a relative spelling must agree too.
-        rel = Path(os.path.relpath(self.repo, Path.cwd()))
-        self.assertTrue(verify_receipt(rel, out['path'])['valid'])
+        # Resolve from the repo's own drive: a cwd on another drive cannot spell it.
+        previous = Path.cwd()
+        os.chdir(Path(self.repo).anchor)
+        try:
+            rel = Path(os.path.relpath(self.repo, Path.cwd()))
+            self.assertTrue(verify_receipt(rel, out['path'])['valid'])
+        finally:
+            os.chdir(previous)
         self.assertTrue(verify_receipt(Path(self.repo), out['path'])['valid'])
 
     def test_remote_normalisation_ignores_scheme_and_user(self):

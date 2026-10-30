@@ -319,8 +319,13 @@ class SecurityRc3Test(unittest.TestCase):
 
     def test_relative_repo_path_does_not_raise(self):
         out = run_command(self.repo, [sys.executable, '-c', 'print(1)'], self.base)
-        relative = os.path.relpath(self.repo, Path.cwd())
-        checked = verify_receipt(Path(relative), out['path'])
+        previous = Path.cwd()
+        os.chdir(Path(self.repo).anchor)
+        try:
+            relative = os.path.relpath(self.repo, Path.cwd())
+            checked = verify_receipt(Path(relative), out['path'])
+        finally:
+            os.chdir(previous)
         self.assertTrue(checked['valid'])
 
     def test_local_env_filters_credentials_and_rejects_injection(self):

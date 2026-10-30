@@ -272,7 +272,12 @@ class AnchorIdentityTest(unittest.TestCase):
         current = authority._current_user_sid()
         self.assertIsNotNone(owner)
         self.assertRegex(owner, r'^S-1-\d+(-\d+)+$')
-        self.assertEqual(owner, current)
+        if owner == current:
+            return
+        # Elevated runners (for example GitHub-hosted Windows) own checked-out
+        # files as a well-known group such as BUILTIN\Administrators, so the
+        # owner SID legitimately differs from the current user SID there.
+        self.assertRegex(owner, r'^S-1-5-32-\d+$', (owner, current))
 
 
 if __name__ == '__main__':
