@@ -164,14 +164,21 @@ class ExternalVerificationTest(unittest.TestCase):
         return subprocess.run(['git', '-C', str(self.repo), *args], check=True,
                               capture_output=True, text=True, encoding='utf-8')
 
-    def verify(self, ci_status, mapping=None):
+    def verify(self, ci_status, mapping=None, evidence_level='externally_verified',
+               pr_number=42, test_receipt=None):
         environment = {'GITHUB_REPOSITORY': 'owner/repo', 'GITHUB_TOKEN': 'secret-token'}
         with mock.patch.dict(os.environ, environment, clear=False):
             with mock.patch.object(GitHubReader, 'pull_request_ci_status',
                                    return_value=ci_status):
                 return verify_run(self.repo, 'run-target', 'run-verifier', 'b9 check',
-                                  'pass', 'externally_verified', pr_number=42,
+                                  'pass', evidence_level, pr_number=pr_number,
+                                  test_receipt=test_receipt,
                                   criterion_evidence=mapping or self.mapping)
+
+    def receipt(self):
+        return run_command(self.repo, [sys.executable, '-c',
+                                       "import sys; print('1 passed'); sys.exit(0)"],
+                           self.base, executed_by='b9-harness')
 
     def test_green_ci_on_verified_commit_raises_trust(self):
         result = self.verify(green_status(self.base))
@@ -190,8 +197,14 @@ class ExternalVerificationTest(unittest.TestCase):
         self.assertEqual(ci['status'], 'success')
         self.assertTrue(ci['head_sha_matches_target'])
         self.assertEqual(ci['pr'], 42)
+        self.assertEqual(ci['repository'], 'owner/repo')
+        self.assertEqual(ci['fetch'], 'ok')
         self.assertNotIn('secret-token', json.dumps(record))
         self.assertFalse(evaluate_goal(self.repo, GOAL)['satisfied'])
+        # D-2: the user-facing caveat must describe the new, limited meaning of
+        # external evidence instead of claiming the level is no longer accepted.
+        self.assertIn('不证明语义覆盖', result['caveat'])
+        self.assertIn('review 证据仍只是声明', result['caveat'])
 
     def test_decoy_head_sha_degrades_to_agent_claimed(self):
         # Negative control: a green CI for a different, non-empty commit must not
@@ -233,7 +246,10 @@ class ExternalVerificationTest(unittest.TestCase):
         fetch.assert_not_called()
         self.assertEqual(result['status'], 'PARTIAL_COVERAGE')
         self.assertEqual(result['criterion_evidence'][0]['observed_level'], 'agent_claimed')
-        self.assertEqual(result['ci']['provenance'], 'none')
+        ci = result['ci']
+        self.assertEqual(ci['provenance'], 'none')
+        self.assertEqual(ci['fetch'], 'missing_repository')
+        self.assertEqual(ci['repository'], '')
 
     def test_api_error_degrades_without_raising(self):
         with mock.patch.dict(os.environ, {'GITHUB_REPOSITORY': 'owner/repo',
@@ -245,7 +261,68 @@ class ExternalVerificationTest(unittest.TestCase):
                                     criterion_evidence=self.mapping)
         self.assertEqual(result['status'], 'PARTIAL_COVERAGE')
         self.assertEqual(result['criterion_evidence'][0]['observed_level'], 'agent_claimed')
-        self.assertEqual(result['ci']['provenance'], 'none')
+        ci = result['ci']
+        self.assertEqual(ci['provenance'], 'none')
+        self.assertEqual(ci['fetch'], 'api_error')
+        self.assertEqual(ci['repository'], 'owner/repo')
+
+    def test_invalid_github_repository_degrades(self):
+        # D-5: a malformed owner/name must not raise or upgrade; the ci record
+        # has to show the problem is configuration, not a CI result.
+        for bad_slug in ('a', 'a/b/c'):
+            env = {'GITHUB_REPOSITORY': bad_slug, 'GITHUB_TOKEN': 'secret-token'}
+            with mock.patch.dict(os.environ, env, clear=False):
+                with mock.patch.object(GitHubReader, 'pull_request_ci_status',
+                                       return_value=green_status(self.base)) as fetch:
+                    result = verify_run(self.repo, 'run-target', 'run-verifier',
+                                        'b9 check', 'pass', 'externally_verified',
+                                        pr_number=42, criterion_evidence=self.mapping)
+            fetch.assert_not_called()
+            self.assertEqual(result['status'], 'PARTIAL_COVERAGE')
+            self.assertEqual(result['criterion_evidence'][0]['observed_level'],
+                             'agent_claimed')
+            self.assertEqual(result['ci']['provenance'], 'none')
+            self.assertEqual(result['ci']['fetch'], 'invalid_repository')
+            self.assertEqual(result['ci']['repository'], bad_slug)
+
+    def test_locally_observed_declaration_caps_green_ci_trust(self):
+        # D-5: min(declared, observed) must cap a locally_observed declaration
+        # even when the fetched CI is green; CI never lifts it above the claim.
+        result = self.verify(green_status(self.base), evidence_level='locally_observed',
+                             test_receipt=self.receipt()['path'])
+        record = result['verification']
+        self.assertEqual(record['evidence_level'], 'locally_observed')
+        self.assertEqual(record['trust_level'], 'locally_observed')
+        entry = record['criterion_evidence'][0]
+        self.assertEqual(entry['observed_level'], 'externally_verified')
+        self.assertTrue(entry['external_ci_verified'])
+        self.assertEqual(record['checks']['ci']['fetch'], 'ok')
+
+    def test_fail_locally_observed_keeps_locally_observed_trust(self):
+        # D-1 regression lock: the non-PASS branch must keep the baseline
+        # trust_level instead of echoing a stronger declared level.
+        result = verify_run(self.repo, 'run-target', 'run-verifier', 'b9 check',
+                            'fail', 'locally_observed',
+                            test_receipt=self.receipt()['path'],
+                            criterion_evidence=self.mapping)
+        self.assertFalse(result['verified'])
+        self.assertEqual(result['status'], 'FAILED')
+        self.assertEqual(result['verification']['trust_level'], 'locally_observed')
+
+    def test_non_pass_externally_verified_is_rejected(self):
+        # D-1/D-5: only a PASS may declare external verification; the fetch is
+        # never attempted for fail/inconclusive.
+        for verdict in ('fail', 'inconclusive'):
+            with mock.patch.object(GitHubReader, 'pull_request_ci_status') as fetch:
+                with mock.patch.dict(os.environ,
+                                     {'GITHUB_REPOSITORY': 'owner/repo'},
+                                     clear=False):
+                    with self.assertRaises(PMError) as ctx:
+                        verify_run(self.repo, 'run-target', 'run-verifier', 'b9 check',
+                                   verdict, 'externally_verified', pr_number=42,
+                                   criterion_evidence=self.mapping)
+            fetch.assert_not_called()
+            self.assertIn('只适用于 pass', str(ctx.exception))
 
     def test_externally_verified_without_pr_is_rejected(self):
         with self.assertRaises(PMError) as ctx:

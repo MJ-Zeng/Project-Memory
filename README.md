@@ -109,12 +109,12 @@ python3 -m project_memory verify --repo . \
 
 判定规则（fail-closed）：
 
-- 仅当所有 check run 完成且结论均为 `success`、且 PR head SHA 等于被验证执行的 head SHA 时，criterion mapping 中 `evidence_source: ci` 的证据才记为 `externally_verified`；记录 `trust_level` 也才能到 `externally_verified`。
+- 仅当所有 check run 完成且结论均为 `success`、且 PR head SHA 等于被验证执行的 head SHA 时，criterion mapping 中 `evidence_source: ci` 的证据才记为 `externally_verified`；记录 `trust_level` 也才能到 `externally_verified`（仅 `pass` 路径；非 `pass` 根本不会抓取）。
 - CI 失败、仍有进行中的任务、没有 check run、head SHA 不匹配、缺少 `GITHUB_REPOSITORY`、网络或 API 错误，都降级为 `agent_claimed`，不阻塞命令。
 - 即使 CI 全绿，记录仍然最多是 `MANUAL_REVIEW_REQUIRED`、`verified` 恒为 `false`：CI 成功只证明该提交的构建事实，不证明语义覆盖。
-- 声明 `--evidence-level externally_verified` 必须同时给 `--pr`；不给 `--pr` 时该等级会被直接拒绝。
+- 声明 `--evidence-level externally_verified` 必须同时给 `--pr`；不给 `--pr` 时该等级会被直接拒绝。该等级只适用于 `pass`，`fail`/`inconclusive` 声明它会被拒绝。
 
-`checks.ci.provenance` 会从 `declared_unfetched` 变成 `github_api`，并记录 `head_sha`、`head_sha_matches_target` 和每个 run 的结论，便于复核。
+`checks.ci.provenance` 会从 `declared_unfetched` 变成 `github_api`，并记录 `head_sha`、`head_sha_matches_target` 和每个 run 的结论，便于复核。`checks.ci.repository` 记录尝试读取的仓库 slug（未发起抓取或缺少配置时为空串；仓库格式非法时保留原值便于排查），`checks.ci.fetch` 记录抓取结果类别：`not_requested`（未请求）、`ok`（成功）、`missing_repository` / `invalid_repository`（仓库配置问题）、`invalid_pr`、`api_error`（网络或 API 错误）、`shape_error`（响应结构异常）。这些字段只含类别与 slug，不含令牌、请求头或响应体。
 
 ### 执行收据与隔离
 

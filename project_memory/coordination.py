@@ -865,27 +865,43 @@ def _repo_matches(repo: Path, declared: str) -> bool:
     return _repo_binding(repo, declared) is not None
 
 
-def _external_ci_status(pr_number: int | None) -> dict | None:
-    """Fetch a PR's CI status from GitHub; return None when it cannot be used.
+def _external_ci_status(pr_number: int | None) -> tuple[dict | None, dict]:
+    """Fetch a PR's CI status from GitHub; return ``(status_or_none, info)``.
 
     B-9: only an explicit PR number plus ``GITHUB_REPOSITORY`` triggers the
     fetch. Missing configuration, network trouble and API errors all degrade to
     None, so the caller keeps agent_claimed trust instead of blocking work.
+    ``info`` records the repository slug and a failure category
+    (``not_requested``/``missing_repository``/``invalid_repository``/
+    ``invalid_pr``/``api_error``/``shape_error``/``ok``) for audit; it never
+    carries tokens, headers or response bodies.
     """
-    if not pr_number:
-        return None
-    slug = os.getenv('GITHUB_REPOSITORY')
+    slug = os.getenv('GITHUB_REPOSITORY') or ''
+    info = {'repository': '', 'fetch': 'not_requested'}
+    if pr_number is None:
+        return None, info
+    if isinstance(pr_number, bool) or not isinstance(pr_number, int) or pr_number < 1:
+        info['fetch'] = 'invalid_pr'
+        return None, info
     if not slug:
-        return None
+        info['fetch'] = 'missing_repository'
+        return None, info
+    info['repository'] = slug
+    if not re.fullmatch(r'[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+', slug):
+        info['fetch'] = 'invalid_repository'
+        return None, info
     try:
-        status = GitHubReader(slug).pull_request_ci_status(int(pr_number))
+        status = GitHubReader(slug).pull_request_ci_status(pr_number)
     except Exception:
         # B-9 contract: any fetch failure (config, network, API, shape) degrades
         # to agent_claimed; external evidence must never block local work.
-        return None
-    if status.get('_provenance') != 'github_api':
-        return None
-    return status
+        info['fetch'] = 'api_error'
+        return None, info
+    if not isinstance(status, dict) or status.get('_provenance') != 'github_api':
+        info['fetch'] = 'shape_error'
+        return None, info
+    info['fetch'] = 'ok'
+    return status, info
 
 
 def _criterion_evidence_entries(value, repo: Path, goal: dict, target: dict,
@@ -2075,6 +2091,12 @@ def _verification_inputs(test_command, test_exit, test_log, ci_url, ci_status,
     if evidence_level == 'externally_verified' and not pr_number:
         raise PMError('externally_verified 需要 --pr 从 GitHub 读取 CI 状态；'
                       '没有外部取证时不能声明该等级')
+    # D-1: the non-PASS branch never fetches CI, so it must not echo a declared
+    # externally_verified back as observed trust.  Only a green CI on a PASS can
+    # establish external evidence.
+    if evidence_level == 'externally_verified' and verdict != 'pass':
+        raise PMError('externally_verified 只适用于 pass；'
+                      'fail/inconclusive 不能声明该等级')
     if evidence_level == 'human_approved':
         raise PMError('human_approved 不能作为声明的 evidence level；'
                       '人工批准必须通过 verification 记录与 criterion mapping 证明')
@@ -2099,14 +2121,20 @@ def _verification_inputs(test_command, test_exit, test_log, ci_url, ci_status,
     return log_path
 
 
-def _ci_payload(ci_url, ci_status, external_ci, pr_number, target_head) -> dict:
+def _ci_payload(ci_url, ci_status, external_ci, pr_number, target_head,
+                fetch_info=None) -> dict:
     """Shape the checks.ci record; never store tokens, only the fetched outcome."""
+    info = fetch_info or {}
+    repository = info.get('repository') or ''
+    fetch = info.get('fetch') or 'not_requested'
     if external_ci is None:
         return {'url': ci_url or '', 'status': ci_status or 'not_provided',
-                'provenance': 'declared_unfetched' if ci_url else 'none'}
+                'provenance': 'declared_unfetched' if ci_url else 'none',
+                'repository': repository, 'fetch': fetch}
     return {'url': ci_url or '', 'status': external_ci.get('status'),
             'declared_status': ci_status or 'not_provided',
             'provenance': 'github_api', 'pr': pr_number,
+            'repository': repository, 'fetch': fetch,
             'head_sha': external_ci.get('head_sha'),
             'head_sha_matches_target': external_ci.get('head_sha') == target_head,
             'truncated': bool(external_ci.get('truncated')),
@@ -2216,8 +2244,9 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
                     'reason': '存在未关闭的 high 缺陷，不能给出 PASS',
                     'blocking_defects': [d['defect_id'] for d in blocking_defects],
                     'dry_run': dry_run}
-        external_ci = _external_ci_status(pr_number)
-        ci = _ci_payload(ci_url, ci_status, external_ci, pr_number, target_head)
+        external_ci, fetch_info = _external_ci_status(pr_number)
+        ci = _ci_payload(ci_url, ci_status, external_ci, pr_number, target_head,
+                         fetch_info=fetch_info)
         criterion_entries = _criterion_evidence_entries(
             criterion_evidence, repo, goal, target, verifier, target_head,
             external_ci=external_ci)
@@ -2361,9 +2390,9 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
               'would_update_run_status': ('verified' if verified else
                                           ('failed' if verdict == 'fail' else target.get('status'))),
               'caveat': ('本地 CLI 写出的验证记录没有受保护信任锚的分离签名，因此 status 最多是 '
-                         'MANUAL_REVIEW_REQUIRED，verified 恒为 false。CLI 不再接受 externally_verified '
-                         '或 human_approved 作为声明的 evidence level。CI/review 证据只获得 '
-                         'agent_claimed 信任。测试收据只证明内容完整性，不证明来源；'
+                         'MANUAL_REVIEW_REQUIRED，verified 恒为 false。externally_verified 需要 --pr '
+                         '并由 GitHub API 实际读取；CI 全绿只证明该提交的构建事实，不证明语义覆盖；'
+                         'review 证据仍只是声明。测试收据只证明内容完整性，不证明来源；'
                          'PASS 仍要求每个必达标准都有绑定提交、独立复核 coverage 的证据映射。'),
               'dry_run': dry_run}
     if dry_run:
