@@ -4,7 +4,7 @@
 - 执行者：PM-02 Developer（`pm02@pilot.invalid`）
 - 基线：`30ddd1d841eb88f7061806b6378f97c33c683286`（`dev/v1.0`，即任务卡所述 `30ddd1d`）
 - 分支：`feat/b9-external-verification`（已推送 origin）
-- 顶点提交：`5d0a26c06e3041e636c8751e01d568691ebfa861`
+- 代码顶点提交：`5d0a26c06e3041e636c8751e01d568691ebfa861`（本交接文件随后单独提交；分支最终 tip 以 `git rev-parse feat/b9-external-verification` 为准）
 - 生成时间：2026-10-30T15:12Z
 - 本文件只记录执行事实与实测命令结果，不给出 PASS/GO 结论；判定属于 PM-03 / PM-01 / 人类审批者。
 
