@@ -42,6 +42,16 @@ Windows 上 `python3` 可能是 Microsoft Store 的别名桩（exit 49），请�
 
 开关取值为 `1`、`true`、`yes`（大小写不敏感）。详见 `docs/OPERATIONS.zh-CN.md`。
 
+### 仓库自带的 CI
+
+本仓库的 `.github/workflows/test.yml` 在三种情况下运行同一套检查：目标为 `dev/v1.0` 的 pull request、合入 `dev/v1.0` 的 push，以及手动 `workflow_dispatch`。
+
+- 运行器 `windows-latest`，Python 3.12，pytest 固定为 9.1.1。
+- 两道门槛依次执行：默认 `pytest -q`，以及 `PROJECT_MEMORY_REQUIRE_OPENSSL=1 pytest -q`。运行器没有 openssl 时，第二道会在日志里显式打印跳过，不会把跳过当成通过。
+- 权限只有 `contents: read`；checkout 不保留凭据；第三方 Action 按提交 SHA 固定。
+
+当前没有启用分支保护（私有仓库的免费计划不提供该能力），所以 CI 结果是建议性的，不会自动阻断合并。合并规则是：先确认该 pull request 的 CI 运行成功，再看代码；合入后由 push 触发的运行会在合并提交上再验证一次。
+
 ## 目标、执行与独立验证
 
 目标用可衡量的成功标准描述，不把 Issue 关闭当成完成：
@@ -196,8 +206,8 @@ python3 -m pip install -e '.[semantic]'
 ## 还需要人工完成的事
 
 1. 检查生成的示例，补全入口文档、架构说明和 ADR 负责人。
-2. 参考 `.github/CODEOWNERS.example` 配置真正的 CODEOWNERS，并在 GitHub 开启分支 Ruleset、必需审查和必需 CI。CLI 不能替你做这些。
-3. 把 Actions 固定到审核过的完整 SHA。
+2. 参考 `.github/CODEOWNERS.example` 配置真正的 CODEOWNERS，并在 GitHub 开启分支 Ruleset、必需审查和必需 CI（私有仓库的免费计划不提供这些能力，需要 GitHub Pro 或改为公开仓库）。CLI 不能替你做这些。
+3. 审核已固定的第三方 Action 代码，并在升级时更新 SHA：当前 `actions/checkout` 固定到 `v4.4.0`、`actions/setup-python` 固定到 `v5.6.0`，只解决了“引用不可变”，没有审核上游代码。
 4. 接入有权限的 GitHub 数据；如果要把完成门禁全自动化，还需要独立核对 CI 和 review 状态，不能只依赖快照声明。
 5. Qoder CN 等客户端目前需要手动切换模型。CLI 只记录实际模型，不调度模型，也不保证跨模型接续。
 6. Goal 的 `approved`/`achieved` 转换、ADR 接受、高风险变更和生产部署仍必须由授权人执行。
