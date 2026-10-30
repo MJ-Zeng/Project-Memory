@@ -49,3 +49,39 @@ class GitHubReader:
         pull['changed_files_list'] = [p['filename'] for p in files]
         pull['files_partial'] = len(files) >= 100
         return pull
+
+    def pull_request_ci_status(self, pr_number: int) -> dict:
+        """Aggregate the check runs of a PR head commit from the GitHub API.
+
+        ``status`` is fail-closed: a failed run wins over a pending one, an
+        empty or truncated check-run list is ``error`` (never ``success``), so
+        a missing CI configuration cannot be read as a green build.
+        """
+        if isinstance(pr_number, bool) or not isinstance(pr_number, int) or pr_number < 1:
+            raise PMError('PR 编号必须是正整数')
+        pull = self.get(f'/repos/{self.slug}/pulls/{pr_number}')
+        head_sha = (pull.get('head') or {}).get('sha')
+        if not head_sha:
+            raise PMError(f'PR #{pr_number} 没有 head SHA')
+        checks = self.get(f'/repos/{self.slug}/commits/{head_sha}/check-runs?per_page=100')
+        raw_runs = checks.get('check_runs') or []
+        runs = [{
+            'name': run.get('name'),
+            'conclusion': run.get('conclusion'),
+            'status': run.get('status'),
+            'html_url': run.get('html_url'),
+        } for run in raw_runs]
+        total = checks.get('total_count', len(runs))
+        truncated = isinstance(total, int) and total > len(runs)
+        if not runs or truncated:
+            overall = 'error'
+        elif any(run['status'] == 'completed' and run['conclusion'] != 'success'
+                 for run in runs):
+            overall = 'failure'
+        elif any(run['status'] != 'completed' for run in runs):
+            overall = 'pending'
+        else:
+            overall = 'success'
+        return {'head_sha': head_sha, 'status': overall, 'runs': runs,
+                'total_count': total, 'truncated': truncated,
+                '_provenance': 'github_api'}

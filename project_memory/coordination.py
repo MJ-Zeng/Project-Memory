@@ -5,6 +5,7 @@ import copy
 import base64
 import hashlib
 import json
+import os
 import re
 import subprocess
 from pathlib import Path
@@ -20,6 +21,7 @@ from .authority import (canonical_bytes, canonical_digest,
                         verification_authority)
 from .execution import (repo_identity, verify_execution_provenance,
                         verify_receipt)
+from .gh import GitHubReader
 
 GOAL_STATUSES = {'proposed', 'approved', 'active', 'evaluating', 'achieved', 'cancelled', 'blocked'}
 GOAL_TRANSITIONS = {
@@ -863,8 +865,32 @@ def _repo_matches(repo: Path, declared: str) -> bool:
     return _repo_binding(repo, declared) is not None
 
 
+def _external_ci_status(pr_number: int | None) -> dict | None:
+    """Fetch a PR's CI status from GitHub; return None when it cannot be used.
+
+    B-9: only an explicit PR number plus ``GITHUB_REPOSITORY`` triggers the
+    fetch. Missing configuration, network trouble and API errors all degrade to
+    None, so the caller keeps agent_claimed trust instead of blocking work.
+    """
+    if not pr_number:
+        return None
+    slug = os.getenv('GITHUB_REPOSITORY')
+    if not slug:
+        return None
+    try:
+        status = GitHubReader(slug).pull_request_ci_status(int(pr_number))
+    except Exception:
+        # B-9 contract: any fetch failure (config, network, API, shape) degrades
+        # to agent_claimed; external evidence must never block local work.
+        return None
+    if status.get('_provenance') != 'github_api':
+        return None
+    return status
+
+
 def _criterion_evidence_entries(value, repo: Path, goal: dict, target: dict,
-                                verifier: dict, target_head: str | None) -> list[dict]:
+                                verifier: dict, target_head: str | None,
+                                external_ci: dict | None = None) -> list[dict]:
     """Validate criterion-to-evidence mappings. Structural errors raise; semantic gaps are recorded."""
     if value is None:
         return []
@@ -983,14 +1009,20 @@ def _criterion_evidence_entries(value, repo: Path, goal: dict, target: dict,
         if review_url and not _valid_http_url(review_url):
             raise PMError('evidence_review_url 必须是 http(s) 地址')
         description_match = _norm_text(description) == _norm_text(criteria[cid]['statement'])
+        external_ci_verified = False
         if source in ('test', 'check', 'command'):
             # R-2: only a receipt-backed execution counts as locally observed.
             observed = ('locally_observed'
                         if receipt_info and receipt_info['valid'] and status == 'passed'
                         and exit_code == 0 else 'agent_claimed')
         elif source == 'ci':
-            # R-1: declared_unfetched CI cannot get externally_verified trust.
-            observed = 'agent_claimed'
+            # B-9: CI raises trust only when the GitHub API reports a green build
+            # for this exact commit.  A declared URL/status is still a claim.
+            external_ci_verified = bool(
+                external_ci
+                and external_ci.get('status') == 'success'
+                and external_ci.get('head_sha') == sha)
+            observed = 'externally_verified' if external_ci_verified else 'agent_claimed'
         elif source == 'review':
             # R-1: declared_unfetched review cannot get human_approved trust.
             observed = 'agent_claimed'
@@ -1016,11 +1048,17 @@ def _criterion_evidence_entries(value, repo: Path, goal: dict, target: dict,
             problems.append('verification_result 不是 pass')
         if observed == 'agent_claimed':
             problems.append('没有可观察的执行证据（缺少有效执行收据）')
+        elif observed == 'externally_verified':
+            # The GitHub API proves the build outcome for this commit only; it
+            # says nothing about semantic coverage of the criterion.
+            problems.append('CI 成功只证明该提交的构建事实；语义覆盖仍需可信人工确认')
         structural_ok = (description_match and status == 'passed' and result == 'pass')
-        if observed == 'locally_observed' and structural_ok:
+        if observed in ('locally_observed', 'externally_verified') and structural_ok:
             state = 'MANUAL_REVIEW_REQUIRED'
         elif observed == 'locally_observed':
             state = 'executed'
+        elif observed == 'externally_verified':
+            state = 'external_observed'
         else:
             state = 'agent_claimed'
         receipt = (receipt_info or {}).get('receipt') or {}
@@ -1049,6 +1087,7 @@ def _criterion_evidence_entries(value, repo: Path, goal: dict, target: dict,
             'verification_result': result,
             'description_match': description_match,
             'observed_level': observed,
+            'external_ci_verified': external_ci_verified,
             # A valid receipt proves content integrity only.  No receipt in this
             # build carries an authenticated, external provenance, so execution
             # is never upgraded to "verified by a trusted source" here.
@@ -1083,7 +1122,14 @@ def _mapping_summary(entries: list[dict], goal: dict) -> dict:
                            and entry.get('execution_status') == 'passed'
                            and entry.get('verification_result') == 'pass'
                            for entry in items)
-            if executed:
+            # B-9: a green CI build fetched for this commit is an externally
+            # observed execution, but semantic coverage is still unconfirmed.
+            externally_observed = all(entry.get('external_ci_verified')
+                                      and entry.get('description_match')
+                                      and entry.get('execution_status') == 'passed'
+                                      and entry.get('verification_result') == 'pass'
+                                      for entry in items)
+            if executed or externally_observed:
                 execution_covered.append(cid)
                 review_required.append(cid)
     missing = [cid for cid in required if cid not in by_criterion]
@@ -2015,17 +2061,20 @@ def _findings(value) -> list[dict]:
 
 def _verification_inputs(test_command, test_exit, test_log, ci_url, ci_status,
                          review_url, review_state, evidence_level, verdict,
-                         test_receipt=None):
+                         test_receipt=None, pr_number=None):
     if verdict not in ('pass', 'fail', 'inconclusive'):
         raise PMError('verdict 必须是 pass、fail 或 inconclusive')
     if evidence_level not in EVIDENCE_LEVELS:
         raise PMError('evidence level 必须是以下之一：' + '、'.join(sorted(EVIDENCE_LEVELS)))
     if verdict == 'pass' and evidence_level == 'agent_claimed':
         raise PMError('Agent 自报不能作为 pass；请提供本地日志、外部 CI 或人工批准')
-    # R-1 Fix: Block externally-declared trust levels that cannot be verified
-    if evidence_level == 'externally_verified':
-        raise PMError('externally_verified 不能作为声明的 evidence level；'
-                      'CI 证据在 criterion mapping 中只获得 agent_claimed 信任')
+    # B-9: externally_verified may only be declared together with --pr, which
+    # reads the real CI outcome.  The record still caps trust at the observed
+    # evidence (min() below), so a failed fetch or a SHA mismatch degrades to
+    # agent_claimed instead of raising.
+    if evidence_level == 'externally_verified' and not pr_number:
+        raise PMError('externally_verified 需要 --pr 从 GitHub 读取 CI 状态；'
+                      '没有外部取证时不能声明该等级')
     if evidence_level == 'human_approved':
         raise PMError('human_approved 不能作为声明的 evidence level；'
                       '人工批准必须通过 verification 记录与 criterion mapping 证明')
@@ -2050,6 +2099,20 @@ def _verification_inputs(test_command, test_exit, test_log, ci_url, ci_status,
     return log_path
 
 
+def _ci_payload(ci_url, ci_status, external_ci, pr_number, target_head) -> dict:
+    """Shape the checks.ci record; never store tokens, only the fetched outcome."""
+    if external_ci is None:
+        return {'url': ci_url or '', 'status': ci_status or 'not_provided',
+                'provenance': 'declared_unfetched' if ci_url else 'none'}
+    return {'url': ci_url or '', 'status': external_ci.get('status'),
+            'declared_status': ci_status or 'not_provided',
+            'provenance': 'github_api', 'pr': pr_number,
+            'head_sha': external_ci.get('head_sha'),
+            'head_sha_matches_target': external_ci.get('head_sha') == target_head,
+            'truncated': bool(external_ci.get('truncated')),
+            'runs': external_ci.get('runs') or []}
+
+
 def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
                verdict: str, evidence_level: str, test_command: str | None = None,
                test_exit: int | None = None, test_log: str | None = None,
@@ -2058,7 +2121,7 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
                findings=None, verification_id: str | None = None,
                resolves_defects=None, expected_sha: str | None = None,
                criterion_evidence=None, test_receipt: str | None = None,
-               dry_run: bool = False) -> dict:
+               dry_run: bool = False, pr_number: int | None = None) -> dict:
     target_path = _find_run_by_id(repo, target_run)
     verifier_path = _find_run_by_id(repo, verifier_run)
     if target_path is None:
@@ -2102,7 +2165,7 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
         test_log = receipt['log_path']
     _verification_inputs(test_command, test_exit, test_log, ci_url, ci_status,
                          review_url, review_state, evidence_level, verdict,
-                         test_receipt=test_receipt)
+                         test_receipt=test_receipt, pr_number=pr_number)
     stale = bool(current_head and target_head and current_head != target_head)
     finding_list = _findings(findings or [])
     if verdict == 'pass' and any(f['severity'] == 'high' for f in finding_list):
@@ -2131,6 +2194,8 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
     criterion_entries, mapping = [], {'status': 'missing', 'required': [],
                                       'covered': [], 'partial': [], 'missing': [],
                                       'unexpected': [], 'problems': []}
+    external_ci = None
+    ci = None
     if verdict == 'pass':
         if not target_head:
             raise PMError('PASS 需要被验证执行绑定完整 head SHA')
@@ -2151,8 +2216,11 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
                     'reason': '存在未关闭的 high 缺陷，不能给出 PASS',
                     'blocking_defects': [d['defect_id'] for d in blocking_defects],
                     'dry_run': dry_run}
+        external_ci = _external_ci_status(pr_number)
+        ci = _ci_payload(ci_url, ci_status, external_ci, pr_number, target_head)
         criterion_entries = _criterion_evidence_entries(
-            criterion_evidence, repo, goal, target, verifier, target_head)
+            criterion_evidence, repo, goal, target, verifier, target_head,
+            external_ci=external_ci)
         mapping = _mapping_summary(criterion_entries, goal)
         if mapping['status'] not in ('complete', 'review_required'):
             status = _mapping_outcome(criterion_entries, mapping)
@@ -2170,7 +2238,7 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
                                if not criterion_entries else
                                'criterion evidence 未满足完整、已确认的覆盖要求'),
                     'mapping': mapping, 'criterion_evidence': criterion_entries,
-                    'dry_run': dry_run}
+                    'ci': ci, 'dry_run': dry_run}
     tests = {'command': test_command or '', 'exit_code': test_exit,
              'log': test_log or '', 'log_exists': bool(_log_problem(repo, test_log) is None),
              'log_content_sha256': log_hash,
@@ -2185,8 +2253,8 @@ def verify_run(repo: Path, target_run: str, verifier_run: str, standard: str,
              'receipt_integrity_valid': bool(receipt_info and receipt_info['valid']),
              'execution_trust': (receipt_info or {}).get('receipt', {}).get('trust'),
              'execution_provenance': (receipt_info or {}).get('provenance')}
-    ci = {'url': ci_url or '', 'status': ci_status or 'not_provided',
-          'provenance': 'declared_unfetched' if ci_url else 'none'}
+    if ci is None:
+        ci = _ci_payload(ci_url, ci_status, None, pr_number, target_head)
     review = {'url': review_url or '', 'state': review_state or 'not_provided',
               'provenance': 'declared_unfetched' if review_url else 'none'}
     observed_rank = max([EVIDENCE_TRUST.get(entry['observed_level'], 0)

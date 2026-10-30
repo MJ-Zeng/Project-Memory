@@ -271,10 +271,12 @@ def parser():
     s.add_argument('--standard', required=True)
     s.add_argument('--verdict', required=True, choices=['pass', 'fail', 'inconclusive'])
     s.add_argument('--evidence-level', required=True,
-                   # R-1 Fix: Only locally_observed and agent_claimed are accepted.
-                   # externally_verified and human_approved are blocked because the CLI
-                   # cannot actually fetch CI/review URLs to verify them.
-                   choices=['agent_claimed', 'locally_observed'])
+                   # B-9: externally_verified is accepted only together with
+                   # --pr, which fetches the real CI outcome; human_approved
+                   # stays blocked because the CLI cannot authenticate a reviewer.
+                   choices=['agent_claimed', 'locally_observed', 'externally_verified'])
+    s.add_argument('--pr', dest='pr_number', type=int,
+                   help='PR 编号；设置 GITHUB_REPOSITORY 后从 GitHub API 读取 CI 状态（外部取证）')
     s.add_argument('--test-command')
     s.add_argument('--test-exit', type=int)
     s.add_argument('--test-log')
@@ -523,7 +525,8 @@ def run(args):
                             args.test_log, args.ci_url, args.ci_status, args.review_url,
                             args.review_state, findings, args.verification_id,
                             args.resolves_defect, args.expected_sha, mapping,
-                            test_receipt=args.test_receipt, dry_run=args.dry_run)
+                            test_receipt=args.test_receipt, dry_run=args.dry_run,
+                            pr_number=args.pr_number)
         emit(result)
         return 0 if result.get('verified') else 2
     elif args.command == 'test-run':
