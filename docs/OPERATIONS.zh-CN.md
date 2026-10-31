@@ -244,7 +244,7 @@ PYTHONPATH=.project-memory/tooling python3 -m project_memory evidence verify --r
 
 清单记录 `commit_sha`、`tree_sha`、`files[{path, sha256, bytes}]`、`generator`（工具版本、Python、平台、生成命令）和 `authority` 信封。`manifest_id` 是记录去掉 `manifest_id` 与 `authority` 后规范 JSON 的 SHA-256 前 12 位，可随时重算；签名载荷是去掉 `authority` 的规范 JSON 字节，复用审批同一套验签实现。
 
-`evidence request` 只写未签名文件，报告 `manifest_id`、`payload_sha256` 和可复制的 `openssl dgst -sha256 -sign` 命令，**不签名**。输出采用 no-clobber：`--output` 已存在且内容不同即 exit 1，不覆盖既有文件（包括已签清单），内容完全相同则原样保留。`evidence attach` 只用 `--anchor` 校验格式与签名，不构成信任；幂等判断比较签名载荷与 `anchor_id`/`issuer`/`algorithm`，忽略 ECDSA 签名因随机数产生的字节差异，同一锚同一载荷返回 `created=false`，不同锚或不同载荷仍拒绝覆盖。信任只在 `evidence verify` 时由 `PROJECT_MEMORY_APPROVAL_ANCHOR` 重新决定。
+`evidence request` 只写未签名文件，报告 `manifest_id`、`payload_sha256` 和可复制的 `openssl dgst -sha256 -sign` 命令，**不签名**。输出采用 no-clobber：`--output` 已存在且内容不同即 exit 1，不覆盖既有文件（包括已签清单），内容完全相同则原样保留。`evidence attach` 只用 `--anchor` 校验格式与签名，不构成信任；幂等判断比较签名载荷与 `anchor_id`/`issuer`/`algorithm`，忽略 ECDSA 签名因随机数产生的字节差异，同一锚同一载荷返回 `created=false`，不同锚或不同载荷仍拒绝覆盖。命中已有清单时还会用给定锚重新校验其 `authority.signature_b64`，签名已损坏则 exit 1，不视为幂等。信任只在 `evidence verify` 时由 `PROJECT_MEMORY_APPROVAL_ANCHOR` 重新决定。
 
 `evidence verify` 校验清单结构、`manifest_id`、签名、`repository.id`/`remote` 与当前仓库 `repo_identity` 一致（沿用审批的仓库绑定，防止把别的仓库的清单搬来当证据）、`commit_sha`、`tree_sha`（必须等于该提交的树）以及每个文件的 `sha256` 与 `bytes`。全部通过才 exit 0；无受保护锚、清单未签名、签名无效、清单被改、仓库身份不符、提交或树不符、文件缺失或变化一律 exit 2，并在 JSON 的 `problems` 中逐条说明，`signed`/`trusted`/`verified` 不会降级为“仅提示”。
 
