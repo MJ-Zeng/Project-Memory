@@ -1,0 +1,25 @@
+{
+  "approval_id": "APR-5e8230515eb7",
+  "approver": "s3-exercise@project-memory.invalid",
+  "at": "2026-10-31T15:39:05+00:00",
+  "authority": {
+    "algorithm": "rsa-sha256",
+    "anchor_id": "ANCHOR-S3-EXERCISE-20261031",
+    "issuer": "s3-exercise@project-memory.invalid",
+    "signature_b64": "h/lhhWlSUubh0aQYgPtOHJzvZepg+ZwpVlRFtRqh5M2d8Fl0pdKU79KTREaED/0oxj/3GSoFA2W+VaPrTzrFBidCsqqjCyLZrHccplRbWy1Gy4I4lZGI5NxJZYBu7NH8kj/CrrhxM1sVRt3xF8XbvtjWAkLAEvgOaRBKHdLW8sU5xxTvPaLuwTcCOHLndldtBYbwoCPZ/XPYnrg8j4IpXxqv+dV0SrheXK36YX2Zm8jw9/69ChAyi0KsBlVZPiFwEA8LOsSbomO15ANw1d14pQw0KwT2yCB9AjEPMTXqL7Tnt4JhpAMEO1tf8hxrlKNKzzdVcNfvMatNk9mqzeLL3Q==",
+    "signed_payload_sha256": "c44f5d43b681c6d9fff86e4148245cee5188fdd77a92bfd3bb68f20464564a41",
+    "status": "signed"
+  },
+  "commit_sha": "e536f60dc4c0490432f03473d3fa5c349e7124bc",
+  "decision": "approve",
+  "kind": "approval_event",
+  "repository": {
+    "id": "6d372b4c9fc56b2a479d8671044a834e285caedb14aaf49d030beaa33dc9e8f6",
+    "remote": "github.com/MJ-Zeng/Project-Memory"
+  },
+  "schema_version": "1.0",
+  "scope": {
+    "kind": "commit"
+  },
+  "statement": "S4-1 gate exercise: approve signed evidence manifest work for this PR head. Exercise identity; not a human approval."
+}
