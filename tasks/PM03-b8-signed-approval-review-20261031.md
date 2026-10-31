@@ -22,7 +22,7 @@
 | 基线（实查） | `187f49da4e473440089342b7144b4c6b302acf82`（与任务卡一致） |
 | merge-base | `187f49da4e473440089342b7144b4c6b302acf82`（分支确实从基线开出） |
 | 复核 worktree | `C:/Temp/pm03-b8-review`（未改 pm-pilot-02 的 clone） |
-| `origin/dev/v1.0` 现值 | `999713bdc454b31b1c853a5602fa6cf33d0942b1`（已前于本卡基线；本次仍按任务卡基线复核，未合入/未 rebase） |
+| `origin/dev/v1.0` 现值 | `187f49da4e473440089342b7144b4c6b302acf82`（复核时 `git fetch origin dev/v1.0` 实查；**与本卡基线相同**，含 2026-10-31 的 DOCS-SYNC-002 / PR #48；未合入/未 rebase） |
 
 提交序列：
 
@@ -108,7 +108,7 @@ PASS | S14 negative control remove then restore | True->False->True
 1. **无真实审批密钥、无受保护外部审批锚**：受任务约束未建真实密钥、未联网；trusted 端到端仅以 openssl 测试密钥 + 打桩锚完成，真实 `anchor_is_protected`（文件属主/权限）路径未在本机复现。
 2. **未跑托管 CI、未验证 key custody / Ruleset / CODEOWNERS / 合并权限**；这些属 B-7/B-10。
 3. **未复跑基线 pytest 的 280 passed 计数**（handoff 的陈述）；本次只按任务卡要求复跑头部的双门槛与定向测试。基线 audit 的多重集已独立复跑。
-4. 未验证 `origin/dev/v1.0` 前进（`999713b`）后与本分支的合并冲突；本次未合并、未 rebase，PM-01 合并时需按当时的 `dev/v1.0` 重新跑门禁。
+4. 复核时 `origin/dev/v1.0` 等于本卡基线 `187f49d`，不存在基线之后的前进提交，因此没有“与更新后 `dev/v1.0` 的合并冲突”可验证；本次未合并、未 rebase。若 PM-01 合并前 `dev/v1.0` 再次前进，应按当时的头重新跑门禁。
 5. 未在 POSIX（非 Windows）上复跑属主保护路径。
 
 ## 8. 声明
