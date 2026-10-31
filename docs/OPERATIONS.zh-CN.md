@@ -246,7 +246,7 @@ PYTHONPATH=.project-memory/tooling python3 -m project_memory evidence verify --r
 
 `evidence request` 只写未签名文件，报告 `manifest_id`、`payload_sha256` 和可复制的 `openssl dgst -sha256 -sign` 命令，**不签名**。`evidence attach` 只用 `--anchor` 校验格式与签名，不构成信任；同名同内容重复附加幂等，不同内容拒绝覆盖。信任只在 `evidence verify` 时由 `PROJECT_MEMORY_APPROVAL_ANCHOR` 重新决定。
 
-`evidence verify` 校验清单结构、`manifest_id`、签名、`commit_sha`、`tree_sha`（必须等于该提交的树）以及每个文件的 `sha256` 与 `bytes`。全部通过才 exit 0；无受保护锚、清单未签名、签名无效、清单被改、提交或树不符、文件缺失或变化一律 exit 2，并在 JSON 的 `problems` 中逐条说明，`signed`/`trusted`/`verified` 不会降级为“仅提示”。
+`evidence verify` 校验清单结构、`manifest_id`、签名、`repository.id`/`remote` 与当前仓库 `repo_identity` 一致（沿用审批的仓库绑定，防止把别的仓库的清单搬来当证据）、`commit_sha`、`tree_sha`（必须等于该提交的树）以及每个文件的 `sha256` 与 `bytes`。全部通过才 exit 0；无受保护锚、清单未签名、签名无效、清单被改、仓库身份不符、提交或树不符、文件缺失或变化一律 exit 2，并在 JSON 的 `problems` 中逐条说明，`signed`/`trusted`/`verified` 不会降级为“仅提示”。
 
 路径规则：清单中的 `path` 必须是仓库相对路径并用 `/` 分隔；绝对路径、盘符、`..`、空段、符号链接（包括指向仓库外的链接）和非常规文件一律拒绝。目录会递归展开，文件按 `path` 升序存放且不得重复，`files` 不得为空。
 

@@ -212,7 +212,7 @@ python3 -m project_memory evidence verify --repo . \
   --manifest C:/Temp/evidence-manifest.json --commit <40位SHA>
 ```
 
-清单与审批共用 `PROJECT_MEMORY_APPROVAL_ANCHOR`，但不含审批人字段。无锚、未签名、签名无效、清单被改、提交或树不符、文件缺失或变化一律 exit 2。它只证明锚持有者对这份清单负责，不证明文件由受保护执行器产生或命令真的执行过。
+清单与审批共用 `PROJECT_MEMORY_APPROVAL_ANCHOR`，但不含审批人字段。无锚、未签名、签名无效、清单被改、仓库身份不符、提交或树不符、文件缺失或变化一律 exit 2。它只证明锚持有者对这份清单负责，不证明文件由受保护执行器产生或命令真的执行过。
 
 ### CI 第二身份与审批门禁
 
