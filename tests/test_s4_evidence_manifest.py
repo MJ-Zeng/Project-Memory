@@ -144,6 +144,17 @@ class EvidenceManifestRequestTest(_RepoFixture):
         self.assertEqual(1, code)
         self.assertIn('符号链接', err)
 
+    def test_existing_output_is_not_overwritten(self):
+        target = self.workspace / 'existing.json'
+        target.write_text('keep\n', encoding='utf-8')
+        code, _out, err = self.run_cli(
+            ['evidence', 'request', '--repo', str(self.repo),
+             '--commit', self.base, '--path', 'docs',
+             '--output', str(target)])
+        self.assertEqual(1, code)
+        self.assertIn('拒绝覆盖', err)
+        self.assertEqual('keep\n', target.read_text(encoding='utf-8'))
+
     def test_empty_file_list_is_rejected(self):
         record = {
             'schema_version': '1.0', 'kind': 'evidence_manifest',
@@ -185,6 +196,18 @@ class EvidenceManifestSignedTest(_RepoFixture):
         cls.other_anchor_path = work / 'other-anchor.json'
         cls.other_anchor_path.write_text(json.dumps(cls.other_anchor_doc),
                                          encoding='utf-8')
+        cls.ec_key = work / 'ec.pem'
+        subprocess.run([cls.openssl, 'genpkey', '-algorithm', 'EC',
+                        '-pkeyopt', 'ec_paramgen_curve:P-256', '-out',
+                        str(cls.ec_key)], check=True, capture_output=True)
+        cls.ec_anchor = {**cls._anchor(work, cls.ec_key, 's4-ec-anchor'),
+                         'algorithm': 'ecdsa-sha256'}
+        cls.ec_anchor_path = work / 'ec-anchor.json'
+        cls.ec_anchor_path.write_text(json.dumps(cls.ec_anchor), encoding='utf-8')
+        cls.ec_other_anchor_path = work / 'ec-other-anchor.json'
+        cls.ec_other_anchor_path.write_text(
+            json.dumps({**cls.ec_anchor, 'anchor_id': 's4-ec-other'}),
+            encoding='utf-8')
 
     @classmethod
     def _anchor(cls, work, key, anchor_id):
@@ -418,6 +441,74 @@ class EvidenceManifestSignedTest(_RepoFixture):
         self.assertEqual(2, code)
         self.assertFalse(result['verified'])
         self.assertTrue(any('仓库身份' in problem for problem in result['problems']))
+
+    def test_ecdsa_resign_is_idempotent_but_other_anchor_is_rejected(self):
+        _request, request_path = self.request()
+        first_sig = self.sign(request_path, key=self.ec_key, name='ec1')
+        attached, path, _code = self.attach(request_path, first_sig,
+                                            anchor_path=self.ec_anchor_path,
+                                            output='ecdsa.json')
+        self.assertTrue(attached['created'])
+        self.assertEqual('ecdsa-sha256', attached['manifest']['authority']['algorithm'])
+        second_sig = self.sign(request_path, key=self.ec_key, name='ec2')
+        self.assertNotEqual(first_sig.read_bytes(), second_sig.read_bytes())
+        again, path2, _code = self.attach(request_path, second_sig,
+                                          anchor_path=self.ec_anchor_path,
+                                          output='ecdsa.json')
+        self.assertFalse(again['created'])
+        self.assertEqual(path, path2)
+        self.assertEqual(attached['manifest_id'], again['manifest_id'])
+        code, _out, err = self.run_cli(
+            ['evidence', 'attach', '--repo', str(self.repo),
+             '--request', str(request_path), '--signature', str(first_sig),
+             '--anchor', str(self.ec_other_anchor_path),
+             '--output', str(path)])
+        self.assertEqual(1, code)
+        self.assertIn('拒绝覆盖', err)
+
+    def test_windows_junction_outside_repository_is_rejected(self):
+        if os.name != 'nt':
+            self.skipTest('目录联接仅 Windows 可创建')
+        _attached, path, _code = self.signed_manifest()
+        code, result = self.verify(path)
+        self.assertEqual(0, code)
+        outside = self.workspace / 'junction-outside'
+        outside.mkdir()
+        secret = outside / 'secret.txt'
+        secret.write_text('outside-secret\n', encoding='utf-8')
+        link = self.repo / 'docs' / 'out'
+        created = subprocess.run(['cmd', '/c', 'mklink', '/J', str(link), str(outside)],
+                                 capture_output=True, text=True, encoding='utf-8',
+                                 errors='replace')
+        if created.returncode != 0:
+            self.skipTest('当前环境无法创建目录联接：'
+                          f'{(created.stderr or created.stdout).strip()[:120]}')
+        try:
+            code, _out, err = self.run_cli(
+                ['evidence', 'request', '--repo', str(self.repo),
+                 '--commit', self.base, '--path', 'docs',
+                 '--output', str(self.workspace / 'junction-request.json')])
+            self.assertEqual(1, code)
+            self.assertIn('目录联接', err)
+            self.assertFalse((self.workspace / 'junction-request.json').exists())
+            record = json.loads(path.read_text(encoding='utf-8'))
+            data = secret.read_bytes()
+            record['files'].append({
+                'path': 'docs/out/secret.txt',
+                'sha256': hashlib.sha256(data).hexdigest(), 'bytes': len(data)})
+            record['files'].sort(key=lambda item: item['path'])
+            record['manifest_id'] = _manifest_id(record)
+            record = self.resign(record)
+            target = self.workspace / 'junction-manifest.json'
+            target.write_text(json.dumps(record, ensure_ascii=False, indent=2),
+                              encoding='utf-8')
+            code, result = self.verify(target)
+            self.assertEqual(2, code)
+            self.assertFalse(result['verified'])
+            self.assertTrue(any('目录联接' in problem for problem in result['problems']),
+                            result['problems'])
+        finally:
+            subprocess.run(['cmd', '/c', 'rmdir', str(link)], capture_output=True)
 
 
 if __name__ == '__main__':

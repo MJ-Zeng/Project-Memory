@@ -5,8 +5,8 @@ approval anchor used for approval events.  The signature proves that the anchor
 holder vouches for *this* list of files at *this* commit; it does not prove that
 a protected executor produced the files or that the commands really ran (see
 ADR-0003).  Verification re-scans the working tree and fails closed: no anchor,
-bad signature, foreign repository, changed bytes, missing file, wrong commit
-or wrong tree all yield exit code 2.
+bad signature, foreign repository, links or other reparse points, changed
+bytes, missing file, wrong commit or wrong tree all yield exit code 2.
 """
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ from pathlib import Path
 
 from . import __version__
 from . import authority
-from .common import PMError, atomic_replace, json_text, safe_json, utc_now, write_new
+from .common import PMError, json_text, safe_json, utc_now, write_new
 from .coordination import _approval_repository, _approval_repository_matches
 from .execution import resolve_commit
 
@@ -58,20 +58,48 @@ def _record_path(value) -> str:
     return text
 
 
+_MOUNT_POINT_TAG = 0xA0000003
+
+
+def _link_kind(st) -> str | None:
+    """Name a link-like component; junctions are reparse points, not symlinks."""
+    if stat.S_ISLNK(st.st_mode):
+        return '符号链接'
+    tag = getattr(st, 'st_reparse_tag', 0)
+    if not tag:
+        return None
+    if tag == _MOUNT_POINT_TAG:
+        return '目录联接或挂载点'
+    return f'reparse point（tag 0x{tag:X}）'
+
+
+def _escapes_root(root: Path, path: Path) -> bool:
+    """True when the resolved path is no longer below the resolved root."""
+    resolved_root = Path(os.path.realpath(root))
+    try:
+        Path(os.path.realpath(path)).relative_to(resolved_root)
+    except ValueError:
+        return True
+    return False
+
+
 def _safe_file(repo: Path, rel: str) -> Path:
-    """Join ``rel`` under ``repo`` and reject symlinked components."""
+    """Join ``rel`` under ``repo``; reject links, junctions and escapes."""
     root = repo.resolve()
     current = root
     for part in rel.split('/'):
         current = current / part
         try:
-            mode = os.lstat(current).st_mode
+            st = os.lstat(current)
         except OSError as exc:
             raise PMError(f'证据文件不存在：{rel}（{exc}）') from exc
-        if stat.S_ISLNK(mode):
-            raise PMError(f'证据路径包含符号链接：{rel}')
+        kind = _link_kind(st)
+        if kind:
+            raise PMError(f'证据路径包含{kind}：{rel}')
     if not stat.S_ISREG(os.lstat(current).st_mode):
         raise PMError(f'证据路径不是普通文件：{rel}')
+    if _escapes_root(root, current):
+        raise PMError(f'证据路径解析后位于仓库之外：{rel}')
     return current
 
 
@@ -93,16 +121,19 @@ def _input_path(repo: Path, value) -> tuple[Path, str]:
         raise PMError(f'路径位于仓库之外：{raw}') from None
     if not rel.parts:
         raise PMError('不能把仓库根目录整体作为证据路径')
-    # Reject a symlinked target or symlinked parent before walking a directory.
+    # Reject a linked target or linked parent before walking a directory.
     current = root
     for part in rel.parts:
         current = current / part
         try:
-            mode = os.lstat(current).st_mode
+            st = os.lstat(current)
         except OSError as exc:
             raise PMError(f'路径不存在：{raw}（{exc}）') from exc
-        if stat.S_ISLNK(mode):
-            raise PMError(f'拒绝符号链接：{raw}')
+        kind = _link_kind(st)
+        if kind:
+            raise PMError(f'拒绝{kind}：{raw}')
+    if _escapes_root(root, current):
+        raise PMError(f'路径解析后位于仓库之外：{raw}')
     return current, rel.as_posix()
 
 
@@ -113,21 +144,24 @@ def _walk(directory: Path, root: Path, found: dict[str, Path]) -> None:
         raise PMError(f'无法读取目录 {directory}：{exc}') from exc
     for entry in entries:
         path = Path(entry.path)
+        rel = path.relative_to(root).as_posix()
         try:
-            mode = os.lstat(path).st_mode
+            st = os.lstat(path)
         except OSError as exc:
             raise PMError(f'无法读取证据路径 {path}：{exc}') from exc
-        if stat.S_ISLNK(mode):
-            raise PMError(f'拒绝符号链接：{path.relative_to(root).as_posix()}')
-        if stat.S_ISDIR(mode):
+        kind = _link_kind(st)
+        if kind:
+            raise PMError(f'拒绝{kind}：{rel}')
+        if _escapes_root(root, path):
+            raise PMError(f'证据路径解析后位于仓库之外：{rel}')
+        if stat.S_ISDIR(st.st_mode):
             _walk(path, root, found)
-        elif stat.S_ISREG(mode):
-            rel = path.relative_to(root).as_posix()
+        elif stat.S_ISREG(st.st_mode):
             if rel in found:
                 raise PMError(f'证据路径重复：{rel}')
             found[rel] = path
         else:
-            raise PMError(f'不是普通文件：{path.relative_to(root).as_posix()}')
+            raise PMError(f'不是普通文件：{rel}')
 
 
 def collect_files(repo: Path, values) -> list[dict]:
@@ -239,15 +273,23 @@ def evidence_request(repo: Path, commit_sha: str, paths, statement: str = '',
     if output is None:
         raise PMError('必须提供 --output')
     output = Path(output)
-    atomic_replace(output, payload.decode('utf-8'))
     shown = str(output.resolve())
-    return {'schema_version': MANIFEST_SCHEMA, 'kind': 'evidence_manifest_request_result',
-            'path': shown, 'manifest_id': record['manifest_id'],
-            'manifest': record, 'payload_sha256': hashlib.sha256(payload).hexdigest(),
-            'sign_command': (f'openssl dgst -sha256 -sign <审批私钥> -out <签名文件> '
-                             f'{shown}'),
-            'requires': ('由仓库外审批私钥对请求文件的规范 JSON 字节签名，再运行 '
-                         'evidence attach；Agent 不持有私钥，也不能自行签名')}
+    result = {'schema_version': MANIFEST_SCHEMA,
+              'kind': 'evidence_manifest_request_result',
+              'path': shown, 'manifest_id': record['manifest_id'],
+              'manifest': record, 'payload_sha256': hashlib.sha256(payload).hexdigest(),
+              'sign_command': (f'openssl dgst -sha256 -sign <审批私钥> -out <签名文件> '
+                               f'{shown}'),
+              'requires': ('由仓库外审批私钥对请求文件的规范 JSON 字节签名，再运行 '
+                           'evidence attach；Agent 不持有私钥，也不能自行签名')}
+    if output.is_file():
+        if output.read_bytes() != payload:
+            raise PMError(f'请求文件已存在且内容不同，拒绝覆盖：{shown}')
+        return result
+    if not write_new(output, payload.decode('utf-8')):
+        if not output.is_file() or output.read_bytes() != payload:
+            raise PMError(f'请求文件已存在且内容不同，拒绝覆盖：{shown}')
+    return result
 
 
 def evidence_attach(repo: Path, request_path, signature_path, anchor_path,
@@ -285,7 +327,7 @@ def evidence_attach(repo: Path, request_path, signature_path, anchor_path,
     shown = str(path.resolve())
     if path.is_file():
         existing = _load(path)
-        if existing == record:
+        if _signed_same(existing, record):
             return {'schema_version': MANIFEST_SCHEMA,
                     'kind': 'evidence_manifest_attach_result', 'path': shown,
                     'manifest_id': existing.get('manifest_id'),
@@ -295,7 +337,7 @@ def evidence_attach(repo: Path, request_path, signature_path, anchor_path,
         raise PMError(f'证据清单 {request["manifest_id"]} 已存在且内容不同，拒绝覆盖')
     if not write_new(path, json_text(record)):
         existing = _load(path)
-        if existing != record:
+        if not _signed_same(existing, record):
             raise PMError(f'证据清单 {request["manifest_id"]} 已存在且内容不同，拒绝覆盖')
         return {'schema_version': MANIFEST_SCHEMA,
                 'kind': 'evidence_manifest_attach_result', 'path': shown,
@@ -383,6 +425,20 @@ def _result(manifest_id, commit_sha, tree_sha, signed, trusted, status, reason,
             'verified': not problems, 'problems': problems,
             'anchor_id': (authoring or {}).get('anchor_id'),
             'issuer': (authoring or {}).get('issuer')}
+
+
+def _signed_same(existing: dict, record: dict) -> bool:
+    """Same payload and anchor identity; signature bytes may differ (ECDSA)."""
+    if not isinstance(existing, dict):
+        return False
+    if _manifest_core(existing) != _manifest_core(record):
+        return False
+    left = existing.get('authority')
+    left = left if isinstance(left, dict) else {}
+    right = record.get('authority')
+    right = right if isinstance(right, dict) else {}
+    return all(left.get(key) == right.get(key)
+               for key in ('anchor_id', 'issuer', 'algorithm'))
 
 
 def _load(path: Path) -> dict:
