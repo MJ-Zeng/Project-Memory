@@ -210,6 +210,7 @@ pass 条件还要求没有 high 级发现、目标 head 未变化、验证记录
 - 搜索结果必须显示原文件路径。链接边只证明存在引用，不证明实现一致或结论正确。
 - 1.1 数据保持可读，不批量重写。下一次 `run finish` 会生成 1.2 handoff；批量迁移需要受审查的一次性脚本。
 - 签名证据清单（`evidence_manifest`，schema 1.0）是第三条独立数据流：`evidence request` 遍历仓库内文件，记录每个文件的 `sha256` 与字节数，连同 `commit_sha`、`tree_sha` 和自报的 `generator` 写成未签名清单；仓库外审批私钥签名后由 `evidence attach` 附加 `authority` 信封；`evidence verify` 用受保护审批锚重新验签，并重算 `manifest_id`、仓库身份（`repository.id`/`remote` 对当前 `repo_identity`）、提交树和所有文件哈希。文件哈希来自 `request` 时的工作区字节，不要求文件已提交进该提交的树；路径解析后必须仍在仓库内，符号链接、目录联接（junction）、挂载点或任何 reparse point 一律拒绝。清单与审批共用审批锚但不含审批人字段：签名只表明锚持有者对「这些文件在这个提交下」负责，不表明文件由受保护执行器产生或命令真的执行过（见 ADR-0003）。任何验签、仓库身份、提交、树或文件内容不符都以 exit 2 结束。
+- 信任判定是一条固定顺序，任一步失败都 fail closed 且给出该步的原因：锚文档结构（`kind`/`schema_version`/`algorithm`/必填字段）→ 可选字段格式与 `fingerprint_sha256` 对公钥 DER 的一致性 → 锚来源保护（文件锚的所有者与可写性，JSON 锚只在 CI）→ 有效期（`not_before`/`not_after` 对当前 UTC，闭区间）→ 自吊销（`anchor_id` 是否出现在 `revoked_anchor_ids`）→ 分离签名验证 → 身份绑定（`approver` 必须等于锚 `issuer`）→ 记录内容复检（载荷摘要、提交、仓库身份）。前两步在 `_anchor_document`，有效期与吊销在 `load_anchor` 每次都执行，因此过期或吊销只影响**之后**的判定，不修改任何已写出的记录；`load_anchor_document`（`attach`/`request` 用）止步于文档与指纹，明确不做信任决定。见 ADR-0008。
 
 ## 六、权限模型与失败处理
 

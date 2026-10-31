@@ -181,6 +181,41 @@ PYTHONPATH=.project-memory/tooling python3 -m project_memory approval verify --r
 
 例外：必达标准集合为空（例如所有判据被改成可选或删除）时，`goal evaluate` 退出 0，但 `satisfied=false`、`evaluation_status=insufficient_evidence`、`status_problems` 含 `no_required_criteria`。自动化不要只看退出码，要读 `satisfied`/`effective_status`/`status_trusted`/`status_problems`；需要纯退出码门禁时，后续版本再提供显式 `--strict`，本版没有。
 
+### 信任锚轮换与吊销
+
+锚文档的必填字段之外，有四个可选字段（`schema_version` 仍是 `1.0`，未识别的额外字段被忽略但不会带来信任）：
+
+```json
+{
+  "not_before": "2026-11-01T00:00:00Z",
+  "not_after": "2027-11-01T00:00:00Z",
+  "revoked_anchor_ids": ["ANCHOR-DRILL-20261031"],
+  "fingerprint_sha256": "sha256:3f2a…（64 位十六进制）"
+}
+```
+
+`not_before`/`not_after` 必须是带时区的 ISO-8601 字符串（`Z` 或 `±HH:MM`），判定用当前 UTC 时间、闭区间，只给一端时另一端不限制；`revoked_anchor_ids` 必须是非空字符串数组；`fingerprint_sha256` 必须等于 `public_key_pem` 解出的 DER SubjectPublicKeyInfo 字节的 SHA-256（哈希 DER 而不是 PEM 文本，避免换行差异），可用 `openssl pkey -pubin -outform DER | openssl dgst -sha256` 独立核对。格式非法、时间无时区、`not_before > not_after`、指纹与公钥不一致都让锚文档直接非法。
+
+轮换步骤：
+
+1. 用新密钥生成新锚，`anchor_id` 必须换（例如 `ANCHOR-PROD-20261101`），并按需要设置 `not_after`。
+2. 把新的锚文档写进受保护锚文件（`PROJECT_MEMORY_APPROVAL_ANCHOR` 指向的仓库外文件）或仓库 Actions secret `PROJECT_MEMORY_APPROVAL_ANCHOR_JSON`；`--anchor` 只是本地校验用的公钥，可以同步更新。
+3. 旧私钥停止签名。旧记录携带旧 `anchor_id`，与当前锚不一致，本来就 `untrusted`，所以轮换不需要吊销列表；需要重签的历史证据用新锚重新 `attach` 即可。
+4. 想让旧锚在还作为当前锚时被停用，把它的 `anchor_id` 写进 `revoked_anchor_ids`；数组里只有别的 id 不影响当前锚。
+
+谁能吊销、吊销列表写在哪：只有受保护锚文件或 CI secret 的持有者能改这两个 JSON；吊销列表就写在同一个锚文档的 `revoked_anchor_ids` 里。仓库内普通文件、审批记录、清单、环境变量以外的任何位置都不能作为吊销来源——否则 Agent 改写一个文件就能宣布自己的审批作废或生效。
+
+吊销与过期**不能**做什么：
+
+- 不能撤回已合并的提交，也不能让合并失效；
+- 不能删除或改写任何已写出的记录、清单或账本；
+- 不能让历史验证「重新变成通过」，也不能反过来把当时合法的验证说成伪造——它只让**之后**的信任判定 fail closed；
+- 不改变记录本身：同一份审批文件在锚被吊销前 `exit 0`、之后 `exit 2`，字节不变。
+
+过期对历史证据的影响：到期后所有依赖该锚的记录在下一次验证时都不可信，包括曾经通过的门禁重跑。需要长期可验证的证据，把 `not_after` 设得足够长，或在轮换后用新锚重新签署同一载荷。
+
+本地调试时可以用 `GITHUB_ACTIONS=true` 加 `PROJECT_MEMORY_APPROVAL_ANCHOR_JSON` 让 JSON 锚生效，这是观察生命周期行为的最快办法；该开关只是防误用闸门，不是密码学边界，CI 门禁里的锚来自仓库 Secret 且验证器来自 base 提交。
+
 ## 审计链与 Goal 状态可信度
 
 `.project-memory/audit/verification_attempts.jsonl` 是哈希链账本，每条记录带 `seq`、`prev_hash`、`entry_hash`；首条 `prev_hash` 为 64 个 `0`。`audit verify` 从 genesis 逐条重算，任何删除、改写或顺序调整都会报出精确的 `*_at` 位置。哈希链只能证明内部自洽，不能证明记录来自谁：整链重建后依然自洽，所以还需要 checkpoint。
