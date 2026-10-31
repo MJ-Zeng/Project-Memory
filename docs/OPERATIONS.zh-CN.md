@@ -244,13 +244,15 @@ PYTHONPATH=.project-memory/tooling python3 -m project_memory evidence verify --r
 
 清单记录 `commit_sha`、`tree_sha`、`files[{path, sha256, bytes}]`、`generator`（工具版本、Python、平台、生成命令）和 `authority` 信封。`manifest_id` 是记录去掉 `manifest_id` 与 `authority` 后规范 JSON 的 SHA-256 前 12 位，可随时重算；签名载荷是去掉 `authority` 的规范 JSON 字节，复用审批同一套验签实现。
 
-`evidence request` 只写未签名文件，报告 `manifest_id`、`payload_sha256` 和可复制的 `openssl dgst -sha256 -sign` 命令，**不签名**。`evidence attach` 只用 `--anchor` 校验格式与签名，不构成信任；同名同内容重复附加幂等，不同内容拒绝覆盖。信任只在 `evidence verify` 时由 `PROJECT_MEMORY_APPROVAL_ANCHOR` 重新决定。
+`evidence request` 只写未签名文件，报告 `manifest_id`、`payload_sha256` 和可复制的 `openssl dgst -sha256 -sign` 命令，**不签名**。输出采用 no-clobber：`--output` 已存在且内容不同即 exit 1，不覆盖既有文件（包括已签清单），内容完全相同则原样保留。`evidence attach` 只用 `--anchor` 校验格式与签名，不构成信任；幂等判断比较签名载荷与 `anchor_id`/`issuer`/`algorithm`，忽略 ECDSA 签名因随机数产生的字节差异，同一锚同一载荷返回 `created=false`，不同锚或不同载荷仍拒绝覆盖。信任只在 `evidence verify` 时由 `PROJECT_MEMORY_APPROVAL_ANCHOR` 重新决定。
 
 `evidence verify` 校验清单结构、`manifest_id`、签名、`repository.id`/`remote` 与当前仓库 `repo_identity` 一致（沿用审批的仓库绑定，防止把别的仓库的清单搬来当证据）、`commit_sha`、`tree_sha`（必须等于该提交的树）以及每个文件的 `sha256` 与 `bytes`。全部通过才 exit 0；无受保护锚、清单未签名、签名无效、清单被改、仓库身份不符、提交或树不符、文件缺失或变化一律 exit 2，并在 JSON 的 `problems` 中逐条说明，`signed`/`trusted`/`verified` 不会降级为“仅提示”。
 
-路径规则：清单中的 `path` 必须是仓库相对路径并用 `/` 分隔；绝对路径、盘符、`..`、空段、符号链接（包括指向仓库外的链接）和非常规文件一律拒绝。目录会递归展开，文件按 `path` 升序存放且不得重复，`files` 不得为空。
+exit 码约定：只有 `evidence verify` 的信任或内容失败是 exit 2；`evidence request` 与 `evidence attach` 的本地校验失败（参数、结构、路径、签名格式、覆盖冲突）是 exit 1。`evidence verify` 始终输出 JSON，`--json` 仅为兼容保留。
 
-它证明什么：锚持有者对「这些文件在这个提交和树下的这些字节」负责。它**不**证明文件由受保护执行器产生，也**不**证明清单里的命令真的执行过；构建来源证明属于后续工作，不在本命令范围。
+路径规则：清单中的 `path` 必须是仓库相对路径并用 `/` 分隔；绝对路径、盘符、`..`、空段、符号链接、目录联接（junction）、挂载点或任何 reparse point，以及非常规文件一律拒绝。除按组件拒绝链接外，还会把路径规范化（realpath）后要求仍位于 `repo.resolve()` 之下。目录会递归展开，文件按 `path` 升序存放且不得重复，`files` 不得为空。
+
+它证明什么：锚持有者对「这些文件在这个提交和树下的这些字节」负责。清单绑定 `commit_sha` 和 `tree_sha`，但 `files` 的 `sha256`/`bytes` 来自 `evidence request` 执行时的工作区字节，**不要求**这些文件已经提交进该提交的树（未跟踪的发布产物也可作为证据文件）。它**不**证明文件由受保护执行器产生，也**不**证明清单里的命令真的执行过；构建来源证明属于后续工作，不在本命令范围。
 
 ## 写文档
 

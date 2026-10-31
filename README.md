@@ -198,21 +198,9 @@ python3 -m project_memory goal evidence --repo . --id G-AUTH --criterion C1 \
 
 ### 签名证据清单
 
-`evidence request` 生成未签名清单（每个文件的 sha256 与字节数、`commit_sha`、`tree_sha`、自报 `generator`），由仓库外审批私钥签名后 `evidence attach` 写出，`evidence verify` 用受保护审批锚重新验签并重算 `manifest_id`、提交树和所有文件哈希：
+`evidence request` 生成未签名清单，仓库外审批私钥签名后由 `evidence attach` 附加，`evidence verify` 用受保护审批锚复检清单、仓库身份、提交/树和工作区文件哈希，任一不符 exit 2。命令入口：`python3 -m project_memory evidence {request,attach,verify} --repo .`；完整步骤与路径规则见 [OPERATIONS](docs/OPERATIONS.zh-CN.md#签名证据清单)。
 
-```bash
-python3 -m project_memory evidence request --repo . --commit <40位SHA> \
-  --path evidence/B8 --output C:/Temp/evidence-request.json
-openssl dgst -sha256 -sign <审批私钥> -out C:/Temp/evidence.sig C:/Temp/evidence-request.json
-python3 -m project_memory evidence attach --repo . \
-  --request C:/Temp/evidence-request.json --signature C:/Temp/evidence.sig \
-  --anchor /path/outside/repo/approval-anchor.json --output C:/Temp/evidence-manifest.json
-export PROJECT_MEMORY_APPROVAL_ANCHOR=/path/outside/repo/approval-anchor.json
-python3 -m project_memory evidence verify --repo . \
-  --manifest C:/Temp/evidence-manifest.json --commit <40位SHA>
-```
-
-清单与审批共用 `PROJECT_MEMORY_APPROVAL_ANCHOR`，但不含审批人字段。无锚、未签名、签名无效、清单被改、仓库身份不符、提交或树不符、文件缺失或变化一律 exit 2。它只证明锚持有者对这份清单负责，不证明文件由受保护执行器产生或命令真的执行过。
+它只证明锚持有者对这份清单负责，不证明文件由受保护执行器产生或命令真的执行过；文件哈希取自 request 时的工作区字节，不要求文件已提交进树。
 
 ### CI 第二身份与审批门禁
 
