@@ -5,8 +5,8 @@ approval anchor used for approval events.  The signature proves that the anchor
 holder vouches for *this* list of files at *this* commit; it does not prove that
 a protected executor produced the files or that the commands really ran (see
 ADR-0003).  Verification re-scans the working tree and fails closed: no anchor,
-bad signature, changed bytes, missing file, wrong commit or wrong tree all
-yield exit code 2.
+bad signature, foreign repository, changed bytes, missing file, wrong commit
+or wrong tree all yield exit code 2.
 """
 from __future__ import annotations
 
@@ -21,7 +21,8 @@ from pathlib import Path
 from . import __version__
 from . import authority
 from .common import PMError, atomic_replace, json_text, safe_json, utc_now, write_new
-from .execution import repo_identity, resolve_commit
+from .coordination import _approval_repository, _approval_repository_matches
+from .execution import resolve_commit
 
 MANIFEST_KIND = 'evidence_manifest'
 MANIFEST_SCHEMA = '1.0'
@@ -40,21 +41,6 @@ def _manifest_core(record: dict) -> dict:
 def _manifest_id(record: dict) -> str:
     """Deterministic id: ``EVM-`` plus 12 hex of the canonical payload digest."""
     return 'EVM-' + authority.canonical_digest(_manifest_core(record))[:12]
-
-
-def repository_binding(repo: Path) -> dict:
-    identity = repo_identity(repo)
-    return {'id': identity['id'], 'remote': identity.get('remote')}
-
-
-def _repository_matches(record: dict, repo: Path) -> bool:
-    declared = record.get('repository')
-    if not isinstance(declared, dict):
-        return False
-    current = repository_binding(repo)
-    if declared.get('id') != current['id']:
-        return False
-    return declared.get('remote') in (None, current['remote'])
 
 
 def _record_path(value) -> str:
@@ -239,7 +225,7 @@ def evidence_request(repo: Path, commit_sha: str, paths, statement: str = '',
     record = {
         'schema_version': MANIFEST_SCHEMA, 'kind': MANIFEST_KIND,
         'created_at': utc_now(), 'commit_sha': commit, 'tree_sha': tree,
-        'repository': repository_binding(repo), 'statement': statement.strip(),
+        'repository': _approval_repository(repo), 'statement': statement.strip(),
         'generator': {
             'tool': 'project-memory', 'version': __version__,
             'python': _platform.python_version(),
@@ -271,7 +257,7 @@ def evidence_attach(repo: Path, request_path, signature_path, anchor_path,
     problem = _structure_problem(request)
     if problem:
         raise PMError(f'证据清单请求不合规：{problem}')
-    if not _repository_matches(request, repo):
+    if not _approval_repository_matches(request, repo):
         raise PMError('证据清单的仓库身份与当前仓库不一致')
     signature_file = Path(signature_path)
     if not signature_file.is_file():
@@ -347,7 +333,7 @@ def evidence_verify(repo: Path, manifest_path, commit_sha: str) -> dict:
     else:
         commit, tree = None, None
         problems.append('--commit 必须是完整的 40 位小写 SHA')
-    if not _repository_matches(record, repo):
+    if not _approval_repository_matches(record, repo):
         problems.append('证据清单的仓库身份与当前仓库不一致')
     if commit is not None:
         if record.get('commit_sha') != commit:

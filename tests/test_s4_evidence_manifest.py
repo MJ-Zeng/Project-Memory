@@ -238,9 +238,9 @@ class EvidenceManifestSignedTest(_RepoFixture):
         _request, request_path = self.request(paths=paths)
         return self.attach(request_path, self.sign(request_path))
 
-    def verify(self, manifest_path, commit=None):
+    def verify(self, manifest_path, commit=None, repo=None):
         code, text, err = self.run_cli(
-            ['evidence', 'verify', '--repo', str(self.repo),
+            ['evidence', 'verify', '--repo', str(repo or self.repo),
              '--manifest', str(manifest_path),
              '--commit', commit or self.base, '--json'])
         self.assertEqual('', err)
@@ -383,6 +383,41 @@ class EvidenceManifestSignedTest(_RepoFixture):
         self.assertEqual(2, code)
         self.assertFalse(result['verified'])
         self.assertTrue(any('重复' in problem for problem in result['problems']))
+
+    def test_negative_11_other_repository_fails(self):
+        self.git('remote', 'add', 'origin', 'https://example.invalid/repo-a.git')
+        _attached, path, _code = self.signed_manifest()
+        original = repo_identity(self.repo)['id']
+
+        same_history = self.workspace / 'repo-b'
+        shutil.copytree(self.repo, same_history)
+        subprocess.run(['git', '-C', str(same_history), 'remote', 'set-url',
+                        'origin', 'https://example.invalid/repo-b.git'],
+                       check=True, capture_output=True, text=True, encoding='utf-8')
+        self.assertNotEqual(original, repo_identity(same_history)['id'])
+        code, result = self.verify(path, repo=same_history)
+        self.assertEqual(2, code)
+        self.assertFalse(result['verified'])
+        self.assertTrue(result['signed'])
+        self.assertTrue(result['trusted'], result['problems'])
+        self.assertTrue(any('仓库身份' in problem for problem in result['problems']))
+
+        other_root = self.workspace / 'repo-c'
+        other_root.mkdir()
+        for args in (('init', '-q'), ('config', 'user.email', 'other@example.invalid'),
+                     ('config', 'user.name', 'Other')):
+            subprocess.run(['git', '-C', str(other_root), *args], check=True,
+                           capture_output=True, text=True, encoding='utf-8')
+        (other_root / 'README.md').write_text('other\n', encoding='utf-8')
+        subprocess.run(['git', '-C', str(other_root), 'add', 'README.md'],
+                       check=True, capture_output=True, text=True, encoding='utf-8')
+        subprocess.run(['git', '-C', str(other_root), 'commit', '-qm', 'other'],
+                       check=True, capture_output=True, text=True, encoding='utf-8')
+        self.assertNotEqual(original, repo_identity(other_root)['id'])
+        code, result = self.verify(path, repo=other_root)
+        self.assertEqual(2, code)
+        self.assertFalse(result['verified'])
+        self.assertTrue(any('仓库身份' in problem for problem in result['problems']))
 
 
 if __name__ == '__main__':
