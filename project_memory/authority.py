@@ -723,3 +723,15 @@ def approval_authority(repo: Path, record: dict) -> dict:
         return {**verdict, 'trusted': False, 'status': 'untrusted',
                 'reason': '审批记录的 approver 与审批锚 issuer 不一致'}
     return verdict
+
+
+def evidence_authority(repo: Path, record: dict) -> dict:
+    """Return the authority status of a signed evidence manifest.
+
+    Manifests share the approval anchor and carry no approver field, so only
+    the anchor signature decides trust.  Everything else (commit, tree, file
+    hashes) is checked by the caller.
+    """
+    return _execution_record_authority(repo, record, '证据清单',
+                                       env_name=APPROVAL_ANCHOR_ENV,
+                                       json_env=APPROVAL_ANCHOR_JSON_ENV)

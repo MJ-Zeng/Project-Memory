@@ -187,7 +187,7 @@ pass 条件还要求没有 high 级发现、目标 head 未变化、验证记录
 
 每条 finding 生成一个缺陷，记录任务、验证来源、代码位置、复现、严重度和状态。缺陷状态是 `open`、`fixed`、`verified`、`wontfix`、`closed`。`fixed` 必须绑定存在的完整提交 SHA；`verified` 由复验的 `--resolves-defect` 产生，不能直接更新；修复提交必须在被验证提交的历史中。
 
-签名审批是另一条独立证据链：`approval request` 只生成未签名载荷，仓库外审批私钥签名后由 `approval attach` 附加，身份取审批锚 `issuer` 而非命令行自报，载荷绑定 `commit_sha`。`scope=commit` 供 CI 门禁，`scope=criterion` 才可挂到 Goal 判据，并额外绑定验证记录摘要。信任只在 `approval verify`、`goal evaluate` 和门禁读取时由 `PROJECT_MEMORY_APPROVAL_ANCHOR` 重新决定，`attach` 时给的公钥不构成信任。审批不修改验证记录，也不改变 `verified=false`；它不替代验证、Ruleset 或人工审批权限。
+签名审批是另一条独立证据链：`approval request` 只生成未签名载荷，仓库外审批私钥签名后由 `approval attach` 附加，身份取审批锚 `issuer` 而非命令行自报，载荷绑定 `commit_sha`。`scope=commit` 供 CI 门禁，`scope=criterion` 才可挂到 Goal 判据，并额外绑定验证记录摘要。信任只在 `approval verify`、`goal evaluate` 和门禁读取时由 `PROJECT_MEMORY_APPROVAL_ANCHOR` 重新决定，`attach` 时给的公钥不构成信任。审批不修改验证记录，也不改变 `verified=false`；它不替代验证、Ruleset 或人工审批权限。签名证据清单的数据流见§五「数据与引用契约」中的签名证据清单条目。
 
 ### L. `reconcile`：知识对账
 
@@ -209,6 +209,7 @@ pass 条件还要求没有 high 级发现、目标 head 未变化、验证记录
 - Git SHA 是工作基准，40 位，可以为空。任务 ID 可以是数字 Issue，也可以是稳定字符串。`run_id` 唯一，但不是业务事务 ID；复验要生成新的验证 ID。
 - 搜索结果必须显示原文件路径。链接边只证明存在引用，不证明实现一致或结论正确。
 - 1.1 数据保持可读，不批量重写。下一次 `run finish` 会生成 1.2 handoff；批量迁移需要受审查的一次性脚本。
+- 签名证据清单（`evidence_manifest`，schema 1.0）是第三条独立数据流：`evidence request` 遍历仓库内文件，记录每个文件的 `sha256` 与字节数，连同 `commit_sha`、`tree_sha` 和自报的 `generator` 写成未签名清单；仓库外审批私钥签名后由 `evidence attach` 附加 `authority` 信封；`evidence verify` 用受保护审批锚重新验签，并重算 `manifest_id`、仓库身份（`repository.id`/`remote` 对当前 `repo_identity`）、提交树和所有文件哈希。文件哈希来自 `request` 时的工作区字节，不要求文件已提交进该提交的树；路径解析后必须仍在仓库内，符号链接、目录联接（junction）、挂载点或任何 reparse point 一律拒绝。清单与审批共用审批锚但不含审批人字段：签名只表明锚持有者对「这些文件在这个提交下」负责，不表明文件由受保护执行器产生或命令真的执行过（见 ADR-0003）。任何验签、仓库身份、提交、树或文件内容不符都以 exit 2 结束。
 
 ## 六、权限模型与失败处理
 

@@ -196,6 +196,12 @@ python3 -m project_memory goal evidence --repo . --id G-AUTH --criterion C1 \
 
 `approval verify` 只在记录通过审批锚验签、`decision=approve` 且 `commit_sha` 与 `--commit` 一致时 exit 0，否则 exit 2。`approval verify --records-dir DIR --commit SHA [--require-approve]` 批量验签目录下的 `*.json` 并逐条输出结论：不带 `--require-approve` 时扫描完成即 exit 0，只在报告中如实给出 `approved`/`problems`；带 `--require-approve` 时，只有存在至少一条 trusted+approve+提交匹配的记录才 exit 0，否则 exit 2。`approval list [--commit SHA] [--goal G]` 只读列出记录、范围与验签状态。
 
+### 签名证据清单
+
+`evidence request` 生成未签名清单，仓库外审批私钥签名后由 `evidence attach` 附加，`evidence verify` 用受保护审批锚复检清单、仓库身份、提交/树和工作区文件哈希，任一不符 exit 2。命令入口：`python3 -m project_memory evidence {request,attach,verify} --repo .`；完整步骤与路径规则见 [OPERATIONS](docs/OPERATIONS.zh-CN.md#签名证据清单)。
+
+它只证明锚持有者对这份清单负责，不证明文件由受保护执行器产生或命令真的执行过；文件哈希取自 request 时的工作区字节，不要求文件已提交进树。
+
 ### CI 第二身份与审批门禁
 
 单用户主机没有独立的 OS 主体，本地文件锚无法自证。`approval-gate` 工作流让 GitHub Actions runner 作为第二身份：runner 用仓库 secret 里的审批公钥验证 `approvals` 分支上的审批记录，并要求 PR head 的具体提交上至少有一条 `approve`。

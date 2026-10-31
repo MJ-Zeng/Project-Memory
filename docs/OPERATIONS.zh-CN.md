@@ -167,7 +167,7 @@ PYTHONPATH=.project-memory/tooling python3 -m project_memory approval verify --r
 
 `approval request` 只写未签名载荷，CLI 不签名也不持有私钥；`approval attach` 只做格式和“给定公钥能验通”的本地检查。信任决定在 `approval verify`、`goal evaluate` 和门禁读取时由 `PROJECT_MEMORY_APPROVAL_ANCHOR` 重新做出；审批人与锚 `issuer` 不一致即不受信。`scope=commit` 只批准提交（供 CI 门禁），`scope=criterion` 才可挂到 Goal 判据，并要求绑定的验证记录仍是 pass、摘要未变、提交等于当前 HEAD。未配置审批锚、签名无效或提交前进时审批只是 `UNVERIFIED_APPROVAL`，不 satisfy。
 
-审批**不会**把验证记录的 `verified=false` 改成 `true`，也不会让 `human_approved` 变成可声明的 `--evidence-level`；它不替代独立验证、Ruleset、CODEOWNERS 或合并权限。审批记录是追加记录，不修改验证记录；验证记录一经改动，原审批摘要失效。
+审批**不会**把验证记录的 `verified=false` 改成 `true`，也不会让 `human_approved` 变成可声明的 `--evidence-level`；它不替代独立验证、Ruleset、CODEOWNERS 或合并权限。审批记录是追加记录，不修改验证记录；验证记录一经改动，原审批摘要失效。证据文件的签名清单见后文「签名证据清单」一节。
 
 ### CI 审批门禁（GitHub Actions 第二身份）
 
@@ -216,6 +216,43 @@ PYTHONPATH=.project-memory/tooling python3 -m project_memory audit checkpoint-at
 - `status_problems`：具体缺什么，如 `audit_missing`、`audit_chain_invalid`、`checkpoint_missing`、`checkpoint_untrusted`、`checkpoint_chain_mismatch`、`status_history_mismatch`、`no_required_criteria`。
 
 自动化脚本请消费 `effective_status`/`status_trusted`，不要 grep `status`。审计目录为空或缺失一律 `invalid`，不会因为“没有记录”而被当作干净。checkpoint 私钥丢失或签名人不可用时，`achieved` 停在 `achieved_unverified` 是预期的 fail-closed 结果。
+
+## 签名证据清单
+
+证据清单把「文件哈希一致」升级为「锚持有者对这份清单负责，且清单只对某个提交有效」。它与审批共用同一把仓库外审批锚，但不含审批人字段：
+
+```bash
+# 1. 生成未签名清单请求；目录递归展开，只收录普通文件
+PYTHONPATH=.project-memory/tooling python3 -m project_memory evidence request --repo . \
+  --commit <40位SHA> --path evidence/B8 --statement 'B8 交付证据' \
+  --output C:/Temp/evidence-request.json
+
+# 2. 由仓库外审批私钥对请求文件的规范 JSON 字节签名
+openssl dgst -sha256 -sign <审批私钥> -out C:/Temp/evidence.sig C:/Temp/evidence-request.json
+
+# 3. 本地校验签名并写出带 authority 信封的清单；--output 必填
+PYTHONPATH=.project-memory/tooling python3 -m project_memory evidence attach --repo . \
+  --request C:/Temp/evidence-request.json --signature C:/Temp/evidence.sig \
+  --anchor /path/outside/repo/approval-anchor.json \
+  --output C:/Temp/evidence-manifest.json
+
+# 4. 用受保护审批锚重新验签，并逐一重算文件哈希与大小
+export PROJECT_MEMORY_APPROVAL_ANCHOR=/path/outside/repo/approval-anchor.json
+PYTHONPATH=.project-memory/tooling python3 -m project_memory evidence verify --repo . \
+  --manifest C:/Temp/evidence-manifest.json --commit <40位SHA> --json
+```
+
+清单记录 `commit_sha`、`tree_sha`、`files[{path, sha256, bytes}]`、`generator`（工具版本、Python、平台、生成命令）和 `authority` 信封。`manifest_id` 是记录去掉 `manifest_id` 与 `authority` 后规范 JSON 的 SHA-256 前 12 位，可随时重算；签名载荷是去掉 `authority` 的规范 JSON 字节，复用审批同一套验签实现。
+
+`evidence request` 只写未签名文件，报告 `manifest_id`、`payload_sha256` 和可复制的 `openssl dgst -sha256 -sign` 命令，**不签名**。输出采用 no-clobber：`--output` 已存在且内容不同即 exit 1，不覆盖既有文件（包括已签清单），内容完全相同则原样保留。`evidence attach` 只用 `--anchor` 校验格式与签名，不构成信任；幂等判断比较签名载荷与 `anchor_id`/`issuer`/`algorithm`，忽略 ECDSA 签名因随机数产生的字节差异，同一锚同一载荷返回 `created=false`，不同锚或不同载荷仍拒绝覆盖。命中已有清单时还会用给定锚重新校验其 `authority.signature_b64`，签名已损坏则 exit 1，不视为幂等。信任只在 `evidence verify` 时由 `PROJECT_MEMORY_APPROVAL_ANCHOR` 重新决定。
+
+`evidence verify` 校验清单结构、`manifest_id`、签名、`repository.id`/`remote` 与当前仓库 `repo_identity` 一致（沿用审批的仓库绑定，防止把别的仓库的清单搬来当证据）、`commit_sha`、`tree_sha`（必须等于该提交的树）以及每个文件的 `sha256` 与 `bytes`。全部通过才 exit 0；无受保护锚、清单未签名、签名无效、清单被改、仓库身份不符、提交或树不符、文件缺失或变化一律 exit 2，并在 JSON 的 `problems` 中逐条说明，`signed`/`trusted`/`verified` 不会降级为“仅提示”。
+
+exit 码约定：只有 `evidence verify` 的信任或内容失败是 exit 2；`evidence request` 与 `evidence attach` 的本地校验失败（参数、结构、路径、签名格式、覆盖冲突）是 exit 1。`evidence verify` 始终输出 JSON，`--json` 仅为兼容保留。
+
+路径规则：清单中的 `path` 必须是仓库相对路径并用 `/` 分隔；绝对路径、盘符、`..`、空段、符号链接、目录联接（junction）、挂载点或任何 reparse point，以及非常规文件一律拒绝。除按组件拒绝链接外，还会把路径规范化（realpath）后要求仍位于 `repo.resolve()` 之下。目录会递归展开，文件按 `path` 升序存放且不得重复，`files` 不得为空。
+
+它证明什么：锚持有者对「这些文件在这个提交和树下的这些字节」负责。清单绑定 `commit_sha` 和 `tree_sha`，但 `files` 的 `sha256`/`bytes` 来自 `evidence request` 执行时的工作区字节，**不要求**这些文件已经提交进该提交的树（未跟踪的发布产物也可作为证据文件）。它**不**证明文件由受保护执行器产生，也**不**证明清单里的命令真的执行过；构建来源证明属于后续工作，不在本命令范围。
 
 ## 写文档
 
