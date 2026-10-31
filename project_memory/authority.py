@@ -27,6 +27,7 @@ import platform
 from pathlib import Path
 
 ANCHOR_ENV = 'PROJECT_MEMORY_TRUST_ANCHOR'
+APPROVAL_ANCHOR_ENV = 'PROJECT_MEMORY_APPROVAL_ANCHOR'
 ANCHOR_SCHEMA = '1.0'
 ANCHOR_KIND = 'project_memory_trust_anchor'
 SUPPORTED_ALGORITHMS = ('rsa-sha256', 'ecdsa-sha256')
@@ -53,6 +54,24 @@ def verification_payload(record: dict) -> bytes:
 
 def verification_digest(record: dict) -> str:
     return hashlib.sha256(verification_payload(record)).hexdigest()
+
+
+def verification_subject_payload(record: dict) -> bytes:
+    """Bytes an approval event binds for a verification record.
+
+    The digest excludes both ``authority`` (the detached signature envelope)
+    and ``authority_evaluation`` (the local, recomputable verdict), so attaching
+    a signature never changes what an approval references.  The algorithm is
+    SHA-256 over the canonical JSON bytes of the remaining fields.
+    """
+    payload = {key: value for key, value in record.items()
+               if key not in ('authority', 'authority_evaluation')}
+    return canonical_bytes(payload)
+
+
+def verification_subject_digest(record: dict) -> str:
+    """SHA-256 hex digest of :func:`verification_subject_payload`."""
+    return hashlib.sha256(verification_subject_payload(record)).hexdigest()
 
 
 class _DerError(ValueError):
@@ -405,10 +424,24 @@ def anchor_is_protected(path: Path) -> tuple[bool, str]:
     return True, f'uid={stat.st_uid}'
 
 
-def load_anchor(repo: Path) -> tuple[dict | None, str]:
-    value = os.environ.get(ANCHOR_ENV, '').strip()
+def _anchor_document(value) -> tuple[dict | None, str]:
+    """Validate the shape of an anchor document; no owner or trust check."""
+    if not isinstance(value, dict):
+        return None, '信任锚必须是 JSON 对象'
+    if value.get('kind') != ANCHOR_KIND or value.get('schema_version') != ANCHOR_SCHEMA:
+        return None, '信任锚 kind/schema_version 不匹配'
+    if value.get('algorithm') not in SUPPORTED_ALGORITHMS:
+        return None, '信任锚 algorithm 不受支持'
+    for field in ('anchor_id', 'issuer', 'public_key_pem'):
+        if not isinstance(value.get(field), str) or not value[field].strip():
+            return None, f'信任锚缺少 {field}'
+    return dict(value), 'ok'
+
+
+def load_anchor(repo: Path, env_name: str = ANCHOR_ENV) -> tuple[dict | None, str]:
+    value = os.environ.get(env_name or ANCHOR_ENV, '').strip()
     if not value:
-        return None, '未配置受保护的信任锚（PROJECT_MEMORY_TRUST_ANCHOR）'
+        return None, f'未配置受保护的信任锚（{env_name or ANCHOR_ENV}）'
     try:
         resolved = Path(value).resolve()
     except OSError as exc:
@@ -425,19 +458,37 @@ def load_anchor(repo: Path) -> tuple[dict | None, str]:
         anchor = json.loads(resolved.read_text(encoding='utf-8'))
     except Exception as exc:  # noqa: BLE001 - any malformed anchor is untrusted
         return None, f'信任锚不是合法 JSON：{exc}'
-    if not isinstance(anchor, dict):
-        return None, '信任锚必须是 JSON 对象'
-    if anchor.get('kind') != ANCHOR_KIND or anchor.get('schema_version') != ANCHOR_SCHEMA:
-        return None, '信任锚 kind/schema_version 不匹配'
-    if anchor.get('algorithm') not in SUPPORTED_ALGORITHMS:
-        return None, '信任锚 algorithm 不受支持'
-    for field in ('anchor_id', 'issuer', 'public_key_pem'):
-        if not isinstance(anchor.get(field), str) or not anchor[field].strip():
-            return None, f'信任锚缺少 {field}'
+    anchor, reason = _anchor_document(anchor)
+    if anchor is None:
+        return None, reason
     protected, detail = anchor_is_protected(resolved)
     if not protected:
         return None, detail
     return {**anchor, 'path': str(resolved), 'protection': detail}, 'ok'
+
+
+def load_anchor_document(path) -> tuple[dict | None, str]:
+    """Load an anchor file for a local format and signature check only.
+
+    This intentionally performs no owner/protection check.  It answers "is this
+    a well-formed public-key document?", never "do I trust it?".  The trust
+    decision is made only at evaluation or gate time by re-reading the anchor
+    named by ``PROJECT_MEMORY_APPROVAL_ANCHOR``.
+    """
+    path = Path(path)
+    if not path.is_file():
+        return None, f'信任锚不是文件：{path}'
+    try:
+        value = json.loads(path.read_text(encoding='utf-8'))
+    except Exception as exc:  # noqa: BLE001 - any malformed anchor is untrusted
+        return None, f'信任锚不是合法 JSON：{exc}'
+    return _anchor_document(value)
+
+
+def verify_detached_signature(anchor: dict, payload: bytes, signature_b64: str,
+                              algorithm: str) -> tuple[bool, str]:
+    """Public detached-signature check with a supplied anchor document."""
+    return _verify_signature(anchor, payload, signature_b64, algorithm)
 
 
 def verification_authority(repo: Path, record: dict) -> dict:
@@ -508,9 +559,10 @@ def execution_record_digest(record: dict) -> str:
     return hashlib.sha256(execution_record_payload(record)).hexdigest()
 
 
-def _execution_record_authority(repo: Path, record: dict, label: str) -> dict:
+def _execution_record_authority(repo: Path, record: dict, label: str,
+                                env_name: str = ANCHOR_ENV) -> dict:
     """Verify an execution record against the protected anchor; fail closed."""
-    anchor, anchor_reason = load_anchor(repo)
+    anchor, anchor_reason = load_anchor(repo, env_name)
     if anchor is None:
         return {'trusted': False, 'status': 'unconfigured',
                 'reason': anchor_reason, 'anchor_id': None, 'issuer': None}
@@ -576,3 +628,22 @@ def signed_record_authority(repo: Path, record: dict, label: str = '签名记录
     self-declared ``authority.status``.
     """
     return _execution_record_authority(repo, record, label)
+
+
+def approval_authority(repo: Path, record: dict) -> dict:
+    """Return the authority status of a signed approval event.
+
+    Trust comes only from the approval anchor named by
+    ``PROJECT_MEMORY_APPROVAL_ANCHOR``.  A valid signature is still untrusted
+    when ``record["approver"]`` differs from that anchor's ``issuer``: the
+    approver identity is the signer, not a self-declared field.
+    """
+    verdict = _execution_record_authority(repo, record, '签名审批',
+                                          env_name=APPROVAL_ANCHOR_ENV)
+    if not verdict.get('trusted'):
+        return verdict
+    approver = record.get('approver') if isinstance(record, dict) else None
+    if approver != verdict.get('issuer'):
+        return {**verdict, 'trusted': False, 'status': 'untrusted',
+                'reason': '审批记录的 approver 与审批锚 issuer 不一致'}
+    return verdict
