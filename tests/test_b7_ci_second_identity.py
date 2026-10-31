@@ -1,12 +1,22 @@
 """B7: the GitHub Actions runner as a second identity for approval gates.
 
+The gate runs on ``pull_request_target`` and checks out only the base commit:
+the workflow definition and the verifier both come from base, so a PR that
+edits ``project_memory`` or the workflow still has to pass the same gate.  The
+PR head is used only as a ``--commit`` string; it is never checked out or
+executed.
+
 The CI anchor is a public-key JSON document delivered through a repository
 secret (``PROJECT_MEMORY_APPROVAL_ANCHOR_JSON``), never through the PR tree.
-It is accepted only when ``GITHUB_ACTIONS=true``; a local process may set any
-environment variable, so local runs must keep using an owner-protected file.
-``approval verify --records-dir`` is the gate entry point: it reads the
-``approvals`` branch checkout from outside the PR tree and succeeds only when
-one record is trusted, ``approve`` and bound to the exact PR head commit.
+It is accepted only when ``GITHUB_ACTIONS`` is exactly ``true``.  That flag is
+a misuse guard, not a cryptographic boundary: a local process may set any
+environment variable, so local runs keep using an owner-protected file.  A
+local run with its own key and its own anchor can still be ``trusted`` without
+weakening the CI gate, whose anchor comes from the secret and whose code comes
+from base.  ``approval verify --records-dir`` is the gate entry point: it reads
+the ``approvals`` branch checkout from outside the PR tree and, under
+``--require-approve``, succeeds only when one record is trusted, ``approve``
+and bound to the exact PR head commit.
 
 Static tests need no key.  Signing tests use a test-time RSA key and the shared
 openssl skip semantics (``PROJECT_MEMORY_REQUIRE_OPENSSL=1`` makes a missing
@@ -100,6 +110,18 @@ class CiJsonAnchorTest(unittest.TestCase):
         self.assertIsNone(anchor, reason)
         self.assertIn('只在 CI', reason)
 
+    def test_ci_flag_rejects_any_other_spelling(self):
+        for value in ('TRUE', 'True', ' true ', '1'):
+            anchor, reason = self.load(authority.TRUST_ANCHOR_JSON_ENV,
+                                       ci_anchor_document(),
+                                       {authority.CI_CONTEXT_ENV: value})
+            self.assertIsNone(anchor, (value, reason))
+            self.assertIn('只在 CI', reason, (value, reason))
+        anchor, reason = self.load(authority.TRUST_ANCHOR_JSON_ENV,
+                                   ci_anchor_document(),
+                                   {authority.CI_CONTEXT_ENV: 'true'})
+        self.assertIsNotNone(anchor, reason)
+
     def test_malformed_json_anchor_is_rejected(self):
         anchor, reason = self.load(authority.TRUST_ANCHOR_JSON_ENV, None,
                                    {authority.CI_CONTEXT_ENV: 'true'})
@@ -151,17 +173,34 @@ class CiJsonAnchorTest(unittest.TestCase):
         self.assertEqual('file-anchor', anchor['anchor_id'])
         self.assertEqual(str(path.resolve()), anchor['path'])
 
-    def test_file_anchor_failure_falls_back_to_ci_json(self):
+    def test_invalid_file_anchor_fails_closed_even_with_valid_ci_json(self):
+        missing = self.outside / 'missing.json'
         environment = {
-            authority.ANCHOR_ENV: str(self.outside / 'missing.json'),
+            authority.ANCHOR_ENV: str(missing),
             authority.TRUST_ANCHOR_JSON_ENV: json.dumps(ci_anchor_document()),
             authority.CI_CONTEXT_ENV: 'true',
         }
         with mock.patch.dict(os.environ, environment):
             anchor, reason = authority.load_anchor(
                 self.repo, json_env=authority.TRUST_ANCHOR_JSON_ENV)
-        self.assertIsNotNone(anchor, reason)
-        self.assertEqual('ci-secret', anchor['protection'])
+        self.assertIsNone(anchor, reason)
+        self.assertIn(str(missing.resolve()), reason)
+
+    def test_unprotected_file_anchor_does_not_fall_back_to_json(self):
+        path = self.outside / 'anchor.json'
+        path.write_text(json.dumps(ci_anchor_document()), encoding='utf-8')
+        environment = {
+            authority.ANCHOR_ENV: str(path),
+            authority.TRUST_ANCHOR_JSON_ENV: json.dumps(ci_anchor_document()),
+            authority.CI_CONTEXT_ENV: 'true',
+        }
+        with mock.patch.dict(os.environ, environment):
+            with mock.patch('project_memory.authority.anchor_is_protected',
+                            return_value=(False, '信任锚所有者是当前用户；不能作为独立信任根')):
+                anchor, reason = authority.load_anchor(
+                    self.repo, json_env=authority.TRUST_ANCHOR_JSON_ENV)
+        self.assertIsNone(anchor, reason)
+        self.assertIn('所有者', reason)
 
     def test_verification_authority_uses_ci_anchor_but_not_locally(self):
         document = ci_anchor_document()
@@ -319,6 +358,15 @@ class RecordsDirVerifyTest(_SignedFixture):
         self.assertFalse(report['approved'])
         self.assertIn('目录中没有审批记录', ' '.join(report['problems']))
 
+    def test_empty_directory_without_require_approve_reports_and_exits_zero(self):
+        with self.ci_anchor():
+            code, output = self.verify(self.base, require_approve=False)
+        report = json.loads(output)
+        self.assertEqual(0, code, output)
+        self.assertFalse(report['approved'])
+        self.assertEqual(0, report['scanned'])
+        self.assertIn('目录中没有审批记录', ' '.join(report['problems']))
+
     def test_missing_directory_fails_closed(self):
         with self.ci_anchor():
             with contextlib.redirect_stdout(io.StringIO()):
@@ -411,10 +459,14 @@ class RecordsDirVerifyTest(_SignedFixture):
 
 
 class WorkflowStaticTest(unittest.TestCase):
-    """Card §4: the workflow is pinned, read-only and not privileged."""
+    """Card §5: base-only checkout, pinned, read-only, no PR code execution."""
 
     def setUp(self):
         self.text = WORKFLOW.read_text(encoding='utf-8')
+        self.lines = self.text.splitlines()
+
+    def line_index(self, needle):
+        return next(i for i, line in enumerate(self.lines) if needle in line)
 
     def test_workflow_exists_and_parses(self):
         self.assertTrue(WORKFLOW.is_file())
@@ -429,9 +481,19 @@ class WorkflowStaticTest(unittest.TestCase):
         # PyYAML resolves the bare YAML 1.1 key ``on`` to boolean True.
         triggers = document.get('on', document.get(True))
         self.assertIsInstance(triggers, dict)
-        self.assertIn('pull_request', triggers)
+        self.assertIn('pull_request_target', triggers)
         self.assertIn('workflow_dispatch', triggers)
-        self.assertNotIn('pull_request_target', triggers)
+        self.assertNotIn('pull_request', triggers)
+        target = triggers['pull_request_target']
+        self.assertEqual(['dev/v1.0'], target['branches'])
+        self.assertEqual(['opened', 'synchronize', 'reopened', 'edited'],
+                         target['types'])
+
+    def test_uses_pull_request_target_without_a_pull_request_trigger(self):
+        self.assertIn('pull_request_target:', self.text)
+        self.assertIsNone(
+            re.search(r'^\s*pull_request:\s*$', self.text, re.MULTILINE),
+            '不得保留独立的 pull_request: 触发；PR 可能用它运行被篡改的同名工作流')
 
     def test_actions_are_pinned_to_40_hex_commit_shas(self):
         uses = re.findall(r'uses:\s*(\S+)', self.text)
@@ -441,15 +503,29 @@ class WorkflowStaticTest(unittest.TestCase):
             self.assertRegex(revision, r'^[0-9a-f]{40}$',
                              f'{name} 必须按提交 SHA 固定')
 
-    def test_it_never_uses_pull_request_target(self):
-        self.assertNotIn('pull_request_target', self.text)
-
     def test_permissions_are_read_only(self):
         block = re.search(r'^permissions:\n((?:[ \t]+.*\n)+)', self.text,
                           re.MULTILINE)
         self.assertIsNotNone(block)
         self.assertNotIn('write', block.group(1))
         self.assertIn('contents: read', block.group(1))
+        self.assertNotIn('pull-requests', block.group(1))
+        self.assertNotIn('checks', block.group(1))
+
+    def test_checkout_uses_the_pull_request_base(self):
+        start = self.line_index('uses: actions/checkout@')
+        ref_line = next(line for line in self.lines[start:start + 6]
+                        if 'ref:' in line)
+        self.assertIn('github.event.pull_request.base.sha', ref_line)
+        self.assertNotIn('pull_request.head.sha', ref_line)
+        self.assertNotIn('refs/pull/', ref_line)
+
+    def test_no_checkout_uses_the_pr_head(self):
+        refs = [line for line in self.lines if re.search(r'^\s+ref:\s', line)]
+        self.assertTrue(refs)
+        for line in refs:
+            self.assertNotIn('pull_request.head.sha', line)
+            self.assertNotIn('refs/pull/', line)
 
     def test_checkout_does_not_persist_credentials(self):
         self.assertIn('persist-credentials: false', self.text)
@@ -457,15 +533,27 @@ class WorkflowStaticTest(unittest.TestCase):
     def test_steps_use_bash(self):
         self.assertIn('shell: bash', self.text)
 
-    def test_fetch_of_approvals_branch_is_not_swallowed(self):
-        lines = self.text.splitlines()
-        index = next(i for i, line in enumerate(lines)
-                     if 'git fetch origin approvals' in line)
-        window = '\n'.join(lines[index:index + 3])
+    def test_resolves_head_from_event_or_authenticated_dispatch_fetch(self):
+        self.assertIn('EVENT_HEAD: ${{ github.event.pull_request.head.sha }}',
+                      self.text)
+        self.assertIn('refs/pull/$PR_NUMBER/head', self.text)
+        self.assertIn("git rev-parse 'FETCH_HEAD^{commit}'", self.text)
+        self.assertIn("grep -Eq '^[0-9a-f]{40}$'", self.text)
+
+    def test_approvals_fetch_authenticates_and_is_not_swallowed(self):
+        index = self.line_index(
+            'origin approvals:refs/remotes/origin/approvals')
+        window = '\n'.join(self.lines[max(0, index - 5):index + 2])
+        self.assertIn('http.extraheader', window)
+        self.assertIn('::add-mask::', window)
         self.assertNotIn('|| true', window)
 
+    def test_no_pip_install_or_pytest(self):
+        self.assertNotIn('pip install', self.text)
+        self.assertNotIn('pytest', self.text)
+
     def test_gate_runs_records_dir_verify_for_the_resolved_head(self):
-        self.assertIn('PM_HEAD=$(git rev-parse HEAD)', self.text)
+        self.assertIn('echo "PM_HEAD=$PM_HEAD" >> "$GITHUB_ENV"', self.text)
         self.assertIn('--records-dir .pm-approvals/records', self.text)
         self.assertIn('--commit "$PM_HEAD" --require-approve', self.text)
         self.assertIn('PROJECT_MEMORY_APPROVAL_ANCHOR_JSON', self.text)

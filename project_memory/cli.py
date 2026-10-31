@@ -233,10 +233,13 @@ def parser():
     source = c.add_mutually_exclusive_group(required=True)
     source.add_argument('--record', type=Path)
     source.add_argument('--records-dir', type=Path,
-                        help='批量验证目录下 *.json；配合 --require-approve 作为 CI 门禁')
+                        help='批量验证目录下 *.json；扫描结果如实输出，'
+                             '--require-approve 决定退出码是否为门禁')
     c.add_argument('--commit', required=True)
     c.add_argument('--require-approve', action='store_true',
-                   help='仅当存在一条 trusted+approve+提交匹配的审批时 exit 0')
+                   help='仅配合 --records-dir：带此标志时，只有存在一条 '
+                        'trusted+approve+提交匹配的审批才 exit 0，否则 exit 2；'
+                        '不带此标志时扫描完成即 exit 0，只报告结果')
     c.add_argument('--json', action='store_true')
     c = _leaf(g, 'list', '列出审批记录')
     c.add_argument('--commit')
@@ -531,7 +534,9 @@ def run(args):
                 result = verify_approval_records(repo, repo_path(repo, args.records_dir),
                                                  args.commit, args.require_approve)
                 emit(result)
-                return 0 if result['approved'] else 2
+                if args.require_approve:
+                    return 0 if result['approved'] else 2
+                return 0
             if args.require_approve:
                 raise PMError('--require-approve 只能与 --records-dir 一起使用')
             result = verify_approval(repo, repo_path(repo, args.record), args.commit)

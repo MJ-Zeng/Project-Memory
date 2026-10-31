@@ -194,18 +194,20 @@ python3 -m project_memory goal evidence --repo . --id G-AUTH --criterion C1 \
 
 审批是追加记录，不修改验证记录；验证记录内容一旦变化，原审批的摘要即失效。审批不会把 `verified=false` 改成 `true`，也不替代独立验证或人工审批权限。
 
-`approval verify` 只在记录通过审批锚验签、`decision=approve` 且 `commit_sha` 与 `--commit` 一致时 exit 0，否则 exit 2。`approval verify --records-dir DIR --commit SHA [--require-approve]` 批量验签目录下的 `*.json` 并逐条输出结论；带 `--require-approve` 时，只有存在至少一条 trusted+approve+提交匹配的记录才 exit 0。`approval list [--commit SHA] [--goal G]` 只读列出记录、范围与验签状态。
+`approval verify` 只在记录通过审批锚验签、`decision=approve` 且 `commit_sha` 与 `--commit` 一致时 exit 0，否则 exit 2。`approval verify --records-dir DIR --commit SHA [--require-approve]` 批量验签目录下的 `*.json` 并逐条输出结论：不带 `--require-approve` 时扫描完成即 exit 0，只在报告中如实给出 `approved`/`problems`；带 `--require-approve` 时，只有存在至少一条 trusted+approve+提交匹配的记录才 exit 0，否则 exit 2。`approval list [--commit SHA] [--goal G]` 只读列出记录、范围与验签状态。
 
 ### CI 第二身份与审批门禁
 
 单用户主机没有独立的 OS 主体，本地文件锚无法自证。`approval-gate` 工作流让 GitHub Actions runner 作为第二身份：runner 用仓库 secret 里的审批公钥验证 `approvals` 分支上的审批记录，并要求 PR head 的具体提交上至少有一条 `approve`。
 
+- 工作流由 `pull_request_target` 触发，并且只检出 PR 的 base 提交：workflow 定义和 `project_memory` 验证器都来自 base，PR head 只作为 `--commit` 字符串使用，从不检出、从不执行。因此修改 `.github/workflows/**` 或 `project_memory/{authority,coordination,cli}.py` 的 PR 同样要过审批门禁，门禁代码不受 PR 影响。
 - 审批锚由仓库管理员放进 Actions secret `PROJECT_MEMORY_APPROVAL_ANCHOR_JSON`（值是审批锚 JSON 本身），不落在仓库树里；PR 代码不能改写它。secret 里只有公钥，泄露不等于私钥泄露。
-- `approvals` 分支只存放审批事件（`records/<40位提交SHA>-<approval_id>.json`），由持有私钥的人在仓库外签名后发布；门禁只读该分支，不写回，也不放密钥。
-- 本地设置 `PROJECT_MEMORY_APPROVAL_ANCHOR_JSON` 不会生效：只有 `GITHUB_ACTIONS=true` 时才接受 JSON 锚，本地仍使用受保护文件锚 `PROJECT_MEMORY_APPROVAL_ANCHOR`。验证记录与 checkpoint 的 `PROJECT_MEMORY_TRUST_ANCHOR_JSON` 遵循同样的 CI 限制。
-- 门禁结果要成为合并必需检查，还需要仓库管理员在 GitHub 侧开启分支保护或 Branch Ruleset；CLI 和本仓库不配置这些。
+- `approvals` 分支只存放审批事件（`records/<40位提交SHA>-<approval_id>.json`），由持有私钥的人在仓库外签名后发布；门禁只读该分支，不写回，也不放密钥。私有库拉取该分支时，用一次性 `http.extraheader` 携带本次运行的 `github.token`，并把认证串 `::add-mask::`，令牌不会出现在日志里。
+- `GITHUB_ACTIONS=true` 只是防误用开关，不是密码学边界：本机可以伪造它，所以本地默认不采用 JSON 锚，非 CI 运行仍使用受保护文件锚 `PROJECT_MEMORY_APPROVAL_ANCHOR`。本地用自己的密钥和自己的锚得到 trusted 不影响 CI 门禁，因为门禁的锚来自仓库 Secret、代码来自 base。验证记录与 checkpoint 的 `PROJECT_MEMORY_TRUST_ANCHOR_JSON` 遵循同样的规则。
+- `workflow_dispatch` 运行的检查**不满足**必需状态检查（GitHub 文档明示），只作诊断，并显式检出 `dev/v1.0`；审批记录发布后，用 PR 事件（编辑、重开、新提交）或重跑原 `pull_request_target` 运行来重新评估。
+- 门禁结果要成为合并必需检查，还需要仓库管理员在 GitHub 侧开启分支保护或 Branch Ruleset，并设置 `enforce_admins`；CLI 和本仓库不配置这些。
 
-边界：门禁 job 在 base 提供的 workflow 定义下运行、锚来自 secret，但它**不能防御仓库账户所有者改写 workflow**，这是 S4 的残余风险。审批记录也只是签名声明，不替代独立验证、CODEOWNERS 或合并权限。
+边界：管理员始终可以通过 API 关闭分支保护、改写 workflow 或 Secret，这是被接受的信任前提（S4 残余风险）。审批记录也只是签名声明，不替代独立验证、CODEOWNERS 或合并权限。
 
 ## 两种审计范围
 

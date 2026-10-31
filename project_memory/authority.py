@@ -16,6 +16,13 @@ only.  It never resolves an external program, so neither ``PATH`` nor any
 environment variable can select or replace the verifier: an attacker who
 controls the environment of the CLI still cannot make a forged signature pass.
 See ``docs/decisions/ADR-0002-inprocess-signature-verifier.md``.
+
+Accepting a JSON anchor only when ``GITHUB_ACTIONS`` is the literal ``true`` is
+a misuse guard, not a cryptographic boundary: a local process can set any
+environment variable.  The real boundary is that the CI anchor lives in a
+repository secret outside the tree and the gate verifier runs from the base
+commit; a local run with its own key and its own anchor can still obtain
+``trusted`` without weakening the CI gate.
 """
 from __future__ import annotations
 
@@ -461,7 +468,7 @@ def _env_value(name: str | None) -> str:
 
 
 def _is_ci_context() -> bool:
-    return _env_value(CI_CONTEXT_ENV).strip().casefold() == 'true'
+    return _env_value(CI_CONTEXT_ENV) == 'true'
 
 
 def _load_file_anchor(repo: Path, value: str) -> tuple[dict | None, str]:
@@ -507,31 +514,30 @@ def load_anchor(repo: Path, env_name: str = ANCHOR_ENV,
                 json_env: str | None = None) -> tuple[dict | None, str]:
     """Load the trust anchor from a protected file or a CI-only JSON secret.
 
-    A file anchor wins whenever it exists and passes the owner check.  The JSON
-    form is accepted only when ``GITHUB_ACTIONS=true``: a local process can set
-    any environment variable, so non-CI runs must keep using an owner-protected
-    file.  In CI the JSON value comes from a repository secret, not from the PR
-    tree, and its kind/schema/algorithm/field checks are identical to the file
-    path; the file-owner check is skipped because the secret has no file owner.
+    An explicitly configured file anchor is authoritative: if it cannot be
+    loaded (missing, inside the repository, wrong shape, not owner-protected)
+    the function fails closed and never falls back to the JSON anchor.
+
+    The JSON form is accepted only when ``GITHUB_ACTIONS`` is exactly ``true``
+    and no file anchor was configured.  That flag is a misuse guard, not a
+    cryptographic boundary: a local process can set any environment variable,
+    so non-CI runs keep using an owner-protected file.  This does not weaken
+    the CI gate: there the JSON value comes from a repository secret outside
+    the tree and the verifier runs from the base commit.  A local run with its
+    own key and its own anchor can still obtain ``trusted``.  The JSON
+    kind/schema/algorithm/field checks are identical to the file path; only the
+    file-owner check is skipped because the secret has no file owner.
     """
     env_name = env_name or ANCHOR_ENV
     value = _env_value(env_name).strip()
-    file_problem = None
     if value:
-        anchor, detail = _load_file_anchor(repo, value)
-        if anchor is not None:
-            return anchor, detail
-        file_problem = detail
+        return _load_file_anchor(repo, value)
     json_value = _env_value(json_env).strip() if json_env else ''
     if json_value:
         if _is_ci_context():
             return _load_json_anchor(json_env, json_value)
-        if file_problem is None:
-            return None, (f'未配置受保护的信任锚（{env_name}）；'
-                          f'{json_env} 只在 CI（{CI_CONTEXT_ENV}=true）中生效')
-        return None, file_problem
-    if file_problem is not None:
-        return None, file_problem
+        return None, (f'未配置受保护的信任锚（{env_name}）；'
+                      f'{json_env} 只在 CI（{CI_CONTEXT_ENV}=true）中生效')
     return None, f'未配置受保护的信任锚（{env_name}）'
 
 
