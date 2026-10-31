@@ -66,12 +66,13 @@ project-memory-mvp/
 ├── runs/<task>/<run-id>.checkpoints/NNNN.json
 ├── handoffs/<task>/<run-id>.json
 ├── verifications/<task>/<verification-id>.json
+├── approvals/<approval-id>.json
 ├── defects/<task>/<defect-id>.json
 ├── tooling/project_memory/
 └── cache/
 ```
 
-`goals`、`runs`、`handoffs`、`verifications` 和 `defects` 是协作记录，不是 canonical 文档。它们随 PR 审查，但不会被 `audit` 当成当前知识。`cache/` 是派生数据，可以重建。
+`goals`、`runs`、`handoffs`、`verifications`、`approvals` 和 `defects` 是协作记录，不是 canonical 文档。它们随 PR 审查，但不会被 `audit` 当成当前知识。`cache/` 是派生数据，可以重建。
 
 初始化目标仓库还会在 `.project-memory/tooling/project_memory/` 留一份经过 PR 审核的项目级 CLI，减少 CI 对发行包的依赖。Codex 和 Cursor 默认从 `.agents/skills/project-memory/` 加载，Claude Code 使用 `.claude/skills/project-memory/`。升级时用新的发行包提 PR；初始安装不覆盖已有文件，也不悄悄覆盖已有 Skill。分发目录更新后，用 `sync-tooling` 先看差异，再 `--write`；它不删除多余文件。
 
@@ -185,6 +186,8 @@ Agent Run 记录 Goal、任务、Agent、模型 provider/id、工具、会话 ID
 pass 条件还要求没有 high 级发现、目标 head 未变化、验证记录属于同一 Goal。验证绑定 `target_head_sha`；代码变化后旧验证不自动有效。pass 把目标执行置为 `verified`，fail 置为 `failed`。
 
 每条 finding 生成一个缺陷，记录任务、验证来源、代码位置、复现、严重度和状态。缺陷状态是 `open`、`fixed`、`verified`、`wontfix`、`closed`。`fixed` 必须绑定存在的完整提交 SHA；`verified` 由复验的 `--resolves-defect` 产生，不能直接更新；修复提交必须在被验证提交的历史中。
+
+签名审批是另一条独立证据链：`approval request` 只生成未签名载荷，仓库外审批私钥签名后由 `approval attach` 附加，身份取审批锚 `issuer` 而非命令行自报，载荷绑定 `commit_sha`。`scope=commit` 供 CI 门禁，`scope=criterion` 才可挂到 Goal 判据，并额外绑定验证记录摘要。信任只在 `approval verify`、`goal evaluate` 和门禁读取时由 `PROJECT_MEMORY_APPROVAL_ANCHOR` 重新决定，`attach` 时给的公钥不构成信任。审批不修改验证记录，也不改变 `verified=false`；它不替代验证、Ruleset 或人工审批权限。
 
 ### L. `reconcile`：知识对账
 

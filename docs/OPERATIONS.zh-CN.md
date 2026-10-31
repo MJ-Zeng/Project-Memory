@@ -148,6 +148,27 @@ PYTHONPATH=.project-memory/tooling python3 -m project_memory reconcile --repo . 
 
 `goal evaluate` 未满足时退出 2；`verify` 未通过时退出 2；`run resume` 在阻断状态退出 2；`reconcile --fail-on high` 有 high 时退出 2。`reconcile` 只报告，不自动改文档，也不关闭任务。
 
+### 签名审批
+
+人工批准可以是一条由仓库外审批私钥签名的独立记录，绑定审批人、时间和提交：
+
+```bash
+PYTHONPATH=.project-memory/tooling python3 -m project_memory approval request --repo . \
+  --commit <40位SHA> --approver lead@example.com --output C:/Temp/approval-request.json
+# 由持有审批私钥的人在仓库外签名
+openssl dgst -sha256 -sign <审批私钥> -out C:/Temp/approval.sig C:/Temp/approval-request.json
+PYTHONPATH=.project-memory/tooling python3 -m project_memory approval attach --repo . \
+  --request C:/Temp/approval-request.json --signature C:/Temp/approval.sig \
+  --anchor /path/outside/repo/approval-anchor.json
+export PROJECT_MEMORY_APPROVAL_ANCHOR=/path/outside/repo/approval-anchor.json
+PYTHONPATH=.project-memory/tooling python3 -m project_memory approval verify --repo . \
+  --record .project-memory/approvals/<approval-id>.json --commit <40位SHA>
+```
+
+`approval request` 只写未签名载荷，CLI 不签名也不持有私钥；`approval attach` 只做格式和“给定公钥能验通”的本地检查。信任决定在 `approval verify`、`goal evaluate` 和门禁读取时由 `PROJECT_MEMORY_APPROVAL_ANCHOR` 重新做出；审批人与锚 `issuer` 不一致即不受信。`scope=commit` 只批准提交（供 CI 门禁），`scope=criterion` 才可挂到 Goal 判据，并要求绑定的验证记录仍是 pass、摘要未变、提交等于当前 HEAD。未配置审批锚、签名无效或提交前进时审批只是 `UNVERIFIED_APPROVAL`，不 satisfy。
+
+审批**不会**把验证记录的 `verified=false` 改成 `true`，也不会让 `human_approved` 变成可声明的 `--evidence-level`；它不替代独立验证、Ruleset、CODEOWNERS 或合并权限。审批记录是追加记录，不修改验证记录；验证记录一经改动，原审批摘要失效。
+
 例外：必达标准集合为空（例如所有判据被改成可选或删除）时，`goal evaluate` 退出 0，但 `satisfied=false`、`evaluation_status=insufficient_evidence`、`status_problems` 含 `no_required_criteria`。自动化不要只看退出码，要读 `satisfied`/`effective_status`/`status_trusted`/`status_problems`；需要纯退出码门禁时，后续版本再提供显式 `--strict`，本版没有。
 
 ## 审计链与 Goal 状态可信度

@@ -232,6 +232,38 @@ python3 -m project_memory verify --repo . \
 
 pass 会把目标执行置为 `verified`；fail 置为 `failed` 并创建缺陷。验证命令在未通过时退出码为 2。
 
+## 签名审批
+
+人工批准不靠 Agent 填邮箱或 `--approved-by`，而是一条由仓库外审批私钥签名的独立记录；它证明谁在何时批准了哪个提交：
+
+```bash
+python3 -m project_memory approval request --repo . --commit <head SHA> \
+  --approver lead@example.com --output C:/Temp/approval-request.json
+# 由持有审批私钥的人在仓库外签名
+openssl dgst -sha256 -sign <审批私钥> -out C:/Temp/approval.sig C:/Temp/approval-request.json
+python3 -m project_memory approval attach --repo . \
+  --request C:/Temp/approval-request.json --signature C:/Temp/approval.sig \
+  --anchor /path/outside/repo/approval-anchor.json
+export PROJECT_MEMORY_APPROVAL_ANCHOR=/path/outside/repo/approval-anchor.json
+python3 -m project_memory approval verify --repo . \
+  --record .project-memory/approvals/<approval-id>.json --commit <head SHA>
+```
+
+- `request` 只写出未签名载荷，并打印 `payload_sha256` 与可复制的 openssl 签名命令；CLI 不签名、不持有私钥。
+- `attach` 只做格式、仓库身份和“给定公钥能验通”的本地检查，不构成信任决定；默认写入 `.project-memory/approvals/<approval_id>.json`，同名同内容幂等，不同则拒绝覆盖。
+- 信任决定在 `verify`、`goal evaluate` 和门禁读取时由 `PROJECT_MEMORY_APPROVAL_ANCHOR` 重新做出。审批人身份取锚的 `issuer`，与记录里的 `approver` 不一致即不信任。
+- `scope=commit` 只批准提交，供 CI 合并门禁使用，不参与 Goal 判据；`scope=criterion` 还要绑定该 Goal 标准的一条已验证记录（摘要、`evidence_id`、提交）。
+- 评估时审批绑定的提交必须等于当前 HEAD；验证记录被重写、摘要变化或提交前进，原审批失效。未配置审批锚时审批仍可登记，但只是 `UNVERIFIED_APPROVAL`，不 satisfy。
+
+批准之后用普通 Goal 证据挂载：
+
+```bash
+python3 -m project_memory goal evidence --repo . --id G-AUTH --criterion C1 \
+  --kind approval --ref .project-memory/approvals/<approval-id>.json
+```
+
+审批不改变 `verified=false`，也不替代独立验证或人类审查权限。
+
 ## 缺陷
 
 ```bash

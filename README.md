@@ -157,6 +157,45 @@ python3 -m project_memory reconcile --repo . --fail-on high
 
 `goal evaluate` 满足时退出 0，未满足时退出 2（没有可信授权来源时始终属于未满足）；例外是必达标准集合为空（例如所有判据被改成可选或删除）：此时退出 0，但 `satisfied=false`、`evaluation_status=insufficient_evidence`、`status_problems` 含 `no_required_criteria`，自动化必须读 `satisfied`/`effective_status`/`status_trusted`/`status_problems` 而不是只看退出码；`verify` 未通过时退出 2；`run resume` 在 `needs_handoff`、`needs_human` 或 `stale_base` 时退出 2。`reconcile` 只报告，不自动改 canonical 文档，也不关闭任务。
 
+### 签名审批
+
+审批是一件独立的签名事件：谁（`approver`）、何时（`at`）、对哪个提交（`commit_sha`）。审批人身份取自审批锚的 `issuer`，不是命令行自报；载荷被改动、签名不正确或提交不匹配时一律视为未受信，不会满足任何判据。
+
+```bash
+# 1. 生成未签名请求；CLI 不持有私钥，也不签名
+python3 -m project_memory approval request --repo . --commit <40位SHA> \
+  --approver lead@example.com --output C:/Temp/approval-request.json
+
+# 2. 由仓库外审批私钥对请求文件的规范 JSON 字节签名
+openssl dgst -sha256 -sign <审批私钥> -out C:/Temp/approval.sig C:/Temp/approval-request.json
+
+# 3. 本地校验签名并写入 .project-memory/approvals/
+python3 -m project_memory approval attach --repo . \
+  --request C:/Temp/approval-request.json --signature C:/Temp/approval.sig \
+  --anchor /path/outside/repo/approval-anchor.json
+
+# 4. 再用受保护的审批锚验证记录
+export PROJECT_MEMORY_APPROVAL_ANCHOR=/path/outside/repo/approval-anchor.json
+python3 -m project_memory approval verify --repo . \
+  --record .project-memory/approvals/<approval-id>.json --commit <40位SHA>
+```
+
+两个锚分工不同：`PROJECT_MEMORY_TRUST_ANCHOR` 只用于验证记录、执行 attestation 和审计 checkpoint；`PROJECT_MEMORY_APPROVAL_ANCHOR` 只用于审批事件。`approval attach` 只校验“这份公钥能验通这个签名、格式是否正确”，**信任决定**发生在 `approval verify`、`goal evaluate` 和门禁读取时，由受保护审批锚重新做出。未配置审批锚时审批仍可登记，但状态是 `UNVERIFIED_APPROVAL`，绝不满足判据。
+
+`scope.kind=commit` 的审批只证明“批准了这个提交”，供后续 CI 合并门禁使用，不参与 Goal 判据；`scope.kind=criterion` 额外绑定一个已验证记录（`goal_id`、`criterion_id`、验证摘要、`evidence_id`、提交），只有该验证记录仍是 pass、映射完整、摘要未变且提交等于当前 HEAD 时才可能让判据达成：
+
+```bash
+python3 -m project_memory approval request --repo . --commit <40位SHA> \
+  --goal G-AUTH --criterion C1 --verification <verification-id> \
+  --approver lead@example.com --output C:/Temp/approval-request.json
+python3 -m project_memory goal evidence --repo . --id G-AUTH --criterion C1 \
+  --kind approval --ref .project-memory/approvals/<approval-id>.json
+```
+
+审批是追加记录，不修改验证记录；验证记录内容一旦变化，原审批的摘要即失效。审批不会把 `verified=false` 改成 `true`，也不替代独立验证或人工审批权限。
+
+`approval verify` 只在记录通过审批锚验签、`decision=approve` 且 `commit_sha` 与 `--commit` 一致时 exit 0，否则 exit 2。`approval list [--commit SHA] [--goal G]` 只读列出记录、范围与验签状态。
+
 ## 两种审计范围
 
 `--scope current` 只审当前知识：canonical 根下状态为 `current`、`draft`、`in_flight`、`unclassified` 的文档，加上全部 ADR。镜像、历史、证据和已归档文档不参与。它适合放在合并门禁里。

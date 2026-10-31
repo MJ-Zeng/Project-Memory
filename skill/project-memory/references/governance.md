@@ -30,6 +30,13 @@
 - 有 high 级发现时不能 pass。发现自动生成缺陷，修复后必须复验才能把缺陷标为 verified；手工把缺陷写成 verified 会被拒绝，对账会检查 `verified_by`。
 - 独立验证是质量检查，不替代有权限的人类审批。
 
+## 签名审批职责
+
+- 审批私钥只由有权限的人或受保护 CI 身份持有，放在仓库外；Agent 只运行 `approval request` 生成载荷，不签名、不接触私钥，也不得代为 `attach` 后声称已获批准。
+- 审批记录绑定 `commit_sha`；代码前进或验证记录被重写后原审批失效，必须对新提交重新审批。不要把旧审批复制到新提交。
+- `approval attach` 时提供的公钥只用于本地格式与签名校验，不是信任决定；信任只在 `approval verify`、`goal evaluate` 或门禁读取时由 `PROJECT_MEMORY_APPROVAL_ANCHOR` 指向的受保护审批锚重新做出。
+- 审批人与审批锚 `issuer` 不一致、未配置审批锚、验签失败或提交不匹配，一律视为未受信，不 satisfy。审批记录不能自证权威，也不能替代验证记录、Ruleset、CODEOWNERS 或合并权限。
+
 ## 人工批准边界
 
 以下动作只能由有权限的人执行，Agent 不得代填、代批或绕过：
