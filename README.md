@@ -196,6 +196,24 @@ python3 -m project_memory goal evidence --repo . --id G-AUTH --criterion C1 \
 
 `approval verify` 只在记录通过审批锚验签、`decision=approve` 且 `commit_sha` 与 `--commit` 一致时 exit 0，否则 exit 2。`approval verify --records-dir DIR --commit SHA [--require-approve]` 批量验签目录下的 `*.json` 并逐条输出结论：不带 `--require-approve` 时扫描完成即 exit 0，只在报告中如实给出 `approved`/`problems`；带 `--require-approve` 时，只有存在至少一条 trusted+approve+提交匹配的记录才 exit 0，否则 exit 2。`approval list [--commit SHA] [--goal G]` 只读列出记录、范围与验签状态。
 
+### 签名证据清单
+
+`evidence request` 生成未签名清单（每个文件的 sha256 与字节数、`commit_sha`、`tree_sha`、自报 `generator`），由仓库外审批私钥签名后 `evidence attach` 写出，`evidence verify` 用受保护审批锚重新验签并重算 `manifest_id`、提交树和所有文件哈希：
+
+```bash
+python3 -m project_memory evidence request --repo . --commit <40位SHA> \
+  --path evidence/B8 --output C:/Temp/evidence-request.json
+openssl dgst -sha256 -sign <审批私钥> -out C:/Temp/evidence.sig C:/Temp/evidence-request.json
+python3 -m project_memory evidence attach --repo . \
+  --request C:/Temp/evidence-request.json --signature C:/Temp/evidence.sig \
+  --anchor /path/outside/repo/approval-anchor.json --output C:/Temp/evidence-manifest.json
+export PROJECT_MEMORY_APPROVAL_ANCHOR=/path/outside/repo/approval-anchor.json
+python3 -m project_memory evidence verify --repo . \
+  --manifest C:/Temp/evidence-manifest.json --commit <40位SHA>
+```
+
+清单与审批共用 `PROJECT_MEMORY_APPROVAL_ANCHOR`，但不含审批人字段。无锚、未签名、签名无效、清单被改、提交或树不符、文件缺失或变化一律 exit 2。它只证明锚持有者对这份清单负责，不证明文件由受保护执行器产生或命令真的执行过。
+
 ### CI 第二身份与审批门禁
 
 单用户主机没有独立的 OS 主体，本地文件锚无法自证。`approval-gate` 工作流让 GitHub Actions runner 作为第二身份：runner 用仓库 secret 里的审批公钥验证 `approvals` 分支上的审批记录，并要求 PR head 的具体提交上至少有一条 `approve`。
