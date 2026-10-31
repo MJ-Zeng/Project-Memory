@@ -27,7 +27,7 @@ last_verified_at: "2026-10-30"
 
 - `approved_by` 只是调用方声明，记录为 `claimed_unverified`，不是批准。
 - 执行收据只证明内容完整性与执行事实，不证明由谁生成、由谁提交。
-- `externally_verified` 与 `human_approved` 不在 CLI 可选证据级别内；`verify --evidence-level` 只接受 `agent_claimed` 与 `locally_observed`。
+- `externally_verified` 仅在 `verify --pr` 实际抓取到该提交全绿且 head 匹配时可声明；无 `--pr` 或非 `pass` 会被拒绝。`human_approved` 仍不能通过 CLI 声明。
 
 ## 四、预期终态
 
