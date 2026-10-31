@@ -3,20 +3,27 @@
 - 日期（UTC）：2026-10-31T02:33:12Z
 - 分支：`feat/b8-signed-approval`
 - 基线：`187f49da4e473440089342b7144b4c6b302acf82`（`origin/dev/v1.0`，fetch 后与派单一致，未前进）
-- HEAD：`137a00463234968366d561ad8ddd46b832ee7d86`
+- 代码/文档头：`137a00463234968366d561ad8ddd46b832ee7d86`
+- handoff 提交：`adb00361241bbe67b9c9fd888084c82c57a85e29`（本文件所在提交）
+- 增量提交后最终分支头：见 §10
 - 执行者：PM-02；独立复核：PM-03；合并：PM-01（等 PR CI 绿后）
 
 ## 1. 提交
 
 ```
+adb0036 docs: add PM-02 handoff for B8 signed approvals
 137a004 docs: describe signed approval workflow and trust boundaries
 7655fa0 test(b8): cover signed approvals, tampering, and fail-closed paths
 f861ad0 feat(b8): add signed approval events with anchor-bound identity
 ```
 
+§10 记录后续的证据卫生增量提交；本文件的 HEAD 字段与 §10 合起来才是分支最终头。
+
 未开 PR、未合并、未打 tag、未改 `dev/v1.0`；未改 `.github/`。仅动了代码/测试/文档。`docs/sync-b9-20261031` 分支未触碰；两个既有未跟踪文件 `PM02_COLD_START_VALIDATION.md`、`tasks/PM02-cold-start-handoff-20261029T150500Z.md` 保持原样、未提交。
 
 ## 2. 变更文件（基线..HEAD）
+
+`git diff --name-only 187f49da4e473440089342b7144b4c6b302acf82..HEAD` 共 11 个路径（其中包含本 handoff 自身）：
 
 ```
 README.md
@@ -28,10 +35,11 @@ project_memory/coordination.py
 skill/project-memory/references/data-contracts.md
 skill/project-memory/references/governance.md
 skill/project-memory/references/workflows.md
+tasks/PM02-b8-signed-approval-handoff-20261031T023312Z.md
 tests/test_b8_signed_approval.py
 ```
 
-`git diff --check`：exit 0。
+`git diff --check 187f49d..HEAD`：exit 0（§10 复跑确认）。
 
 ## 3. 数据格式与摘要算法
 
@@ -97,7 +105,7 @@ criterion 范围与 Goal 挂载（测试中验证，见 §7）：
 ```bash
 python -m project_memory.cli approval request --repo . --commit <HEAD> \
   --goal G-APPROVAL --criterion C1 --verification <verification-id> \
-  --approver <email> --output <out> 
+  --approver <email> --output <out>
 python -m project_memory.cli goal evidence --repo . --id G-APPROVAL \
   --criterion C1 --kind approval --ref .project-memory/approvals/<id>.json
 python -m project_memory.cli goal evaluate --repo . --id G-APPROVAL
@@ -151,3 +159,38 @@ negative-control restored: satisfied=True status=satisfied
 关闭：审批从“邮箱正则 + 代理黑名单的自报”变成可验签、绑定审批人与提交、可绑定验证摘要的签名事件；无锚/坏签名/篡改/提交前进一律 fail closed；审批不再能自证权威，也不会改变 `verified=false`。
 
 仍属其它阻断：审批私钥的托管、签名主体的部署保护、CI 合并门禁（必需审批/Ruleset）属于 B-7/B-10；本卡只提供事件格式、验签与评估联动。
+
+## 10. 增量：证据卫生修正（本 handoff 之后）
+
+PM-01 独立门禁在 `adb0036` 发现两项证据卫生问题，本增量只改本 handoff，不改代码、测试或文档正文：
+
+1. 删除 §5 criterion 示例 `--output <out>` 行尾的多余空格（此前使 `git diff --check` exit 2）。
+2. §2 文件清单补上本 handoff 自身，与实际 11 个路径逐字一致。
+3. HEAD 字段拆成“代码/文档头”“handoff 提交”和“增量后最终头”，避免误读。
+
+增量实跑（Windows，`C:/SoftWare/Anconda/python.exe`）：
+
+```text
+git diff --name-only 187f49da4e473440089342b7144b4c6b302acf82..HEAD
+→ 11 个路径：README.md, docs/ARCHITECTURE.zh-CN.md, docs/OPERATIONS.zh-CN.md,
+  project_memory/authority.py, project_memory/cli.py, project_memory/coordination.py,
+  skill/project-memory/references/data-contracts.md,
+  skill/project-memory/references/governance.md,
+  skill/project-memory/references/workflows.md,
+  tasks/PM02-b8-signed-approval-handoff-20261031T023312Z.md,
+  tests/test_b8_signed_approval.py
+
+git diff --check 187f49da4e473440089342b7144b4c6b302acf82..HEAD
+→ exit 0
+
+audit --scope current --output C:/Temp/pm02_b8_incremental_audit.json
+→ exit 0；40 条（0 high / 16 medium / 24 low），entry_doc_* 0；
+  与基线按 (severity, code, location) 多重集比较 added 0、removed 0
+
+reconcile --fail-on high --output C:/Temp/pm02_b8_incremental_reconcile.json
+→ exit 0；40 项，counts high=0 / medium=16 / low=24
+```
+
+双门槛 pytest：增量只改 handoff，未重跑；代码与测试自 §6 的 294 passed / 2 skipped 起未变。
+
+`docs/CURRENT_STATE.md` 的测试计数过时问题不在本卡处理，未改动该文件。
