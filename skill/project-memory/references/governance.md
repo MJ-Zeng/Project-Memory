@@ -36,6 +36,9 @@
 - 审批记录绑定 `commit_sha`；代码前进或验证记录被重写后原审批失效，必须对新提交重新审批。不要把旧审批复制到新提交。
 - `approval attach` 时提供的公钥只用于本地格式与签名校验，不是信任决定；信任只在 `approval verify`、`goal evaluate` 或门禁读取时由 `PROJECT_MEMORY_APPROVAL_ANCHOR` 指向的受保护审批锚重新做出。
 - 审批人与审批锚 `issuer` 不一致、未配置审批锚、验签失败或提交不匹配，一律视为未受信，不 satisfy。审批记录不能自证权威，也不能替代验证记录、Ruleset、CODEOWNERS 或合并权限。
+- CI 第二身份：`approval-gate` 工作流由 `pull_request_target` 触发，只检出 PR 的 base 提交；workflow 定义和验证器都来自 base，PR head 只作为 `--commit` 字符串，不检出、不执行。runner 读取 Actions secret `PROJECT_MEMORY_APPROVAL_ANCHOR_JSON` 里的审批公钥，对 PR head 的提交验证 `approvals` 分支上的审批记录。runner 不等于任何本地 Windows 账户，也不读取本地 `.project-memory`。
+- `approvals` 分支只放审批事件，由仓库外私钥签名后发布；不得放入私钥、令牌或私密材料。分支保护、必需检查和 secret 值由仓库管理员维护，Agent 不配置。
+- 该门禁不能防御账户所有者改写 workflow、Secret 或关闭保护（S4 残余）。它证明的是“PR head 不检出、不执行，验证器与 workflow 都来自 base，锚来自 secret”，不是“不可绕过”。`GITHUB_ACTIONS=true` 是防误用开关，不是信任边界：非 CI 默认不采用 JSON 锚；本地用自有密钥和自己的锚仍可得到 trusted，不影响 CI 门禁。
 
 ## 人工批准边界
 
@@ -64,7 +67,7 @@
 
 **供应链。** Skill 文件、CLI 代码、工作流和 CODEOWNERS 都要审查。生产环境的 Actions 固定到审查过的完整 commit SHA。`sync-tooling --write` 前先看 dry-run 差异。
 
-**CI 权限。** 使用 `pull_request` 和只读权限；不要用特权令牌运行不可信的 PR 代码，也不要在 `pull_request_target` 下执行 PR 源码。
+**CI 权限。** 常规测试使用 `pull_request` 和只读权限；不要用特权令牌运行不可信的 PR 代码，也不要在 `pull_request_target` 下检出或执行 PR 源码。`pull_request_target` 只用于定义和验证器都来自 base、PR head 仅作为字符串传入的门禁（见 `approval-gate`）。
 
 **数据外流。** 嵌入模式必须使用明确安装的本地模型；没有授权时，不要把私有文档或密钥上传到第三方服务。`.project-memory/handoffs`、检查点和验证记录里不要放凭据。
 

@@ -14,6 +14,7 @@ import inspect
 import json
 import os
 import platform
+import re
 import tempfile
 import unittest
 from pathlib import Path
@@ -119,9 +120,17 @@ class VerifierIsNotEnvironmentSelectable(unittest.TestCase):
         self.assertNotIn('PROJECT_MEMORY_OPENSSL', source)
         self.assertNotIn('powershell', source)
         self.assertNotIn('Get-Acl', source)
-        self.assertEqual(1, source.count('os.environ.get'),
-                         '只有信任锚路径允许来自环境变量')
-        self.assertIn('ANCHOR_ENV', source.split('os.environ.get')[1][:80])
+        # Anchors may come from a fixed set of environment names; the verifier
+        # itself still cannot be selected.  ``env_name``/``json_env`` variables
+        # are never passed to ``os.environ.get`` directly, so an arbitrary name
+        # cannot be read.  The approval file anchor remains one of the fixed
+        # names because B8's local workflow still uses it.
+        used = set(re.findall(r'os\.environ\.get\(\s*([A-Za-z_][A-Za-z0-9_]*)',
+                              source))
+        self.assertEqual(
+            {'ANCHOR_ENV', 'APPROVAL_ANCHOR_ENV', 'TRUST_ANCHOR_JSON_ENV',
+             'APPROVAL_ANCHOR_JSON_ENV', 'CI_CONTEXT_ENV'},
+            used, 'authority 只允许读取固定的信任锚环境变量名字')
 
 
 class RsaVectorTest(unittest.TestCase):

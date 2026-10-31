@@ -169,6 +169,16 @@ PYTHONPATH=.project-memory/tooling python3 -m project_memory approval verify --r
 
 审批**不会**把验证记录的 `verified=false` 改成 `true`，也不会让 `human_approved` 变成可声明的 `--evidence-level`；它不替代独立验证、Ruleset、CODEOWNERS 或合并权限。审批记录是追加记录，不修改验证记录；验证记录一经改动，原审批摘要失效。
 
+### CI 审批门禁（GitHub Actions 第二身份）
+
+1. **配置锚（仓库管理员）**：把审批锚 JSON（只含公钥）整体写入仓库 Actions secret `PROJECT_MEMORY_APPROVAL_ANCHOR_JSON`。不要写私钥、令牌或任何签名文件；私钥留在仓库外。secret 值不在本仓库、日志或 handoff 中出现。
+2. **发布审批记录**：`approval request` 生成载荷，由仓库外私钥签名，再执行 `approval attach --output <records>/<40位提交SHA>-<approval_id>.json`，把记录提交到 `approvals` 分支的 `records/`。只提交记录本身；该分支不得放入密钥或私密材料。
+3. **门禁运行**：`.github/workflows/approval-gate.yml` 由 `pull_request_target`（目标 `dev/v1.0`，事件 opened/synchronize/reopened/edited）触发，只检出 PR 的 base 提交；workflow 定义和验证器都来自 base，PR head 只作为 `--commit` 字符串，不检出、不执行。门禁在 base 树上执行 `approval verify --records-dir .pm-approvals/records --commit "$PM_HEAD" --require-approve`。`approvals` 分支用一次性 `http.extraheader`（`github.token`，认证串 `::add-mask::`）认证拉取，失败即停止。缺少锚、没有记录、记录不匹配、验签失败或提交不符都会让 job 失败。
+4. **重跑门禁**：`workflow_dispatch` 显式检出 `dev/v1.0`，只用于诊断——GitHub 不把 dispatch 运行的检查当作必需状态检查。审批记录发布后，用 PR 事件（编辑、重开、新提交）或重跑原 `pull_request_target` 运行来重新评估；不要为了触发重跑推空提交——空提交会改变 head，原有审批随之失效。
+5. **本地限制**：`GITHUB_ACTIONS=true` 是防误用开关，不是密码学边界；非 CI 默认不采用 JSON 锚，本机仍用受保护文件锚。本地用自己的密钥和自己的锚得到 trusted 不影响 CI 门禁，因为门禁的锚来自仓库 Secret、代码来自 base。
+
+门禁成为必需检查需要分支保护或 Branch Ruleset，并设置 `enforce_admins`，这由仓库管理员在 GitHub 侧配置，本仓库不做。管理员始终可以通过 API 关闭保护、改写 workflow 或 Secret，这是被接受的信任前提（S4 残余风险）；门禁保证的是 PR head 不检出、不执行，验证器与 workflow 都来自 base，锚来自 secret，而不是“不可绕过”。
+
 例外：必达标准集合为空（例如所有判据被改成可选或删除）时，`goal evaluate` 退出 0，但 `satisfied=false`、`evaluation_status=insufficient_evidence`、`status_problems` 含 `no_required_criteria`。自动化不要只看退出码，要读 `satisfied`/`effective_status`/`status_trusted`/`status_problems`；需要纯退出码门禁时，后续版本再提供显式 `--strict`，本版没有。
 
 ## 审计链与 Goal 状态可信度

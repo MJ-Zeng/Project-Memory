@@ -720,7 +720,8 @@ def attach_audit_checkpoint(repo: Path, signature_path) -> dict:
     signature = signature_file.read_bytes()
     if not signature:
         raise PMError('签名为空')
-    anchor, anchor_reason = authority.load_anchor(repo)
+    anchor, anchor_reason = authority.load_anchor(
+        repo, json_env=authority.TRUST_ANCHOR_JSON_ENV)
     if anchor is None:
         raise PMError(f'无法验证 checkpoint：{anchor_reason}')
     record = {**payload, 'authority': {
@@ -2018,6 +2019,48 @@ def verify_approval(repo: Path, record_path, commit_sha: str) -> dict:
             'problems': problems}
 
 
+def verify_approval_records(repo: Path, records_dir, commit_sha: str,
+                            require_approve: bool = False) -> dict:
+    """Verify every ``*.json`` approval record in a directory for one commit.
+
+    Each record gets its own verdict.  With ``require_approve`` the batch is
+    accepted only when at least one record is trusted, ``decision=approve`` and
+    bound to ``commit_sha``; an empty directory is never approval.
+    """
+    commit_sha = _single_line(commit_sha, 'commit')
+    directory = Path(records_dir)
+    if not directory.is_dir():
+        raise PMError(f'审批记录目录不存在：{directory}')
+    results = []
+    for path in sorted(directory.glob('*.json')):
+        if not path.is_file():
+            continue
+        entry = {'path': _approval_display_path(repo, path), 'approval_id': None,
+                 'decision': None, 'approver': None, 'commit_sha': None,
+                 'authority_status': 'invalid', 'trusted': False,
+                 'verified': False, 'problems': []}
+        try:
+            result = verify_approval(repo, path, commit_sha)
+            entry.update({key: result.get(key) for key in (
+                'approval_id', 'decision', 'approver', 'commit_sha',
+                'authority_status', 'trusted', 'verified', 'problems')})
+        except PMError as exc:
+            entry['problems'] = [str(exc)]
+        results.append(entry)
+    approved = any(item.get('verified') for item in results)
+    problems = []
+    if not results:
+        problems.append(f'目录中没有审批记录：{directory}')
+    if require_approve and not approved:
+        problems.append(f'没有 trusted+approve+提交匹配的审批记录（提交 {commit_sha}）')
+    return {'schema_version': APPROVAL_SCHEMA,
+            'kind': 'approval_verify_records_result',
+            'records_dir': _approval_display_path(repo, directory),
+            'commit_sha': commit_sha, 'require_approve': require_approve,
+            'scanned': len(results), 'approved': approved,
+            'records': results, 'problems': problems}
+
+
 def iter_approvals(repo: Path):
     values = []
     for path in _json_files(_approval_dir(repo)):
@@ -2108,7 +2151,9 @@ def _approval_evidence(repo: Path, evidence: dict, goal_id: str,
         return {**detail, 'reason': '审批提交与验证证据的提交不一致'}
     if not _verification_current(repo, verification):
         return {**detail, 'reason': '审批指向的验证记录已失效（不是当前提交或执行已变化）'}
-    anchor, anchor_reason = authority.load_anchor(repo, authority.APPROVAL_ANCHOR_ENV)
+    anchor, anchor_reason = authority.load_anchor(
+        repo, authority.APPROVAL_ANCHOR_ENV,
+        json_env=authority.APPROVAL_ANCHOR_JSON_ENV)
     if anchor is None:
         return {**detail, 'valid': True, 'trust': 'unverified_approval',
                 'reason': f'审批锚未配置：{anchor_reason}；审批记录只能登记，不能达成标准',

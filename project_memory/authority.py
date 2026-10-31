@@ -16,6 +16,13 @@ only.  It never resolves an external program, so neither ``PATH`` nor any
 environment variable can select or replace the verifier: an attacker who
 controls the environment of the CLI still cannot make a forged signature pass.
 See ``docs/decisions/ADR-0002-inprocess-signature-verifier.md``.
+
+Accepting a JSON anchor only when ``GITHUB_ACTIONS`` is the literal ``true`` is
+a misuse guard, not a cryptographic boundary: a local process can set any
+environment variable.  The real boundary is that the CI anchor lives in a
+repository secret outside the tree and the gate verifier runs from the base
+commit; a local run with its own key and its own anchor can still obtain
+``trusted`` without weakening the CI gate.
 """
 from __future__ import annotations
 
@@ -28,6 +35,9 @@ from pathlib import Path
 
 ANCHOR_ENV = 'PROJECT_MEMORY_TRUST_ANCHOR'
 APPROVAL_ANCHOR_ENV = 'PROJECT_MEMORY_APPROVAL_ANCHOR'
+TRUST_ANCHOR_JSON_ENV = 'PROJECT_MEMORY_TRUST_ANCHOR_JSON'
+APPROVAL_ANCHOR_JSON_ENV = 'PROJECT_MEMORY_APPROVAL_ANCHOR_JSON'
+CI_CONTEXT_ENV = 'GITHUB_ACTIONS'
 ANCHOR_SCHEMA = '1.0'
 ANCHOR_KIND = 'project_memory_trust_anchor'
 SUPPORTED_ALGORITHMS = ('rsa-sha256', 'ecdsa-sha256')
@@ -438,10 +448,31 @@ def _anchor_document(value) -> tuple[dict | None, str]:
     return dict(value), 'ok'
 
 
-def load_anchor(repo: Path, env_name: str = ANCHOR_ENV) -> tuple[dict | None, str]:
-    value = os.environ.get(env_name or ANCHOR_ENV, '').strip()
-    if not value:
-        return None, f'未配置受保护的信任锚（{env_name or ANCHOR_ENV}）'
+def _env_value(name: str | None) -> str:
+    """Read one of the fixed trust-anchor environment names.
+
+    The whitelist is deliberate: no caller can make ``authority`` read an
+    arbitrary environment variable, and it still cannot select a verifier.
+    """
+    if name == ANCHOR_ENV:
+        return os.environ.get(ANCHOR_ENV, '')
+    if name == APPROVAL_ANCHOR_ENV:
+        return os.environ.get(APPROVAL_ANCHOR_ENV, '')
+    if name == TRUST_ANCHOR_JSON_ENV:
+        return os.environ.get(TRUST_ANCHOR_JSON_ENV, '')
+    if name == APPROVAL_ANCHOR_JSON_ENV:
+        return os.environ.get(APPROVAL_ANCHOR_JSON_ENV, '')
+    if name == CI_CONTEXT_ENV:
+        return os.environ.get(CI_CONTEXT_ENV, '')
+    return ''
+
+
+def _is_ci_context() -> bool:
+    return _env_value(CI_CONTEXT_ENV) == 'true'
+
+
+def _load_file_anchor(repo: Path, value: str) -> tuple[dict | None, str]:
+    """Load an anchor file named by a path environment variable."""
     try:
         resolved = Path(value).resolve()
     except OSError as exc:
@@ -465,6 +496,49 @@ def load_anchor(repo: Path, env_name: str = ANCHOR_ENV) -> tuple[dict | None, st
     if not protected:
         return None, detail
     return {**anchor, 'path': str(resolved), 'protection': detail}, 'ok'
+
+
+def _load_json_anchor(name: str, value: str) -> tuple[dict | None, str]:
+    """Parse a JSON anchor from a CI secret; shape checks match file anchors."""
+    try:
+        anchor = json.loads(value)
+    except Exception as exc:  # noqa: BLE001 - any malformed anchor is untrusted
+        return None, f'{name} 不是合法 JSON：{exc}'
+    anchor, reason = _anchor_document(anchor)
+    if anchor is None:
+        return None, f'{name}：{reason}'
+    return {**anchor, 'path': f'<env:{name}>', 'protection': 'ci-secret'}, 'ok'
+
+
+def load_anchor(repo: Path, env_name: str = ANCHOR_ENV,
+                json_env: str | None = None) -> tuple[dict | None, str]:
+    """Load the trust anchor from a protected file or a CI-only JSON secret.
+
+    An explicitly configured file anchor is authoritative: if it cannot be
+    loaded (missing, inside the repository, wrong shape, not owner-protected)
+    the function fails closed and never falls back to the JSON anchor.
+
+    The JSON form is accepted only when ``GITHUB_ACTIONS`` is exactly ``true``
+    and no file anchor was configured.  That flag is a misuse guard, not a
+    cryptographic boundary: a local process can set any environment variable,
+    so non-CI runs keep using an owner-protected file.  This does not weaken
+    the CI gate: there the JSON value comes from a repository secret outside
+    the tree and the verifier runs from the base commit.  A local run with its
+    own key and its own anchor can still obtain ``trusted``.  The JSON
+    kind/schema/algorithm/field checks are identical to the file path; only the
+    file-owner check is skipped because the secret has no file owner.
+    """
+    env_name = env_name or ANCHOR_ENV
+    value = _env_value(env_name).strip()
+    if value:
+        return _load_file_anchor(repo, value)
+    json_value = _env_value(json_env).strip() if json_env else ''
+    if json_value:
+        if _is_ci_context():
+            return _load_json_anchor(json_env, json_value)
+        return None, (f'未配置受保护的信任锚（{env_name}）；'
+                      f'{json_env} 只在 CI（{CI_CONTEXT_ENV}=true）中生效')
+    return None, f'未配置受保护的信任锚（{env_name}）'
 
 
 def load_anchor_document(path) -> tuple[dict | None, str]:
@@ -498,7 +572,7 @@ def verification_authority(repo: Path, record: dict) -> dict:
     verifies.  A record that merely contains ``authority.status == "trusted"``
     is untrusted.
     """
-    anchor, anchor_reason = load_anchor(repo)
+    anchor, anchor_reason = load_anchor(repo, json_env=TRUST_ANCHOR_JSON_ENV)
     if anchor is None:
         return {'trusted': False, 'status': 'unconfigured',
                 'reason': anchor_reason, 'anchor_id': None, 'issuer': None}
@@ -560,9 +634,10 @@ def execution_record_digest(record: dict) -> str:
 
 
 def _execution_record_authority(repo: Path, record: dict, label: str,
-                                env_name: str = ANCHOR_ENV) -> dict:
+                                env_name: str = ANCHOR_ENV,
+                                json_env: str | None = TRUST_ANCHOR_JSON_ENV) -> dict:
     """Verify an execution record against the protected anchor; fail closed."""
-    anchor, anchor_reason = load_anchor(repo, env_name)
+    anchor, anchor_reason = load_anchor(repo, env_name, json_env=json_env)
     if anchor is None:
         return {'trusted': False, 'status': 'unconfigured',
                 'reason': anchor_reason, 'anchor_id': None, 'issuer': None}
@@ -639,7 +714,8 @@ def approval_authority(repo: Path, record: dict) -> dict:
     approver identity is the signer, not a self-declared field.
     """
     verdict = _execution_record_authority(repo, record, '签名审批',
-                                          env_name=APPROVAL_ANCHOR_ENV)
+                                          env_name=APPROVAL_ANCHOR_ENV,
+                                          json_env=APPROVAL_ANCHOR_JSON_ENV)
     if not verdict.get('trusted'):
         return verdict
     approver = record.get('approver') if isinstance(record, dict) else None

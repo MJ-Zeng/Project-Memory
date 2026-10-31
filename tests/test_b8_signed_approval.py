@@ -291,7 +291,7 @@ class B8SignedApprovalTest(_RepoFixture):
     def setUp(self):
         super().setUp()
 
-        def fake_anchor(repo, env_name=authority.ANCHOR_ENV):
+        def fake_anchor(repo, env_name=authority.ANCHOR_ENV, json_env=None):
             if env_name == authority.APPROVAL_ANCHOR_ENV:
                 return {**self.anchor, 'path': str(self.anchor_path),
                         'protection': 'test'}, 'ok'

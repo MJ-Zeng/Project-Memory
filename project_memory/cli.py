@@ -15,7 +15,7 @@ from .coordination import (create_goal, goal_list, goal_show, evaluate_goal, add
                            update_defect, reconcile, audit_verify, audit_head, audit_migrate,
                            write_audit_checkpoint_request, attach_audit_checkpoint,
                            write_approval_request, attach_approval, verify_approval,
-                           approval_list)
+                           verify_approval_records, approval_list)
 from .gh import GitHubReader
 
 
@@ -230,8 +230,16 @@ def parser():
     c.add_argument('--anchor', required=True, type=Path)
     c.add_argument('--output', type=Path)
     c = _leaf(g, 'verify', '用受保护审批锚验证记录、决定与提交')
-    c.add_argument('--record', required=True, type=Path)
+    source = c.add_mutually_exclusive_group(required=True)
+    source.add_argument('--record', type=Path)
+    source.add_argument('--records-dir', type=Path,
+                        help='批量验证目录下 *.json；扫描结果如实输出，'
+                             '--require-approve 决定退出码是否为门禁')
     c.add_argument('--commit', required=True)
+    c.add_argument('--require-approve', action='store_true',
+                   help='仅配合 --records-dir：带此标志时，只有存在一条 '
+                        'trusted+approve+提交匹配的审批才 exit 0，否则 exit 2；'
+                        '不带此标志时扫描完成即 exit 0，只报告结果')
     c.add_argument('--json', action='store_true')
     c = _leaf(g, 'list', '列出审批记录')
     c.add_argument('--commit')
@@ -522,6 +530,15 @@ def run(args):
                                  repo_path(repo, args.anchor),
                                  repo_path(repo, args.output)))
         elif args.approval_command == 'verify':
+            if args.records_dir is not None:
+                result = verify_approval_records(repo, repo_path(repo, args.records_dir),
+                                                 args.commit, args.require_approve)
+                emit(result)
+                if args.require_approve:
+                    return 0 if result['approved'] else 2
+                return 0
+            if args.require_approve:
+                raise PMError('--require-approve 只能与 --records-dir 一起使用')
             result = verify_approval(repo, repo_path(repo, args.record), args.commit)
             emit(result)
             return 0 if result['verified'] else 2
