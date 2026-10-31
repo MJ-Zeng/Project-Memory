@@ -1,0 +1,62 @@
+name: approval-gate
+
+on:
+  pull_request:
+    branches: [dev/v1.0]
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: PR number to gate
+        required: true
+
+permissions:
+  contents: read
+  pull-requests: read
+  checks: read
+
+concurrency:
+  group: approval-gate-${{ github.event.pull_request.number || inputs.pr }}-${{ github.event_name }}
+  cancel-in-progress: true
+
+jobs:
+  approval:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ github.event.pull_request.head.sha || format('refs/pull/{0}/head', inputs.pr) }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: '3.12'
+      - name: resolve head
+        shell: bash
+        run: echo "PM_HEAD=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: fetch approvals branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          # A missing branch fails here instead of silently approving nothing.
+          git fetch origin approvals:refs/remotes/origin/approvals
+      - name: verify approval
+        shell: bash
+        env:
+          PROJECT_MEMORY_APPROVAL_ANCHOR_JSON: ${{ secrets.PROJECT_MEMORY_APPROVAL_ANCHOR_JSON }}
+        run: |
+          set -uo pipefail
+          python -m pip install -q pytest==9.1.1
+          mkdir -p .pm-approvals
+          git --work-tree=.pm-approvals checkout origin/approvals -- records || {
+            echo "::error::approvals 分支缺少 records/；没有任何审批记录可用于该提交"
+            exit 1
+          }
+          if [ -z "${PROJECT_MEMORY_APPROVAL_ANCHOR_JSON:-}" ]; then
+            echo "::error::secrets.PROJECT_MEMORY_APPROVAL_ANCHOR_JSON 未配置；门禁没有审批信任锚"
+            exit 1
+          fi
+          # Failure reasons printed by the CLI cover: missing anchor, no record,
+          # record not matching this commit, signature verification failure.
+          python -m project_memory.cli approval verify \
+            --records-dir .pm-approvals/records \
+            --commit "$PM_HEAD" --require-approve
