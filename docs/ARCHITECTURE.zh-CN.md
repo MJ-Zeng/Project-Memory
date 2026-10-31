@@ -169,7 +169,7 @@ Agent Run 记录 Goal、任务、Agent、模型 provider/id、工具、会话 ID
 
 验证记录独立于执行，包含验证 ID、目标 run、验证者 run、验证者模型/工具/会话、目标 head、当前 head、标准、证据级别、测试/CI/审查结果、发现、结论和可信级别。
 
-证据级别从低到高是 `agent_claimed`、`locally_observed`、`externally_verified`、`human_approved`。`agent_claimed` 不能产生 pass。本地观察必须绑定 `test-run` 生成的执行收据（命令、整数退出码、日志哈希和快照摘要可重算），手写日志不再算执行证据；外部验证需要 CI URL 和 passed；人工批准需要 review URL 和 approved。CLI 离线时不抓取 CI 或 review，后两者标为 `declared_unfetched`，仍属调用方声明。
+证据级别从低到高是 `agent_claimed`、`locally_observed`、`externally_verified`、`human_approved`。`agent_claimed` 不能产生 pass。本地观察必须绑定 `test-run` 生成的执行收据（命令、整数退出码、日志哈希和快照摘要可重算），手写日志不再算执行证据；外部验证由 `verify --pr` 通过 GitHub API 读取 PR head 的 check runs：仅当该提交全绿且 head 匹配时，`evidence_source: ci` 的证据才记为 `externally_verified`；失败、pending、空或截断、head 不匹配或缺配置都降级为 `agent_claimed`。人工批准仍需要 review URL 和 approved，但 review 只是调用方声明，CLI 不抓取、不认证；只声明 CI URL 而未抓取时标为 `declared_unfetched`。
 
 验证记录把四层事实分开：
 

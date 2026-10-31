@@ -24,7 +24,7 @@
 - 执行者不能给自己验证。`verify` 要求 `target_run` 和 `verifier_run` 是两个不同的执行记录，且验证者必须登记为 `role=verifier`。
 - 验证者还必须在 agent、model 或 session 上与被验证执行不同；三项都相同会被 CLI 拒绝。独立会话、独立工作树或独立的人更可信，但记录层面的独立不证明结论正确。
 - 同一个模型可以验证，但报告必须写明“同模型独立验证”，不能暗示跨模型。
-- `agent_claimed` 永远不能产生 pass。本地测试需要命令、整数退出码和存在的非空证据日志（不能是 canonical 文档）；外部 CI 需要 URL 和 passed 状态；人工批准需要 review URL 和 approved 状态。CLI 离线时不抓取 CI 或 review，后两者是 `declared_unfetched` 的调用方声明。
+- `agent_claimed` 永远不能产生 pass。本地测试需要命令、整数退出码和存在的非空证据日志（不能是 canonical 文档）；外部 CI 只在 `verify --pr` 实际读取到该提交全绿且 head 匹配时升级，否则降级为 `agent_claimed`，只声明 URL 而未抓取时记为 `declared_unfetched`；人工批准需要 review URL 和 approved 状态，仍是调用方声明，CLI 不抓取也不认证 review。
 - 验证绑定 `target_head_sha`。当前 HEAD 变化后，旧验证不能继续作为 pass 使用；Goal 证据和 `resume` 会重新检查这一点。
 - 验证记录只能作为同一 Goal 的证据，不能跨 Goal 复用。
 - 有 high 级发现时不能 pass。发现自动生成缺陷，修复后必须复验才能把缺陷标为 verified；手工把缺陷写成 verified 会被拒绝，对账会检查 `verified_by`。

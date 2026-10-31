@@ -200,10 +200,10 @@ queued -> running -> submitted -> verified
 |---|---|---|
 | `agent_claimed` | 0 | 永远不能 pass |
 | `locally_observed` | 1 | `test-run` 执行收据（命令、整数 exit 0、日志哈希、快照摘要可重算）；手写日志不算 |
-| `externally_verified` | 2 | CI URL、`ci_status=passed`；记录标记 `provenance: declared_unfetched` |
-| `human_approved` | 3 | review URL、`review_state=approved`；记录标记 `provenance: declared_unfetched` |
+| `externally_verified` | 2 | `--pr` 抓取到该提交全绿且 head 匹配；仅声明 CI URL、`ci_status=passed` 只记为 `declared_unfetched` |
+| `human_approved` | 3 | review URL、`review_state=approved`；记录标记 `provenance: declared_unfetched`；CLI 不能声明该等级 |
 
-CLI 的 `verify --evidence-level` 只接受 `agent_claimed` 与 `locally_observed`；`externally_verified` / `human_approved` 仅作概念与历史记录对照，不能通过 CLI 提交。
+CLI 的 `verify --evidence-level` 接受 `agent_claimed` 与 `locally_observed`；`externally_verified` 仅在同时提供 `--pr` 且 `verdict=pass` 时接受，由 CLI 实际读取；`human_approved` 仍不能通过 CLI 提交。
 
 `evidence_level` 是调用方声明。`trust_level` 取声明级别与实际可观察证据级别的较小值；手工提高声明不会提高 `trust_level`。即使 `trust_level` 较高，没有受保护信任锚签名的记录仍然不能被 `goal evidence` 当作达成依据。
 
@@ -329,7 +329,7 @@ agent_claimed < locally_observed < externally_verified < human_approved
 
 - `agent_claimed`：Agent 的文字声明、自由文本测试证据、单独出现的 `--reviewed-by`。
 - `locally_observed`：`test-run` 执行收据、整数退出码和可重算的日志/快照摘要；只证明执行事实。
-- `externally_verified`：外部 CI 声明。CLI 离线时不联网，记录为 `declared_unfetched`。
+- `externally_verified`：`--pr` 通过 GitHub API 读取 PR head 的 check runs；抓取成功且该提交全绿、head 匹配时记为 `github_api`，否则降级为 `agent_claimed`。未使用 `--pr` 抓取、只声明 CI URL 时记为 `declared_unfetched`。
 - `human_approved`：review URL 和 approved 状态，或明确的 `approved_by`。CLI 不能认证审批人身份，仍属调用方声明。
 
 这四个级别描述证据强度，不等于授权。要把证据用于满足 Goal，还必须通过仓库外受保护信任锚的签名校验；否则一律视为本地声明。

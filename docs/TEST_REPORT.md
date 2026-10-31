@@ -103,6 +103,8 @@ PYTHONUTF8=1 /c/SoftWare/Anconda/python.exe -m unittest discover -s tests -v
 
 未在离线环境解决的问题：`externally_verified` 和 `human_approved` 仍由调用方声明。CLI 不联网抓取 CI、不认证 review 审批人，只把来源标为 `declared_unfetched`。
 
+> 2026-10-31 更新（B-9 之后）：上面是当时版本的结果。后续版本已让 `verify --pr` 通过 GitHub REST 实际读取 PR head 的 check runs，并在 `pass`、全绿、head 匹配时把 CI 证据升级为 `externally_verified`；失败、pending、空/截断、head 不匹配或缺配置降级为 `agent_claimed`。`human_approved` 仍不能通过 CLI 声明，review 仍不被抓取或认证。
+
 ## v0.3 本地 Goal 实验
 
 实验仓库：`C:\Documents\02_Research\Code\project-memory-v03-lab`，真实 Git 提交 `ec5c031` → `7d78b7e` → `3250269`。实验使用 `auto` 模型的多个独立 Qoder 会话，没有切换模型。
@@ -150,6 +152,7 @@ PYTHONUTF8=1 /c/SoftWare/Anconda/python.exe -m unittest discover -s tests -v
 - **跨模型续接**：NOT RUN。Qoder CN 的会话创建接口没有模型参数，实验只在 `auto` 模型的多个独立会话之间交接；`dfmodel`、`qfmodel` 只在本地配置中确认存在，没有在 v0.3 实验中切换使用。真正换模型需要人在界面中选择。
 - **真实 GitHub 接入**：NOT RUN。`https://api.github.com/repos/wpqweasd/pro3` 返回 HTTP 404，本机也没有安装 `gh`。没有获取或创建任何 Issue、PR、review 或 CI 结果。
 - **外部 CI / review 证据**：NOT RUN。`externally_verified` 和 `human_approved` 只验证 URL 形式并标记 `declared_unfetched`，没有抓取或认证真实状态。
+  > 2026-10-31 更新（B-9 之后）：本条目记录的是当时版本未验证的部分。后续版本增加了 `verify --pr` 的 GitHub API 抓取路径；本报告没有用真实令牌或联网执行它，因此“NOT RUN”仍只描述当时版本。
 - **真实人工审批**：NOT RUN。实验中的 Goal 批准是自批；没有有权限的人批准 `achieved`，Goal 停在 `evaluating`。
 - **跨进程并发的强保证**：只测了同进程多线程和重复 run 的记录冲突；没有测多个操作系统进程或多个 Agent 同时写。没有分布式锁。
 - **JSON Schema 实例校验**：只验证了 schema 文件能被 JSON 解析，没有用 Draft 2020-12 校验器检查全部生成的记录。
