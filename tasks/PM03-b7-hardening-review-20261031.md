@@ -160,7 +160,7 @@ EXPECTED A=2,B=0,C=0,D=0 -> MATCH
 
 ### 7.1 本地无法验证（本卡 D-6 范围）
 
-1. **真实 PR 上 `approval` 检查是否出现在必需检查候选、是否按最新 head SHA 阻断合并。** GitHub 文档把 `pull_request_target` 列为可针对 PR 评估检查的合格事件，并明确 `workflow_dispatch` 不满足必需检查（`docs.github.com/.../troubleshooting-required-status-checks`）。但检查具体挂在 head、base 还是 test merge commit，以及 Ruleset 候选里显示的名称（`approval` 还是 `approval-gate / approval`），必须在真实 PR 上观察。
+1. **真实 PR 上 `approval` 检查是否出现在必需检查候选、是否按最新 head SHA 阻断合并。** GitHub 文档把 `pull_request_target` 列为可针对 PR 评估检查的合格事件，并明确 `workflow_dispatch` 不满足必需检查（https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/collaborating-on-repositories-with-code-quality-features/troubleshooting-required-status-checks）。但检查具体挂在 head、base 还是 test merge commit，以及 Ruleset 候选里显示的名称（`approval` 还是 `approval-gate / approval`），必须在真实 PR 上观察。
 2. **托管 runner 上的认证 fetch 与 Secret 注入。** 私有库 `http.extraheader` 是否按预期工作、`secrets.PROJECT_MEMORY_APPROVAL_ANCHOR_JSON` 是否注入、mask 是否覆盖所有输出，本地无法证明。
 3. **`pull_request_target` 的 check 归属与 `enforce_admins` 组合行为。** 包括 check 运行是否绑定到 PR 的可合并提交、管理员绕过是否按预期被 `enforce_admins` 关闭。
 4. **fork PR 行为。** fork PR 是否自动触发 `pull_request_target`、是否拿到 base 仓库 secret、head SHA 如何映射、首次贡献者是否需要人工批准运行，均未实测。
@@ -180,5 +180,5 @@ EXPECTED A=2,B=0,C=0,D=0 -> MATCH
 ## 8. 边界声明
 
 - 本报告是 PM-03 的独立复核意见，不是合并批准；未开 PR、未合并、未改 `dev/v1.0` / `approvals` / 仓库 Secrets。
-- 未使用 `s3-exercise-keys`；签名使用 `C:/Temp/b7h/sim*/keys` 下本次生成的临时密钥，验证后随临时目录丢弃。
-- 复核过程未写入 `pm-pilot-01`、`pm-pilot-02`；`pm-pilot-03` 中既有的未跟踪复核产物保持原样，本提交只新增本报告。
+- 未使用 `s3-exercise-keys`；签名只使用 `C:/Temp/b7h/sim*/keys` 下本次生成的测试期临时 RSA 密钥，未提交到仓库，也未用于任何真实审批。
+- 复核过程未写入 `pm-pilot-01`、`pm-pilot-02`；`pm-pilot-03` 中既有的未跟踪复核产物保持原样，本复核分支只新增/修改本报告。
