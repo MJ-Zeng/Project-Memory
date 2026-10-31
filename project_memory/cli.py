@@ -16,6 +16,7 @@ from .coordination import (create_goal, goal_list, goal_show, evaluate_goal, add
                            write_audit_checkpoint_request, attach_audit_checkpoint,
                            write_approval_request, attach_approval, verify_approval,
                            verify_approval_records, approval_list)
+from .evidence import evidence_request, evidence_attach, evidence_verify
 from .gh import GitHubReader
 
 
@@ -244,6 +245,24 @@ def parser():
     c = _leaf(g, 'list', '列出审批记录')
     c.add_argument('--commit')
     c.add_argument('--goal')
+    c.add_argument('--json', action='store_true')
+
+    s = base('evidence', '签名证据清单：请求、外部签名、附加与验签')
+    g = s.add_subparsers(dest='evidence_command', required=True)
+    c = _leaf(g, 'request', '生成未签名证据清单请求，计算文件哈希与提交树')
+    c.add_argument('--commit', required=True)
+    c.add_argument('--path', action='append', required=True,
+                   help='仓库内的文件或目录（可重复；目录递归展开为普通文件）')
+    c.add_argument('--statement', default='')
+    c.add_argument('--output', required=True, type=Path)
+    c = _leaf(g, 'attach', '本地校验签名并附加证据清单记录')
+    c.add_argument('--request', required=True, type=Path)
+    c.add_argument('--signature', required=True, type=Path)
+    c.add_argument('--anchor', required=True, type=Path)
+    c.add_argument('--output', required=True, type=Path)
+    c = _leaf(g, 'verify', '用受保护审批锚验证清单、提交、树与文件内容')
+    c.add_argument('--manifest', required=True, type=Path)
+    c.add_argument('--commit', required=True)
     c.add_argument('--json', action='store_true')
 
     s = base('run', 'Agent 执行记忆：启动、检查点、恢复、结束')
@@ -544,6 +563,19 @@ def run(args):
             return 0 if result['verified'] else 2
         elif args.approval_command == 'list':
             emit(approval_list(repo, args.commit, args.goal))
+    elif args.command == 'evidence':
+        if args.evidence_command == 'request':
+            emit(evidence_request(repo, args.commit, args.path, args.statement,
+                                  repo_path(repo, args.output)))
+        elif args.evidence_command == 'attach':
+            emit(evidence_attach(repo, repo_path(repo, args.request),
+                                 repo_path(repo, args.signature),
+                                 repo_path(repo, args.anchor),
+                                 repo_path(repo, args.output)))
+        elif args.evidence_command == 'verify':
+            result = evidence_verify(repo, repo_path(repo, args.manifest), args.commit)
+            emit(result)
+            return 0 if result['verified'] else 2
     elif args.command == 'run':
         if args.run_command == 'start':
             emit(start_run(repo, args.goal, args.task, args.run_id, args.agent,
