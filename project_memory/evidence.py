@@ -328,6 +328,7 @@ def evidence_attach(repo: Path, request_path, signature_path, anchor_path,
     if path.is_file():
         existing = _load(path)
         if _signed_same(existing, record):
+            _require_existing_signature(existing, anchor)
             return {'schema_version': MANIFEST_SCHEMA,
                     'kind': 'evidence_manifest_attach_result', 'path': shown,
                     'manifest_id': existing.get('manifest_id'),
@@ -339,6 +340,7 @@ def evidence_attach(repo: Path, request_path, signature_path, anchor_path,
         existing = _load(path)
         if not _signed_same(existing, record):
             raise PMError(f'证据清单 {request["manifest_id"]} 已存在且内容不同，拒绝覆盖')
+        _require_existing_signature(existing, anchor)
         return {'schema_version': MANIFEST_SCHEMA,
                 'kind': 'evidence_manifest_attach_result', 'path': shown,
                 'manifest_id': existing.get('manifest_id'), 'manifest': existing,
@@ -439,6 +441,17 @@ def _signed_same(existing: dict, record: dict) -> bool:
     right = right if isinstance(right, dict) else {}
     return all(left.get(key) == right.get(key)
                for key in ('anchor_id', 'issuer', 'algorithm'))
+
+
+def _require_existing_signature(existing: dict, anchor: dict) -> None:
+    """Re-check the stored signature before reporting an existing file as idempotent."""
+    authoring = existing.get('authority')
+    signature_b64 = authoring.get('signature_b64') if isinstance(authoring, dict) else None
+    ok, detail = authority.verify_detached_signature(
+        anchor, authority.signed_record_payload(existing), signature_b64,
+        anchor['algorithm'])
+    if not ok:
+        raise PMError(f'已有证据清单签名无效，拒绝视为幂等：{detail}')
 
 
 def _load(path: Path) -> dict:

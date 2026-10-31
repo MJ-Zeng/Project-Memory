@@ -314,6 +314,33 @@ class EvidenceManifestSignedTest(_RepoFixture):
         self.assertEqual(0, code)
         self.assertTrue(result['verified'])
 
+    def test_corrupted_existing_signature_is_not_treated_as_idempotent(self):
+        _request, request_path = self.request()
+        signature = self.sign(request_path)
+        _first, path, _code = self.attach(request_path, signature)
+        record = json.loads(path.read_text(encoding='utf-8'))
+        good = record['authority']['signature_b64']
+        record['authority']['signature_b64'] = base64.b64encode(
+            b'not-the-real-signature').decode('ascii')
+        path.write_text(json.dumps(record, ensure_ascii=False, indent=2),
+                        encoding='utf-8')
+        code, _out, err = self.run_cli(
+            ['evidence', 'attach', '--repo', str(self.repo),
+             '--request', str(request_path), '--signature', str(signature),
+             '--anchor', str(self.anchor_path), '--output', str(path)])
+        self.assertEqual(1, code)
+        self.assertIn('已有证据清单签名无效', err)
+        self.assertIn('拒绝视为幂等', err)
+        kept = json.loads(path.read_text(encoding='utf-8'))
+        self.assertEqual(b'not-the-real-signature',
+                         base64.b64decode(kept['authority']['signature_b64']))
+        kept['authority']['signature_b64'] = good
+        path.write_text(json.dumps(kept, ensure_ascii=False, indent=2),
+                        encoding='utf-8')
+        again, path2, _code = self.attach(request_path, signature)
+        self.assertFalse(again['created'])
+        self.assertEqual(path, path2)
+
     # ------------------------------------------------------------ negatives
 
     def test_negative_1_modified_byte_fails(self):
