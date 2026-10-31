@@ -16,9 +16,10 @@ from .knowledge import (audit, iter_docs, load_config, load_doc, log_problem,
 from .workflows import handoff as write_handoff
 from .workflows import task_id_of
 from . import authority
-from .authority import (canonical_bytes, canonical_digest,
-                        signed_record_authority, untrusted_envelope,
-                        verification_authority)
+from .authority import (approval_authority, canonical_bytes, canonical_digest,
+                        signed_record_authority, signed_record_payload,
+                        untrusted_envelope, verification_authority,
+                        verification_subject_digest)
 from .execution import (repo_identity, verify_execution_provenance,
                         verify_receipt)
 from .gh import GitHubReader
@@ -69,6 +70,11 @@ APPROVAL_REF = re.compile(r'(?:https?://\S+|#\d+|(?:PR|pr|Issue|issue|Review|rev
 AGENT_SELF_PATTERNS = {'agent-self', 'agent', 'auto', 'system', 'self', 'bot', 'ai', 'automated'}
 # R-1 Fix: approved_by must look like a verifiable human identity (email or known reviewer)
 HUMAN_IDENTITY_PATTERN = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+APPROVAL_SCHEMA = '1.0'
+APPROVAL_KIND = 'approval_event'
+APPROVAL_DECISIONS = ('approve', 'reject')
+APPROVAL_ID = re.compile(r'APR-[0-9a-f]{12}')
+APPROVAL_DIR_NAME = 'approvals'
 
 # B4: execution audit ledger + signed checkpoint.  See ADR-0007.
 AUDIT_SCHEMA = '1.3'
@@ -134,6 +140,14 @@ def _verification_path(repo: Path, task: str, verification_id: str) -> Path:
 
 def _defect_path(repo: Path, task: str, defect_id: str) -> Path:
     return _root(repo, 'defects') / _task_key(task) / (defect_id + '.json')
+
+
+def _approval_dir(repo: Path) -> Path:
+    return _root(repo, APPROVAL_DIR_NAME)
+
+
+def _approval_path(repo: Path, approval_id: str) -> Path:
+    return _approval_dir(repo) / (approval_id + '.json')
 
 
 def _json_files(path: Path):
@@ -1410,6 +1424,10 @@ def _evidence_result(repo: Path, evidence: dict, goal_id: str = '',
             return False, '测试证据的 exit_code 必须为 0', 'invalid', False, 'invalid'
         return (True, '有本地测试日志和 0 退出码；但缺少 criterion 映射和独立 coverage 复核',
                 'locally_observed', False, 'executed_not_matched')
+    if kind == 'approval':
+        detail = _approval_evidence(repo, evidence, goal_id, criterion_id)
+        return (detail['valid'], detail['reason'], detail['trust'],
+                detail['satisfies'], detail['state'])
     if kind == 'manual':
         # R-1 Fix: Validate approved_by is a verifiable human identity
         approved_by = evidence.get('approved_by')
@@ -1433,17 +1451,33 @@ def _evidence_result(repo: Path, evidence: dict, goal_id: str = '',
 
 def evaluate_goal(repo: Path, goal_id: str) -> dict:
     goal = load_goal(repo, goal_id)
-    criteria_out, blocking, partial = [], [], []
+    criteria_out, blocking, partial, approvals_out = [], [], [], []
     open_high = _open_high_defects(repo, goal_id)
     for criterion in goal.get('success_criteria', []):
         evidence_out = []
         satisfied = False
         reviewable = False
         for evidence in criterion.get('evidence', []):
-            valid, reason, trust, satisfies, state = _evidence_result(
-                repo, evidence, goal_id, criterion['id'])
+            detail = None
+            if isinstance(evidence, dict) and evidence.get('kind') == 'approval':
+                detail = _approval_evidence(repo, evidence, goal_id, criterion['id'])
+                valid, reason, trust, satisfies, state = (
+                    detail['valid'], detail['reason'], detail['trust'],
+                    detail['satisfies'], detail['state'])
+            else:
+                valid, reason, trust, satisfies, state = _evidence_result(
+                    repo, evidence, goal_id, criterion['id'])
             evidence_out.append({**evidence, 'ok': valid, 'satisfies': satisfies,
                                  'reason': reason, 'trust': trust, 'state': state})
+            if detail is not None:
+                approvals_out.append({
+                    'criterion_id': criterion['id'], 'ref': evidence.get('ref'),
+                    'approval_id': detail['approval_id'], 'decision': detail['decision'],
+                    'approver': detail['approver'], 'at': detail['at'],
+                    'commit_sha': detail['commit_sha'],
+                    'authority_status': detail['authority_status'],
+                    'trusted': detail['trusted'], 'satisfies': detail['satisfies'],
+                    'state': detail['state'], 'reason': detail['reason']})
             if satisfies:
                 satisfied = True
             # R-1: manual evidence is reviewable but never auto-satisfying; an
@@ -1497,6 +1531,7 @@ def evaluate_goal(repo: Path, goal_id: str) -> dict:
         'recorded_status_consistent': goal['status'] != 'achieved' or satisfied,
         'status_authority': 'local_untrusted',
         'evaluation_status': state, 'criteria': criteria_out,
+        'approvals': approvals_out,
         'no_required_criteria': no_required_criteria,
         'blocking': blocking, 'partial': partial,
         'open_high_defects': [d['defect_id'] for d in open_high],
@@ -1675,7 +1710,430 @@ def goal_list(repo: Path) -> dict:
                        'owner': g.get('owner'), 'updated_at': g.get('updated_at')} for g in goals]}
 
 
-# ---------------------------------------------------------------- runs
+# ---------------------------------------------------------------- approvals
+
+def _approval_core(record: dict) -> dict:
+    """Fields covered by the approval id (excludes the id and its signature)."""
+    return {key: value for key, value in record.items()
+            if key not in ('approval_id', 'authority')}
+
+
+def _approval_id(record: dict) -> str:
+    """Deterministic id: first 12 hex of the SHA-256 canonical payload digest."""
+    return 'APR-' + canonical_digest(_approval_core(record))[:12]
+
+
+def _approval_display_path(repo: Path, path: Path) -> str:
+    """Signing requests may live outside the repo; keep those paths absolute."""
+    try:
+        return relpath(repo, path)
+    except PMError:
+        return str(Path(path).resolve())
+
+
+def _approval_repository(repo: Path) -> dict:
+    identity = repo_identity(repo)
+    return {'id': identity['id'], 'remote': identity.get('remote')}
+
+
+def _approval_repository_matches(record: dict, repo: Path) -> bool:
+    declared = record.get('repository')
+    if not isinstance(declared, dict):
+        return False
+    current = _approval_repository(repo)
+    if declared.get('id') != current['id']:
+        return False
+    recorded_remote = declared.get('remote')
+    return recorded_remote in (None, current['remote'])
+
+
+def _approval_structure_problem(record) -> str | None:
+    """Structural validation shared by attach and evaluation; no trust decision."""
+    if not isinstance(record, dict):
+        return '审批记录必须是 JSON 对象'
+    if record.get('kind') != APPROVAL_KIND:
+        return 'kind 不是 approval_event'
+    if record.get('schema_version') != APPROVAL_SCHEMA:
+        return 'schema_version 不是 1.0'
+    if record.get('decision') not in APPROVAL_DECISIONS:
+        return 'decision 必须是 approve 或 reject'
+    if _approved_by_problem(record.get('approver')):
+        return 'approver 必须是可验证的邮箱地址'
+    if not isinstance(record.get('at'), str) or not record['at'].strip():
+        return 'at 缺失'
+    if not GIT_SHA.fullmatch(str(record.get('commit_sha') or '')):
+        return 'commit_sha 必须是完整的 40 位 SHA'
+    repository = record.get('repository')
+    if (not isinstance(repository, dict)
+            or not isinstance(repository.get('id'), str)
+            or not repository['id'].strip()):
+        return 'repository 缺失或格式错误'
+    scope = record.get('scope')
+    if not isinstance(scope, dict) or scope.get('kind') not in ('commit', 'criterion'):
+        return 'scope.kind 必须是 commit 或 criterion'
+    if scope.get('kind') == 'criterion':
+        if not str(scope.get('goal_id') or '').strip():
+            return 'scope.goal_id 缺失'
+        if not str(scope.get('criterion_id') or '').strip():
+            return 'scope.criterion_id 缺失'
+        verification = scope.get('verification')
+        if not isinstance(verification, dict):
+            return 'scope.verification 缺失'
+        for field in ('ref', 'verification_id', 'digest', 'target_head_sha', 'evidence_id'):
+            if not isinstance(verification.get(field), str) or not verification[field].strip():
+                return f'scope.verification.{field} 缺失'
+        if not re.fullmatch(r'[0-9a-f]{64}', verification['digest']):
+            return 'scope.verification.digest 必须是 64 位小写 SHA-256'
+        if not GIT_SHA.fullmatch(verification['target_head_sha']):
+            return 'scope.verification.target_head_sha 必须是完整的 40 位 SHA'
+    if record.get('approval_id') != _approval_id(record):
+        return 'approval_id 不可重算（记录被修改或格式错误）'
+    return None
+
+
+def _resolve_verification_ref(repo: Path, ref: str):
+    """Return ``(verification, path)`` for an id or a repository-relative path."""
+    value = str(ref or '').strip()
+    if not value:
+        return None, None
+    candidate = Path(value)
+    paths = []
+    if candidate.is_absolute():
+        paths.append(candidate)
+    else:
+        paths.append(repo / value)
+        if value.startswith('verifications/'):
+            paths.append(_root(repo, 'verifications').parent / value)
+    for path in paths:
+        if not path.is_file():
+            continue
+        try:
+            record = safe_json(path)
+        except PMError:
+            return None, path
+        if isinstance(record, dict) and record.get('kind') in (None, 'verification_record'):
+            return record, path
+        return None, path
+    path = _find_record(repo, 'verifications', value)
+    if path is None:
+        return None, None
+    return _load(path), path
+
+
+def _resolve_approval_ref(repo: Path, ref: str):
+    """Return ``(approval, path)`` for an id or a repository-relative path."""
+    value = str(ref or '').strip()
+    if not value:
+        return None, None
+    candidate = Path(value)
+    paths = []
+    if candidate.is_absolute():
+        paths.append(candidate)
+    else:
+        paths.append(repo / value)
+        if value.startswith('approvals/'):
+            paths.append(_root(repo, APPROVAL_DIR_NAME).parent / value)
+        if APPROVAL_ID.fullmatch(value):
+            paths.append(_approval_path(repo, value))
+    for path in paths:
+        if not path.is_file():
+            continue
+        try:
+            record = safe_json(path)
+        except PMError:
+            return None, path
+        if isinstance(record, dict) and record.get('kind') == APPROVAL_KIND:
+            return record, path
+        return None, path
+    return None, None
+
+
+def _criterion_approval_scope(repo: Path, goal_id: str, criterion_id: str,
+                              verification_ref: str, commit_sha: str) -> dict:
+    """Validate the §5 conditions and return the criterion scope block."""
+    goal = load_goal(repo, goal_id)
+    if not any(criterion.get('id') == criterion_id
+               for criterion in goal.get('success_criteria', [])):
+        raise PMError(f'Goal {goal_id} 没有 criterion {criterion_id}')
+    verification, path = _resolve_verification_ref(repo, verification_ref)
+    if verification is None or path is None:
+        raise PMError(f'找不到验证记录 {verification_ref}')
+    if verification.get('goal_id') != goal_id:
+        raise PMError(f'验证记录 {verification_ref} 属于其他目标：{verification.get("goal_id")}')
+    if verification.get('verdict') != 'pass':
+        raise PMError(f'验证记录 {verification_ref} 的 verdict 不是 pass')
+    if verification.get('mapping_status') != 'complete':
+        raise PMError(f'验证记录 {verification_ref} 的 criterion 映射不完整')
+    entry = next((item for item in verification.get('criterion_evidence') or []
+                  if item.get('criterion_id') == criterion_id), None)
+    if entry is None:
+        raise PMError(f'验证记录 {verification_ref} 没有标准 {criterion_id} 的证据映射')
+    target_head = verification.get('target_head_sha')
+    if entry.get('target_commit_sha') != commit_sha:
+        raise PMError(f'验证证据绑定到 {entry.get("target_commit_sha")}，不是审批提交 {commit_sha}')
+    if target_head != commit_sha:
+        raise PMError(f'验证记录绑定到 {target_head}，不是审批提交 {commit_sha}')
+    evidence_id = str(entry.get('evidence_id') or '').strip()
+    if not evidence_id:
+        raise PMError('验证证据缺少 evidence_id')
+    if not _verification_current(repo, verification):
+        raise PMError(f'验证记录 {verification_ref} 已失效（不是当前提交或执行已变化）')
+    return {'kind': 'criterion', 'goal_id': goal_id, 'criterion_id': criterion_id,
+            'verification': {'ref': relpath(repo, path),
+                             'verification_id': verification.get('verification_id'),
+                             'digest': verification_subject_digest(verification),
+                             'target_head_sha': target_head,
+                             'evidence_id': evidence_id}}
+
+
+def write_approval_request(repo: Path, commit_sha: str, approver: str,
+                           decision: str = 'approve', statement: str = '',
+                           goal_id: str | None = None, criterion_id: str | None = None,
+                           verification_ref: str | None = None,
+                           output: Path | None = None) -> dict:
+    """Write an unsigned approval payload for an out-of-repo key to sign."""
+    decision = _single_line(decision, 'decision')
+    if decision not in APPROVAL_DECISIONS:
+        raise PMError('decision 必须是 approve 或 reject')
+    approver = _single_line(approver, 'approver')
+    problem = _approved_by_problem(approver)
+    if problem:
+        raise PMError(f'审批人身份无效：{problem}')
+    commit_sha = _single_line(commit_sha, 'commit_sha')
+    if not GIT_SHA.fullmatch(commit_sha):
+        raise PMError('commit_sha 必须是完整的 40 位 SHA')
+    if not _commit_exists(repo, commit_sha):
+        raise PMError(f'commit 不存在：{commit_sha}')
+    statement = _single_line(statement, 'statement', required=False)
+    parts = (goal_id, criterion_id, verification_ref)
+    if any(x is not None for x in parts) and not all(x is not None for x in parts):
+        raise PMError('--goal、--criterion 与 --verification 必须同时提供，或都不提供')
+    if all(x is not None for x in parts):
+        scope = _criterion_approval_scope(repo, goal_id, criterion_id,
+                                          verification_ref, commit_sha)
+    else:
+        scope = {'kind': 'commit'}
+    record = {'schema_version': APPROVAL_SCHEMA, 'kind': APPROVAL_KIND,
+              'decision': decision, 'approver': approver, 'at': utc_now(),
+              'repository': _approval_repository(repo), 'commit_sha': commit_sha,
+              'scope': scope, 'statement': statement}
+    record['approval_id'] = _approval_id(record)
+    payload = signed_record_payload(record)
+    path = Path(output) if output else _approval_path(repo, record['approval_id'])
+    atomic_replace(path, payload.decode('utf-8'))
+    shown = _approval_display_path(repo, path)
+    return {'schema_version': APPROVAL_SCHEMA, 'kind': 'approval_request_result',
+            'path': shown, 'approval_id': record['approval_id'],
+            'request': record, 'payload_sha256': hashlib.sha256(payload).hexdigest(),
+            'sign_command': (f'openssl dgst -sha256 -sign <审批私钥> -out <签名文件> '
+                             f'{shown}'),
+            'requires': ('由仓库外审批私钥对请求文件的规范 JSON 字节签名，再运行 '
+                         'approval attach；Agent 不持有私钥，也不能自行签名')}
+
+
+def attach_approval(repo: Path, request_path, signature_path, anchor_path,
+                    output: Path | None = None) -> dict:
+    """Attach an externally produced signature after local format/verify checks."""
+    request = _load(Path(request_path))
+    problem = _approval_structure_problem(request)
+    if problem:
+        raise PMError(f'审批请求不合规：{problem}')
+    if not _approval_repository_matches(request, repo):
+        raise PMError('审批请求的仓库身份与当前仓库不一致')
+    signature_file = Path(signature_path)
+    if not signature_file.is_file():
+        raise PMError(f'签名文件不存在：{signature_file}')
+    signature = signature_file.read_bytes()
+    if not signature:
+        raise PMError('签名为空')
+    anchor, anchor_reason = authority.load_anchor_document(anchor_path)
+    if anchor is None:
+        raise PMError(f'无法校验审批签名：{anchor_reason}')
+    payload = signed_record_payload(request)
+    signature_b64 = base64.b64encode(signature).decode('ascii')
+    ok, detail = authority.verify_detached_signature(
+        anchor, payload, signature_b64, anchor['algorithm'])
+    if not ok:
+        raise PMError(f'审批签名无效：{detail}')
+    if request.get('approver') != anchor.get('issuer'):
+        raise PMError('审批记录的 approver 与签名锚 issuer 不一致')
+    record = {**request, 'authority': {
+        'status': 'signed', 'anchor_id': anchor['anchor_id'],
+        'issuer': anchor['issuer'], 'algorithm': anchor['algorithm'],
+        'signed_payload_sha256': hashlib.sha256(payload).hexdigest(),
+        'signature_b64': signature_b64}}
+    path = Path(output) if output else _approval_path(repo, request['approval_id'])
+    shown = _approval_display_path(repo, path)
+    if path.is_file():
+        existing = _load(path)
+        if existing == record:
+            return {'schema_version': APPROVAL_SCHEMA,
+                    'kind': 'approval_attach_result', 'path': shown,
+                    'approval_id': existing.get('approval_id'),
+                    'approval': existing, 'created': False, 'signature_valid': True,
+                    'anchor_id': anchor['anchor_id'], 'issuer': anchor['issuer'],
+                    'note': '已存在同名且内容相同的审批记录；未覆盖'}
+        raise PMError(f'审批记录 {request["approval_id"]} 已存在且内容不同，拒绝覆盖')
+    if not write_new(path, json_text(record)):
+        existing = _load(path)
+        if existing != record:
+            raise PMError(f'审批记录 {request["approval_id"]} 已存在且内容不同，拒绝覆盖')
+        return {'schema_version': APPROVAL_SCHEMA, 'kind': 'approval_attach_result',
+                'path': shown,
+                'approval_id': existing.get('approval_id'), 'approval': existing,
+                'created': False, 'signature_valid': True,
+                'anchor_id': anchor['anchor_id'],
+                'issuer': anchor['issuer'], 'note': '并发写入命中同名记录；未覆盖'}
+    return {'schema_version': APPROVAL_SCHEMA, 'kind': 'approval_attach_result',
+            'path': shown, 'approval_id': record.get('approval_id'),
+            'approval': record, 'created': True,
+            'signature_valid': True, 'anchor_id': anchor['anchor_id'],
+            'issuer': anchor['issuer'],
+            'note': ('附加时只对给定公钥校验格式与签名；信任决定在评估/门禁时由 '
+                     'PROJECT_MEMORY_APPROVAL_ANCHOR 重新做出')}
+
+
+def verify_approval(repo: Path, record_path, commit_sha: str) -> dict:
+    """Check one approval record against the protected approval anchor."""
+    record = _load(Path(record_path))
+    problem = _approval_structure_problem(record)
+    if problem:
+        raise PMError(f'审批记录不合规：{problem}')
+    commit_sha = _single_line(commit_sha, 'commit')
+    verdict = approval_authority(repo, record)
+    problems = []
+    if record.get('decision') != 'approve':
+        problems.append(f'decision 是 {record.get("decision")}，不是 approve')
+    if record.get('commit_sha') != commit_sha:
+        problems.append(f'commit_sha 是 {record.get("commit_sha")}，不是 {commit_sha}')
+    if not verdict.get('trusted'):
+        problems.append(f'审批未通过验签（{verdict.get("status")}）：{verdict.get("reason")}')
+    return {'schema_version': APPROVAL_SCHEMA, 'kind': 'approval_verify_result',
+            'approval_id': record.get('approval_id'), 'decision': record.get('decision'),
+            'approver': record.get('approver'), 'commit_sha': record.get('commit_sha'),
+            'scope_kind': (record.get('scope') or {}).get('kind'),
+            'authority_status': verdict.get('status'),
+            'trusted': bool(verdict.get('trusted')),
+            'reason': verdict.get('reason'), 'verified': not problems,
+            'problems': problems}
+
+
+def iter_approvals(repo: Path):
+    values = []
+    for path in _json_files(_approval_dir(repo)):
+        try:
+            value = safe_json(path)
+        except PMError:
+            continue
+        if isinstance(value, dict) and value.get('kind') == APPROVAL_KIND:
+            values.append(value)
+    return sorted(values, key=lambda r: (r.get('at') or '', r.get('approval_id') or ''))
+
+
+def approval_list(repo: Path, commit_sha: str | None = None,
+                  goal_id: str | None = None) -> dict:
+    items = []
+    for record in iter_approvals(repo):
+        scope = record.get('scope') if isinstance(record.get('scope'), dict) else {}
+        if commit_sha and record.get('commit_sha') != commit_sha:
+            continue
+        if goal_id and scope.get('goal_id') != goal_id:
+            continue
+        verdict = approval_authority(repo, record)
+        items.append({'approval_id': record.get('approval_id'),
+                      'decision': record.get('decision'),
+                      'approver': record.get('approver'),
+                      'commit_sha': record.get('commit_sha'),
+                      'scope': scope.get('kind'),
+                      'goal_id': scope.get('goal_id'),
+                      'criterion_id': scope.get('criterion_id'),
+                      'authority_status': verdict.get('status'),
+                      'trusted': bool(verdict.get('trusted'))})
+    return {'schema_version': APPROVAL_SCHEMA, 'kind': 'approval_list_result',
+            'approvals': items}
+
+
+def _approval_evidence(repo: Path, evidence: dict, goal_id: str,
+                       criterion_id: str) -> dict:
+    """Evaluate ``kind=approval`` evidence; returns a detail dict, fails closed."""
+    detail = {'valid': False, 'reason': '', 'trust': 'invalid', 'satisfies': False,
+              'state': 'invalid', 'approval_id': None, 'decision': None,
+              'approver': None, 'at': None, 'commit_sha': None,
+              'authority_status': None, 'trusted': False}
+    ref = str(evidence.get('ref') or '').strip()
+    if not ref:
+        return {**detail, 'reason': '缺少审批引用'}
+    record, _path = _resolve_approval_ref(repo, ref)
+    if record is None:
+        return {**detail, 'reason': f'找不到审批记录 {ref}'}
+    detail.update({'approval_id': record.get('approval_id'),
+                   'decision': record.get('decision'), 'approver': record.get('approver'),
+                   'at': record.get('at'), 'commit_sha': record.get('commit_sha')})
+    problem = _approval_structure_problem(record)
+    if problem:
+        return {**detail, 'reason': f'审批记录不合规：{problem}'}
+    if not _approval_repository_matches(record, repo):
+        return {**detail, 'reason': '审批记录的仓库身份与当前仓库不一致'}
+    scope = record['scope']
+    if scope['kind'] != 'criterion':
+        return {**detail, 'reason': 'commit 范围的审批不参与 Goal 判据'}
+    if scope.get('goal_id') != goal_id or scope.get('criterion_id') != criterion_id:
+        return {**detail, 'reason': '审批绑定的 Goal 或 criterion 与当前证据不一致'}
+    current_head = git_sha_optional(repo)
+    if record['commit_sha'] != current_head:
+        return {**detail, 'reason': '审批绑定的提交不是当前 HEAD（审批已过期）'}
+    verification, _vpath = _resolve_verification_ref(repo, scope['verification']['ref'])
+    if verification is None:
+        return {**detail, 'reason': '审批指向的验证记录不存在'}
+    if verification.get('verification_id') != scope['verification']['verification_id']:
+        return {**detail, 'reason': '审批指向的验证记录 ID 不一致'}
+    if verification.get('goal_id') != goal_id:
+        return {**detail, 'reason': '审批指向的验证记录属于其他 Goal'}
+    if verification_subject_digest(verification) != scope['verification']['digest']:
+        return {**detail, 'reason': '审批指向的验证记录摘要已变化（审批失效）'}
+    if verification.get('target_head_sha') != scope['verification']['target_head_sha']:
+        return {**detail, 'reason': '审批指向的验证记录提交与绑定不一致'}
+    if verification.get('target_head_sha') != record['commit_sha']:
+        return {**detail, 'reason': '审批提交与验证记录提交不一致'}
+    if verification.get('verdict') != 'pass' or verification.get('mapping_status') != 'complete':
+        return {**detail, 'reason': '审批指向的验证记录不再是 pass 且映射完整'}
+    entry = next((item for item in verification.get('criterion_evidence') or []
+                  if item.get('criterion_id') == criterion_id), None)
+    if entry is None:
+        return {**detail, 'reason': '审批指向的验证记录没有该 criterion 的证据映射'}
+    if (not str(entry.get('evidence_id') or '').strip()
+            or entry.get('evidence_id') != scope['verification']['evidence_id']):
+        return {**detail, 'reason': '审批绑定的 evidence_id 与验证记录不一致'}
+    if entry.get('target_commit_sha') != record['commit_sha']:
+        return {**detail, 'reason': '审批提交与验证证据的提交不一致'}
+    if not _verification_current(repo, verification):
+        return {**detail, 'reason': '审批指向的验证记录已失效（不是当前提交或执行已变化）'}
+    anchor, anchor_reason = authority.load_anchor(repo, authority.APPROVAL_ANCHOR_ENV)
+    if anchor is None:
+        return {**detail, 'valid': True, 'trust': 'unverified_approval',
+                'reason': f'审批锚未配置：{anchor_reason}；审批记录只能登记，不能达成标准',
+                'state': 'UNVERIFIED_APPROVAL', 'authority_status': 'unconfigured'}
+    if record.get('approver') != anchor.get('issuer'):
+        return {**detail, 'reason': '审批记录的 approver 与审批锚 issuer 不一致',
+                'authority_status': 'untrusted'}
+    verdict = approval_authority(repo, record)
+    if not verdict.get('trusted'):
+        return {**detail, 'valid': True, 'trust': 'unverified_approval',
+                'reason': f'审批未通过验签（{verdict.get("status")}）：{verdict.get("reason")}',
+                'state': 'UNVERIFIED_APPROVAL',
+                'authority_status': verdict.get('status')}
+    if record.get('decision') == 'reject':
+        return {**detail, 'valid': True, 'trust': 'human_approved',
+                'reason': '审批决定为 reject；该标准不因拒绝而达成',
+                'state': 'human_rejected', 'authority_status': 'trusted',
+                'trusted': True}
+    return {**detail, 'valid': True, 'trust': 'human_approved',
+            'reason': '签名审批通过，绑定当前提交与该验证记录',
+            'state': 'human_approved', 'authority_status': 'trusted',
+            'trusted': True, 'satisfies': True}
+
+
+
 
 def start_run(repo: Path, goal_id: str, task, run_id: str, agent: str,
               model_provider: str, model_id: str,
@@ -2659,6 +3117,77 @@ def reconcile(repo: Path, config: dict | None = None, format: str = 'json') -> d
         if fixed_sha and current_head and _is_ancestor(repo, fixed_sha, current_head) is False:
             add('medium', 'defect_fix_not_ancestor', f'缺陷 {defect["defect_id"]} 的修复提交不在当前历史中',
                 [defect['defect_id']], '确认修复分支是否已合并')
+
+    # Approval checks only scan .project-memory/approvals/; an absent directory
+    # must not add findings, so existing repositories keep their baseline.
+    if _approval_dir(repo).is_dir():
+        for approval in iter_approvals(repo):
+            aid = approval.get('approval_id') or '<unknown>'
+            scope = approval.get('scope') if isinstance(approval.get('scope'), dict) else {}
+            problem = _approval_structure_problem(approval)
+            if problem:
+                add('high', 'approval_subject_mismatch',
+                    f'审批 {aid} 结构或摘要不一致：{problem}', [aid],
+                    '重新生成审批请求并由仓库外私钥签名')
+                continue
+            if not _approval_repository_matches(approval, repo):
+                add('high', 'approval_subject_mismatch',
+                    f'审批 {aid} 的仓库身份与当前仓库不一致', [aid],
+                    '确认审批是否针对本仓库签发')
+            if scope.get('kind') == 'criterion':
+                goal_id = scope.get('goal_id')
+                criterion_id = scope.get('criterion_id')
+                goal = goal_by_id.get(goal_id)
+                criterion_ids = ({c.get('id') for c in goal.get('success_criteria', [])}
+                                 if goal else set())
+                if goal is None or criterion_id not in criterion_ids:
+                    add('high', 'approval_orphan',
+                        f'审批 {aid} 指向不存在的 Goal/criterion：{goal_id}/{criterion_id}',
+                        [aid, str(goal_id)], '修正审批范围或移除失效审批')
+                verification, _vpath = _resolve_verification_ref(
+                    repo, (scope.get('verification') or {}).get('ref'))
+                if verification is None:
+                    add('high', 'approval_orphan',
+                        f'审批 {aid} 指向不存在的验证记录',
+                        [aid, str((scope.get('verification') or {}).get('ref'))],
+                        '重新生成绑定现有验证记录的审批')
+                else:
+                    binding = scope.get('verification')
+                    entry = next((item for item in verification.get('criterion_evidence') or []
+                                  if item.get('criterion_id') == criterion_id), None)
+                    mismatches = []
+                    if verification.get('verification_id') != binding.get('verification_id'):
+                        mismatches.append('verification_id')
+                    if verification_subject_digest(verification) != binding.get('digest'):
+                        mismatches.append('验证摘要')
+                    if verification.get('target_head_sha') != binding.get('target_head_sha'):
+                        mismatches.append('target_head_sha')
+                    if (entry is None
+                            or entry.get('evidence_id') != binding.get('evidence_id')):
+                        mismatches.append('evidence_id')
+                    if entry is not None and (
+                            entry.get('target_commit_sha') != approval.get('commit_sha')
+                            or binding.get('target_head_sha') != approval.get('commit_sha')):
+                        mismatches.append('target commit')
+                    if mismatches:
+                        add('high', 'approval_subject_mismatch',
+                            f'审批 {aid} 与验证记录不一致：' + '、'.join(mismatches),
+                            [aid, str(verification.get('verification_id'))],
+                            '重新生成审批，不要手工修改已有记录')
+            if current_head and approval.get('commit_sha') != current_head:
+                add('medium', 'approval_stale_commit',
+                    f'审批 {aid} 绑定旧提交 {str(approval.get("commit_sha"))[:8]}',
+                    [aid], '对当前提交重新审批')
+            if approval.get('decision') == 'approve':
+                verdict = approval_authority(repo, approval)
+                if not verdict.get('trusted'):
+                    add('medium', 'approval_not_trusted',
+                        f'审批 {aid} 是 approve，但没有通过审批锚验签（{verdict.get("status")}）',
+                        [aid], '配置 PROJECT_MEMORY_APPROVAL_ANCHOR 或重新用受保护密钥签名')
+            elif approval.get('decision') == 'reject':
+                add('low', 'approval_rejected',
+                    f'审批 {aid} 是 reject，存在被拒绝的审批', [aid],
+                    '人工确认拒绝原因，必要时重新提交')
 
     report = audit(repo, cfg, allow_empty=True, scope='current')
     for finding in report['findings']:

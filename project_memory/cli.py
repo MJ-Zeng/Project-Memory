@@ -13,7 +13,9 @@ from .coordination import (create_goal, goal_list, goal_show, evaluate_goal, add
                            transition_goal, start_run, checkpoint_run, resume_run, finish_run,
                            run_show, iter_runs, verify_run, defect_list, defect_show,
                            update_defect, reconcile, audit_verify, audit_head, audit_migrate,
-                           write_audit_checkpoint_request, attach_audit_checkpoint)
+                           write_audit_checkpoint_request, attach_audit_checkpoint,
+                           write_approval_request, attach_approval, verify_approval,
+                           approval_list)
 from .gh import GitHubReader
 
 
@@ -198,7 +200,8 @@ def parser():
     c = _leaf(g, 'evidence', '为成功标准添加可核验证据')
     c.add_argument('--id', required=True)
     c.add_argument('--criterion', required=True)
-    c.add_argument('--kind', required=True, choices=['verification', 'commit', 'test', 'manual'])
+    c.add_argument('--kind', required=True,
+                   choices=['verification', 'commit', 'test', 'manual', 'approval'])
     c.add_argument('--ref', required=True)
     c.add_argument('--note', default='')
     c.add_argument('--approved-by')
@@ -209,6 +212,31 @@ def parser():
     c.add_argument('--approved-by')
     c.add_argument('--reason', default='')
     c.add_argument('--dry-run', action='store_true')
+
+    s = base('approval', '签名审批事件：请求、外部签名、附加与验签')
+    g = s.add_subparsers(dest='approval_command', required=True)
+    c = _leaf(g, 'request', '生成未签名审批请求，交由仓库外私钥签名')
+    c.add_argument('--commit', required=True)
+    c.add_argument('--goal')
+    c.add_argument('--criterion')
+    c.add_argument('--verification')
+    c.add_argument('--approver', required=True)
+    c.add_argument('--decision', choices=['approve', 'reject'], default='approve')
+    c.add_argument('--statement', default='')
+    c.add_argument('--output', required=True, type=Path)
+    c = _leaf(g, 'attach', '本地校验签名并附加审批记录')
+    c.add_argument('--request', required=True, type=Path)
+    c.add_argument('--signature', required=True, type=Path)
+    c.add_argument('--anchor', required=True, type=Path)
+    c.add_argument('--output', type=Path)
+    c = _leaf(g, 'verify', '用受保护审批锚验证记录、决定与提交')
+    c.add_argument('--record', required=True, type=Path)
+    c.add_argument('--commit', required=True)
+    c.add_argument('--json', action='store_true')
+    c = _leaf(g, 'list', '列出审批记录')
+    c.add_argument('--commit')
+    c.add_argument('--goal')
+    c.add_argument('--json', action='store_true')
 
     s = base('run', 'Agent 执行记忆：启动、检查点、恢复、结束')
     g = s.add_subparsers(dest='run_command', required=True)
@@ -483,6 +511,22 @@ def run(args):
                                    args.note, args.approved_by, args.exit_code))
         elif args.goal_command == 'transition':
             emit(transition_goal(repo, args.id, args.to, args.approved_by, args.reason, args.dry_run))
+    elif args.command == 'approval':
+        if args.approval_command == 'request':
+            emit(write_approval_request(repo, args.commit, args.approver, args.decision,
+                                        args.statement, args.goal, args.criterion,
+                                        args.verification, repo_path(repo, args.output)))
+        elif args.approval_command == 'attach':
+            emit(attach_approval(repo, repo_path(repo, args.request),
+                                 repo_path(repo, args.signature),
+                                 repo_path(repo, args.anchor),
+                                 repo_path(repo, args.output)))
+        elif args.approval_command == 'verify':
+            result = verify_approval(repo, repo_path(repo, args.record), args.commit)
+            emit(result)
+            return 0 if result['verified'] else 2
+        elif args.approval_command == 'list':
+            emit(approval_list(repo, args.commit, args.goal))
     elif args.command == 'run':
         if args.run_command == 'start':
             emit(start_run(repo, args.goal, args.task, args.run_id, args.agent,

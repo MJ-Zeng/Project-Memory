@@ -59,6 +59,7 @@
 | `commit` | 完整 40 位 SHA，提交存在且在当前 HEAD 历史中 | 不能，只证明提交存在 | artifact |
 | `test` | 本地日志存在，`exit_code` 为 0 | 不能，只证明执行过；需要 criterion 映射和 coverage 复核 | locally_observed |
 | `manual` | 提供 `approved_by`，且 `ref` 是可追溯的批准链接、PR/Issue 编号或 40 位提交 SHA | 不能；没有可信审批来源时只是未核验声明 | unverified_approval |
+| `approval` | 签名审批事件 `decision=approve`、`scope.kind=criterion`、受保护审批锚验签通过、`approver` 等于锚 `issuer`、`commit_sha` 等于当前 HEAD，且绑定的验证记录摘要、`evidence_id`、提交均未变化 | 只有审批锚验签通过时才能 | human_approved；未配置审批锚或验签失败时为 unverified_approval |
 
 `goal evaluate` 只接受已确认覆盖且带可信授权的 criterion 映射。直接 `test`/`commit` 证据会被记录为补充材料，但不会让标准变成 satisfied；`manual` 证据保持 `UNVERIFIED_APPROVAL`。没有配置 `PROJECT_MEMORY_TRUST_ANCHOR` 时，本地写出的验证记录不会满足任何标准，这是预期的 fail-closed 结果。评估状态分为 `satisfied`、`needs_review`、`partial`、`insufficient_evidence` 和 `blocked_by_defect`；Issue 全部关闭不等于目标达成。
 
@@ -227,6 +228,27 @@ CLI 的 `verify --evidence-level` 接受 `agent_claimed` 与 `locally_observed`�
 - 缺少 criterion 映射的旧 pass 记录可读，但 `goal evidence` 不会接受它作为标准达成依据；`reconcile` 会报告 `pass_without_criterion_mapping`。
 
 `findings` 在验证记录里是缺陷 ID 数组。缺陷记录保留原始位置、复现和严重度。
+
+## 审批事件
+
+必填：`schema_version`（`1.0`）、`kind`（`approval_event`）、`approval_id`、`decision`、`approver`、`at`、`repository`、`commit_sha`、`scope`。可选：`statement`（人读说明）。签名信封写在 `authority`：`status`（恒为 `signed`，只是信封标签）、`anchor_id`、`issuer`、`algorithm`、`signed_payload_sha256`、`signature_b64`。
+
+- `decision`：`approve` 或 `reject`。
+- `approver`：可验证的邮箱；必须等于审批锚的 `issuer`，否则 `trusted=false`。
+- `commit_sha`：完整 40 位 SHA；评估时必须是当前 HEAD。
+- `scope.kind=commit`：只批准该提交，不参与 Goal 判据。
+- `scope.kind=criterion`：额外包含 `goal_id`、`criterion_id` 和 `verification`（`ref`、`verification_id`、`digest`、`target_head_sha`、`evidence_id`）。
+
+摘要算法：
+
+- 审批载荷 = 记录去掉 `authority` 后的规范 JSON 字节（`signed_record_payload`）；签名覆盖这些字节。
+- `approval_id = 'APR-' + sha256(记录去掉 approval_id 与 authority 的规范 JSON)[:12]`，可重算，改任一字段都会改变 ID。
+- `authority.signed_payload_sha256 = sha256(signed_record_payload(record))`。
+- 验证摘要 `digest = sha256(规范 JSON(验证记录去掉 authority 与 authority_evaluation))`。`authority_evaluation` 是本地可重算的结论，附签名不应改变审批引用的内容；两处（请求生成、评估校验）调用同一个函数。
+
+信任决定只发生在 `approval verify`、`goal evaluate` 和门禁读取时，由 `PROJECT_MEMORY_APPROVAL_ANCHOR` 指定的受保护审批锚重新验签；`approval attach` 时给了公钥只做格式与签名校验，不构成信任。未配置审批锚、验签失败、`approver` 与 `issuer` 不一致、提交不是当前 HEAD、验证摘要变化，都不 satisfy。审批是独立记录，不修改验证记录。
+
+对账会扫描审批目录，报告 `approval_orphan`（high）、`approval_subject_mismatch`（high）、`approval_stale_commit`（medium）、`approval_not_trusted`（medium）和 `approval_rejected`（low）；没有该目录时不新增 finding。
 
 ## 缺陷
 
