@@ -217,6 +217,10 @@ python3 -m project_memory goal evidence --repo . --id G-AUTH --criterion C1 \
 
 边界：管理员始终可以通过 API 关闭分支保护、改写 workflow 或 Secret，这是被接受的信任前提（S4 残余风险）。审批记录也只是签名声明，不替代独立验证、CODEOWNERS 或合并权限。
 
+### 发布构建与来源证明
+
+`release` 工作流由 `v*` tag 推送或手动 `workflow_dispatch` 触发，产出源码归档、sdist、wheel、`sha256sums.txt` 和 `BUILD-INFO.json`，向 GitHub 申请 artifact attestation，并把它们一起作为 workflow artifact 上传。它不创建 tag、不发布 Release、不读任何仓库 secret——发布仍然是人工动作（S4-5）。外部验证一次 run：下载 artifact → `sha256sum -c sha256sums.txt` → 逐个 `gh attestation verify <文件> --repo MJ-Zeng/Project-Memory`；完整命令、失败判读和已知限制见 [OPERATIONS](docs/OPERATIONS.zh-CN.md#发布构建与来源证明)。attestation 只能在 hosted runner 上签发，本地静态测试锁的是工作流形状，tag 触发路径要等人类打下第一个 `v*` tag 才算实测。
+
 ## 两种审计范围
 
 `--scope current` 只审当前知识：canonical 根下状态为 `current`、`draft`、`in_flight`、`unclassified` 的文档，加上全部 ADR。镜像、历史、证据和已归档文档不参与。它适合放在合并门禁里。
@@ -290,7 +294,7 @@ python3 -m pip install -e '.[semantic]'
 
 1. 检查生成的示例，补全入口文档、架构说明和 ADR 负责人。
 2. 参考 `.github/CODEOWNERS.example` 配置真正的 CODEOWNERS，并在 GitHub 开启分支 Ruleset、必需审查和必需 CI（私有仓库的免费计划不提供这些能力，需要 GitHub Pro 或改为公开仓库）。CLI 不能替你做这些。
-3. 审核已固定的第三方 Action 代码，并在升级时更新 SHA：当前 `actions/checkout` 固定到 `v4.4.0`、`actions/setup-python` 固定到 `v5.6.0`，只解决了“引用不可变”，没有审核上游代码。
+3. 审核已固定的第三方 Action 代码，并在升级时更新 SHA：当前 `actions/checkout` 固定到 `v4.4.0`、`actions/setup-python` 固定到 `v5.6.0`、`actions/attest-build-provenance` 固定到 `v4.2.2`、`actions/upload-artifact` 固定到 `v4.6.2`，只解决了“引用不可变”，没有审核上游代码。
 4. 接入有权限的 GitHub 数据；如果要把完成门禁全自动化，还需要独立核对 CI 和 review 状态，不能只依赖快照声明。
 5. Qoder CN 等客户端目前需要手动切换模型。CLI 只记录实际模型，不调度模型，也不保证跨模型接续。
 6. Goal 的 `approved`/`achieved` 转换、ADR 接受、高风险变更和生产部署仍必须由授权人执行。
@@ -300,7 +304,7 @@ python3 -m pip install -e '.[semantic]'
 
 - [教程与工作流](docs/TUTORIAL.zh-CN.md)：从临时仓库试跑到真实仓库接入，以及日常协作节奏。
 - [技术设计](docs/ARCHITECTURE.zh-CN.md)：模块、目录模型、数据契约和后续门槛。
-- [操作手册](docs/OPERATIONS.zh-CN.md)：接入步骤、文档写入、新人接手和上线检查。
+- [操作手册](docs/OPERATIONS.zh-CN.md)：接入步骤、文档写入、新人接手、发布构建与来源证明和上线检查。
 - [验证记录](docs/TEST_REPORT.md)：跑过的测试、真实仓库结果和未验证项。
 - [Skill 说明](skill/project-memory/SKILL.md) 与 `skill/project-memory/references/`：Agent 执行时读的规则和字段契约。
 
