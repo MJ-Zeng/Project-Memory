@@ -37,6 +37,21 @@ ATTEST_SHA = ('actions/attest-build-provenance@'
 UPLOAD_SHA = ('actions/upload-artifact@'
               'ea165f8d65b6e75b540449e92b4886f43607fa02')
 
+# The manifest's self-exclusion guard, in either find spelling (`!` / `-not`)
+# and with or without a quoted filename; both rewrites mean the same thing, so
+# the test must not pin the literal bytes.
+MANIFEST_SELF_EXCLUSION = re.compile(
+    r"""(?:!|-not)[ \t]+-name[ \t]+['"]?sha256sums\.txt""")
+
+# `subject-path` must be *exactly* the whole dist tree, up to end of line.
+# A same-line comment is allowed; anything else after `dist/*` narrows what the
+# attestation covers, so the pattern is anchored with re.MULTILINE (`$` without
+# it only matches the very end of the string and could never fire).
+SUBJECT_PATH_WHOLE_DIST = re.compile(
+    r"""^[ \t]*subject-path:[ \t]*"""
+    r"""\$\{\{ github\.workspace \}\}/dist/\*[ \t]*(?:#.*)?$""",
+    re.MULTILINE)
+
 # Actions that would publish a Release; none of them may appear.
 RELEASE_PUBLISHING = (
     'gh release create', 'gh release upload', 'gh api repos',
@@ -85,6 +100,44 @@ class ReleaseWorkflowStaticTest(unittest.TestCase):
                 return self.lines[index:offset]
         return self.lines[index:]
 
+    def permission_blocks(self):
+        """Every ``permissions:`` mapping in the file, with its indentation.
+
+        A job (or a step) may declare its own ``permissions:``; Actions then
+        overlays it on the workflow-level block, so reading only column zero
+        would let a ``contents: write`` buried in the job pass unnoticed.
+        """
+        blocks = []
+        for index, line in enumerate(self.lines):
+            match = re.fullmatch(r'( *)permissions:(.*)', line)
+            if match is None:
+                continue
+            indent, inline = len(match.group(1)), match.group(2).strip()
+            body = []
+            for entry in self.lines[index + 1:]:
+                if not entry.strip():
+                    continue
+                if len(entry) - len(entry.lstrip()) <= indent:
+                    break
+                if entry.lstrip().startswith('#'):
+                    continue
+                body.append(entry)
+            blocks.append({'indent': indent, 'inline': inline, 'body': body})
+        return blocks
+
+    def effective_permissions(self):
+        """Grants after overlaying every level, the way Actions resolves them."""
+        granted, inline = {}, {}
+        for block in sorted(self.permission_blocks(), key=lambda b: b['indent']):
+            if block['inline']:
+                inline[block['indent']] = block['inline']
+            for line in block['body']:
+                match = re.fullmatch(r'\s*([A-Za-z_-]+):[ \t]*(\S+)\s*', line)
+                if match is None:
+                    self.fail(f'无法解析权限行 {line!r}')
+                granted[match.group(1)] = match.group(2)
+        return granted, inline
+
     # 1 ------------------------------------------------------------------
     def test_workflow_exists_and_is_named_release(self):
         self.assertTrue(WORKFLOW.is_file(), f'{WORKFLOW} 不存在')
@@ -112,19 +165,26 @@ class ReleaseWorkflowStaticTest(unittest.TestCase):
                 f'{trigger}: 触发会把未合并的 PR 代码放进发布构建里')
 
     # 3 ------------------------------------------------------------------
+    def test_permissions_is_declared_only_at_workflow_level(self):
+        blocks = self.permission_blocks()
+        self.assertTrue(blocks, 'release.yml 必须声明 permissions')
+        self.assertEqual(1, len(blocks),
+                         '多一处 permissions 就多一层覆盖关系：job 或 step 层的'
+                         '声明会追加/改写工作流层的权限，不能被顶层段落代表')
+        self.assertEqual([0], [block['indent'] for block in blocks],
+                         'permissions 只能出现在工作流层（第 0 列）')
+
     def test_permissions_are_exactly_the_three_declared(self):
-        body = self.block('permissions')
-        granted = {}
-        for line in body:
-            match = re.fullmatch(r' {2}([A-Za-z_-]+):[ \t]*(\S+)', line)
-            self.assertIsNotNone(match, f'无法解析权限行 {line!r}')
-            granted[match.group(1)] = match.group(2)
+        granted, inline = self.effective_permissions()
+        self.assertEqual({}, inline,
+                         '不允许 write-all 这类行内权限；逐条列举才看得住')
         self.assertEqual({'contents': 'read', 'id-token': 'write',
-                          'attestations': 'write'}, granted)
+                          'attestations': 'write'}, granted,
+                         '按各层叠加后的有效权限比较，而不是只看顶层段落')
 
     def test_permissions_grant_nothing_more_than_needed(self):
-        body = '\n'.join(self.block('permissions'))
-        self.assertNotIn('contents: write', body,
+        granted, _ = self.effective_permissions()
+        self.assertEqual('read', granted.get('contents'),
                          '制品只进 artifact 存储，写仓库内容不在本工作流职责内')
         self.assertNotIn('write-all', self.text)
 
@@ -165,6 +225,16 @@ class ReleaseWorkflowStaticTest(unittest.TestCase):
         self.assertIn('sha256sum --text', self.text,
                       '--text 固定 "<hex>  <name>" 双空格格式')
 
+    def test_checksum_manifest_excludes_itself(self):
+        # 清单若把自己的哈希也算进去，`sha256sum -c` 就永远对不上：写完清单再校验
+        # 时文件内容已经变了。运行期会失败，但合并前的静态门禁也要抓得住。
+        body = '\n'.join(self.step_window('- name: Write sha256sums.txt'))
+        self.assertIsNotNone(
+            MANIFEST_SELF_EXCLUSION.search(body),
+            '列举制品时必须用 ! / -not 排除 sha256sums.txt 自身')
+        self.assertIn(': > sha256sums.txt', body,
+                      '清单必须先截断为空再逐行追加，否则重复运行会累积旧行')
+
     def test_build_info_fields_are_not_allowed_to_be_empty(self):
         # `export X="$(cmd)"` 掩盖失败：赋值命令退出码被吞掉，空字段照样写进
         # BUILD-INFO。所以取值必须是普通赋值，并且每个字段在写出前检查非空。
@@ -181,12 +251,26 @@ class ReleaseWorkflowStaticTest(unittest.TestCase):
 
     # 7 ------------------------------------------------------------------
     def test_attests_build_provenance_over_the_dist_tree(self):
-        body = '\n'.join(self.step_window('uses: actions/attest-build-provenance@'))
+        body = '\n'.join(self.step_window(
+            'uses: actions/attest-build-provenance@'))
+        self.assertEqual(
+            1, len(re.findall(r'^[ \t]*subject-path:', body, re.MULTILINE)),
+            'subject-path 只能有一条，多条会让人读错被证明的是哪些文件')
+        self.assertIsNotNone(
+            SUBJECT_PATH_WHOLE_DIST.search(body),
+            '值必须恰好是 dist 下的全部制品：行尾多出的 *.whl / *.tar.gz 会把证明'
+            '范围收窄，sdist、源码归档和哈希清单就落在证明之外')
+
+    def test_attest_step_selects_subject_only_by_path(self):
+        # 该 action 要求 subject-path / subject-digest / subject-checksums 三者
+        # 只选一个；换成后两种就被指向了另一组制品，dist/* 的覆盖不再成立。
+        body = '\n'.join(self.step_window(
+            'uses: actions/attest-build-provenance@'))
         self.assertIn('subject-path:', body)
-        self.assertRegex(
-            body,
-            r'subject-path:[ \t]*\$\{\{[ \t]*github\.workspace[ \t]*\}\}/dist/\*',
-            'subject-path 要覆盖 dist 下的全部制品')
+        for alternative in ('subject-digest:', 'subject-checksums:',
+                            'push-to-registry:'):
+            self.assertNotIn(alternative, body,
+                             f'{alternative} 会把证明对象从 dist 目录换成别的东西')
 
     def test_attestation_bundle_is_kept_outside_the_checksummed_tree(self):
         # bundle 是该 action 的 *output*，不是 input；output 给了路径但文件不在
