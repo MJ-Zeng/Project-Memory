@@ -4,8 +4,8 @@ kind: "canonical"
 title: "Project Memory 当前状态（v1.0.0）"
 status: "current"
 owner: "MJ-Zeng"
-updated_at: "2026-10-31"
-last_verified_at: "2026-10-31"
+updated_at: "2026-11-01"
+last_verified_at: "2026-11-01"
 ---
 
 # Project Memory 当前状态（v1.0.0）
@@ -18,7 +18,7 @@ v1.0.0 可以用于团队内部的记忆记录与跨会话交接；不能作为�
 
 - 发布基线：`v1.0.0` tag 指向 `f033a6c`；`dev/v1.0` 已领先该发布点，尚未发新版本。
 - 版本标签：`v1.0.0` 是 annotated tag，未签名。
-- 测试门槛：默认运行与设置 `PROJECT_MEMORY_REQUIRE_OPENSSL=1` 运行均通过全量 350 项测试；Windows 上 3 个符号链接用例因无法创建链接而 skip（其中 1 个来自签名证据清单测试），WSL2 sandbox 用例在 WSL 可用时通过（347 passed / 3 skipped），不可用时 skip（346 passed / 4 skipped），具体 skip 数随环境变化。
+- 测试门槛：默认运行与设置 `PROJECT_MEMORY_REQUIRE_OPENSSL=1` 运行均通过全量 370 项测试；Windows 上 3 个符号链接用例因无法创建链接而 skip（其中 1 个来自签名证据清单测试），WSL2 sandbox 用例在 WSL 可用时通过（367 passed / 3 skipped），不可用时 skip（366 passed / 4 skipped），具体 skip 数随环境变化。
 - 发布证据：在干净检出上，证据包完整性检查 24/24 通过。
 
 ## 预期行为

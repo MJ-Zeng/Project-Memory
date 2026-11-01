@@ -1995,7 +1995,12 @@ def attach_approval(repo: Path, request_path, signature_path, anchor_path,
 
 
 def verify_approval(repo: Path, record_path, commit_sha: str) -> dict:
-    """Check one approval record against the protected approval anchor."""
+    """Check one approval record against the protected approval anchor.
+
+    A valid signature is not enough: the record must also declare the identity
+    of the repository it approves, so an approval signed for another clone
+    never verifies here.
+    """
     record = _load(Path(record_path))
     problem = _approval_structure_problem(record)
     if problem:
@@ -2007,6 +2012,8 @@ def verify_approval(repo: Path, record_path, commit_sha: str) -> dict:
         problems.append(f'decision 是 {record.get("decision")}，不是 approve')
     if record.get('commit_sha') != commit_sha:
         problems.append(f'commit_sha 是 {record.get("commit_sha")}，不是 {commit_sha}')
+    if not _approval_repository_matches(record, repo):
+        problems.append('审批记录的 repository.id 与当前仓库不一致')
     if not verdict.get('trusted'):
         problems.append(f'审批未通过验签（{verdict.get("status")}）：{verdict.get("reason")}')
     return {'schema_version': APPROVAL_SCHEMA, 'kind': 'approval_verify_result',

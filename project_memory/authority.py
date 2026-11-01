@@ -31,6 +31,8 @@ import hashlib
 import json
 import os
 import platform
+import re
+from datetime import datetime, timezone
 from pathlib import Path
 
 ANCHOR_ENV = 'PROJECT_MEMORY_TRUST_ANCHOR'
@@ -44,6 +46,8 @@ SUPPORTED_ALGORITHMS = ('rsa-sha256', 'ecdsa-sha256')
 MIN_RSA_MODULUS_BITS = 2048
 MAX_KEY_DER_BYTES = 65536
 MAX_SIGNATURE_BYTES = 1024
+ANCHOR_ID_PATTERN = re.compile(r'[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}')
+FINGERPRINT_HEX_PATTERN = re.compile(r'[0-9a-fA-F]{64}')
 
 
 def canonical_bytes(value) -> bytes:
@@ -144,12 +148,8 @@ _PRIME256V1_OID = b'\x2a\x86\x48\xce\x3d\x03\x01\x07'
 _SHA256_DIGEST_INFO_PREFIX = bytes.fromhex('3031300d060960864801650304020105000420')
 
 
-def _public_key(pem: str) -> tuple[str, int, int]:
-    """Parse a SubjectPublicKeyInfo PEM into ``('rsa'|'ecdsa', a, b)``.
-
-    RSA returns ``(modulus, publicExponent)``; ECDSA returns the uncompressed
-    P-256 point coordinates ``(x, y)``.  Anything else is refused.
-    """
+def _pem_der(pem: str) -> bytes:
+    """Decode a SubjectPublicKeyInfo PEM body into its DER bytes."""
     head, tail = '-----BEGIN PUBLIC KEY-----', '-----END PUBLIC KEY-----'
     text = str(pem or '').strip()
     if head not in text or tail not in text:
@@ -161,6 +161,27 @@ def _public_key(pem: str) -> tuple[str, int, int]:
         raise _DerError(f'公钥 base64 非法：{exc}') from exc
     if len(der) > MAX_KEY_DER_BYTES:
         raise _DerError('公钥 DER 过大')
+    return der
+
+
+def public_key_fingerprint(pem: str) -> str:
+    """SHA-256 of the DER SubjectPublicKeyInfo, lowercase hex.
+
+    The DER bytes are hashed rather than the PEM text so that line endings and
+    line wrapping cannot change the fingerprint.  It only proves "the public key
+    in this anchor document is the one that was published"; proving that the
+    issuer is a real person needs an out-of-repo channel.
+    """
+    return hashlib.sha256(_pem_der(pem)).hexdigest()
+
+
+def _public_key(pem: str) -> tuple[str, int, int]:
+    """Parse a SubjectPublicKeyInfo PEM into ``('rsa'|'ecdsa', a, b)``.
+
+    RSA returns ``(modulus, publicExponent)``; ECDSA returns the uncompressed
+    P-256 point coordinates ``(x, y)``.  Anything else is refused.
+    """
+    der = _pem_der(pem)
     algorithm = _der_sequence(der)
     if len(algorithm) != 2 or algorithm[0][0] != 0x30 or algorithm[1][0] != 0x03:
         raise _DerError('SubjectPublicKeyInfo 结构不符')
@@ -434,6 +455,93 @@ def anchor_is_protected(path: Path) -> tuple[bool, str]:
     return True, f'uid={stat.st_uid}'
 
 
+class _AnchorFieldError(ValueError):
+    """A malformed optional anchor field.  Every such field fails closed."""
+
+
+def _anchor_timestamp(value, field: str) -> datetime:
+    """Parse an ISO-8601 anchor timestamp into UTC; no timezone means invalid."""
+    text = str(value).strip()
+    if text.endswith(('Z', 'z')):
+        text = text[:-1] + '+00:00'
+    try:
+        moment = datetime.fromisoformat(text)
+    except ValueError as exc:
+        raise _AnchorFieldError(f'{field} 不是合法 ISO-8601 时间：{value}') from exc
+    if moment.tzinfo is None:
+        raise _AnchorFieldError(f'{field} 缺少时区（必须带 Z 或 ±HH:MM）：{value}')
+    return moment.astimezone(timezone.utc)
+
+
+def _anchor_optional_problem(value: dict) -> str | None:
+    """Validate the optional lifecycle fields of an anchor document.
+
+    Revocation and expiry come only from this document, i.e. from the protected
+    anchor file or the CI secret; nothing inside the repository can revoke an
+    anchor.  Unrecognized extra fields are ignored for forward compatibility,
+    but they never grant trust.
+    """
+    not_before, not_after = value.get('not_before'), value.get('not_after')
+    try:
+        start = (_anchor_timestamp(not_before, 'not_before')
+                 if not_before is not None else None)
+        end = (_anchor_timestamp(not_after, 'not_after')
+               if not_after is not None else None)
+    except _AnchorFieldError as exc:
+        return str(exc)
+    if start is not None and end is not None and start > end:
+        return f'not_before（{not_before}）晚于 not_after（{not_after}）'
+    revoked = value.get('revoked_anchor_ids')
+    if revoked is not None:
+        if not isinstance(revoked, list):
+            return 'revoked_anchor_ids 必须是 JSON 数组'
+        for item in revoked:
+            if not isinstance(item, str) or not ANCHOR_ID_PATTERN.fullmatch(item):
+                return f'revoked_anchor_ids 含非法条目：{item!r}'
+    fingerprint = value.get('fingerprint_sha256')
+    if fingerprint is not None:
+        declared = str(fingerprint).strip()
+        if declared.lower().startswith('sha256:'):
+            declared = declared.split(':', 1)[1].strip()
+        if not FINGERPRINT_HEX_PATTERN.fullmatch(declared):
+            return 'fingerprint_sha256 必须是 64 位十六进制（可带 sha256: 前缀）'
+        try:
+            actual = public_key_fingerprint(value['public_key_pem'])
+        except _DerError as exc:
+            return f'fingerprint_sha256 无法核对公钥：{exc}'
+        if declared.lower() != actual:
+            return f'fingerprint_sha256（{declared.lower()}）与公钥实算（{actual}）不一致'
+    return None
+
+
+def _anchor_lifecycle_problem(anchor: dict, now: datetime | None = None) -> str | None:
+    """Validity window and self-revocation; ``None`` means the anchor is usable.
+
+    This runs on every trust decision, so an expired or revoked anchor stops
+    later verifications while leaving already-written records and merged commits
+    untouched.  ``now`` exists only to keep tests readable; production always
+    uses the current UTC time with a closed interval.
+    """
+    moment = now or datetime.now(timezone.utc)
+    if moment.tzinfo is None:
+        moment = moment.replace(tzinfo=timezone.utc)
+    not_before, not_after = anchor.get('not_before'), anchor.get('not_after')
+    try:
+        if (not_before is not None
+                and _anchor_timestamp(not_before, 'not_before') > moment):
+            return f'信任锚尚未生效（not_before={not_before}）'
+        if (not_after is not None
+                and _anchor_timestamp(not_after, 'not_after') < moment):
+            return f'信任锚已过期（not_after={not_after}）'
+    except _AnchorFieldError as exc:
+        return str(exc)
+    anchor_id = anchor.get('anchor_id')
+    revoked = anchor.get('revoked_anchor_ids')
+    if isinstance(revoked, list) and anchor_id in revoked:
+        return f'信任锚已吊销（anchor_id={anchor_id} 在 revoked_anchor_ids 中）'
+    return None
+
+
 def _anchor_document(value) -> tuple[dict | None, str]:
     """Validate the shape of an anchor document; no owner or trust check."""
     if not isinstance(value, dict):
@@ -445,6 +553,9 @@ def _anchor_document(value) -> tuple[dict | None, str]:
     for field in ('anchor_id', 'issuer', 'public_key_pem'):
         if not isinstance(value.get(field), str) or not value[field].strip():
             return None, f'信任锚缺少 {field}'
+    problem = _anchor_optional_problem(value)
+    if problem:
+        return None, problem
     return dict(value), 'ok'
 
 
@@ -510,13 +621,24 @@ def _load_json_anchor(name: str, value: str) -> tuple[dict | None, str]:
     return {**anchor, 'path': f'<env:{name}>', 'protection': 'ci-secret'}, 'ok'
 
 
+def _anchor_with_lifecycle(anchor: dict | None, reason: str) -> tuple[dict | None, str]:
+    """Apply the lifecycle decision to an already document-valid anchor."""
+    if anchor is None:
+        return None, reason
+    problem = _anchor_lifecycle_problem(anchor)
+    if problem:
+        return None, problem
+    return anchor, reason
+
+
 def load_anchor(repo: Path, env_name: str = ANCHOR_ENV,
                 json_env: str | None = None) -> tuple[dict | None, str]:
     """Load the trust anchor from a protected file or a CI-only JSON secret.
 
     An explicitly configured file anchor is authoritative: if it cannot be
-    loaded (missing, inside the repository, wrong shape, not owner-protected)
-    the function fails closed and never falls back to the JSON anchor.
+    loaded (missing, inside the repository, wrong shape, not owner-protected,
+    outside its validity window, or revoked) the function fails closed and never
+    falls back to the JSON anchor.
 
     The JSON form is accepted only when ``GITHUB_ACTIONS`` is exactly ``true``
     and no file anchor was configured.  That flag is a misuse guard, not a
@@ -527,15 +649,19 @@ def load_anchor(repo: Path, env_name: str = ANCHOR_ENV,
     own key and its own anchor can still obtain ``trusted``.  The JSON
     kind/schema/algorithm/field checks are identical to the file path; only the
     file-owner check is skipped because the secret has no file owner.
+
+    Both forms are also checked for ``not_before``/``not_after``/self-revocation
+    here, which is why every trust decision in this module inherits the
+    lifecycle: they all read the anchor through this function.
     """
     env_name = env_name or ANCHOR_ENV
     value = _env_value(env_name).strip()
     if value:
-        return _load_file_anchor(repo, value)
+        return _anchor_with_lifecycle(*_load_file_anchor(repo, value))
     json_value = _env_value(json_env).strip() if json_env else ''
     if json_value:
         if _is_ci_context():
-            return _load_json_anchor(json_env, json_value)
+            return _anchor_with_lifecycle(*_load_json_anchor(json_env, json_value))
         return None, (f'未配置受保护的信任锚（{env_name}）；'
                       f'{json_env} 只在 CI（{CI_CONTEXT_ENV}=true）中生效')
     return None, f'未配置受保护的信任锚（{env_name}）'
@@ -544,10 +670,13 @@ def load_anchor(repo: Path, env_name: str = ANCHOR_ENV,
 def load_anchor_document(path) -> tuple[dict | None, str]:
     """Load an anchor file for a local format and signature check only.
 
-    This intentionally performs no owner/protection check.  It answers "is this
-    a well-formed public-key document?", never "do I trust it?".  The trust
-    decision is made only at evaluation or gate time by re-reading the anchor
-    named by ``PROJECT_MEMORY_APPROVAL_ANCHOR``.
+    This intentionally performs no owner/protection check and no lifecycle
+    decision: ``not_before``/``not_after`` and ``revoked_anchor_ids`` are only
+    *structurally* validated here (plus the fingerprint against the public key).
+    It answers "is this a well-formed public-key document?", never "do I trust
+    it?".  The trust decision is made only at evaluation or gate time by
+    re-reading the anchor named by ``PROJECT_MEMORY_APPROVAL_ANCHOR`` through
+    ``load_anchor``, which is where expiry and revocation are enforced.
     """
     path = Path(path)
     if not path.is_file():
