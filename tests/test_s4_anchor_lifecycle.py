@@ -13,7 +13,10 @@ Test injection deliberately does *not* patch ``authority.load_anchor``: that
 would bypass the code under test.  The signed tests patch
 ``authority._load_file_anchor`` with a loader that still runs the real
 ``_anchor_document`` validation, so only the path/owner checks (not part of
-this card) are replaced.
+this card) are replaced.  The CI-secret tests at the end patch nothing at all:
+they set ``GITHUB_ACTIONS=true`` plus ``PROJECT_MEMORY_APPROVAL_ANCHOR_JSON``
+and go through the real ``load_anchor`` JSON branch, which is the only anchor
+source the approval gate workflow injects.
 """
 import base64
 import contextlib
@@ -257,6 +260,29 @@ class AnchorLifecycleSignedTest(unittest.TestCase):
         with anchor_patcher, env_patcher:
             return signed_record_authority(self.repo, record)
 
+    # ------------------------------------------------- CI secret anchor channel
+
+    def under_json_anchor(self, document):
+        """Feed the anchor through the real ``load_anchor`` JSON branch.
+
+        No production function is patched.  The file anchor variables are
+        emptied so the JSON secret is the only anchor source, exactly as in
+        the approval gate workflow.
+        """
+        return mock.patch.dict(os.environ, {
+            authority.CI_CONTEXT_ENV: 'true',
+            authority.APPROVAL_ANCHOR_ENV: '',
+            authority.ANCHOR_ENV: '',
+            authority.APPROVAL_ANCHOR_JSON_ENV: json.dumps(document),
+            authority.TRUST_ANCHOR_JSON_ENV: ''})
+
+    def verify_json(self, document, *source):
+        with self.under_json_anchor(document):
+            code, output = self.run_cli(
+                ['approval', 'verify', '--repo', str(self.repo), *source,
+                 '--commit', self.base, '--json'])
+        return code, (json.loads(output) if output.strip() else None)
+
     # ------------------------------------------------------------ positives
 
     def test_fingerprint_matches_the_openssl_der_digest(self):
@@ -333,14 +359,56 @@ class AnchorLifecycleSignedTest(unittest.TestCase):
         self.assertIn('fingerprint_sha256', result['reason'])
 
     def test_malformed_time_fields_are_rejected(self):
-        for extra in ({'not_before': '2026-01-01T00:00:00'},
-                      {'not_after': '2026-01-01 00:00:00'},
-                      {'not_before': 'not-a-time'},
-                      {'not_before': _hours(1), 'not_after': _hours(-1)}):
+        cases = (({'not_before': '2026-01-01T00:00:00'}, '时区'),
+                 ({'not_after': '2026-01-01 00:00:00'}, '时区'),
+                 ({'not_before': 'not-a-time'}, 'ISO-8601'),
+                 ({'not_before': _hours(1), 'not_after': _hours(-1)}, '晚于'))
+        for extra, keyword in cases:
             code, result = self.verify(self.document(**extra))
             self.assertEqual(2, code, extra)
             self.assertFalse(result['verified'], extra)
-            self.assertTrue(result['reason'], extra)
+            self.assertIn(keyword, result['reason'], extra)
+
+    def test_revoked_anchor_json_secret_is_not_trusted(self):
+        """The CI-secret branch decides the lifecycle, not only the file branch."""
+        document = self.document(revoked_anchor_ids=[OTHER_ANCHOR_ID, ANCHOR_ID])
+        code, result = self.verify_json(document, '--record', str(self.record_path))
+        self.assertEqual(2, code)
+        self.assertFalse(result['verified'])
+        self.assertFalse(result['trusted'])
+        self.assertIn('已吊销', result['reason'])
+        code, result = self.verify_json(document, '--records-dir',
+                                        str(self.record_path.parent),
+                                        '--require-approve')
+        self.assertEqual(2, code)
+        self.assertFalse(result['approved'])
+        self.assertEqual(1, result['scanned'])
+        self.assertFalse(result['records'][0]['trusted'])
+        self.assertIn('已吊销', result['records'][0]['problems'][0])
+
+    def test_expired_anchor_json_secret_is_not_trusted(self):
+        code, result = self.verify_json(self.document(not_after=_hours(-24)),
+                                        '--record', str(self.record_path))
+        self.assertEqual(2, code)
+        self.assertFalse(result['verified'])
+        self.assertFalse(result['trusted'])
+        self.assertIn('已过期', result['reason'])
+
+    def test_valid_anchor_json_secret_stays_trusted(self):
+        document = self.document(not_before=_hours(-24), not_after=_hours(24),
+                                 revoked_anchor_ids=[OTHER_ANCHOR_ID],
+                                 fingerprint_sha256=authority.public_key_fingerprint(
+                                     self.public_pem))
+        code, result = self.verify_json(document, '--record', str(self.record_path))
+        self.assertEqual(0, code)
+        self.assertTrue(result['verified'])
+        self.assertTrue(result['trusted'])
+        self.assertEqual([], result['problems'])
+        code, result = self.verify_json(document, '--records-dir',
+                                        str(self.record_path.parent),
+                                        '--require-approve')
+        self.assertEqual(0, code)
+        self.assertTrue(result['approved'])
 
     def test_approval_from_another_repository_does_not_verify(self):
         other = self.init_repo(self.work / 'repo-b', 'repo-b')
