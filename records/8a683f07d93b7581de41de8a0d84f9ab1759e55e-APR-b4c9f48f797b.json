@@ -1,0 +1,25 @@
+{
+  "approval_id": "APR-b4c9f48f797b",
+  "approver": "s3-exercise@project-memory.invalid",
+  "at": "2026-11-01T02:17:11+00:00",
+  "authority": {
+    "algorithm": "rsa-sha256",
+    "anchor_id": "ANCHOR-S3-EXERCISE-20261031",
+    "issuer": "s3-exercise@project-memory.invalid",
+    "signature_b64": "QRFZtzz1+h4OIAnpXeOyOVt4MzcDRktAE18YoVo2S9sUcB8qALniYmv6eQrpftBdJn0PBVEOLKU/FSOwXTcUVStbj7qSaS2G3SN/obIjQnAu+ctA1G5qnsh2aWxbdvWET85kiX9vEGodYMfMKrVB7xl8yhswV9CJAcAmGHCqzIk/dlBQfSip41bc2bCYfiFTaHGUj1/OzaMtoGi/UtUisNkTw2jPBmyhXVCEM7ozEcmYWraVVTMQsGtevHuj8ydWQqekeVkxVv+fHC1s3P1ssZp86KSoMpArdLTTOQ3t/jGgeSVmtfx0klbQudlCFm4GeRk4I7sTNf/UaJ3GE6gWOA==",
+    "signed_payload_sha256": "95334d2f38052b561068250e7d60980d5439646451d3e7767e3f91fbc1b560b4",
+    "status": "signed"
+  },
+  "commit_sha": "8a683f07d93b7581de41de8a0d84f9ab1759e55e",
+  "decision": "approve",
+  "kind": "approval_event",
+  "repository": {
+    "id": "6d372b4c9fc56b2a479d8671044a834e285caedb14aaf49d030beaa33dc9e8f6",
+    "remote": "github.com/MJ-Zeng/Project-Memory"
+  },
+  "schema_version": "1.0",
+  "scope": {
+    "kind": "commit"
+  },
+  "statement": "S4-2 gate exercise: approve anchor lifecycle and repository recheck work for this PR head. Exercise identity; not a human approval."
+}
