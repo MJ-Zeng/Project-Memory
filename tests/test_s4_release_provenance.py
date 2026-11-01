@@ -43,8 +43,8 @@ UPLOAD_SHA = ('actions/upload-artifact@'
 MANIFEST_SELF_EXCLUSION = re.compile(
     r"""(?:!|-not)[ \t]+-name[ \t]+['"]?sha256sums\.txt""")
 
-# The `permissions` mapping key as Actions lets you write it: the key name may
-# be quoted and the colon may be preceded by whitespace.  All three spellings
+# The `permissions` mapping key as YAML lets you write it: the key name may be
+# quoted and the colon may be preceded by whitespace.  All three spellings
 # parse to the same mapping, so the guard must not be fooled by any of them.
 PERMISSIONS_KEY = re.compile(r"""( *)['"]?permissions['"]?[ \t]*:(.*)""")
 
@@ -109,9 +109,18 @@ class ReleaseWorkflowStaticTest(unittest.TestCase):
     def permission_blocks(self):
         """Every ``permissions:`` mapping in the file, with its indentation.
 
-        A job (or a step) may declare its own ``permissions:``; Actions then
-        overlays it on the workflow-level block, so reading only column zero
-        would let a ``contents: write`` buried in the job pass unnoticed.
+        Actions puts ``permissions`` in exactly two places — the workflow
+        level and the job level — and a job-level block *replaces* the
+        workflow grants, so every scope it does not list becomes ``none``.
+        A step has no such key.  This collector does not model that
+        resolution on purpose: it reports every block at any indentation and
+        the guard below fails anything not at column zero, which is stricter
+        than the grammar and keeps a step-level block — illegal today, but a
+        plausible rewrite — from being quietly merged into the workflow
+        grants.  The scan is line-based over the whole file, so a literal
+        ``permissions:`` inside a ``run:`` body is counted too; if that ever
+        bites a legitimate script, reword the script or open a card to relax
+        the guard instead of weakening the assertion here.
         """
         blocks = []
         for index, line in enumerate(self.lines):
@@ -132,7 +141,14 @@ class ReleaseWorkflowStaticTest(unittest.TestCase):
         return blocks
 
     def effective_permissions(self):
-        """Grants after overlaying every level, the way Actions resolves them."""
+        """Every scope listed by any ``permissions:`` block in the file.
+
+        Blocks are merged shallowest-first, so a deeper block overwrites the
+        scopes it repeats and leaves the rest in place.  That is a union, not
+        the replacement Actions performs for a job-level block; the placement
+        guard runs first, so in a passing file there is exactly one block and
+        the difference cannot change the comparison.
+        """
         granted, inline = {}, {}
         for block in sorted(self.permission_blocks(), key=lambda b: b['indent']):
             if block['inline']:
@@ -175,8 +191,9 @@ class ReleaseWorkflowStaticTest(unittest.TestCase):
         blocks = self.permission_blocks()
         self.assertTrue(blocks, 'release.yml 必须声明 permissions')
         self.assertEqual(1, len(blocks),
-                         '多一处 permissions 就多一层覆盖关系：job 或 step 层的'
-                         '声明会追加/改写工作流层的权限，不能被顶层段落代表')
+                         '多一处 permissions 就多一层替换：job 层声明会整体改写'
+                         '工作流层的权限，未列出的作用域一律变成 none，不能被顶层'
+                         '段落代表；step 层没有这个键，出现更要拦下')
         self.assertEqual([0], [block['indent'] for block in blocks],
                          'permissions 只能出现在工作流层（第 0 列）')
 
@@ -186,7 +203,8 @@ class ReleaseWorkflowStaticTest(unittest.TestCase):
                          '不允许 write-all 这类行内权限；逐条列举才看得住')
         self.assertEqual({'contents': 'read', 'id-token': 'write',
                           'attestations': 'write'}, granted,
-                         '按各层叠加后的有效权限比较，而不是只看顶层段落')
+                         '把每处 permissions 块声明的作用域合并起来比较，而不是'
+                         '只看顶层段落')
 
     def test_permissions_grant_nothing_more_than_needed(self):
         granted, _ = self.effective_permissions()
