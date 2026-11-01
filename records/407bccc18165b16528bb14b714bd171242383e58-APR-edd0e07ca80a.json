@@ -1,0 +1,25 @@
+{
+  "approval_id": "APR-edd0e07ca80a",
+  "approver": "s3-exercise@project-memory.invalid",
+  "at": "2026-11-01T15:35:47+00:00",
+  "authority": {
+    "algorithm": "rsa-sha256",
+    "anchor_id": "ANCHOR-S3-EXERCISE-20261031",
+    "issuer": "s3-exercise@project-memory.invalid",
+    "signature_b64": "az/Hm+6CESiNY2fvnLHMdfdzHtJVipz7avK+EM/LvyfzXKDetglyQDD017rkUrWkHdV1Gc9e6twdBfKFnvf83vZ4fEbmhdOBc44obOXojtUVwAZT0ywiQnj5D3WI3W3efQEkoVtCt+scZL6FIZvJBMSspLbT2uja/JM5nyyfLnvSf/X4ZAAoje4PyavPuFK0Nu3TP/jgB50AqA0DcomdmwvBDPjVd0v/idDz1tlZtDXtoJynn+YDAVf5yS2Gs7SITCmuBp5roNtnKf1st2Iy9CSkrYb175I3S0cSKAMHnLM6XMdHr4tcPSp0uEPK/HIq0KTIK62TBW+oLaG73QRdZA==",
+    "signed_payload_sha256": "586e7cab790c5131bb81216c64b86efde60544b30c6f2f5a24136455cb34c767",
+    "status": "signed"
+  },
+  "commit_sha": "407bccc18165b16528bb14b714bd171242383e58",
+  "decision": "approve",
+  "kind": "approval_event",
+  "repository": {
+    "id": "6d372b4c9fc56b2a479d8671044a834e285caedb14aaf49d030beaa33dc9e8f6",
+    "remote": "github.com/MJ-Zeng/Project-Memory"
+  },
+  "schema_version": "1.0",
+  "scope": {
+    "kind": "commit"
+  },
+  "statement": "S4-3 drill approval for the DEV-FIX-003 candidate head: PM-01 re-ran the 46 static checks, the normalised-AST behaviour proof, the dual-multiset knowledge audit, the 18-row mutation battery and gates G1-G8 at this commit with zero drift against 17152e2; PM-03 light re-verification R1/R2/R3 must come back PASS before merge. Exercise identity, not a human approval; no tag, no Release, no acceptance claim."
+}
