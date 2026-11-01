@@ -145,9 +145,11 @@ class ReleaseWorkflowStaticTest(unittest.TestCase):
 
         Blocks are merged shallowest-first, so a deeper block overwrites the
         scopes it repeats and leaves the rest in place.  That is a union, not
-        the replacement Actions performs for a job-level block; the placement
-        guard runs first, so in a passing file there is exactly one block and
-        the difference cannot change the comparison.
+        the replacement Actions performs for a job-level block; the file only
+        passes when all three permission assertions hold, and
+        test_permissions_is_declared_only_at_workflow_level fails on any second
+        block, so a passing repo has exactly one block and the merge order is
+        never observable -- this does not depend on which assertion runs first.
         """
         granted, inline = {}, {}
         for block in sorted(self.permission_blocks(), key=lambda b: b['indent']):
@@ -193,7 +195,10 @@ class ReleaseWorkflowStaticTest(unittest.TestCase):
         self.assertEqual(1, len(blocks),
                          '多一处 permissions 就多一层替换：job 层声明会整体改写'
                          '工作流层的权限，未列出的作用域一律变成 none，不能被顶层'
-                         '段落代表；step 层没有这个键，出现更要拦下')
+                         '段落代表；step 层没有这个键，出现更要拦下。若多出的一处其实'
+                         '出现在 run: 正文里，那是本文件第 120-123 行说过的行扫描代价'
+                         '（此时并没有第二层权限生效），要改的是脚本措辞或另开卡放宽'
+                         '扫描，不要动这条断言')
         self.assertEqual([0], [block['indent'] for block in blocks],
                          'permissions 只能出现在工作流层（第 0 列）')
 
