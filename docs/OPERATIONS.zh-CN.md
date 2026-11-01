@@ -353,6 +353,48 @@ PYTHONPATH=.project-memory/tooling python3 -m project_memory sync-tooling --repo
 
 Windows 上用 Git Bash 时，先 `export PYTHONUTF8=1`，并把 `python3` 换成实际可用的解释器路径。
 
+## 发布构建与来源证明
+
+`.github/workflows/release.yml` 只做「构建 + 证明来源」，发布仍是人工动作。它有两个入口：推送形如 `v*` 的 tag，或手动 `workflow_dispatch`（`tag` 输入留空则构建 dispatch 当下选中的 ref，填了就先按 `^[A-Za-z0-9][A-Za-z0-9._-]*$` 校验形状，再进入 `git fetch` 与 `$GITHUB_ENV`）。被构建的 commit、tree、ref 会写进 run summary，和决定这次运行的 workflow 提交（`GITHUB_SHA`）分开列出——给 tag 输入时两者不同。
+
+产物都在 `dist/`：
+
+| 文件 | 来源 |
+| --- | --- |
+| `project-memory-<short>-source.tar.gz` | `git archive` 直接打包被构建的 commit |
+| `*.whl` / `*.tar.gz`（sdist） | `python -m build` |
+| `sha256sums.txt` | 对 `dist/` 内除自身外的每个文件跑 `sha256sum --text` |
+| BUILD-INFO.json | commit / tree / ref / event / run id / run url / workflow 提交 / Python 与 build 版本 / 生成时间 + 写它那一刻 `dist/` 里的制品名单，按工作流的先后恰好 3 项（源码归档、wheel、sdist）——不含 sha256sums.txt（它在这之后才生成）、不含 BUILD-INFO.json 自身（枚举时还没落盘）、不含 attestation bundle（从不进 `dist/`） |
+
+sdist 和源码归档都是 `.tar.gz`，靠 `project-memory-<short>-source` 前缀区分。attestation bundle 单独放在 attestation/attestation.json，不进 `dist/`：它由 `actions/attest-build-provenance` 的 `bundle-path` **输出**给出（这个 action 没有 `bundle-path` 输入），拷进 `dist/` 会让它出现在自己的哈希清单里。output 为空或指向的文件不存在时该步骤直接报错，不会留下一个自称已生成的空目录。
+
+**不创建 Release。** 权限只有 `contents: read`、`id-token: write`、`attestations: write`；没有 `gh release create`、没有 Release API、不读任何仓库 secret（`gh attestation verify` 用的是当次 run 自带的 `github.token`）。打 tag、建 Release、挂资产留给 S4-5 人工执行。
+
+外部验证一次已完成的 run：
+
+```bash
+# 1. 下载 run 的 workflow artifact（名形如 release-artifacts-<short>）
+gh run download RUN_ID --repo MJ-Zeng/Project-Memory \
+  --name release-artifacts-<short>
+# 2. 先核对哈希清单
+( cd ARTIFACT_DIR/dist && sha256sum -c -- sha256sums.txt )
+# 3. 再逐个验证 GitHub 签发的 attestation
+for file in ARTIFACT_DIR/dist/*; do
+  gh attestation verify "$file" --repo MJ-Zeng/Project-Memory
+done
+```
+
+`gh attestation verify` 一次只接受一个文件，所以必须循环。
+
+失败判读：
+
+- run 不是 success：这批制品不构成证据，不下载、不引用。summary 末尾会标出 `sha256sum -c` 与每个文件的 `gh attestation verify` 各自的退出码。
+- `sha256sum -c` 不符：artifact 被改动过，或清单与制品不是同一次构建。弃用这批，不要试图解释差异。
+- run success 但 `gh attestation verify` 失败：先确认 `--repo` 和文件来自同一次 run（跨仓库、跨 run 都会失败）；刚跑完时索引可能还读不到，工作流内部已按 5 次 × 10 秒重试过，外部仍然验证不过就按「没有 attestation」处理。
+- artifact 里没有 attestation/attestation.json：那次 run 没有可下载的 bundle。attestation 步骤 success 只说明签发成功，不说明你之后还能离线复现验证。
+
+已知限制：workflow artifact 不是 Release 资产，保留 90 天后就要重新构建；attestation 声明的是「这些文件由该仓库这次 run 构建」，不声明 SLSA 等级，也不独立证明 BUILD-INFO.json 自报的 commit 与外部记录一致；tag 触发路径在人类打下第一个 `v*` tag 之前没有被真实执行过——本仓库的静态测试只锁工作流的形状（触发、权限、固定 SHA、产物与上传清单），不证明 hosted runner 一定成功。来源证明也不等于评审证据：`v*` tag 触发跑的是 tag 所指提交里的那份 `.github/workflows/release.yml`，而 tag 可以指向一个从未走过「PR + 双门禁」的提交——`.github/workflows/test.yml` 监听 `dev/v1.0` 的 push 与 `pull_request`，另有 `workflow_dispatch`；`.github/workflows/approval-gate.yml` 监听 `pull_request_target` 与 `workflow_dispatch`；两者都不监听 tag，所以 tag 触发的发布构建本身不携带评审证据：attestation 只说明「这些文件由本仓库这次 run 构建」，不说明那个提交被独立复核过。核对评审状态要认**两个** SHA、分两步做，因为两类检查本来就不挂在同一个 SHA 上。第一步定锚点：`v*` tag 是带注解标签，必须先剥皮得到它指向的提交 T（`git rev-parse vX.Y.Z^{commit}`；只看 `refs/tags/vX.Y.Z` 的第一列会拿到 tag 对象），或按分支合并点解出 T。第二步分头核：在 **T** 上核 `test`（作业 `pytest`）completed 且 success——这条由落地时的 push 事件产生；用服务端的提交↔PR 绑定 `GET /repos/{owner}/{repo}/commits/{T}/pulls` 取回 PR 号及其 `head_sha`，记为 P（合并式提交里 P 就是 T 的第二父；squash 合并后 P **不是** T 的祖先，此时只能靠这条服务端绑定加「T 的树 == P 的树」说明审过的就是落地的），再在 **P** 上核 `approval-gate`（作业 `approval`）completed 且 success——它由 `pull_request_target` 产生，永远不挂 T。写条件要写成「**最新一次** completed 且 conclusion=success」，不要写成「所有记录都 success」：同一个 SHA 可以同时留有一次 failure 和一次较新的 success。**不要**把「`pytest` 与 `approval` 都跑在同一个 SHA 上且都成功」当条件——这是做不到的动作：`dev/v1.0` 上四个落地提交（squash 与真合并两种形态都有）的检查记录都只有 `pytest` 一条，`approval` 只出现在 PR 头提交上；本仓库现存的 `v1.0.0` 剥皮后（`f033a6c5…`）更是**一条检查都没有**（total=0），因为那条提交早于双门禁落地。BUILD-INFO.json 里的 commit、tree、run_id、run_url 一律由工作流自己从环境变量写入，属自报字段：attestation 证明的是 dist/* 的字节，不证明这些字段。所以 run_id、run_url 只能当作文本线索，一旦引用就要反向核那次 run 的 `head_sha` 是否等于 P（评审证据挂在那儿）或 T（落地与构建证据挂在那儿），两者不是同一个 SHA——相等是核对得到的结果，不是可以预设的前提。源码归档的字节还依赖产出机器的 git 配置，不跨机器可比：`git archive` 按当次环境的行尾设置落地，本机在 `core.autocrlf=true` 下实测 `README.md`、`docs/OPERATIONS.zh-CN.md`、`project_memory/authority.py` 解出的是 CRLF（与仓库 blob 字节不同），而 `.gitattributes` 声明 `text eol=lf` 的 `bin/project-memory` 保持 LF、与 blob 逐字节相同；因此别指望本地重新打包的源码归档能对上制品清单里的那个 SHA-256——外部复核认的是那次 run 自己的哈希清单与 attestation，不是重打包的哈希。
+
 ## 上线检查
 
 - [ ] Agent 不共享管理员 PAT。使用最小权限的 GitHub App 令牌，令牌不写进 handoff。
