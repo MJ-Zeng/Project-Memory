@@ -43,13 +43,19 @@ UPLOAD_SHA = ('actions/upload-artifact@'
 MANIFEST_SELF_EXCLUSION = re.compile(
     r"""(?:!|-not)[ \t]+-name[ \t]+['"]?sha256sums\.txt""")
 
+# The `permissions` mapping key as Actions lets you write it: the key name may
+# be quoted and the colon may be preceded by whitespace.  All three spellings
+# parse to the same mapping, so the guard must not be fooled by any of them.
+PERMISSIONS_KEY = re.compile(r"""( *)['"]?permissions['"]?[ \t]*:(.*)""")
+
 # `subject-path` must be *exactly* the whole dist tree, up to end of line.
 # A same-line comment is allowed; anything else after `dist/*` narrows what the
 # attestation covers, so the pattern is anchored with re.MULTILINE (`$` without
-# it only matches the very end of the string and could never fire).
+# it only matches the very end of the string and could never fire).  Whitespace
+# inside the `${{ … }}` expression carries no meaning, so it is not pinned.
 SUBJECT_PATH_WHOLE_DIST = re.compile(
     r"""^[ \t]*subject-path:[ \t]*"""
-    r"""\$\{\{ github\.workspace \}\}/dist/\*[ \t]*(?:#.*)?$""",
+    r"""\$\{\{\s*github\.workspace\s*\}\}/dist/\*[ \t]*(?:#.*)?$""",
     re.MULTILINE)
 
 # Actions that would publish a Release; none of them may appear.
@@ -109,7 +115,7 @@ class ReleaseWorkflowStaticTest(unittest.TestCase):
         """
         blocks = []
         for index, line in enumerate(self.lines):
-            match = re.fullmatch(r'( *)permissions:(.*)', line)
+            match = PERMISSIONS_KEY.fullmatch(line)
             if match is None:
                 continue
             indent, inline = len(match.group(1)), match.group(2).strip()
