@@ -162,6 +162,8 @@ jobs:
         shell: bash
         env:
           PM_BUNDLE_PATH: ${{ steps.attest.outputs.bundle-path }}
+          PM_ATTESTATION_ID: ${{ steps.attest.outputs.attestation-id }}
+          PM_ATTESTATION_URL: ${{ steps.attest.outputs.attestation-url }}
         run: |
           set -euo pipefail
           if [ -z "${PM_BUNDLE_PATH}" ] || [ ! -f "${PM_BUNDLE_PATH}" ]; then
@@ -170,8 +172,8 @@ jobs:
           fi
           cp "${PM_BUNDLE_PATH}" attestation/attestation.json
           echo "- attestation bundle: $(wc -c < attestation/attestation.json) bytes" >> "$GITHUB_STEP_SUMMARY"
-          echo "- attestation id: ${{ steps.attest.outputs.attestation-id }}" >> "$GITHUB_STEP_SUMMARY"
-          echo "- attestation url: ${{ steps.attest.outputs.attestation-url }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- attestation id: ${PM_ATTESTATION_ID}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- attestation url: ${PM_ATTESTATION_URL}" >> "$GITHUB_STEP_SUMMARY"
       - name: Checksum self-check
         shell: bash
         run: |
