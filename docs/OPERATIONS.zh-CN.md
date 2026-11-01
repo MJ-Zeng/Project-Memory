@@ -364,9 +364,9 @@ Windows 上用 Git Bash 时，先 `export PYTHONUTF8=1`，并把 `python3` 换�
 | `project-memory-<short>-source.tar.gz` | `git archive` 直接打包被构建的 commit |
 | `*.whl` / `*.tar.gz`（sdist） | `python -m build` |
 | `sha256sums.txt` | 对 `dist/` 内除自身外的每个文件跑 `sha256sum --text` |
-| `BUILD-INFO.json` | commit / tree / ref / event / run id / run url / workflow 提交 / Python 与 build 版本 / 生成时间 + 当时的制品名单 |
+| BUILD-INFO.json | commit / tree / ref / event / run id / run url / workflow 提交 / Python 与 build 版本 / 生成时间 + 当时的制品名单 |
 
-sdist 和源码归档都是 `.tar.gz`，靠 `project-memory-<short>-source` 前缀区分。attestation bundle 单独放在 `attestation/attestation.json`，不进 `dist/`：它由 `actions/attest-build-provenance` 的 `bundle-path` **输出**给出（这个 action 没有 `bundle-path` 输入），拷进 `dist/` 会让它出现在自己的哈希清单里。output 为空或指向的文件不存在时该步骤直接报错，不会留下一个自称已生成的空目录。
+sdist 和源码归档都是 `.tar.gz`，靠 `project-memory-<short>-source` 前缀区分。attestation bundle 单独放在 attestation/attestation.json，不进 `dist/`：它由 `actions/attest-build-provenance` 的 `bundle-path` **输出**给出（这个 action 没有 `bundle-path` 输入），拷进 `dist/` 会让它出现在自己的哈希清单里。output 为空或指向的文件不存在时该步骤直接报错，不会留下一个自称已生成的空目录。
 
 **不创建 Release。** 权限只有 `contents: read`、`id-token: write`、`attestations: write`；没有 `gh release create`、没有 Release API、不读任何仓库 secret（`gh attestation verify` 用的是当次 run 自带的 `github.token`）。打 tag、建 Release、挂资产留给 S4-5 人工执行。
 
@@ -391,9 +391,9 @@ done
 - run 不是 success：这批制品不构成证据，不下载、不引用。summary 末尾会标出 `sha256sum -c` 与每个文件的 `gh attestation verify` 各自的退出码。
 - `sha256sum -c` 不符：artifact 被改动过，或清单与制品不是同一次构建。弃用这批，不要试图解释差异。
 - run success 但 `gh attestation verify` 失败：先确认 `--repo` 和文件来自同一次 run（跨仓库、跨 run 都会失败）；刚跑完时索引可能还读不到，工作流内部已按 5 次 × 10 秒重试过，外部仍然验证不过就按「没有 attestation」处理。
-- artifact 里没有 `attestation/attestation.json`：那次 run 没有可下载的 bundle。attestation 步骤 success 只说明签发成功，不说明你之后还能离线复现验证。
+- artifact 里没有 attestation/attestation.json：那次 run 没有可下载的 bundle。attestation 步骤 success 只说明签发成功，不说明你之后还能离线复现验证。
 
-已知限制：workflow artifact 不是 Release 资产，保留 90 天后就要重新构建；attestation 声明的是「这些文件由该仓库这次 run 构建」，不声明 SLSA 等级，也不独立证明 `BUILD-INFO.json` 自报的 commit 与外部记录一致；tag 触发路径在人类打下第一个 `v*` tag 之前没有被真实执行过——本仓库的静态测试只锁工作流的形状（触发、权限、固定 SHA、产物与上传清单），不证明 hosted runner 一定成功。
+已知限制：workflow artifact 不是 Release 资产，保留 90 天后就要重新构建；attestation 声明的是「这些文件由该仓库这次 run 构建」，不声明 SLSA 等级，也不独立证明 BUILD-INFO.json 自报的 commit 与外部记录一致；tag 触发路径在人类打下第一个 `v*` tag 之前没有被真实执行过——本仓库的静态测试只锁工作流的形状（触发、权限、固定 SHA、产物与上传清单），不证明 hosted runner 一定成功。
 
 ## 上线检查
 

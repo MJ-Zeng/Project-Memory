@@ -219,7 +219,7 @@ python3 -m project_memory goal evidence --repo . --id G-AUTH --criterion C1 \
 
 ### 发布构建与来源证明
 
-`release` 工作流由 `v*` tag 推送或手动 `workflow_dispatch` 触发，产出源码归档、sdist、wheel、`sha256sums.txt` 和 `BUILD-INFO.json`，向 GitHub 申请 artifact attestation，并把它们一起作为 workflow artifact 上传。它不创建 tag、不发布 Release、不读任何仓库 secret——发布仍然是人工动作（S4-5）。外部验证一次 run：下载 artifact → `sha256sum -c sha256sums.txt` → 逐个 `gh attestation verify <文件> --repo MJ-Zeng/Project-Memory`；完整命令、失败判读和已知限制见 [OPERATIONS](docs/OPERATIONS.zh-CN.md#发布构建与来源证明)。attestation 只能在 hosted runner 上签发，本地静态测试锁的是工作流形状，tag 触发路径要等人类打下第一个 `v*` tag 才算实测。
+`release` 工作流由 `v*` tag 推送或手动 `workflow_dispatch` 触发，产出源码归档、sdist、wheel、`sha256sums.txt` 和 BUILD-INFO.json，向 GitHub 申请 artifact attestation，并把它们一起作为 workflow artifact 上传。它不创建 tag、不发布 Release、不读任何仓库 secret——发布仍然是人工动作（S4-5）。外部验证一次 run：下载 artifact → `sha256sum -c sha256sums.txt` → 逐个 `gh attestation verify <文件> --repo MJ-Zeng/Project-Memory`；完整命令、失败判读和已知限制见 [OPERATIONS](docs/OPERATIONS.zh-CN.md#发布构建与来源证明)。attestation 只能在 hosted runner 上签发，本地静态测试锁的是工作流形状，tag 触发路径要等人类打下第一个 `v*` tag 才算实测。
 
 ## 两种审计范围
 

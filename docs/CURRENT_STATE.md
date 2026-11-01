@@ -20,7 +20,7 @@ v1.0.0 可以用于团队内部的记忆记录与跨会话交接；不能作为�
 - 版本标签：`v1.0.0` 是 annotated tag，未签名。
 - 测试门槛：默认运行与设置 `PROJECT_MEMORY_REQUIRE_OPENSSL=1` 运行均通过全量 386 项测试；Windows 上 3 个符号链接用例因无法创建链接而 skip（其中 1 个来自签名证据清单测试），WSL2 sandbox 用例在 WSL 可用时通过（383 passed / 3 skipped），设置 `PROJECT_MEMORY_DISABLE_WSL=1` 后该用例 skip（382 passed / 4 skipped），具体 skip 数随环境变化。
 - 发布证据：在干净检出上，证据包完整性检查 24/24 通过。
-- 发布构建：`release` 工作流已定义源码归档、sdist、wheel、`sha256sums.txt`、`BUILD-INFO.json` 与 GitHub artifact attestation 的产出与上传，但尚未在 hosted runner 上跑过一次；attestation 需要 runner 的 OIDC 令牌，本机无法生成或验证。`v1.0.0` 仍是未签名的 annotated tag，Release 没有资产，发布构建也不创建 Release。
+- 发布构建：`release` 工作流已定义源码归档、sdist、wheel、`sha256sums.txt`、BUILD-INFO.json 与 GitHub artifact attestation 的产出与上传，但尚未在 hosted runner 上跑过一次；attestation 需要 runner 的 OIDC 令牌，本机无法生成或验证。`v1.0.0` 仍是未签名的 annotated tag，Release 没有资产，发布构建也不创建 Release。
 
 ## 预期行为
 
