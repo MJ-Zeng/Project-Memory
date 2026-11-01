@@ -194,7 +194,9 @@ PYTHONPATH=.project-memory/tooling python3 -m project_memory approval verify --r
 }
 ```
 
-`not_before`/`not_after` 必须是带时区的 ISO-8601 字符串（`Z` 或 `±HH:MM`），判定用当前 UTC 时间、闭区间，只给一端时另一端不限制；`revoked_anchor_ids` 必须是非空字符串数组；`fingerprint_sha256` 必须等于 `public_key_pem` 解出的 DER SubjectPublicKeyInfo 字节的 SHA-256（哈希 DER 而不是 PEM 文本，避免换行差异），可用 `openssl pkey -pubin -outform DER | openssl dgst -sha256` 独立核对。格式非法、时间无时区、`not_before > not_after`、指纹与公钥不一致都让锚文档直接非法。
+`not_before`/`not_after` 必须是带时区的 ISO-8601 字符串（`Z` 或 `±HH:MM`），判定用当前 UTC 时间、闭区间，只给一端时另一端不限制；`revoked_anchor_ids` 必须是非空字符串数组；`fingerprint_sha256` 必须等于 `public_key_pem` 解出的 DER SubjectPublicKeyInfo 字节的 SHA-256（哈希 DER 而不是 PEM 文本，避免换行差异），可用 `openssl pkey -pubin -outform DER | openssl dgst -sha256` 独立核对。格式非法、时间无时区、`not_before > not_after`、指纹与公钥不一致都让锚文档直接非法。四个字段都可选：写成 JSON `null` 与不提供该字段等同，按「未启用」处理；但值一旦给出就必须合规，空字符串 `""` 判非法。
+
+锚失效之后各链的退出码不是一个数，别按一个数写自动化：`approval verify`（含 `--records-dir --require-approve`）与 `evidence verify` 是 exit 2；`audit checkpoint-attach` 在读取受保护锚失败时抛 `PMError`，CLI 统一映射为 exit 1；`goal evaluate` 只跟随 `satisfied`（判据不满足 exit 2，判据集合为空时 exit 0 + `satisfied=false`，见上文）。每条链给出的结论都是 `trusted=false` 并 fail closed，但要区分「锚失效」与「根本没配锚」只能读 JSON 里的 `reason`。
 
 轮换步骤：
 
@@ -211,6 +213,7 @@ PYTHONPATH=.project-memory/tooling python3 -m project_memory approval verify --r
 - 不能删除或改写任何已写出的记录、清单或账本；
 - 不能让历史验证「重新变成通过」，也不能反过来把当时合法的验证说成伪造——它只让**之后**的信任判定 fail closed；
 - 不改变记录本身：同一份审批文件在锚被吊销前 `exit 0`、之后 `exit 2`，字节不变。
+- 不是一次写入就不可撤销：吊销列表由受保护锚文件或 CI secret 的持有者维护，**能编辑这份锚的人从 `revoked_anchor_ids` 里删掉一条，那个锚就重新可信**。它是运维手段，不是不可篡改的公开 CRL；防的是「改写仓库就能宣布吊销」，不是「锚的持有者反悔」。
 
 过期对历史证据的影响：到期后所有依赖该锚的记录在下一次验证时都不可信，包括曾经通过的门禁重跑。需要长期可验证的证据，把 `not_after` 设得足够长，或在轮换后用新锚重新签署同一载荷。
 

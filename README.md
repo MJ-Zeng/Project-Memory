@@ -196,7 +196,7 @@ python3 -m project_memory goal evidence --repo . --id G-AUTH --criterion C1 \
 
 `approval verify` 只在记录通过审批锚验签、`decision=approve`、`commit_sha` 与 `--commit` 一致且记录里的 `repository.id` 与当前仓库身份一致时 exit 0，否则 exit 2。`approval verify --records-dir DIR --commit SHA [--require-approve]` 批量验签目录下的 `*.json` 并逐条输出结论：不带 `--require-approve` 时扫描完成即 exit 0，只在报告中如实给出 `approved`/`problems`；带 `--require-approve` 时，只有存在至少一条 trusted+approve+提交匹配的记录才 exit 0，否则 exit 2。`approval list [--commit SHA] [--goal G]` 只读列出记录、范围与验签状态。
 
-信任锚本身也有生命周期。锚文档可以带四个可选字段：`not_before`、`not_after`（带时区的 ISO-8601，闭区间）、`revoked_anchor_ids`（字符串数组，含自身 `anchor_id` 即自我吊销）与 `fingerprint_sha256`（必须等于公钥 DER 字节的 SHA-256，用于核对「文档里的公钥就是公布的那个」）。有效期与吊销在**每次信任判定**时由受保护锚重新求值，因此锚过期或被吊销后，之后的审批、清单与验证记录一律 exit 2，而已写出的记录与已合并的提交不改动一个字节；吊销列表只能放在受保护锚文件或 CI secret 里，放在仓库内的文件既可由 Agent 改写，不构成吊销。轮换与吊销的操作步骤见 `docs/OPERATIONS.zh-CN.md`「信任锚轮换与吊销」，设计取舍见 `docs/decisions/ADR-0008-anchor-lifecycle.md`。
+信任锚本身也有生命周期。锚文档可以带四个可选字段：`not_before`、`not_after`（带时区的 ISO-8601，闭区间）、`revoked_anchor_ids`（字符串数组，含自身 `anchor_id` 即自我吊销）与 `fingerprint_sha256`（必须等于公钥 DER 字节的 SHA-256，用于核对「文档里的公钥就是公布的那个」）。有效期与吊销在**每次信任判定**时由受保护锚重新求值，因此锚过期或被吊销后，之后的审批、清单、验证记录与审计 checkpoint 一律 `trusted=false` 并 fail closed，而已写出的记录与已合并的提交不改动一个字节。退出码口径各不相同，别把它当成一个：`approval verify`、`evidence verify` 与 `approval verify --records-dir --require-approve` 是 exit 2；`audit checkpoint-attach` 遇到失效锚抛 `PMError`，CLI 统一映射为 exit 1；`goal evaluate` 只按判据是否满足给码，判据集合为空时甚至是 exit 0 + `satisfied=false`——所以自动化必须读 JSON 字段，不能只看退出码。吊销列表只能放在受保护锚文件或 CI secret 里，放在仓库内的文件既可由 Agent 改写，不构成吊销。轮换与吊销的操作步骤与各链退出码见 `docs/OPERATIONS.zh-CN.md`「信任锚轮换与吊销」，设计取舍见 `docs/decisions/ADR-0008-anchor-lifecycle.md`。
 
 ### 签名证据清单
 

@@ -29,7 +29,7 @@ ADR-0002 §6.5 把「无吊销机制」列为残余风险：锚一旦泄露或�
 
 ### 2.1 锚文档增量四个可选字段
 
-必填字段与 `schema_version: "1.0"` 都不变；新增字段全部可选，因此老锚文档行为完全不变（回归由测试保证）。
+必填字段与 `schema_version: "1.0"` 都不变；新增字段全部可选，因此老锚文档行为完全不变（回归由测试保证）。口径：字段显式写成 JSON `null` 与根本不提供该字段等同，都按「未启用」处理；空字符串 `""` 与纯空白串判非法——可选不等于宽松，值一旦给出就必须合规。
 
 - `not_before` / `not_after`：带时区的 ISO-8601 字符串（`Z` 或 `±HH:MM`）。无时区、不可解析、`not_before > not_after` 都视为锚文档非法。判定用当前 UTC，闭区间 `not_before <= now <= not_after`；只给一端时另一端不限制。
 - `revoked_anchor_ids`：字符串数组，每项匹配 `[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}`。不是数组、含非字符串、含空串或空白串一律非法；字段存在但格式错误必须 fail closed，不允许「忽略后继续」。数组含当前锚自己的 `anchor_id` ⇒ 该锚不再参与信任判定。
@@ -76,22 +76,35 @@ CI secret 分支同理：值来自仓库外，且只在 `GITHUB_ACTIONS=true` �
 |---|---|
 | 锚文档缺 `not_before`/`not_after`/`revoked_anchor_ids`/`fingerprint_sha256` | 行为与 S4-1 相同（可选字段，向后兼容） |
 | 时间在闭区间内 | 继续判定；`not_after` 缺失 ⇒ 只受 `not_before` 约束 |
-| `not_after` 已过 / `not_before` 未到 | `load_anchor` 返回 `(None, 原因)` ⇒ 审批、清单、验证记录、执行记录一律 `trusted=false`，CLI exit 2 |
+| `not_after` 已过 / `not_before` 未到 | `load_anchor` 返回 `(None, 原因)` ⇒ 审批、清单、验证记录、执行记录与审计 checkpoint 一律 `trusted=false`，退出码见本节末尾的口径说明 |
 | `anchor_id` 出现在自己的 `revoked_anchor_ids` | 同上，原因写明「已吊销」 |
-| `revoked_anchor_ids` 不是数组 / 含空串 / 含非字符串 / 含非法字符 / 超 128 字符 | 锚文档非法 ⇒ `unconfigured`，exit 2 |
-| 时间字段无时区或不可解析、`not_before > not_after` | 锚文档非法，exit 2 |
-| `fingerprint_sha256` 与公钥 DER 实算不符、或不是 64 位十六进制 | 锚文档非法，exit 2 |
+| `revoked_anchor_ids` 不是数组 / 含空串 / 含非字符串 / 含非法字符 / 超 128 字符 | 锚文档非法 ⇒ `unconfigured`，该锚不参与信任判定 |
+| 时间字段无时区或不可解析、`not_before > not_after` | 锚文档非法，该锚不参与信任判定 |
+| `fingerprint_sha256` 与公钥 DER 实算不符、或不是 64 位十六进制 | 锚文档非法，该锚不参与信任判定 |
 | 生命周期失败且同时配置了文件锚与 JSON 锚 | 不回退到 JSON 锚（保持「显式配置的文件锚权威」的既有语义） |
 | 记录来自另一仓库（签名有效） | `approval verify` exit 2，`problems` 只含仓库身份不一致 |
 | `attach`/`request` 面对过期或已自我吊销的锚文档 | 仍然只做格式与签名检查，不做生命周期判定（信任在 `verify`/门禁决定） |
 
+**退出码不是一个数**。失效锚在所有信任判定点都只产生 `trusted=false`，但各链的 CLI 口径不同（下表为本卡实测，`goal evaluate` 的判据集合为空时甚至 exit 0）：
+
+| 链 / 命令 | 锚失效时的结果 |
+|---|---|
+| `approval verify`（单条）、`approval verify --records-dir --require-approve`、`evidence verify` | exit 2，`trusted=false`，`problems`/`reason` 给出原因 |
+| `audit checkpoint-attach` | `load_anchor` 失败 ⇒ `raise PMError` ⇒ CLI exit 1，stderr 写「无法验证 checkpoint：信任锚已吊销…」 |
+| `goal evaluate` | 退出码只跟随 `satisfied`；判据不满足 exit 2，判据集合为空 exit 0 + `satisfied=false`（`no_required_criteria`） |
+
+因此自动化必须读 JSON 字段（`trusted`/`verified`/`approved`/`satisfied`/`status_*`），不能只看退出码——这条与 OPERATIONS「CI 审批门禁」里既有的提醒一致。
+
 ## 5. 测试与证据
 
-`tests/test_s4_anchor_lifecycle.py`（17 项）覆盖：无可选字段的回归、有效期内 + 指纹正确 + 只吊销他人 id 的正例、签名执行记录在同一锚下 `trusted`；负对照含自我吊销、已过期、未生效、`revoked_anchor_ids` 各种非法形态、指纹不符、时间格式非法、区间倒置、跨仓库记录；对照含「只吊销别人」与「只有 `not_before` 且已生效」两条必须 exit 0 的情形，防止过度拦截。
+`tests/test_s4_anchor_lifecycle.py`（20 项）覆盖：无可选字段的回归、有效期内 + 指纹正确 + 只吊销他人 id 的正例、签名执行记录在同一锚下 `trusted`；负对照含自我吊销、已过期、未生效、`revoked_anchor_ids` 各种非法形态、指纹不符、时间格式非法（逐形态断言对应的原因关键词）、区间倒置、跨仓库记录；对照含「只吊销别人」与「只有 `not_before` 且已生效」两条必须 exit 0 的情形，防止过度拦截。
+
+另有 3 项专门走 **CI secret 通道**（`GITHUB_ACTIONS=true` + `PROJECT_MEMORY_APPROVAL_ANCHOR_JSON`）：自我吊销与已过期锚让单条 `approval verify` 和 `--records-dir --require-approve` 批量门禁都 exit 2、`trusted=false`，而有效期内的锚仍然 exit 0。文件锚与 JSON 锚是 `load_anchor` 的两条分支，生命周期包装各一份；门禁 workflow 只注入 JSON secret，所以这条分支必须有独立的回归锁。
 
 两处方法论约定：
 
-- **不 patch `authority.load_anchor`**：那会绕过被测逻辑。测试 patch `authority._load_file_anchor`，其 side effect 仍调用真实的 `_anchor_document`，因此只替换了路径解析与所有者保护（不属于本卡），文档校验与生命周期判定都走真实代码。
+- **不 patch `authority.load_anchor`**：那会绕过被测逻辑。文件锚用例 patch `authority._load_file_anchor`，其 side effect 仍调用真实的 `_anchor_document`，因此只替换了路径解析与所有者保护（不属于本卡），文档校验与生命周期判定都走真实代码；CI secret 用例不 patch 任何生产函数，环境变量用 `mock.patch.dict` 注入，走完整的 `load_anchor`。
+- **变异验证**：删掉 `load_anchor` JSON 分支的生命周期包装后，上述 2 条负对照立即失败（`AssertionError: 2 != 0`，全量 370 项报 `FAILED (failures=2)`），还原后全部通过；同一变异在加入这 3 项之前（17 项）不被任何测试发现。这就是这条分支需要独立锁的理由。
 - **时间一律相对当前 UTC 构造**，避免固定日期在未来某个时刻集体过期；闭区间边界用 `_anchor_lifecycle_problem(anchor, now=...)` 直接判定。
 - 指纹实现与 `openssl pkey -pubin -outform DER | openssl dgst -sha256` 交叉核对（测试内用两条 openssl 命令独立计算）。
 
