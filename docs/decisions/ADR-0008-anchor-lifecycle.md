@@ -91,7 +91,7 @@ CI secret 分支同理：值来自仓库外，且只在 `GITHUB_ACTIONS=true` �
 |---|---|
 | `approval verify`（单条）、`approval verify --records-dir --require-approve`、`evidence verify` | exit 2，`trusted=false`，`problems`/`reason` 给出原因 |
 | `audit checkpoint-attach` | `load_anchor` 失败 ⇒ `raise PMError` ⇒ CLI exit 1，stderr 写「无法验证 checkpoint：信任锚已吊销…」 |
-| `goal evaluate` | 退出码只跟随 `satisfied`；判据不满足 exit 2，判据集合为空 exit 0 + `satisfied=false`（`no_required_criteria`） |
+| `goal evaluate` | 退出码只跟随 `satisfied`；判据不满足 exit 2，判据集合为空 exit 0 + `satisfied=false`（`no_required_criteria`；这个状态只能由改写 Goal 文件把必达判据删空或全部改成可选得到，`goal create` 要求至少一条必达判据，否则 `PMError`，所以它不是正常创建的产物） |
 
 因此自动化必须读 JSON 字段（`trusted`/`verified`/`approved`/`satisfied`/`status_*`），不能只看退出码——这条与 OPERATIONS「CI 审批门禁」里既有的提醒一致。
 
@@ -99,7 +99,7 @@ CI secret 分支同理：值来自仓库外，且只在 `GITHUB_ACTIONS=true` �
 
 `tests/test_s4_anchor_lifecycle.py`（20 项）覆盖：无可选字段的回归、有效期内 + 指纹正确 + 只吊销他人 id 的正例、签名执行记录在同一锚下 `trusted`；负对照含自我吊销、已过期、未生效、`revoked_anchor_ids` 各种非法形态、指纹不符、时间格式非法（逐形态断言对应的原因关键词）、区间倒置、跨仓库记录；对照含「只吊销别人」与「只有 `not_before` 且已生效」两条必须 exit 0 的情形，防止过度拦截。
 
-另有 3 项专门走 **CI secret 通道**（`GITHUB_ACTIONS=true` + `PROJECT_MEMORY_APPROVAL_ANCHOR_JSON`）：自我吊销与已过期锚让单条 `approval verify` 和 `--records-dir --require-approve` 批量门禁都 exit 2、`trusted=false`，而有效期内的锚仍然 exit 0。文件锚与 JSON 锚是 `load_anchor` 的两条分支，生命周期包装各一份；门禁 workflow 只注入 JSON secret，所以这条分支必须有独立的回归锁。
+另有 3 项专门走 **CI secret 通道**（`GITHUB_ACTIONS=true` + `PROJECT_MEMORY_APPROVAL_ANCHOR_JSON`），不 patch 任何生产函数，各自锁定的范围按测试名读得出来：`test_revoked_anchor_json_secret_is_not_trusted` 让自我吊销锚在**单条** `approval verify` 与 `--records-dir --require-approve` **批量**门禁下都 exit 2、`trusted=false`；`test_expired_anchor_json_secret_is_not_trusted` 让已过期锚在**单条**门禁下 exit 2 —— 过期锚的**批量**形态目前只有独立复核实测确认（exit 2、`approved=false`），本仓库还没有专属测试锁定它，这条差异写在这里，别让读者以为批量已被测过；`test_valid_anchor_json_secret_stays_trusted` 让有效期内的锚在同一通道下仍 exit 0（单条与批量都断言），防过度拦截。文件锚与 JSON 锚是 `load_anchor` 的两条分支，生命周期包装各一份；门禁 workflow 只注入 JSON secret，所以这条分支必须有独立的回归锁。
 
 两处方法论约定：
 

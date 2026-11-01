@@ -196,7 +196,7 @@ PYTHONPATH=.project-memory/tooling python3 -m project_memory approval verify --r
 
 `not_before`/`not_after` 必须是带时区的 ISO-8601 字符串（`Z` 或 `±HH:MM`），判定用当前 UTC 时间、闭区间，只给一端时另一端不限制；`revoked_anchor_ids` 必须是非空字符串数组；`fingerprint_sha256` 必须等于 `public_key_pem` 解出的 DER SubjectPublicKeyInfo 字节的 SHA-256（哈希 DER 而不是 PEM 文本，避免换行差异），可用 `openssl pkey -pubin -outform DER | openssl dgst -sha256` 独立核对。格式非法、时间无时区、`not_before > not_after`、指纹与公钥不一致都让锚文档直接非法。四个字段都可选：写成 JSON `null` 与不提供该字段等同，按「未启用」处理；但值一旦给出就必须合规，空字符串 `""` 判非法。
 
-锚失效之后各链的退出码不是一个数，别按一个数写自动化：`approval verify`（含 `--records-dir --require-approve`）与 `evidence verify` 是 exit 2；`audit checkpoint-attach` 在读取受保护锚失败时抛 `PMError`，CLI 统一映射为 exit 1；`goal evaluate` 只跟随 `satisfied`（判据不满足 exit 2，判据集合为空时 exit 0 + `satisfied=false`，见上文）。每条链给出的结论都是 `trusted=false` 并 fail closed，但要区分「锚失效」与「根本没配锚」只能读 JSON 里的 `reason`。
+锚失效之后各链的退出码不是一个数，别按一个数写自动化：`approval verify`（含 `--records-dir --require-approve`）与 `evidence verify` 是 exit 2；`audit checkpoint-attach` 在读取受保护锚失败时抛 `PMError`，CLI 统一映射为 exit 1；`goal evaluate` 只跟随 `satisfied`（判据不满足 exit 2，判据集合为空时 exit 0 + `satisfied=false`，见上文）。分两层看：判定层（`approval_authority`、`evidence_authority`、`verification_authority`、`signed_record_authority`）给出的结论一律 `trusted=false` 并 fail closed；`audit checkpoint-attach` 拿不到可信锚时**不返回**带 `trusted` 字段的 JSON，直接抛错退出，只能读 exit 1 与 stderr 文本。所以仍按上文那条老规矩办：不要只看退出码，要读 JSON 里的 `reason`/`trusted`/`satisfied`，才能区分「锚失效」与「根本没配锚」。
 
 轮换步骤：
 
