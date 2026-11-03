@@ -1,14 +1,14 @@
 ---
 id: "DOC-CURRENT-STATE"
 kind: "canonical"
-title: "Project Memory 当前状态（v1.0.0）"
+title: "Project Memory 当前状态"
 status: "current"
 owner: "MJ-Zeng"
-updated_at: "2026-11-01"
+updated_at: "2026-11-03"
 last_verified_at: "2026-11-01"
 ---
 
-# Project Memory 当前状态（v1.0.0）
+# Project Memory 当前状态
 
 ## 一句话结论
 

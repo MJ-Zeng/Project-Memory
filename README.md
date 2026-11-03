@@ -28,7 +28,7 @@ Windows 上用 Git Bash 时，先设置 `PYTHONUTF8=1`，并把 `python3` 换成
 
 ### 测试期 openssl 要求
 
-openssl 只在测试期用于生成测试密钥和签名，**不是运行时依赖**；CLI 的验签在进程内完成。缺少 openssl 时，B2/B3/B4 签名测试默认 `SkipTest`，本地仍可跑其余测试。发布和 CI **必须**设置开关，让缺 openssl 直接失败，避免把 skip 当成通过：
+openssl 只在测试期用于生成测试密钥和签名，**不是运行时依赖**；CLI 的验签在进程内完成。缺少 openssl 时，依赖 openssl 生成密钥与签名的测试默认 `SkipTest`，本地仍可跑其余测试。发布和 CI **必须**设置开关，让缺 openssl 直接失败，避免把 skip 当成通过：
 
 ```bash
 # 发布/CI：缺 openssl 时签名测试 failed/error，不再 skip
@@ -50,7 +50,16 @@ Windows 上 `python3` 可能是 Microsoft Store 的别名桩（exit 49），请�
 - 两道门槛依次执行：默认 `pytest -q`，以及 `PROJECT_MEMORY_REQUIRE_OPENSSL=1 pytest -q`。运行器没有 openssl 时，第二道会在日志里显式打印跳过，不会把跳过当成通过。
 - 权限只有 `contents: read`；checkout 不保留凭据；第三方 Action 按提交 SHA 固定。
 
-当前没有启用分支保护（私有仓库的免费计划不提供该能力），所以 CI 结果是建议性的，不会自动阻断合并。合并规则是：先确认该 pull request 的 CI 运行成功，再看代码；合入后由 push 触发的运行会在合并提交上再验证一次。
+### 分支保护与必需检查（历史快照，核查日期 2026-11-02）
+
+下面四件事必须分开读。它们都是 2026-11-02 用只读 API 取到的**历史快照**：保护设置随时可由仓库管理员改动，不要把这里当成永久事实，动手前按你实际拥有的仓库权限与当时的平台配置重新核实。
+
+- **已配置的必需状态检查**：默认分支 `dev/v1.0` 启用了经典分支保护，必需检查上下文是 `pytest`（`test.yml` 的作业名）与 `approval`（`approval-gate.yml` 的作业名），`strict=true`（分支落后目标分支时必须先更新），`enforce_admins=true`（管理员同样被拦截），`restrictions=null`。这两道 CI 是硬性前提，不是建议性的。
+- **尚未配置的必需真人 PR Review**：`required_pull_request_reviews=null`。GitHub 不强制任何人类批准；「人类批准后再合并」在本项目是程序约束，平台不代为执法。
+- **尚未配置的必需提交签名**：`required_signatures.enabled=false`。提交与标签签名不是合并前提。
+- **未启用的 Ruleset**：仓库里唯一的那个分支 Ruleset `branch _1`（id 26002815）`enforcement=disabled`，其 `pull_request` 规则 `required_approving_review_count=0`、`require_code_owner_review=false`；它的两个历史版本（2026-10-28 08:41 与 08:53）也全是 disabled，从未开启，所以审查要求没有藏在 Ruleset 里。
+
+`workflow_dispatch` 手动运行的检查不满足必需状态检查，只用于诊断。必需检查强制的是「这两项检查通过」；`approval` 只验审批记录的签名与提交是否匹配，不证明批准来自独立真人——当前满足它的是演练锚下签发的演练审批。合并规则是：先确认该 pull request 的 `pytest` 与 `approval` 两项必需检查成功，再看代码；合入后由 push 触发的运行会在合并提交上再验证一次。
 
 ## 目标、执行与独立验证
 
@@ -213,13 +222,13 @@ python3 -m project_memory goal evidence --repo . --id G-AUTH --criterion C1 \
 - `approvals` 分支只存放审批事件（`records/<40位提交SHA>-<approval_id>.json`），由持有私钥的人在仓库外签名后发布；门禁只读该分支，不写回，也不放密钥。私有库拉取该分支时，用一次性 `http.extraheader` 携带本次运行的 `github.token`，并把认证串 `::add-mask::`，令牌不会出现在日志里。
 - `GITHUB_ACTIONS=true` 只是防误用开关，不是密码学边界：本机可以伪造它，所以本地默认不采用 JSON 锚，非 CI 运行仍使用受保护文件锚 `PROJECT_MEMORY_APPROVAL_ANCHOR`。本地用自己的密钥和自己的锚得到 trusted 不影响 CI 门禁，因为门禁的锚来自仓库 Secret、代码来自 base。验证记录与 checkpoint 的 `PROJECT_MEMORY_TRUST_ANCHOR_JSON` 遵循同样的规则。
 - `workflow_dispatch` 运行的检查**不满足**必需状态检查（GitHub 文档明示），只作诊断，并显式检出 `dev/v1.0`；审批记录发布后，用 PR 事件（编辑、重开、新提交）或重跑原 `pull_request_target` 运行来重新评估。
-- 门禁结果要成为合并必需检查，还需要仓库管理员在 GitHub 侧开启分支保护或 Branch Ruleset，并设置 `enforce_admins`；CLI 和本仓库不配置这些。
+- 门禁结果要成为合并必需检查，还需要仓库管理员在 GitHub 侧开启分支保护或 Branch Ruleset，并设置 `enforce_admins`；CLI 和仓库代码都不代为配置，本仓库自身的设置见上文「分支保护与必需检查」（历史快照，注明核查日期）。
 
-边界：管理员始终可以通过 API 关闭分支保护、改写 workflow 或 Secret，这是被接受的信任前提（S4 残余风险）。审批记录也只是签名声明，不替代独立验证、CODEOWNERS 或合并权限。
+边界：管理员始终可以通过 API 关闭分支保护、改写 workflow 或 Secret，这是被接受的信任前提；逐条残余风险写在各 ADR 的「残余风险」小节和本文对应的限制说明里，不在入口文档重复内部编号。审批记录也只是签名声明，不替代独立验证、CODEOWNERS 或合并权限。
 
 ### 发布构建与来源证明
 
-`release` 工作流由 `v*` tag 推送或手动 `workflow_dispatch` 触发，产出源码归档、sdist、wheel、`sha256sums.txt` 和 BUILD-INFO.json，向 GitHub 申请 artifact attestation，并把它们一起作为 workflow artifact 上传。它不创建 tag、不发布 Release、不读任何仓库 secret——发布仍然是人工动作（S4-5）。外部验证一次 run：下载 artifact → `sha256sum -c sha256sums.txt` → 逐个 `gh attestation verify <文件> --repo MJ-Zeng/Project-Memory`；完整命令、失败判读和已知限制见 [OPERATIONS](docs/OPERATIONS.zh-CN.md#发布构建与来源证明)。attestation 只能在 hosted runner 上签发，本地静态测试锁的是工作流形状，tag 触发路径要等人类打下第一个 `v*` tag 才算实测。
+`release` 工作流由 `v*` tag 推送或手动 `workflow_dispatch` 触发，产出源码归档、sdist、wheel、`sha256sums.txt` 和 BUILD-INFO.json，向 GitHub 申请 artifact attestation，并把它们一起作为 workflow artifact 上传。它不创建 tag、不发布 Release、不读任何仓库 secret——打 tag、建 Release、挂资产仍是人工动作。外部验证一次 run：下载 artifact → `sha256sum -c sha256sums.txt` → 逐个 `gh attestation verify <文件> --repo MJ-Zeng/Project-Memory`；完整命令、失败判读和已知限制见 [OPERATIONS](docs/OPERATIONS.zh-CN.md#发布构建与来源证明)。attestation 只能在 hosted runner 上签发，本地静态测试锁的是工作流形状，tag 触发路径要等人类打下第一个 `v*` tag 才算实测。
 
 ## 两种审计范围
 
@@ -293,7 +302,7 @@ python3 -m pip install -e '.[semantic]'
 ## 还需要人工完成的事
 
 1. 检查生成的示例，补全入口文档、架构说明和 ADR 负责人。
-2. 参考 `.github/CODEOWNERS.example` 配置真正的 CODEOWNERS，并在 GitHub 开启分支 Ruleset、必需审查和必需 CI（私有仓库的免费计划不提供这些能力，需要 GitHub Pro 或改为公开仓库）。CLI 不能替你做这些。
+2. 参考 `.github/CODEOWNERS.example` 配置真正的 CODEOWNERS，并在 GitHub 开启分支 Ruleset、必需审查和必需 CI。这些能力是否可用取决于你当时的账户权限与平台当前配置，本文不断言某个账户计划提供或不提供什么，请按实际仓库核实；本仓库自身的保护设置快照见上文「分支保护与必需检查」。CLI 不能替你做这些。
 3. 审核已固定的第三方 Action 代码，并在升级时更新 SHA：当前 `actions/checkout` 固定到 `v4.4.0`、`actions/setup-python` 固定到 `v5.6.0`、`actions/attest-build-provenance` 固定到 `v4.2.2`、`actions/upload-artifact` 固定到 `v4.6.2`，只解决了“引用不可变”，没有审核上游代码。
 4. 接入有权限的 GitHub 数据；如果要把完成门禁全自动化，还需要独立核对 CI 和 review 状态，不能只依赖快照声明。
 5. Qoder CN 等客户端目前需要手动切换模型。CLI 只记录实际模型，不调度模型，也不保证跨模型接续。
