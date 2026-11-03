@@ -177,7 +177,7 @@ PYTHONPATH=.project-memory/tooling python3 -m project_memory approval verify --r
 4. **重跑门禁**：`workflow_dispatch` 显式检出 `dev/v1.0`，只用于诊断——GitHub 不把 dispatch 运行的检查当作必需状态检查。审批记录发布后，用 PR 事件（编辑、重开、新提交）或重跑原 `pull_request_target` 运行来重新评估；不要为了触发重跑推空提交——空提交会改变 head，原有审批随之失效。
 5. **本地限制**：`GITHUB_ACTIONS=true` 是防误用开关，不是密码学边界；非 CI 默认不采用 JSON 锚，本机仍用受保护文件锚。本地用自己的密钥和自己的锚得到 trusted 不影响 CI 门禁，因为门禁的锚来自仓库 Secret、代码来自 base。
 
-门禁成为必需检查需要分支保护或 Branch Ruleset，并设置 `enforce_admins`，这由仓库管理员在 GitHub 侧配置，本仓库不做。管理员始终可以通过 API 关闭保护、改写 workflow 或 Secret，这是被接受的信任前提（S4 残余风险）；门禁保证的是 PR head 不检出、不执行，验证器与 workflow 都来自 base，锚来自 secret，而不是“不可绕过”。
+门禁成为必需检查需要分支保护或 Branch Ruleset，并设置 `enforce_admins`，这由仓库管理员在 GitHub 侧配置；CLI 不提供这些配置能力。本仓库自身的设置（哪些已配置、哪些仍未配置，属注明核查日期的历史快照）见 `README.md`「分支保护与必需检查」一节。管理员始终可以通过 API 关闭保护、改写 workflow 或 Secret，这是被接受的信任前提，逐条残余风险见相应 ADR 的「残余风险」小节；门禁保证的是 PR head 不检出、不执行，验证器与 workflow 都来自 base，锚来自 secret，而不是“不可绕过”。
 
 例外：必达标准集合为空（例如所有判据被改成可选或删除）时，`goal evaluate` 退出 0，但 `satisfied=false`、`evaluation_status=insufficient_evidence`、`status_problems` 含 `no_required_criteria`。自动化不要只看退出码，要读 `satisfied`/`effective_status`/`status_trusted`/`status_problems`；需要纯退出码门禁时，后续版本再提供显式 `--strict`，本版没有。
 
@@ -368,7 +368,7 @@ Windows 上用 Git Bash 时，先 `export PYTHONUTF8=1`，并把 `python3` 换�
 
 sdist 和源码归档都是 `.tar.gz`，靠 `project-memory-<short>-source` 前缀区分。attestation bundle 单独放在 attestation/attestation.json，不进 `dist/`：它由 `actions/attest-build-provenance` 的 `bundle-path` **输出**给出（这个 action 没有 `bundle-path` 输入），拷进 `dist/` 会让它出现在自己的哈希清单里。output 为空或指向的文件不存在时该步骤直接报错，不会留下一个自称已生成的空目录。
 
-**不创建 Release。** 权限只有 `contents: read`、`id-token: write`、`attestations: write`；没有 `gh release create`、没有 Release API、不读任何仓库 secret（`gh attestation verify` 用的是当次 run 自带的 `github.token`）。打 tag、建 Release、挂资产留给 S4-5 人工执行。
+**不创建 Release。** 权限只有 `contents: read`、`id-token: write`、`attestations: write`；没有 `gh release create`、没有 Release API、不读任何仓库 secret（`gh attestation verify` 用的是当次 run 自带的 `github.token`）。打 tag、建 Release、挂资产由人工执行，本工作流不代办。
 
 外部验证一次已完成的 run：
 
