@@ -1,0 +1,25 @@
+{
+  "approval_id": "APR-8c81a164e943",
+  "approver": "s3-exercise@project-memory.invalid",
+  "at": "2026-11-03T08:25:39+00:00",
+  "authority": {
+    "algorithm": "rsa-sha256",
+    "anchor_id": "ANCHOR-S3-EXERCISE-20261031",
+    "issuer": "s3-exercise@project-memory.invalid",
+    "signature_b64": "NJ/zYN4hcueXzqG/hfemL+23lK5YfPazQtj3brhVLfO6sokuCiH9yxR10xCcNTI9FzGWSWRwkCSZ/BlsF3Q6GN2ZJtTybfmyJeRQ6yysQLdRvHN4v/OF/kdKNpGQEsHZ8vJdIASu6O5WN7P74sh/8YS3IysRkR1YCyQSEz2IAW23MUrohrgdK/oeAiou+7PzF8Eim/2feGuq+gTIXq6bO7WjxuZiCYNzBUoTBinavS+d0OxAdCZ9UlURbhn9Ucx6JTJomNncFpHTA3Y0Yyu/ouqnPzHMlmhe902sNanG5d76SNUwtSvBzmZnX7Q21/d/T0HKBS9E5q12Q3a+CGz2uw==",
+    "signed_payload_sha256": "5c288fdb0e4ef8992559d72bba93c7255703acb7853888696306f2eafb1c63cc",
+    "status": "signed"
+  },
+  "commit_sha": "daf66502291265115a1231b437e809e9ee80f60a",
+  "decision": "approve",
+  "kind": "approval_event",
+  "repository": {
+    "id": "6d372b4c9fc56b2a479d8671044a834e285caedb14aaf49d030beaa33dc9e8f6",
+    "remote": "github.com/MJ-Zeng/Project-Memory"
+  },
+  "schema_version": "1.0",
+  "scope": {
+    "kind": "commit"
+  },
+  "statement": "Drill-identity approval for docs PR #56 head daf66502291265115a1231b437e809e9ee80f60a. ISSUED BY AGENT PM-01 ON EXPLICIT OWNER INSTRUCTION 2026-11-03 ('issue approval for daf6650 with the drill key'); signed with the S3 exercise key, NOT a human signature. Scope: P-1..P-4 plus CURRENT_STATE line 23."
+}
