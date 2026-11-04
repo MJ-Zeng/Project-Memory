@@ -2,7 +2,7 @@
 
 本项目遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 的结构；版本号从 1.0.0 起表示本试点的首个发布门槛。历史以 Git 提交为准。
 
-## [1.1.0] — 2026-11-03（版本候选，Tag 待授权）
+## [1.1.0] — 2026-11-04（已发布：Tag `v1.1.0`、GitHub Release 与 6 枚公开制品）
 
 本版汇总自 `v1.0.0` 以来进入 `dev/v1.0` 的全部能力：签名审批质量门禁（S3）与发布制品来源证明（S4）。功能面为新增与加固，CLI 既有入口与数据格式向后兼容。
 
@@ -26,12 +26,12 @@
 - 负对照强化：非空诱饵目录与 `findings-file` 覆盖（合并 `165fa55`、`9075012`）。
 - 7 个 ADR 补齐元数据（合并 `1eaa3f4`）；文档与实现对齐并新增试点章程（合并 `81c5531`）。
 
-### 已知边界（本版未改变）
+### 已知边界与发布状态（核查日期 2026-11-04）
 
-- `v1.0.0` 仍是未签名 annotated tag，其 GitHub Release 没有资产；`1.1.0` 的 Tag 与 Release 需发布人另行授权后创建，本条不构成已发布声明。
-- `v*` tag 推送触发的发布构建路径仍为 NOT VERIFIED，只有一次 `workflow_dispatch` 干跑成功。
+- 发布状态：`v1.1.0` 的 annotated tag、GitHub Release（id 433549523，`published_at 2026-11-04T05:37:01Z`）与 6 枚制品已发布并公开可下载；`v1.1.0` 与 `v1.0.0` 两个 tag 都未签名，`v1.0.0` 的 Release 仍没有资产。
+- `v*` tag 推送触发的发布构建已实测一次：run `41763116854` 绑定 `4918b86`，产物与 attestation 随 Release 公开、可逐件匿名复算；来源证明不等于外部采信，也不证明那个提交被独立真人复核过。
 - 跨主机制品字节不可复现：`git archive` 在 `core.autocrlf=true` 的 Windows 检出与 Linux CI 上逐文件行尾不同，以 CI 构建为权威。
-- `release` 工作流仍引用一个 node20 时代的 `actions/upload-artifact` 固定 SHA；Node20 运行时淘汰后需与其余 Action 一并重固定，见 `docs/CURRENT_STATE.md`。
+- `release` 工作流仍引用一个 node20 时代的 `actions/upload-artifact` 固定 SHA。GitHub 已于 2026-09-23 移除 Node20，旧 pin 被强制跑在 Node24 上并每次留一条 warning annotation；实测没有兼容性故障，本项目据此决定不再重固定、也不再扩大 Actions 维护范围。
 - `audit` 是本地防篡改检测与文档一致性提示，不构成对外可采信的审计留痕；`approved_by` 仍是 `claimed_unverified`。
 
 ## [1.0.0] — 2026-10-29
