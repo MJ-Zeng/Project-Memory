@@ -2,6 +2,38 @@
 
 本项目遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 的结构；版本号从 1.0.0 起表示本试点的首个发布门槛。历史以 Git 提交为准。
 
+## [1.1.0] — 2026-11-03（版本候选，Tag 待授权）
+
+本版汇总自 `v1.0.0` 以来进入 `dev/v1.0` 的全部能力：签名审批质量门禁（S3）与发布制品来源证明（S4）。功能面为新增与加固，CLI 既有入口与数据格式向后兼容。
+
+### 新增 — 审批与 CI 质量门禁（S3）
+
+- B-7：CI 审批门禁加固，拒绝由 PR 自身控制的验证器（合并 `77052bf`，PR #50）。
+- B-8：签名审批事件，审批身份绑定仓库外信任锚（合并 `c3dea2a`，PR #49）。
+- B-9：从 GitHub API 复核 PR 的 CI 结果，作为外部证据而非本地自述（合并 `999713b`，PR #47；行为文档同步 `187f49d`，PR #48）。
+- B-10：默认分支启用必需状态检查 `pytest` 与 `approval`，`strict=true`、`enforce_admins=true`；`approvals` 孤儿分支承载审批记录。
+
+### 新增 — 发布制品与来源证明（S4）
+
+- S4-1：绑定 commit 与 tree 的签名证据清单（合并 `40d3f1d`）。
+- S4-2：信任锚生命周期（ADR-0008）与 `verify` 时的仓库身份复检（合并 `9aa6af4`，PR #54）。
+- S4-3：`release` 工作流构建源码归档、sdist、wheel、`sha256sums.txt`、`BUILD-INFO.json` 与 build provenance attestation；不创建 tag、不发布 Release、不读取仓库 secret（合并 `cfdd848`，PR #55）。已在 GitHub-hosted runner 上真实干跑一次（run `41324143240`）。
+
+### 变更 — CI、可移植性与测试
+
+- 第三方 Action 固定到不可变提交 SHA（合并 `617cdd9`，PR #44）；合入 `dev/v1.0` 的 push 同样触发门禁（合并 `87600d7`，PR #45）。
+- `verify` 的输入路径按 `--repo` 解析，不再依赖当前工作目录（合并 `8510919`）。
+- 负对照强化：非空诱饵目录与 `findings-file` 覆盖（合并 `165fa55`、`9075012`）。
+- 7 个 ADR 补齐元数据（合并 `1eaa3f4`）；文档与实现对齐并新增试点章程（合并 `81c5531`）。
+
+### 已知边界（本版未改变）
+
+- `v1.0.0` 仍是未签名 annotated tag，其 GitHub Release 没有资产；`1.1.0` 的 Tag 与 Release 需发布人另行授权后创建，本条不构成已发布声明。
+- `v*` tag 推送触发的发布构建路径仍为 NOT VERIFIED，只有一次 `workflow_dispatch` 干跑成功。
+- 跨主机制品字节不可复现：`git archive` 在 `core.autocrlf=true` 的 Windows 检出与 Linux CI 上逐文件行尾不同，以 CI 构建为权威。
+- `release` 工作流仍引用一个 node20 时代的 `actions/upload-artifact` 固定 SHA；Node20 运行时淘汰后需与其余 Action 一并重固定，见 `docs/CURRENT_STATE.md`。
+- `audit` 是本地防篡改检测与文档一致性提示，不构成对外可采信的审计留痕；`approved_by` 仍是 `claimed_unverified`。
+
 ## [1.0.0] — 2026-10-29
 
 ### 发布门槛（R1）
