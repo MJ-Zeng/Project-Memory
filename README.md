@@ -4,6 +4,8 @@
 
 它不负责审批、合并、关闭 Issue，也不判断文档里的结论是否正确。目标达成、ADR 接受和生产变更仍由人和 GitHub 规则决定。
 
+当前版本 `v1.1.0` 已于 2026-11-04 正式发布：annotated tag、GitHub Release 与 6 枚公开可下载的制品（含构建来源证明）。项目自同日进入维护模式，只处理真实缺陷、安全与兼容性问题。逐条发布事实、预期行为与已知限制只写在唯一一篇现状文档 [`docs/CURRENT_STATE.md`](docs/CURRENT_STATE.md) 里，本文不再复述。
+
 ## 快速开始
 
 需要 Python 3.11 或更高版本。默认功能不依赖第三方库。
@@ -311,6 +313,8 @@ python3 -m pip install -e '.[semantic]'
 
 ## 文档
 
+- [当前状态](docs/CURRENT_STATE.md)：唯一的现状入口文档，发布事实、预期行为、已知限制和阅读顺序都在那里。
+- [更新记录](CHANGELOG.md)：按版本汇总的变更与发布状态。
 - [教程与工作流](docs/TUTORIAL.zh-CN.md)：从临时仓库试跑到真实仓库接入，以及日常协作节奏。
 - [技术设计](docs/ARCHITECTURE.zh-CN.md)：模块、目录模型、数据契约和后续门槛。
 - [操作手册](docs/OPERATIONS.zh-CN.md)：接入步骤、文档写入、新人接手、发布构建与来源证明和上线检查。
