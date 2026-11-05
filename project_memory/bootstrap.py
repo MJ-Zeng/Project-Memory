@@ -1,7 +1,8 @@
 """Non-destructive repository initialization and skill installation."""
 from __future__ import annotations
 from pathlib import Path
-from .common import PMError, atomic_replace, git_sha_optional, json_text, md_header, today, write_new
+from .common import (PMError, atomic_replace, ensure_inside_repo, git_sha_optional, json_text,
+                     md_header, normalize_repo_relative, today, write_new)
 
 TOOL_ROOT = Path(__file__).resolve().parent.parent
 SKILL_SOURCE = TOOL_ROOT / 'skill' / 'project-memory'
@@ -58,14 +59,17 @@ def copy_new_tree(source: Path, target: Path, files: list[str], base: Path):
         if not p.is_file() or '__pycache__' in p.parts or p.suffix == '.pyc':
             continue
         out = target / p.relative_to(source)
+        ensure_inside_repo(base, out, '初始化工具制品')
         if write_new(out, p.read_text(encoding='utf-8')):
             files.append(out.relative_to(base).as_posix())
 
 
 def _docs_root(value: str) -> str:
-    root = value.strip().replace('\\', '/').strip('/')
-    if not root or root == '.' or '..' in root.split('/'):
-        raise PMError('--docs-root 必须是非空的相对目录')
+    text = str(value).strip().replace('\\', '/')
+    if text.startswith('/'):
+        raise PMError('--docs-root / --mirror-root / --legacy-root 必须是仓库内相对目录，'
+                      f'不能是绝对路径或 UNC：{value!r}')
+    root = normalize_repo_relative(text.strip('/'), '--docs-root')
     return root
 
 
@@ -86,6 +90,8 @@ def sync_tooling(repo: Path, write: bool = False) -> dict:
         for path in sorted(files):
             rel = path.relative_to(source)
             out = target / rel
+            # The tooling copy overwrites: confirm the boundary before writing anything.
+            ensure_inside_repo(repo, out, '工具同步目标')
             key = out.relative_to(repo).as_posix()
             expected.add(key)
             content = path.read_text(encoding='utf-8')
@@ -187,6 +193,7 @@ jobs:
             f'{root}/architecture/overview.md': md_header({'id': 'DOC-ARCH', 'kind': 'canonical', 'title': '架构总览', 'status': 'current', 'owner': 'team', 'updated_at': today()}) + '# 架构总览\n\n待补：换成经过核实的系统架构。\n',
         })
     for rel, body in artifacts.items():
+        ensure_inside_repo(repo, repo / rel, '初始化文件')
         if write_new(repo / rel, body):
             new.append(rel)
         else:
