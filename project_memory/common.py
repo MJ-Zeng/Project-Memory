@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 import re
+import stat
 import subprocess
 import sys
 import tempfile
@@ -265,6 +266,74 @@ def relpath(repo: Path, path: Path) -> str:
         return path.resolve().relative_to(repo.resolve()).as_posix()
     except ValueError:
         raise PMError(f'路径位于仓库之外：{path}') from None
+
+
+_MOUNT_POINT_TAG = 0xA0000003
+
+
+def link_kind(path: Path) -> str | None:
+    """Name a link-like path component; junctions are reparse points, not symlinks."""
+    try:
+        info = os.lstat(path)
+    except OSError:
+        return None
+    if stat.S_ISLNK(info.st_mode):
+        return '符号链接'
+    tag = getattr(info, 'st_reparse_tag', 0)
+    if not tag:
+        return None
+    if tag == _MOUNT_POINT_TAG:
+        return '目录联接或挂载点'
+    return f'重解析点（tag 0x{tag:X}）'
+
+
+def normalize_repo_relative(value, label: str) -> str:
+    """Accept only a normalized repository-relative posix path; fail closed."""
+    text = str(value if value is not None else '').strip().replace('\\', '/')
+    if not text:
+        raise PMError(f'{label} 不能为空')
+    if text.startswith('/') or re.match(r'^[A-Za-z]:', text):
+        raise PMError(f'{label} 必须是仓库内相对路径，不能是绝对路径或带盘符路径：{value!r}')
+    parts = text.split('/')
+    if any(part in ('', '.', '..') for part in parts):
+        raise PMError(f'{label} 不能包含空段、. 或 ..：{value!r}')
+    return text
+
+
+def ensure_inside_repo(repo: Path, path: Path, label: str = '写入路径') -> Path:
+    """Reject a target that leaves the repository *before* any write happens.
+
+    Checks the lexical join and every existing parent component, so a linked
+    directory inside the repo that points outside is refused.  A link that stays
+    inside the repository is allowed: it does not cross the boundary.  This cannot
+    remove a check/write race against a same-user process that swaps a component
+    afterwards; it only closes the deterministic escape.
+    """
+    root = Path(os.path.abspath(repo))
+    real_root = Path(os.path.realpath(root))
+    candidate = Path(os.path.abspath(path))
+    try:
+        relative = candidate.relative_to(root)
+    except ValueError:
+        raise PMError(f'{label} 必须位于仓库之内：{path}') from None
+    if not relative.parts:
+        raise PMError(f'{label} 不能是仓库根目录本身')
+    current = root
+    for part in relative.parts:
+        current = current / part
+        kind = link_kind(current)
+        if kind:
+            target = Path(os.path.realpath(current))
+            try:
+                target.relative_to(real_root)
+            except ValueError:
+                raise PMError(f'{label} 经过{kind}指向仓库之外：{current}') from None
+    resolved = Path(os.path.realpath(candidate))
+    try:
+        resolved.relative_to(real_root)
+    except ValueError:
+        raise PMError(f'{label} 解析后位于仓库之外：{path}') from None
+    return candidate
 
 
 def validate_identifier(value: str, label: str = 'id') -> str:

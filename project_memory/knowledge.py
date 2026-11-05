@@ -7,7 +7,8 @@ import re
 import subprocess
 from pathlib import Path
 from urllib.parse import unquote, urlparse
-from .common import (PMError, frontmatter, md_header, today, relpath, validate_identifier,
+from .common import (PMError, ensure_inside_repo, frontmatter, md_header, normalize_repo_relative,
+                     today, relpath, validate_identifier,
                      write_new, safe_json, sha256_file, git_sha_optional)
 
 ADR_ID = re.compile(r'\bADR-0*(\d+)\b', re.IGNORECASE)
@@ -96,6 +97,14 @@ REQUIRED_CURRENT_METADATA = ('id', 'kind', 'title', 'status', 'owner', 'last_ver
 RECOMMENDED_CURRENT_METADATA = ('evidence', 'verified_commit', 'related_decisions', 'superseded_by')
 
 
+def normalize_root(value, label: str) -> str:
+    """A configured root is a repository-relative directory: never absolute, never escaping."""
+    text = str(value).strip().replace('\\', '/')
+    if text.startswith('/'):
+        raise PMError(f'{label} 必须是仓库内相对路径，不能是绝对路径：{value!r}')
+    return normalize_repo_relative(text.strip('/'), label)
+
+
 def load_config(repo: Path) -> dict:
     """Read .project-memory/config.json; missing config keeps the docs/ default."""
     cfg = {k: (list(v) if isinstance(v, list) else v) for k, v in DEFAULT_CONFIG.items()}
@@ -115,8 +124,10 @@ def load_config(repo: Path) -> dict:
         value = cfg.get(key)
         if not isinstance(value, list) or not all(isinstance(x, str) and x for x in value):
             raise PMError(f'配置项 {key} 必须是相对路径数组')
+        cfg[key] = [normalize_root(item, f'配置项 {key}') for item in value]
     if not cfg.get('adr_dir') or not isinstance(cfg['adr_dir'], str):
         raise PMError('配置项 adr_dir 必须是相对路径')
+    cfg['adr_dir'] = normalize_root(cfg['adr_dir'], '配置项 adr_dir')
     if cfg.get('mirror_policy') not in MIRROR_POLICIES:
         raise PMError('配置项 mirror_policy 必须是以下之一：' + '、'.join(sorted(MIRROR_POLICIES)))
     entry = cfg.get('entry_doc')
@@ -575,7 +586,7 @@ def create_adr(repo: Path, title: str, topic: str, issue: int, options: str, rat
     if issue <= 0:
         raise PMError('Issue 编号必须为正数')
     cfg = load_config(repo)
-    root = repo / cfg['adr_dir']
+    root = ensure_inside_repo(repo, repo / cfg['adr_dir'], 'ADR 目录')
     root.mkdir(parents=True, exist_ok=True)
     prior = sorted(set('ADR-' + str(int(n)).zfill(4) for n in ADR_ID.findall(supersedes)))
     number = max([int(n) for p in root.glob('*.md') for n in ADR_ID.findall(p.name)] or [0]) + 1
@@ -589,6 +600,7 @@ def create_adr(repo: Path, title: str, topic: str, issue: int, options: str, rat
                 f'## 提议与理由\n\n{rationale}\n\n'
                 '## 影响与风险\n\n待审查。\n\n'
                 '## 证据与批准\n\n等待人工明确批准和 PR 审查。\n')
+        ensure_inside_repo(repo, path, 'ADR 文件')
         if write_new(path, header + body):
             return relpath(repo, path)
     raise PMError('无法分配 ADR 编号：冲突过多')
@@ -640,7 +652,7 @@ def create_document(repo: Path, ident: str, title: str, kind: str, status: str, 
                 '## 证据\n\n<!-- 按 L/S/D 标注，附文件、提交、日志或命令输出。 -->\n\n'
                 '## 适用范围与未决\n\n<!-- 边界、限制、仍需确认的问题。 -->\n\n'
                 f'## 变更记录\n\n- {today()}：初始草稿。\n')
-    target = repo / rel
+    target = ensure_inside_repo(repo, repo / rel, '文档路径')
     if not write_new(target, md_header(meta) + body):
         raise PMError(f'拒绝覆盖已有文件：{rel}')
     return {
