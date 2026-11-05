@@ -12,30 +12,87 @@ revision and the second write silently discards the first.  With a mutex only th
 lock owner gets there; its wait expires after ``MEET_TIMEOUT`` seconds, the
 barrier breaks, and the other process is released into the record it should have
 seen in the first place.
+
+One more cross-process hazard lives on the same path and is Windows-only:
+``os.replace`` is refused with ``PermissionError`` while another process still has
+the record open for reading, so ``atomic_replace`` retries inside a bounded
+deadline.  ``test_a_concurrent_reader_does_not_defeat_the_writer`` applies that
+pressure on purpose.
 """
 import json
 import multiprocessing
-import shutil
+import os
+import stat
 import subprocess
 import tempfile
 import threading
+import time
 import unittest
 from pathlib import Path
 from unittest import mock
 
 from project_memory.common import PMError, record_lock
 from project_memory.coordination import (_append_audit_entry, _goal_path, _mutate,
-                                         _read_audit_entries, add_goal_evidence,
+                                         _read_audit_entries, add_goal_evidence, audit_migrate,
                                          audit_verify, create_goal, load_goal)
 
 MEET_TIMEOUT = 1.0
 GOAL = 'G-RACE'
 CRITERION = 'C1'
 AUDIT_LEDGER = '.project-memory/audit/verification_attempts.jsonl'
+TEMP_PREFIX = 'pm-race-'
 
 
 def _git(repo: Path, *args):
     subprocess.run(['git', '-C', str(repo), *args], check=True, capture_output=True)
+
+
+def _remove_with_one_retry(action, path: str) -> None:
+    """Git writes loose objects read-only, so the first removal can raise
+    ``PermissionError`` on Windows; clear the bit and retry once, then propagate."""
+    try:
+        action(path)
+    except PermissionError:
+        os.chmod(path, stat.S_IWRITE)
+        action(path)
+
+
+def _delete_tree(root: Path) -> None:
+    if not root.exists():
+        return
+    with os.scandir(root) as scan:
+        entries = sorted(scan, key=lambda item: item.name)
+    for entry in entries:
+        if entry.is_symlink() or getattr(entry.stat(follow_symlinks=False), 'st_reparse_tag', 0):
+            # A link entry is removed as an entry; its target is never followed.
+            # Windows junctions answer to rmdir, and rmdir on a reparse point
+            # removes the point itself rather than the directory behind it.
+            try:
+                _remove_with_one_retry(os.unlink, entry.path)
+            except OSError:
+                _remove_with_one_retry(os.rmdir, entry.path)
+        elif entry.is_dir(follow_symlinks=False):
+            _delete_tree(Path(entry.path))
+        else:
+            _remove_with_one_retry(os.unlink, entry.path)
+    _remove_with_one_retry(os.rmdir, str(root))
+
+
+def remove_owned_temp_tree(root: Path) -> None:
+    """Delete the tree this case created — and only that tree.
+
+    The old cleanup was ``shutil.rmtree(self.root, ignore_errors=True)``, which
+    hid a real failure: the read-only git objects above made every run leak a
+    half-deleted repository instead of reporting anything.  Removal here is
+    recursive, link entries (POSIX symlinks, Windows junctions) are dropped as
+    entries so their targets are never followed or deleted, and a failure after
+    the single retry propagates rather than being swallowed.
+    """
+    if not root.name.startswith(TEMP_PREFIX):
+        raise AssertionError(f'拒绝清理不是本测试创建的目录：{root}')
+    if Path(tempfile.gettempdir()).resolve() not in root.resolve().parents:
+        raise AssertionError(f'拒绝清理临时目录之外的路径：{root}')
+    _delete_tree(root)
 
 
 def _meet(barrier) -> bool:
@@ -114,6 +171,34 @@ def audit_worker(args):
     return token
 
 
+def ledger_worker(args):
+    """Migration rewrites the whole ledger, so it must serialise behind an append.
+
+    The rendezvous sits inside the critical section (the same technique as
+    ``mutate_worker``): with the mutex the second writer is kept out and nobody
+    meets anybody, without it both read the same ledger and both meet.
+    """
+    root, mode, token, barrier = args
+    repo = Path(root)
+    real_read = _read_audit_entries
+    seen = {}
+
+    def read_with_rendezvous(path):
+        entries = real_read(path)
+        seen.setdefault('met', _meet(barrier))
+        return entries
+
+    with mock.patch('project_memory.coordination._read_audit_entries', read_with_rendezvous):
+        if mode == 'migrate':
+            result = audit_migrate(repo)
+            outcome = {'mode': mode, 'changed': result['changed'], 'entries': result['entries']}
+        else:
+            _append_audit_entry(repo, {'action': 'race', 'token': token})
+            outcome = {'mode': mode, 'token': token}
+    outcome['met'] = seen.get('met')
+    return outcome
+
+
 def lock_probe_worker(args):
     """Try a record the parent already holds, then an unrelated record."""
     root, target, timeout = args
@@ -136,11 +221,38 @@ def lock_probe_worker(args):
     return outcome
 
 
+def hammer_reader_worker(args):
+    """Read the record in a tight loop until the parent says stop.
+
+    On Windows a reader that still holds the file open makes the writer's
+    ``os.replace`` fail with ``PermissionError`` (WinError 5).  This worker exists
+    to apply that pressure at its maximum, so the retry in ``atomic_replace`` is
+    exercised rather than assumed.  ``ready`` is set after the first successful
+    read, which is how the writer learns the pressure is actually on — no sleeps.
+    """
+    path, stop, ready = args
+    started = time.monotonic()
+    reads = denied = 0
+    announced = False
+    while not stop.is_set():
+        try:
+            with open(path, encoding='utf-8') as handle:
+                handle.read()
+            reads += 1
+            if not announced:
+                announced = True
+                ready.set()
+        except (PermissionError, FileNotFoundError):
+            denied += 1
+    return {'reads': reads, 'read_denied': denied,
+            'seconds': round(time.monotonic() - started, 2)}
+
+
 class RecordLockRaceTest(unittest.TestCase):
     """问题一：多 Agent 并发更新可能丢失记录。"""
 
     def setUp(self):
-        self.root = Path(tempfile.mkdtemp(prefix='pm-race-'))
+        self.root = Path(tempfile.mkdtemp(prefix=TEMP_PREFIX))
         _git(self.root, 'init', '-q')
         _git(self.root, 'config', 'user.email', 'test@example.invalid')
         _git(self.root, 'config', 'user.name', 'Test')
@@ -155,7 +267,7 @@ class RecordLockRaceTest(unittest.TestCase):
                                              capture_output=True, text=True).stdout.strip())
 
     def tearDown(self):
-        shutil.rmtree(self.root, ignore_errors=True)
+        remove_owned_temp_tree(self.root)
 
     def test_two_processes_updating_one_goal_lose_nothing(self):
         barrier = multiprocessing.Barrier(2, timeout=MEET_TIMEOUT * 10)
@@ -177,6 +289,37 @@ class RecordLockRaceTest(unittest.TestCase):
         self.assertEqual(goal['revision'], 5)
         self.assertEqual(sorted(revisions), [2, 3, 4, 5])
 
+    def test_a_concurrent_reader_does_not_defeat_the_writer(self):
+        """Windows 上「有人只是在读」也能让写入者的改名被拒（WinError 5）。
+
+        读取进程把同一份记录循环打开到父进程确认它已经在跑（``ready`` 事件，不靠
+        睡眠），父进程随后连着做 4 次真实更新。没有 ``atomic_replace`` 里的有界重试时，
+        改名会直接抛 ``PermissionError``；有重试时四次更新全部落地、revision 连续、
+        引用一条不少。读取计数也必须远大于零，否则这条测试什么都没压到。
+        """
+        path = _goal_path(self.root, GOAL)
+        ctx = multiprocessing.get_context(None)
+        stop = ctx.Event()
+        ready = ctx.Event()
+        queue = ctx.Queue()
+        reader = ctx.Process(target=_runner,
+                             args=(hammer_reader_worker, (str(path), stop, ready), queue))
+        reader.start()
+        try:
+            self.assertTrue(ready.wait(timeout=60), '读取进程没有开始读记录')
+            revisions = [add_goal_evidence(self.root, GOAL, CRITERION, 'commit', sha)['goal']['revision']
+                         for sha in self.shas]
+        finally:
+            stop.set()
+            kind, pressure = queue.get(timeout=60)
+            reader.join(30)
+        self.assertEqual(kind, 'ok', pressure)
+        self.assertGreater(pressure['reads'], 100, f'读取进程没有形成压力：{pressure}')
+        self.assertEqual(revisions, [2, 3, 4, 5], '读者的共享占用不能把更新挤掉')
+        goal = load_goal(self.root, GOAL)
+        refs = [item['ref'] for item in goal['success_criteria'][0]['evidence']]
+        self.assertEqual(sorted(refs), sorted(self.shas))
+
     def test_concurrent_audit_append_keeps_the_chain_valid(self):
         _append_audit_entry(self.root, {'action': 'seed', 'token': 'seed'})
         barrier = multiprocessing.Barrier(2, timeout=MEET_TIMEOUT * 10)
@@ -187,6 +330,38 @@ class RecordLockRaceTest(unittest.TestCase):
         raced = [entry for entry in entries if entry.get('action') == 'race']
         self.assertEqual(sorted(entry['token'] for entry in raced), sorted(tokens))
         self.assertEqual([entry['seq'] for entry in entries], list(range(1, len(entries) + 1)))
+        report = audit_verify(self.root)
+        self.assertTrue(report['valid'], report['problems'])
+        self.assertEqual(report['entries'], len(entries))
+
+    def test_migration_and_append_on_one_ledger_serialize(self):
+        """迁移整本重写账本，追加只写最后一行：两者并发时链必须仍然成立。
+
+        屏障放在临界区里（和 ``mutate_worker`` 同一套构造）：有互斥时第二个写入者
+        被挡在锁外，谁也不遇见谁，``met`` 为 False；互斥一旦摘掉，两个进程读到同一
+        份账本、在屏障上相遇，``met`` 为 True，链也会被后写的那本覆盖掉。
+        两种先后顺序都满足同一组不变量，所以这里不需要睡眠。
+        """
+        ledger = self.root / AUDIT_LEDGER
+        ledger.parent.mkdir(parents=True, exist_ok=True)
+        ledger.write_text(
+            '{"schema_version": "1.2", "kind": "verification_attempt",'
+            ' "timestamp": "2026-01-01T00:00:00Z", "outcome": "recorded", "token": "legacy-0"}\n'
+            '{"schema_version": "1.2", "kind": "verification_attempt",'
+            ' "timestamp": "2026-01-01T00:00:01Z", "outcome": "recorded", "token": "legacy-1"}\n',
+            encoding='utf-8')
+        barrier = multiprocessing.Barrier(2, timeout=MEET_TIMEOUT * 10)
+        outcomes = run_processes(ledger_worker, [(str(self.root), 'migrate', '', barrier),
+                                                 (str(self.root), 'append', 'cd-9', barrier)])
+        self.assertEqual(sorted(item['mode'] for item in outcomes), ['append', 'migrate'])
+        for item in outcomes:
+            self.assertFalse(item['met'], f'{item["mode"]} 在临界区里遇见了另一个写入者')
+        entries = [json.loads(line) for line in
+                   ledger.read_text(encoding='utf-8').splitlines() if line]
+        self.assertEqual([entry['seq'] for entry in entries], list(range(1, len(entries) + 1)),
+                         '并发写入不能让 seq 重复或跳号')
+        self.assertEqual({entry.get('token') for entry in entries},
+                         {'legacy-0', 'legacy-1', 'cd-9'}, '追加的那条不能被迁移重写吞掉')
         report = audit_verify(self.root)
         self.assertTrue(report['valid'], report['problems'])
         self.assertEqual(report['entries'], len(entries))

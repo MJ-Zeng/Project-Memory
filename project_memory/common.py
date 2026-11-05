@@ -111,6 +111,32 @@ def write_new(path: Path, content: str) -> bool:
             os.unlink(temp_name)
 
 
+REPLACE_DEADLINE_SECONDS = 2.0
+_REPLACE_POLL_SECONDS = 0.02
+
+
+def _replace_with_retry(source: str, target: Path) -> None:
+    """``os.replace`` that survives a Windows sharing violation, bounded.
+
+    On Windows a rename onto a file another process still has open is refused
+    with ``PermissionError`` (WinError 5): the reader does not have to be a
+    Project Memory writer, any process holding the record open — a peer reading
+    it outside the lock, an indexer, an editor — is enough.  POSIX rename ignores
+    readers, so this loop only ever costs a Windows call.  The retry is bounded
+    and the last error propagates; a record is never reported as written when the
+    replace actually failed.
+    """
+    deadline = time.monotonic() + REPLACE_DEADLINE_SECONDS
+    while True:
+        try:
+            os.replace(source, target)
+            return
+        except PermissionError:
+            if time.monotonic() >= deadline:
+                raise
+            time.sleep(_REPLACE_POLL_SECONDS)
+
+
 def atomic_replace(path: Path, content: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     name = None
@@ -120,7 +146,7 @@ def atomic_replace(path: Path, content: str) -> None:
             f.write(content)
             f.flush()
             os.fsync(f.fileno())
-        os.replace(name, path)
+        _replace_with_retry(name, path)
     finally:
         if name and os.path.exists(name):
             os.unlink(name)
@@ -130,19 +156,54 @@ LOCK_TIMEOUT_SECONDS = 10.0
 _LOCK_POLL_SECONDS = 0.02
 _lock_holds = threading.local()
 
+_EXTENDED_PREFIX = '\\\\?\\'
+_EXTENDED_UNC_PREFIX = '\\\\?\\UNC\\'
 
-def _lock_path_for(path: Path) -> Path:
+
+def canonical_realpath(path) -> str:
+    """``os.path.realpath`` with the Windows device-namespace prefix removed.
+
+    Windows hands back the same object under two spellings: normally
+    ``C:\\dir\\file``, but while a peer is replacing that file — or has just
+    created it — the resolver sometimes answers ``\\\\?\\C:\\dir\\file``.
+    Measured here: 1 of 40 134 resolutions of a record under continuous
+    replacement came back prefixed, and it produced a different lock key.
+    Both the sidecar name and the boundary check are derived from realpath, so
+    without this normalization one process can take a lock nobody else takes
+    (mutual exclusion silently lost) or a legal in-repository path gets refused.
+    A prefix that does not name a drive or UNC share — a volume GUID path or a
+    ``GLOBALROOT`` device path — is left as it is, so it still fails closed.  The
+    UNC form is rewritten to the native ``\\\\server\\\\share`` spelling, because
+    ``os.path.normcase()`` does not unify separators and a ``//server/share``
+    answer would hash to a different lock key than the ``\\\\server\\\\share`` a
+    resolver normally returns.
+    """
+    text = os.path.realpath(path)
+    if text.startswith(_EXTENDED_UNC_PREFIX):
+        return '\\\\' + text[len(_EXTENDED_UNC_PREFIX):]
+    if (text.startswith(_EXTENDED_PREFIX) and len(text) > 5
+            and text[4].isascii() and text[4].isalpha() and text[5] == ':'):
+        return text[len(_EXTENDED_PREFIX):]
+    return text
+
+
+def _lock_path_for(path: Path) -> tuple[Path, Path]:
     """Sidecar lock named from the record path, never from its inode.
 
     ``os.replace`` gives a record a new inode, so a lock attached to the file
     object would not serialise anything.  The name is a hash of the normalized
     real path, and lock files are never deleted (removing one re-opens the race).
+
+    Returns the lock file together with the repository root that owns it, so the
+    caller can check the boundary *before* ``mkdir`` creates anything: a linked
+    ``.project-memory/cache`` would otherwise take the lock outside the repository.
     """
-    key = hashlib.sha256(os.path.normcase(os.path.realpath(path)).encode('utf-8')).hexdigest()[:16]
+    key = hashlib.sha256(os.path.normcase(canonical_realpath(path)).encode('utf-8')).hexdigest()[:16]
     for parent in Path(os.path.abspath(path)).parents:
         if parent.name == '.project-memory':
-            return parent / 'cache' / 'locks' / f'{key}.lock'
-    return Path(os.path.abspath(path)).parent / f'.pm-lock-{key}.lock'
+            return parent / 'cache' / 'locks' / f'{key}.lock', parent.parent
+    own_dir = Path(os.path.abspath(path)).parent
+    return own_dir / f'.pm-lock-{key}.lock', own_dir
 
 
 def _try_lock(fd: int) -> bool:
@@ -177,8 +238,18 @@ def record_lock(path: Path, timeout: float = LOCK_TIMEOUT_SECONDS, label: str = 
     Re-entrant per thread, so a nested call on the same record (for example an
     audit migration inside an append) cannot deadlock itself.  Advisory only:
     a same-user process that ignores this lock is not stopped by it.
+
+    This is a convention between cooperating processes of one user on one
+    machine.  It is not a defence against a same-user process that deliberately
+    ignores the lock, and it says nothing about two machines writing the same
+    files.
     """
-    key = os.path.normcase(os.path.realpath(_lock_path_for(path)))
+    lock_file, lock_root = _lock_path_for(path)
+    # The sidecar is a write like any other: if .project-memory, cache or locks
+    # is a directory link out of the repository, the mkdir and open below would
+    # put lock files outside the repo.  Refuse before anything is created.
+    ensure_inside_repo(lock_root, lock_file, '记录锁路径')
+    key = os.path.normcase(canonical_realpath(lock_file))
     held = getattr(_lock_holds, 'keys', None)
     if held is None:
         held = _lock_holds.keys = {}
@@ -191,7 +262,6 @@ def record_lock(path: Path, timeout: float = LOCK_TIMEOUT_SECONDS, label: str = 
             if not held[key]:
                 del held[key]
         return
-    lock_file = _lock_path_for(path)
     lock_file.parent.mkdir(parents=True, exist_ok=True)
     fd = os.open(lock_file, os.O_CREAT | os.O_RDWR, 0o600)
     deadline = time.monotonic() + timeout
@@ -310,7 +380,7 @@ def ensure_inside_repo(repo: Path, path: Path, label: str = '写入路径') -> P
     afterwards; it only closes the deterministic escape.
     """
     root = Path(os.path.abspath(repo))
-    real_root = Path(os.path.realpath(root))
+    real_root = Path(canonical_realpath(root))
     candidate = Path(os.path.abspath(path))
     try:
         relative = candidate.relative_to(root)
@@ -323,12 +393,12 @@ def ensure_inside_repo(repo: Path, path: Path, label: str = '写入路径') -> P
         current = current / part
         kind = link_kind(current)
         if kind:
-            target = Path(os.path.realpath(current))
+            target = Path(canonical_realpath(current))
             try:
                 target.relative_to(real_root)
             except ValueError:
                 raise PMError(f'{label} 经过{kind}指向仓库之外：{current}') from None
-    resolved = Path(os.path.realpath(candidate))
+    resolved = Path(canonical_realpath(candidate))
     try:
         resolved.relative_to(real_root)
     except ValueError:
