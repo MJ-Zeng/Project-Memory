@@ -1,0 +1,25 @@
+{
+  "approval_id": "APR-aee569bf8962",
+  "approver": "2427474674@qq.com",
+  "at": "2026-11-08T11:14:02+00:00",
+  "authority": {
+    "algorithm": "rsa-sha256",
+    "anchor_id": "ANCHOR-PROD-20261108",
+    "issuer": "2427474674@qq.com",
+    "signature_b64": "YIxEyFyU7zlug9V6VrujuWUQqaecOVh2Rsy7CaOVHIpyshlWxQL60C9sE3PPRIj0jLaATCuWrNA5BQ7cQ4uDzDIBetrPavGIG1RvyW9ulcb1u0/VdCSYXb0Ah3ouUP4CF1UkQAToYwNyy9MNR1YBQftkU7miW+ZgQCi5pdvBQYWWak2gYQHzjlLI4MAouhvIdQ6C/0DqYCbaWMnyMX/aQlItNWxtstaDrxTf8q8tWNDmIRBL807sgxIIJH91+/plLiRIhea6vJx4lme7NGd886An1X8yaZc1EUjn47gtV9horFVBgr3RIN/C0+jN4KoNGJihq0rWhTgQfpGA3LJxog==",
+    "signed_payload_sha256": "fbd5ee236fc27927d3aeb48611bd29019d8374fbe689c46be545bf04d435be6e",
+    "status": "signed"
+  },
+  "commit_sha": "8c2725a9caa52005b2f6d23cbefb6392f2801f37",
+  "decision": "approve",
+  "kind": "approval_event",
+  "repository": {
+    "id": "6d372b4c9fc56b2a479d8671044a834e285caedb14aaf49d030beaa33dc9e8f6",
+    "remote": "github.com/MJ-Zeng/Project-Memory"
+  },
+  "schema_version": "1.0",
+  "scope": {
+    "kind": "commit"
+  },
+  "statement": "PR #63 reviewed by agent: README CI/protection wording and CHANGELOG [Unreleased] aligned to merged main line; colon task-ID recorded as regression pin after verifying path_component at 4918b86:project_memory/common.py:176. Local pytest 390 passed/3 skipped exit 0; audit --fail-on high exit 0, 43 findings (high 0) identical to baseline on clean file set. ISSUED BY AGENT ON EXPLICIT OWNER INSTRUCTION (继续这个任务, 2026-11-08)."
+}
