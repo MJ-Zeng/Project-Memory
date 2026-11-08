@@ -15,6 +15,9 @@
 cd project-memory-mvp
 python3 -m pytest -q
 
+# CLI 自检：版本只有一个来源 project_memory.__version__，包元数据与 --version 都读它
+python3 -m project_memory --version
+
 # 初始化一个已经建好的 Git 仓库；只补缺失文件，不覆盖
 python3 -m project_memory init --repo /path/to/git/repo --install both
 cd /path/to/git/repo
@@ -30,7 +33,7 @@ Windows 上用 Git Bash 时，先设置 `PYTHONUTF8=1`，并把 `python3` 换成
 
 ### 测试期 openssl 要求
 
-openssl 只在测试期用于生成测试密钥和签名，**不是运行时依赖**；CLI 的验签在进程内完成。缺少 openssl 时，依赖 openssl 生成密钥与签名的测试默认 `SkipTest`，本地仍可跑其余测试。发布和 CI **必须**设置开关，让缺 openssl 直接失败，避免把 skip 当成通过：
+openssl 只在测试期用于生成测试密钥和签名，**不是运行时依赖**；CLI 的验签在进程内完成。缺少 openssl 时，依赖 openssl 生成密钥与签名的测试默认 `SkipTest`，本地仍可跑其余测试。发布和 CI **必须**设置开关，让缺 openssl 直接失败，避免把 skip 当成通过：本仓库的 `test` 工作流在步骤里先探测 openssl，探测不到就 `exit 1`，不会静默放行（2026-11-08 起）。
 
 ```bash
 # 发布/CI：缺 openssl 时签名测试 failed/error，不再 skip
@@ -233,7 +236,7 @@ python3 -m project_memory goal evidence --repo . --id G-AUTH --criterion C1 \
 
 ### 发布构建与来源证明
 
-`release` 工作流由 `v*` tag 推送或手动 `workflow_dispatch` 触发，产出源码归档、sdist、wheel、`sha256sums.txt` 和 BUILD-INFO.json，向 GitHub 申请 artifact attestation，并把它们一起作为 workflow artifact 上传。它不创建 tag、不发布 Release、不读任何仓库 secret——打 tag、建 Release、挂资产仍是人工动作。外部验证一次 run：下载 artifact → `sha256sum -c sha256sums.txt` → 逐个 `gh attestation verify <文件> --repo MJ-Zeng/Project-Memory`；完整命令、失败判读和已知限制见 [OPERATIONS](docs/OPERATIONS.zh-CN.md#发布构建与来源证明)。attestation 只能在 hosted runner 上签发，本地静态测试锁的是工作流形状，tag 触发路径要等人类打下第一个 `v*` tag 才算实测。
+`release` 工作流由 `v*` tag 推送或手动 `workflow_dispatch` 触发，产出源码归档、sdist、wheel、`sha256sums.txt` 和 BUILD-INFO.json，向 GitHub 申请 artifact attestation，并把它们一起作为 workflow artifact 上传。它不创建 tag、不发布 Release、不读任何仓库 secret——打 tag、建 Release、挂资产仍是人工动作。外部验证一次 run：下载 artifact → `sha256sum -c sha256sums.txt` → 逐个 `gh attestation verify <文件> --repo MJ-Zeng/Project-Memory`；完整命令、失败判读和已知限制见 [OPERATIONS](docs/OPERATIONS.zh-CN.md#发布构建与来源证明)。attestation 只能在 hosted runner 上签发，本地静态测试锁的是工作流形状；tag 触发路径已经真实跑过——`v1.1.0` 的 tag 推送触发 run `41763116854`，绑定提交 `4918b86…`，产物已随 Release 公开，逐条事实与核查日期见 [docs/CURRENT_STATE.md](docs/CURRENT_STATE.md)。
 
 ## 两种审计范围
 
@@ -317,12 +320,16 @@ python3 -m pip install -e '.[semantic]'
 ## 文档
 
 - [当前状态](docs/CURRENT_STATE.md)：唯一的现状入口文档，发布事实、预期行为、已知限制和阅读顺序都在那里。
+- [知识索引](docs/INDEX.md)：从入口出发能到哪些规范文档。
 - [更新记录](CHANGELOG.md)：按版本汇总的变更与发布状态。
 - [教程与工作流](docs/TUTORIAL.zh-CN.md)：从临时仓库试跑到真实仓库接入，以及日常协作节奏。
 - [技术设计](docs/ARCHITECTURE.zh-CN.md)：模块、目录模型、数据契约和后续门槛。
 - [操作手册](docs/OPERATIONS.zh-CN.md)：接入步骤、文档写入、新人接手、发布构建与来源证明和上线检查。
-- [验证记录](docs/TEST_REPORT.md)：跑过的测试、真实仓库结果和未验证项。
+- [架构决策索引](docs/decisions/README.md)：8 篇 ADR 的标题、状态和各自决定了什么。
+- [验证记录](docs/TEST_REPORT.md)：2026-10-25 v0.3 阶段跑过的测试与未验证项，属于历史证据，不代表当前版本的结论。
 - [Skill 说明](skill/project-memory/SKILL.md) 与 `skill/project-memory/references/`：Agent 执行时读的规则和字段契约。
+
+`docs/` 下的规范文档在 frontmatter 里显式声明 `status`，当前文档还带 `last_verified_at`（核对结论的日期，与只记编辑的 `updated_at` 分开）；这批日期在 2026-11-08 补齐，`audit --scope current` 用它判断新鲜度。历史与证据文档不追求把这个字段清零。
 
 ## 参考
 

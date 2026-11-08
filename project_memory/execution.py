@@ -678,7 +678,8 @@ def verify_execution_provenance(repo: Path, receipt: dict, target_commit: str, *
 _SENSITIVE_ENV = ('TOKEN', 'SECRET', 'PASSWORD', 'PASSWD', 'API_KEY', 'APIKEY',
                   'CREDENTIAL', 'QODER', 'GITHUB', 'GH_', 'OPENAI', 'ANTHROPIC',
                   'DEEPSEEK', 'HF_', 'AWS_', 'AZURE', 'SSH_AUTH_SOCK', 'KRB5',
-                  'PROJECT_MEMORY_TRUST_ANCHOR', 'PROJECT_MEMORY_OPENSSL')
+                  'PROJECT_MEMORY_TRUST_ANCHOR', 'PROJECT_MEMORY_OPENSSL',
+                  'PROJECT_MEMORY_APPROVAL_ANCHOR')
 
 
 def _sensitive_env_name(name: str) -> bool:

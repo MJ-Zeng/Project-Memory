@@ -8,19 +8,28 @@
 
 - `build_graph` 遇到 frontmatter 损坏的文档不再整体崩溃，改为跳过并在结果的 `skipped` 中报告路径与原因（合并 `34618ba`，PR #61）。
 - `init` 在 Skill 资源目录缺失时显式报错并指引用 editable 安装，不再静默产出半成品工作区（合并 `34618ba`，PR #61）。
-
-### 测试
-
-- 新增回归固定：含冒号的任务 ID 走 `path_component` 净化、净化后同名冲突失败关闭（该行为自 `v1.1.0` 即存在，`common.py` 的 `path_component`，本轮只补测试，不是修复）；图谱坏 frontmatter 与 init 缺 Skill 资源两项均先在基线上做过负对照（合并 `34618ba`，PR #61）。
+- 版本号只有一个来源：`project_memory/__init__.py` 的 `__version__` 修正为 `1.1.0`，`pyproject.toml` 改用 `dynamic = ["version"]` + `[tool.setuptools.dynamic] attr = "project_memory.__version__"`。这是影响已发行制品的真实缺陷——`v1.1.0` 那一份里包元数据写 `1.1.0`、`__version__` 仍是 `1.0.0`，而 `evidence.py` 把 `__version__` 写进签名证据清单的 `generator.version`，清单因此自报错误版本（PR #64）。
+- `search` 的输出补上 `skipped` 字段并写进 caveat：frontmatter 解析失败的文档没建节点、也不参与检索，调用方必须看得见。`knowledge-graph` 与 `search-results` 两个 schema 和字段契约同步声明该字段（PR #64）。
+- CI 的 openssl 门禁不再静默放行：runner 上探测不到 openssl 时步骤 `exit 1`。原写法只打印一行 “SKIPPED (not passed)” 后成功退出，与 README「发布和 CI 必须让缺 openssl 直接失败」的口径矛盾。2026-11-08 从两个 hosted runner 的 job 日志核实当前都有 openssl（ubuntu 3.5.5、windows 3.5.9），所以该分支在现有镜像上不会触发；将来镜像去掉 openssl 时门禁会变红，而不是假装通过（PR #64）。
+- `test-run` 的子进程环境把 `PROJECT_MEMORY_APPROVAL_ANCHOR` 及其 `_JSON` 变体也当作凭据类变量剥离并拒绝注入；此前名单只覆盖 `PROJECT_MEMORY_TRUST_ANCHOR`（PR #64）。
 
 ### 变更
 
 - CI 测试矩阵从单一 `windows-latest` 扩展为 `ubuntu-latest` + `windows-latest`（`fail-fast: false`），关闭 Linux/`fcntl` 路径从未被门禁覆盖的空白；必需状态检查上下文随之改为 `pytest (ubuntu-latest)`、`pytest (windows-latest)`、`approval`（合并 `34618ba`，PR #61）。
 - 审批信任锚轮换为 `ANCHOR-PROD-20261108`，`ANCHOR-S3-EXERCISE-20261031` 进入 `revoked_anchor_ids`；CI secret 已同步。PR #61、#62 是首批经真实签名审批合并的 PR。
+- CLI 新增 `--version`，打印 `project-memory <__version__>`，用于确认装的是哪一份（PR #64）。
+- `init --profile full` 生成的架构总览占位稿改为 `status: "draft"`：未核实内容的骨架不能自称 current 知识，提升为 `current` 仍由人做。init 报告在 `.project-memory/tooling` 被仓库忽略规则排除时新增一条 manual action，说明生成的审计工作流取不到这份副本；生成的工作流模板把 `actions/checkout` 固定到 `v4.4.0`（与本仓 CI 同一提交）并加上 `persist-credentials: false`（PR #64）。
+- 文档口径：`docs/ARCHITECTURE.zh-CN.md`、`docs/OPERATIONS.zh-CN.md`、`docs/TUTORIAL.zh-CN.md` 补齐 frontmatter（显式 `status: current` 与 `last_verified_at`），`docs/TEST_REPORT.md` 按正文自述标成 `kind: evidence` + `status: historical`，因此不再计入 `--scope current`；`docs/decisions/README.md` 补全 8 篇 ADR 的索引表；README 修正「tag 触发路径要等第一个 `v*` tag 才算实测」的旧口径，并补 `--version`、知识索引与 ADR 索引导航。补齐后 `audit --scope current` 实测 high 0 / medium 17 / low 19（14 篇当前文档；此前为 0 / 18 / 25，15 篇）（PR #64）。
+- Skill：`SKILL.md` 的 CLI 自检步骤补 `--version` 与 Windows 解释器说明（Git Bash 要先设 `PYTHONUTF8=1`，`python3` 可能是 Store 占位别名）；仓库内已安装的 `.agents/skills/project-memory/` 同步为逐字节一致（PR #64）。
 
 ### 新增
 
 - 仓库自接入：`init` 补齐 `.agents/skills` 安装、`docs/INDEX.md`、PR/Issue 模板、CODEOWNERS 示例，以及 `项目记忆审计` 工作流（跑本仓自身源码，`--fail-on high`，非必需检查）；`docs/CURRENT_STATE.md` 刷新到实测事实（合并 `b2c9e79`，PR #62）。
+
+### 测试
+
+- 新增回归固定：含冒号的任务 ID 走 `path_component` 净化、净化后同名冲突失败关闭（该行为自 `v1.1.0` 即存在，`common.py` 的 `path_component`，本轮只补测试，不是修复）；图谱坏 frontmatter 与 init 缺 Skill 资源两项均先在基线上做过负对照（合并 `34618ba`，PR #61）。
+- PR #64 新增并全部做过基线负对照（改动前失败、改动后通过）：版本单一来源三项结构断言与 `--version` 输出、`search` 暴露 `skipped`、审批锚环境变量被过滤、init 生成的架构稿为 draft、生成工作流的 checkout 固定与 `persist-credentials`、tooling 被忽略时的 manual action、CI openssl 步骤 `exit 1`。
 
 同期在 v0.3 线 `feat/v0.3-goal-memory` 上合并的 PR #60（merge `19a6ce6`：仓库边界、记录锁、图谱容错、init 显式失败）不在 `dev/v1.0` 历史内，其图谱与 init 两项已按上表移植。
 

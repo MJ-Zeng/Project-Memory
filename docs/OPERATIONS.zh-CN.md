@@ -1,3 +1,13 @@
+---
+id: "DOC-OPERATIONS"
+kind: "canonical"
+title: "Project Memory 操作手册"
+status: "current"
+owner: "MJ-Zeng"
+updated_at: "2026-11-08"
+last_verified_at: "2026-11-08"
+---
+
 # 操作手册
 
 ## 接入步骤

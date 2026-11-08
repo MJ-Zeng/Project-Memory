@@ -39,9 +39,9 @@ jobs:
       - name: OpenSSL gate
         shell: bash
         run: |
-          if command -v openssl >/dev/null 2>&1; then
-            echo "openssl available: $(openssl version)"
-            PROJECT_MEMORY_REQUIRE_OPENSSL=1 python -m pytest -q
-          else
-            echo "openssl not found on runner; PROJECT_MEMORY_REQUIRE_OPENSSL gate SKIPPED (not passed)"
+          if ! command -v openssl >/dev/null 2>&1; then
+            echo "::error::runner 上没有 openssl；PROJECT_MEMORY_REQUIRE_OPENSSL 门禁无法执行"
+            exit 1
           fi
+          echo "openssl available: $(openssl version)"
+          PROJECT_MEMORY_REQUIRE_OPENSSL=1 python -m pytest -q

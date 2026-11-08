@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "project-memory-skill"
-version = "1.1.0"
+dynamic = ["version"]
 description = "面向 GitHub 多 Agent 协作的项目记忆命令行工具与 Agent Skill"
 requires-python = ">=3.11"
 dependencies = []
@@ -26,6 +26,11 @@ script-files = [
     "bin/project-memory.cmd",
     "_project_memory_launcher.py",
 ]
+
+[tool.setuptools.dynamic]
+# 版本只有一个来源：project_memory.__version__。写死的第二份版本会与包元数据漂移，
+# 而 evidence.py 把 __version__ 写进签名清单的 generator.version。
+version = { attr = "project_memory.__version__" }
 
 [tool.pytest.ini_options]
 # 只收集正式测试；evidence/ 下的历史探针文件名也以 test_ 开头，

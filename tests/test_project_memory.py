@@ -94,6 +94,34 @@ class ProjectMemoryTest(unittest.TestCase):
         workflow = (self.repo / '.github/workflows/project-memory-check.yml').read_text(encoding='utf-8')
         self.assertIn('--scope current --fail-on high', workflow)
 
+    def test_init_generated_audit_workflow_is_pinned_and_read_only(self):
+        init(self.repo, 'none')
+        workflow = (self.repo / '.github/workflows/project-memory-check.yml').read_text(encoding='utf-8')
+        self.assertIn('actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0', workflow)
+        self.assertIn('persist-credentials: false', workflow)
+        self.assertIn('--scope current --fail-on high', workflow)
+
+    def test_init_architecture_stub_is_draft(self):
+        init(self.repo, 'none')
+        meta, body = frontmatter((self.repo / 'docs/architecture/overview.md').read_text(encoding='utf-8'))
+        self.assertEqual(meta['status'], 'draft')
+        self.assertIn('待补', body)
+        report = audit(self.repo, scope='current')
+        self.assertEqual([f for f in report['findings'] if f['severity'] == 'high'], [])
+        self.assertNotIn('docs/architecture/overview.md',
+                         [f['location'] for f in report['findings']
+                          if f['code'] == 'current_document_unverified'])
+
+    def test_init_warns_only_when_tooling_copy_is_git_ignored(self):
+        (self.repo / '.gitignore').write_text('.project-memory/tooling/\n', encoding='utf-8')
+        ignored = init(self.repo, 'none')
+        self.assertTrue(any('PYTHONPATH=.project-memory/tooling' in action
+                            for action in ignored['manual_actions']), ignored['manual_actions'])
+        (self.repo / '.gitignore').write_text('build/\n', encoding='utf-8')
+        clean = init(self.repo, 'none')
+        self.assertFalse(any('PYTHONPATH=.project-memory/tooling' in action
+                             for action in clean['manual_actions']), clean['manual_actions'])
+
     def test_init_fails_explicitly_when_skill_source_missing(self):
         missing = self.repo / 'no-such-skill-source'
         with mock.patch('project_memory.bootstrap.SKILL_SOURCE', missing):
@@ -239,6 +267,21 @@ class ProjectMemoryTest(unittest.TestCase):
         self.assertIn('title', graph['skipped'][0]['reason'])
         self.assertTrue(any(u['to'] == 'DOC:docs/bad.md' for u in graph['unresolved']))
 
+    def test_search_reports_skipped_documents(self):
+        init(self.repo, 'none')
+        self.write_doc('docs/good.md', body='# Doc\n缓存口径说明\n')
+        (self.repo / 'docs/bad.md').write_text('---\ntitle: [broken\n---\n# Bad\n缓存\n', encoding='utf-8')
+        env = os.environ.copy()
+        env['PYTHONPATH'] = str(ROOT)
+        env['PYTHONUTF8'] = '1'
+        result = subprocess.run(
+            [sys.executable, '-m', 'project_memory', 'search', '--repo', str(self.repo), '缓存'],
+            cwd=self.repo, env=env, capture_output=True, text=True, encoding='utf-8')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertEqual([s['path'] for s in payload['skipped']], ['docs/bad.md'])
+        self.assertNotIn('docs/bad.md', [r['path'] for r in payload['results']])
+
     def test_handoff_store_outside_repo_stays_read_only(self):
         init(self.repo, 'none')
         with tempfile.TemporaryDirectory() as other:
@@ -371,17 +414,15 @@ class ProjectMemoryTest(unittest.TestCase):
         self.assertNotIn('broken_reference', codes)
 
     def test_current_document_requires_last_verified_at(self):
-        init(self.repo, 'none')
-        p = self.repo / 'docs/architecture/overview.md'
-        text = p.read_text(encoding='utf-8')
-        self.assertEqual(frontmatter(text)[0]['status'], 'current')
+        self.write_config(['docs'])
+        self.write_doc('docs/architecture/overview.md', body='# 架构总览\n')
         findings = audit(self.repo)['findings']
         unverified = [f for f in findings if f['code'] == 'current_document_unverified'
                       and f['location'] == 'docs/architecture/overview.md']
         self.assertEqual(len(unverified), 1)
         self.assertEqual(unverified[0]['severity'], 'low')
 
-        p.write_text(text.replace('status: "current"', 'status: "draft"'), encoding='utf-8')
+        self.write_doc('docs/architecture/overview.md', status='draft', body='# 架构总览\n')
         codes = [f['code'] for f in audit(self.repo)['findings']
                  if f['location'] == 'docs/architecture/overview.md']
         self.assertNotIn('current_document_unverified', codes)

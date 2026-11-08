@@ -1,3 +1,12 @@
+---
+id: "DOC-TEST-REPORT-20261025"
+kind: "evidence"
+title: "验证记录（2026-10-25，v0.3 阶段）"
+status: "historical"
+owner: "MJ-Zeng"
+updated_at: "2026-10-25"
+---
+
 > 历史记录（2026-10-25，v0.3 阶段，74 项 unittest）：不代表 v1.0.0 的测试结论。
 > 当前状态见 `docs/CURRENT_STATE.md`。
 
