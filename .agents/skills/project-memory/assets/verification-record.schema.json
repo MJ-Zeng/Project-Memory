@@ -1,0 +1,239 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/project-memory/v1/verification-record.schema.json",
+  "title": "verification-record",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "verification_id",
+    "task",
+    "goal_id",
+    "target_run",
+    "verifier_run",
+    "verifier",
+    "target_head_sha",
+    "standard",
+    "verdict",
+    "evidence_level",
+    "verified",
+    "checks",
+    "findings",
+    "created_at",
+    "revision"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.2"
+    },
+    "kind": {
+      "const": "verification_record"
+    },
+    "verification_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "task": {
+      "type": "string",
+      "minLength": 1
+    },
+    "goal_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "target_run": {
+      "type": "string",
+      "minLength": 1
+    },
+    "verifier_run": {
+      "type": "string",
+      "minLength": 1
+    },
+    "verifier": {
+      "type": "object",
+      "properties": {
+        "agent": {
+          "type": "string"
+        },
+        "model": {
+          "type": "object"
+        },
+        "tool": {
+          "type": "string"
+        },
+        "session_id": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "target_head_sha": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[a-f0-9]{40}$"
+    },
+    "target_run_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "verifier_run_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "goal_criteria_sha256": {
+      "description": "SHA-256 of the criterion definitions (id, statement, required) in canonical JSON. Evidence arrays are excluded so appending evidence does not invalidate a signed record. Legacy records that hashed the full success_criteria list, or that list with evidence=[], remain current while the definitions are unchanged (ADR-0004).",
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "authority": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "enum": ["trusted", "untrusted"]
+        },
+        "issuer": {"type": ["string", "null"]},
+        "anchor_id": {"type": ["string", "null"]},
+        "algorithm": {"type": ["string", "null"]},
+        "signed_payload_sha256": {"type": ["string", "null"]},
+        "signature_b64": {"type": ["string", "null"]},
+        "reason": {"type": "string"}
+      },
+      "additionalProperties": true
+    },
+    "authority_evaluation": {
+      "type": "object",
+      "properties": {
+        "trusted": {"type": "boolean"},
+        "status": {"enum": ["trusted", "untrusted", "unconfigured"]},
+        "reason": {"type": "string"}
+      },
+      "additionalProperties": true
+    },
+    "current_head_sha": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[a-f0-9]{40}$"
+    },
+    "stale": {
+      "type": "boolean"
+    },
+    "standard": {
+      "type": "string",
+      "minLength": 1
+    },
+    "verdict": {
+      "enum": [
+        "pass",
+        "fail",
+        "inconclusive"
+      ]
+    },
+    "evidence_level": {
+      "enum": [
+        "agent_claimed",
+        "locally_observed",
+        "externally_verified",
+        "human_approved"
+      ]
+    },
+    "verified": {
+      "type": "boolean"
+    },
+    "status": {
+      "enum": [
+        "VERIFIED",
+        "MANUAL_REVIEW_REQUIRED",
+        "INSUFFICIENT_EVIDENCE",
+        "PARTIAL_COVERAGE",
+        "BLOCKED_BY_DEFECT",
+        "FAILED",
+        "INCONCLUSIVE"
+      ]
+    },
+    "trust_level": {
+      "enum": [
+        "agent_claimed",
+        "locally_observed",
+        "externally_verified",
+        "human_approved"
+      ]
+    },
+    "mapping_status": {
+      "enum": [
+        "missing",
+        "partial",
+        "complete",
+        "invalid"
+      ]
+    },
+    "criterion_evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "criterion_id",
+          "goal_id",
+          "target_commit_sha",
+          "evidence_id",
+          "evidence_matched",
+          "coverage_review_status"
+        ],
+        "properties": {
+          "criterion_id": {"type": "string", "minLength": 1},
+          "goal_id": {"type": "string", "minLength": 1},
+          "target_commit_sha": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+          "evidence_id": {"type": "string", "minLength": 1},
+          "coverage_review_status": {
+            "enum": ["confirmed", "unconfirmed", "rejected", "not_reviewed"]
+          },
+          "evidence_matched": {"type": "boolean"},
+          "observed_level": {"type": "string"},
+          "evidence_state": {"type": "string"}
+        },
+        "additionalProperties": true
+      }
+    },
+    "covered_criteria": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "missing_criteria": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "checks": {
+      "type": "object",
+      "properties": {
+        "tests": {
+          "type": "object"
+        },
+        "ci": {
+          "type": "object"
+        },
+        "review": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": true
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "additionalProperties": true
+}
