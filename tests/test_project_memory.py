@@ -202,6 +202,28 @@ class ProjectMemoryTest(unittest.TestCase):
         c = handoff(self.repo, 325, 'claude', 'run-002', [], ['new attempt'], [], [])
         self.assertNotEqual(c['stored_at'], a['stored_at'])
 
+    def test_handoff_task_id_with_colon_is_sanitized_not_crashed(self):
+        rec = handoff(self.repo, 'A:B', 'codex', 'run-colon', ['done'], [], [], [])
+        self.assertEqual(rec['task'], 'A:B')
+        self.assertTrue((self.repo / '.project-memory/handoffs/A_B/run-colon.json').is_file())
+
+    def test_handoff_sanitized_collision_fails_closed(self):
+        handoff(self.repo, 'A:B', 'codex', 'run-x', ['done'], [], [], [])
+        with self.assertRaises(PMError):
+            handoff(self.repo, 'A_B', 'codex', 'run-x', ['done'], [], [], [])
+
+    def test_graph_skips_invalid_frontmatter_with_warning(self):
+        self.write_doc('docs/good.md', body='# Doc\n参见 docs/bad.md\n')
+        (self.repo / 'docs/bad.md').write_text('---\ntitle: [broken\n---\n# Bad\n', encoding='utf-8')
+        graph = build_graph(self.repo)
+        paths = {n['path'] for n in graph['nodes']}
+        self.assertIn('docs/good.md', paths)
+        self.assertNotIn('docs/bad.md', paths)
+        self.assertEqual(len(graph['skipped']), 1)
+        self.assertEqual(graph['skipped'][0]['path'], 'docs/bad.md')
+        self.assertIn('title', graph['skipped'][0]['reason'])
+        self.assertTrue(any(u['to'] == 'DOC:docs/bad.md' for u in graph['unresolved']))
+
     def test_handoff_store_outside_repo_stays_read_only(self):
         init(self.repo, 'none')
         with tempfile.TemporaryDirectory() as other:
