@@ -1,0 +1,25 @@
+{
+  "approval_id": "APR-c2162a31fa50",
+  "approver": "2427474674@qq.com",
+  "at": "2026-11-08T04:23:25+00:00",
+  "authority": {
+    "algorithm": "rsa-sha256",
+    "anchor_id": "ANCHOR-PROD-20261108",
+    "issuer": "2427474674@qq.com",
+    "signature_b64": "Rt2hLzu8Q9KNqAV1y27Wv0eV8Tf6Xb1UDMvUPwU6N2GuElVXufW4Uxr0olqnIYOXB1aYz+hsUQ1+kh5JkLms8WJITRKXVYriLIE9zrSmu4W0kDYhnFWOGV0/yHfB0gCc9jB+1JLo5Oh2DoA3QCfSPgp+6majQ7QEAV1wLid1stIr90zJf+YhwVfDgeyXQBz2ouJ4WzU+aeU1rwEHKYHLTfS2VDsYRULn4W3LlcKGEC3x2JcXKGe+12NraGqwL/k8bRni7f6hLwKUZMMJkquFAkirKSpYuyBZeXFLr3UtBS2YmEzBz+l2OnRaoNiHYSuhBl/NlH4ndJJKnV6908kUhA==",
+    "signed_payload_sha256": "8e87e1c9df60629bda7612a38a24eea31682fa728982a79abc2709e2a1b60b99",
+    "status": "signed"
+  },
+  "commit_sha": "e8a4f956f194360da59921ae9c43770cffef0534",
+  "decision": "approve",
+  "kind": "approval_event",
+  "repository": {
+    "id": "6d372b4c9fc56b2a479d8671044a834e285caedb14aaf49d030beaa33dc9e8f6",
+    "remote": "github.com/MJ-Zeng/Project-Memory"
+  },
+  "schema_version": "1.0",
+  "scope": {
+    "kind": "commit"
+  },
+  "statement": "PR #61 reviewed by agent: graph invalid-frontmatter skip, init missing-skill fail-closed, CI ubuntu+windows matrix. CI test run 42443903390 green on both OS. ISSUED BY AGENT ON EXPLICIT OWNER INSTRUCTION (anchor rotation ANCHOR-PROD-20261108 authorized; revokes ANCHOR-S3-EXERCISE-20261031)."
+}
