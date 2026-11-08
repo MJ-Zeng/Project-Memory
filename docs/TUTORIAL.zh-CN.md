@@ -1,3 +1,13 @@
+---
+id: "DOC-TUTORIAL"
+kind: "canonical"
+title: "教程与工作流"
+status: "current"
+owner: "MJ-Zeng"
+updated_at: "2026-11-08"
+last_verified_at: "2026-11-08"
+---
+
 # 教程与工作流
 
 这篇文档写给两类人：准备把工具接进仓库的负责人，以及之后要读文档、写代码的 Agent。内容包括一次临时试跑、接入已有仓库、八个命令的用法，以及我们现在的日常协作方式。

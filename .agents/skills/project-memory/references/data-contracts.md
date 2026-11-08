@@ -384,3 +384,5 @@ Python 实现只支持受限 YAML：一层 `key: scalar` 和 JSON 兼容的行�
 `references` 和 `supersedes` 是从文档和快照中抽取的显式链接。一条边只证明存在引用，不证明双方一致、已经实现或存在因果关系。
 
 `unresolved` 表示被引用的对象不在本地索引里，不代表它在 GitHub 上一定不存在。
+
+`skipped` 是 frontmatter 无法解析的文档清单，每项含 `path` 和 `reason`。被跳过的文档不产生节点，也不参与检索：`graph` 和 `search` 都输出这个字段，缺省为空数组。跳过不等于文档不存在，修复 frontmatter 后重建即可恢复。

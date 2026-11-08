@@ -156,5 +156,20 @@ class OpensslSwitchTest(unittest.TestCase):
         self.assertIn(REQUIRE_ENV, message)
 
 
+class WorkflowOpensslGateTest(unittest.TestCase):
+    """CI must fail closed when a runner has no openssl.
+
+    A skipped gate step still reports success, so the ``PROJECT_MEMORY_REQUIRE_OPENSSL``
+    coverage claimed in README would be unexecuted.
+    """
+
+    def test_openssl_gate_hard_fails_without_openssl(self):
+        text = (Path(__file__).resolve().parents[1] / '.github' / 'workflows' / 'test.yml').read_text(encoding='utf-8')
+        gate = text.split('- name: OpenSSL gate', 1)[1]
+        self.assertIn('exit 1', gate)
+        self.assertNotIn('SKIPPED', gate)
+        self.assertIn(f'{REQUIRE_ENV}=1 python -m pytest -q', gate)
+
+
 if __name__ == '__main__':
     unittest.main()

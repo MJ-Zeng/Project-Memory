@@ -1,5 +1,6 @@
 """Non-destructive repository initialization and skill installation."""
 from __future__ import annotations
+import subprocess
 from pathlib import Path
 from .common import PMError, atomic_replace, git_sha_optional, json_text, md_header, today, write_new
 
@@ -67,6 +68,14 @@ def _docs_root(value: str) -> str:
     if not root or root == '.' or '..' in root.split('/'):
         raise PMError('--docs-root 必须是非空的相对目录')
     return root
+
+
+def _tooling_is_git_ignored(repo: Path) -> bool:
+    """True when the host repository's ignore rules exclude the copied tooling."""
+    probe = '.project-memory/tooling/project_memory/__init__.py'
+    proc = subprocess.run(['git', '-C', str(repo), 'check-ignore', '-q', probe],
+                          capture_output=True, text=True)
+    return proc.returncode == 0
 
 
 def sync_tooling(repo: Path, write: bool = False) -> dict:
@@ -180,14 +189,17 @@ jobs:
   knowledge:
     runs-on: ubuntu-latest
     steps:
-      # actions/checkout v4.2.2 固定到审核过的提交；升级时重新评估。
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      # actions/checkout v4.4.0 固定到审核过的提交；升级时重新评估。
+      # persist-credentials: false —— 审计只需要读代码；检出凭据留在 runner 上是额外的攻击面。
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
       - name: 审计当前知识
         run: PYTHONPATH=.project-memory/tooling python3 -m project_memory audit --repo . --scope current --fail-on high
 ''',
             f'{root}/INDEX.md': md_header({'id': 'DOC-INDEX', 'kind': 'canonical', 'title': '知识索引', 'status': 'current', 'owner': 'team', 'updated_at': today()}) + '# 知识索引\n\n- [当前状态](CURRENT_STATE.md)\n- [架构](architecture/overview.md)\n- [决策](decisions/README.md)\n',
             f'{root}/CURRENT_STATE.md': md_header({'id': 'DOC-STATE', 'kind': 'canonical', 'title': '当前项目状态', 'status': 'current', 'owner': 'team', 'updated_at': today()}) + CURRENT_STATE_BODY,
-            f'{root}/architecture/overview.md': md_header({'id': 'DOC-ARCH', 'kind': 'canonical', 'title': '架构总览', 'status': 'current', 'owner': 'team', 'updated_at': today()}) + '# 架构总览\n\n待补：换成经过核实的系统架构。\n',
+            f'{root}/architecture/overview.md': md_header({'id': 'DOC-ARCH', 'kind': 'canonical', 'title': '架构总览', 'status': 'draft', 'owner': 'team', 'updated_at': today()}) + '# 架构总览\n\n待补：换成经过核实的系统架构。\n\n<!-- 占位稿保持 status: draft；内容核实后改成 current 并填 last_verified_at，再走人工审查。 -->\n',
         })
     for rel, body in artifacts.items():
         if write_new(repo / rel, body):
@@ -202,14 +214,18 @@ jobs:
     manual_actions = [
         '检查生成的文件，配置 CODEOWNERS（示例本身不生效）。',
         '在 GitHub 开启分支 Ruleset、必需 CI 和人工批准。',
-        '补全项目架构和负责人。',
+        f'补全 {root}/architecture/overview.md：占位稿是 status: draft，核实内容后改成 current 并补 last_verified_at。',
+        '补全项目负责人。',
         'canonical 文档被复制到别处时，在 .project-memory/config.json 设置 mirror_roots / legacy_roots。',
         '通过 PR 提交审查后的文件；初始化不会提交或推送。',
     ]
     if profile == 'full':
-        manual_actions.insert(1, '填写生成的 CURRENT_STATE.md，核对之后把 last_verified_at 改成实际日期。')
+        manual_actions.insert(1, '填写生成的 CURRENT_STATE.md，核对之后在 frontmatter 补上 last_verified_at。')
     else:
         manual_actions.insert(1, 'overlay 不生成入口文档：补一篇 status 为 current、带 last_verified_at 的当前状态文档，然后在 .project-memory/config.json 设置 entry_doc。')
+    if profile == 'full' and _tooling_is_git_ignored(repo):
+        manual_actions.append('.project-memory/tooling 被 Git 忽略：生成的 CI 用 PYTHONPATH=.project-memory/tooling '
+                              '取不到这份副本，需要在 runner 上先安装本项目，或取消忽略并提交 tooling。')
     return {
         'schema_version': '1.1',
         'kind': 'init_report',

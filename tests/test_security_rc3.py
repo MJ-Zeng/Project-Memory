@@ -336,6 +336,21 @@ class SecurityRc3Test(unittest.TestCase):
         with self.assertRaises(PMError):
             execution._local_env(self.repo, {'PYTHONPATH': '/tmp'})
 
+    def test_anchor_env_names_are_filtered_from_subprocess_env(self):
+        for name in ('PROJECT_MEMORY_APPROVAL_ANCHOR',
+                    'PROJECT_MEMORY_APPROVAL_ANCHOR_JSON',
+                    'PROJECT_MEMORY_TRUST_ANCHOR',
+                    'PROJECT_MEMORY_TRUST_ANCHOR_JSON'):
+            self.assertTrue(execution._sensitive_env_name(name), name)
+            os.environ[name] = 'anchor-material'
+            try:
+                self.assertNotIn(name, execution._local_env(self.repo, None))
+                with self.assertRaises(PMError):
+                    execution._local_env(self.repo, {name: 'x'})
+            finally:
+                del os.environ[name]
+        self.assertFalse(execution._sensitive_env_name('PROJECT_MEMORY_DOC_ROOTS'))
+
     def test_trusted_mode_fails_closed_when_disabled(self):
         previous = os.environ.get(DISABLE_ENV)
         os.environ[DISABLE_ENV] = '1'
