@@ -48,9 +48,10 @@ Windows 上 `python3` 可能是 Microsoft Store 的别名桩（exit 49），请�
 
 本仓库的 `.github/workflows/test.yml` 在三种情况下运行同一套检查：目标为 `dev/v1.0` 的 pull request、合入 `dev/v1.0` 的 push，以及手动 `workflow_dispatch`。
 
-- 运行器 `windows-latest`，Python 3.12，pytest 固定为 9.1.1。
-- 两道门槛依次执行：默认 `pytest -q`，以及 `PROJECT_MEMORY_REQUIRE_OPENSSL=1 pytest -q`。运行器没有 openssl 时，第二道会在日志里显式打印跳过，不会把跳过当成通过。
+- 运行器矩阵 `ubuntu-latest` 与 `windows-latest`（`fail-fast: false`），Python 3.12，pytest 固定为 9.1.1；两个平台各出一道必需检查。
+- 每个平台上依次执行两道门槛：默认 `pytest -q`，以及 `PROJECT_MEMORY_REQUIRE_OPENSSL=1 pytest -q`。运行器没有 openssl 时，第二道会在日志里显式打印跳过，不会把跳过当成通过。
 - 权限只有 `contents: read`；checkout 不保留凭据；第三方 Action 按提交 SHA 固定。
+- 另有 `项目记忆审计` 工作流（`.github/workflows/project-memory-check.yml`）在 PR 与 `dev/v1.0` push 上跑 `audit --scope current --fail-on high`；它是报告性检查，不是必需状态检查。本仓库直接用自身源码运行，不依赖被 `.gitignore` 排除的 `tooling/` 副本。
 
 ### 分支保护与必需检查（历史快照，核查日期 2026-11-02）
 
@@ -61,7 +62,9 @@ Windows 上 `python3` 可能是 Microsoft Store 的别名桩（exit 49），请�
 - **尚未配置的必需提交签名**：`required_signatures.enabled=false`。提交与标签签名不是合并前提。
 - **未启用的 Ruleset**：仓库里唯一的那个分支 Ruleset `branch _1`（id 26002815）`enforcement=disabled`，其 `pull_request` 规则 `required_approving_review_count=0`、`require_code_owner_review=false`；它的两个历史版本（2026-10-28 08:41 与 08:53）也全是 disabled，从未开启，所以审查要求没有藏在 Ruleset 里。
 
-`workflow_dispatch` 手动运行的检查不满足必需状态检查，只用于诊断。必需检查强制的是「这两项检查通过」；`approval` 只验审批记录的签名与提交是否匹配，不证明批准来自独立真人——当前满足它的是演练锚下签发的演练审批。合并规则是：先确认该 pull request 的 `pytest` 与 `approval` 两项必需检查成功，再看代码；合入后由 push 触发的运行会在合并提交上再验证一次。
+`workflow_dispatch` 手动运行的检查不满足必需状态检查，只用于诊断。必需检查强制的是「这些检查通过」；`approval` 只验审批记录的签名与提交是否匹配，不证明批准来自独立真人。合并规则是：先确认该 pull request 的必需检查全部成功，再看代码；合入后由 push 触发的运行会在合并提交上再验证一次。
+
+**2026-11-08 增量**（以上快照之后的变化，逐条现状见 [`docs/CURRENT_STATE.md`](docs/CURRENT_STATE.md)）：`test.yml` 改成 ubuntu+windows 矩阵后，必需检查上下文已从单个 `pytest` 变为 `pytest (ubuntu-latest)`、`pytest (windows-latest)` 与 `approval`（矩阵作业会自动带上平台后缀，旧上下文名不再产生，因此必须同步改名，否则门禁永远红）。审批信任锚已轮换为 `ANCHOR-PROD-20261108`，演练锚 `ANCHOR-S3-EXERCISE-20261031` 已吊销；当前满足 `approval` 的是新锚下的真实签名审批，PR #61 与 PR #62 是首批经该链合并的 PR。签名审批的操作步骤见 `docs/OPERATIONS.zh-CN.md`。
 
 ## 目标、执行与独立验证
 

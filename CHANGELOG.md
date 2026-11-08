@@ -2,6 +2,28 @@
 
 本项目遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 的结构；版本号从 1.0.0 起表示本试点的首个发布门槛。历史以 Git 提交为准。
 
+## [未发布] — 自 `v1.1.0` 起进入 `dev/v1.0` 的改动（尚未打 tag）
+
+### 修复
+
+- `build_graph` 遇到 frontmatter 损坏的文档不再整体崩溃，改为跳过并在结果的 `skipped` 中报告路径与原因（合并 `34618ba`，PR #61）。
+- `init` 在 Skill 资源目录缺失时显式报错并指引用 editable 安装，不再静默产出半成品工作区（合并 `34618ba`，PR #61）。
+
+### 测试
+
+- 新增回归固定：含冒号的任务 ID 走 `path_component` 净化、净化后同名冲突失败关闭（该行为自 `v1.1.0` 即存在，`common.py` 的 `path_component`，本轮只补测试，不是修复）；图谱坏 frontmatter 与 init 缺 Skill 资源两项均先在基线上做过负对照（合并 `34618ba`，PR #61）。
+
+### 变更
+
+- CI 测试矩阵从单一 `windows-latest` 扩展为 `ubuntu-latest` + `windows-latest`（`fail-fast: false`），关闭 Linux/`fcntl` 路径从未被门禁覆盖的空白；必需状态检查上下文随之改为 `pytest (ubuntu-latest)`、`pytest (windows-latest)`、`approval`（合并 `34618ba`，PR #61）。
+- 审批信任锚轮换为 `ANCHOR-PROD-20261108`，`ANCHOR-S3-EXERCISE-20261031` 进入 `revoked_anchor_ids`；CI secret 已同步。PR #61、#62 是首批经真实签名审批合并的 PR。
+
+### 新增
+
+- 仓库自接入：`init` 补齐 `.agents/skills` 安装、`docs/INDEX.md`、PR/Issue 模板、CODEOWNERS 示例，以及 `项目记忆审计` 工作流（跑本仓自身源码，`--fail-on high`，非必需检查）；`docs/CURRENT_STATE.md` 刷新到实测事实（合并 `b2c9e79`，PR #62）。
+
+同期在 v0.3 线 `feat/v0.3-goal-memory` 上合并的 PR #60（merge `19a6ce6`：仓库边界、记录锁、图谱容错、init 显式失败）不在 `dev/v1.0` 历史内，其图谱与 init 两项已按上表移植。
+
 ## [1.1.0] — 2026-11-04（已发布：Tag `v1.1.0`、GitHub Release 与 6 枚公开制品）
 
 本版汇总自 `v1.0.0` 以来进入 `dev/v1.0` 的全部能力：签名审批质量门禁（S3）与发布制品来源证明（S4）。功能面为新增与加固，CLI 既有入口与数据格式向后兼容。
