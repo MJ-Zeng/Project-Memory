@@ -9,7 +9,8 @@ import subprocess
 from pathlib import Path
 from urllib.parse import urlparse
 
-from .common import PMError, atomic_replace, git_sha_optional, json_text, relpath, safe_json, utc_now, validate_identifier, write_new
+from .common import (PMError, atomic_replace, git_sha_optional, json_text,
+                     record_lock, relpath, safe_json, utc_now, validate_identifier, write_new)
 from .knowledge import audit, iter_docs, load_config, load_doc
 from .workflows import handoff as write_handoff
 from .workflows import task_id_of
@@ -118,18 +119,23 @@ def _diff(existing: dict, record: dict, keys) -> bool:
 
 
 def _mutate(path: Path, mutator) -> dict:
-    """Optimistic update with a revision check; never silently overwrite a newer record."""
-    for _ in range(3):
-        current = _load(path)
-        candidate = mutator(copy.deepcopy(current))
-        latest = _load(path)
-        if latest.get('revision', 1) != current.get('revision', 1):
-            continue
-        candidate['revision'] = int(current.get('revision', 1)) + 1
-        candidate['updated_at'] = utc_now()
-        atomic_replace(path, json_text(candidate))
-        return candidate
-    raise PMError(f'记录在更新期间发生变化，请重试：{path}')
+    """Optimistic update with a revision check; never silently overwrite a newer record.
+
+    The cross-process lock covers load -> mutate -> re-check -> replace, so two
+    writers cannot both pass the revision check and then overwrite each other.
+    """
+    with record_lock(path, label='记录'):
+        for _ in range(3):
+            current = _load(path)
+            candidate = mutator(copy.deepcopy(current))
+            latest = _load(path)
+            if latest.get('revision', 1) != current.get('revision', 1):
+                continue
+            candidate['revision'] = int(current.get('revision', 1)) + 1
+            candidate['updated_at'] = utc_now()
+            atomic_replace(path, json_text(candidate))
+            return candidate
+        raise PMError(f'记录在更新期间发生变化，请重试：{path}')
 
 
 def _git(repo: Path, *args):

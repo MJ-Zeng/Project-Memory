@@ -44,9 +44,14 @@ def build_graph(repo: Path, config: dict | None = None) -> dict:
     cfg = config or load_config(repo)
     nodes: dict[str, dict] = {}
     edges: set[tuple[str, str, str]] = set()
+    skipped = []
     for path in iter_docs(repo, cfg['doc_roots'] + cfg['mirror_roots'] + cfg['legacy_roots']):
-        meta, text = load_doc(path)
         loc = relpath(repo, path)
+        try:
+            meta, text = load_doc(path)
+        except PMError as e:
+            skipped.append({'path': loc, 'reason': str(e)})
+            continue
         authority = authority_of(loc, cfg)
         is_adr = loc.startswith(cfg['adr_dir'].rstrip('/') + '/') and meta.get('kind') == 'adr'
         ident = str(meta.get('id') or loc)
@@ -90,7 +95,7 @@ def build_graph(repo: Path, config: dict | None = None) -> dict:
     for src, dst, kind in edges:
         if dst not in nodes:
             unresolved.append({'from': src, 'to': dst, 'relation': kind})
-    return {'schema_version': '1.1', 'kind': 'knowledge_graph', 'nodes': list(nodes.values()), 'edges': [{'from': a, 'to': b, 'relation': c} for a, b, c in sorted(edges)], 'unresolved': sorted(unresolved, key=lambda x: (x['from'], x['to']))}
+    return {'schema_version': '1.1', 'kind': 'knowledge_graph', 'nodes': list(nodes.values()), 'edges': [{'from': a, 'to': b, 'relation': c} for a, b, c in sorted(edges)], 'unresolved': sorted(unresolved, key=lambda x: (x['from'], x['to'])), 'skipped': sorted(skipped, key=lambda x: x['path'])}
 
 
 def lexical_search(graph: dict, query: str, top_k: int = 6, include_archived: bool = False, include_mirror: bool = False) -> list[dict]:
