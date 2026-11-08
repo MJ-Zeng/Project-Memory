@@ -1,0 +1,5 @@
+# 复制审查后的条目到 .github/CODEOWNERS，并替换团队名
+# /docs/decisions/ @your-org/tech-leads
+# /docs/ @your-org/tech-leads
+# /.agents/skills/ @your-org/platform
+# /.github/workflows/ @your-org/platform
