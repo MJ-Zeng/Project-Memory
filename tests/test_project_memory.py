@@ -7,6 +7,7 @@ import tempfile
 import threading
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from project_memory.bootstrap import init, sync_tooling
 from project_memory.common import PMError, frontmatter, git_sha, md_header, today
@@ -87,6 +88,15 @@ class ProjectMemoryTest(unittest.TestCase):
         self.assertTrue((self.repo / '.project-memory/templates/document.md').exists())
         workflow = (self.repo / '.github/workflows/project-memory-check.yml').read_text(encoding='utf-8')
         self.assertIn('--scope current --fail-on high', workflow)
+
+    def test_init_fails_explicitly_when_skill_source_missing(self):
+        missing = self.repo / 'no-such-skill-source'
+        with mock.patch('project_memory.bootstrap.SKILL_SOURCE', missing):
+            with self.assertRaises(PMError) as ctx:
+                init(self.repo, 'both')
+        self.assertIn('editable', str(ctx.exception))
+        self.assertFalse((self.repo / '.agents/skills/project-memory').exists())
+        self.assertFalse((self.repo / '.project-memory').exists())
 
     def test_sync_tooling_is_dry_run_then_updates_without_deleting_extra(self):
         init(self.repo, 'none')

@@ -22,7 +22,7 @@ PYTHONPATH=.project-memory/tooling python3 -m project_memory audit --repo . --sc
 PYTHONPATH=.project-memory/tooling python3 -m project_memory search --repo . '项目 状态'
 ```
 
-也可以从分发目录安装：`python3 -m pip install -e .`，然后直接运行 `project-memory --help`。
+也可以从分发目录安装：`python3 -m pip install -e .`，然后直接运行 `project-memory --help`。只支持 editable 安装：普通 wheel 安装不包含 `skill/` 资源，`init` 会显式报错而不是静默跳过 Skill 安装。
 
 Windows 上用 Git Bash 时，先设置 `PYTHONUTF8=1`，并把 `python3` 换成实际可用的解释器路径。
 

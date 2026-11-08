@@ -137,6 +137,9 @@ def init(repo: Path, install: str = 'agents', docs_root: str = 'docs', profile: 
         raise PMError('install 目标不合法')
     if profile not in ('full', 'overlay'):
         raise PMError('init profile 不合法')
+    if not SKILL_SOURCE.is_dir():
+        raise PMError(f'当前安装缺少 Skill 资源目录：{SKILL_SOURCE}。'
+                      'wheel 安装不包含 skill/；请从分发目录运行，或改用 editable 安装：pip install -e .')
     root = _docs_root(docs_root)
     if root == 'docs' and not (repo / 'docs').exists() and (repo / 'doc').exists():
         raise PMError('已存在 doc/ 根目录；请显式传入 --docs-root，避免再创建一个竞争的 docs/ 目录')
