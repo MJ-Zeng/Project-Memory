@@ -367,6 +367,8 @@ Windows 上用 Git Bash 时，先 `export PYTHONUTF8=1`，并把 `python3` 换�
 
 `.github/workflows/release.yml` 只做「构建 + 证明来源」，发布仍是人工动作。它有两个入口：推送形如 `v*` 的 tag，或手动 `workflow_dispatch`（`tag` 输入留空则构建 dispatch 当下选中的 ref，填了就先按 `^[A-Za-z0-9][A-Za-z0-9._-]*$` 校验形状，再进入 `git fetch` 与 `$GITHUB_ENV`）。被构建的 commit、tree、ref 会写进 run summary，和决定这次运行的 workflow 提交（`GITHUB_SHA`）分开列出——给 tag 输入时两者不同。
 
+**发版顺序约束**：先把 `CHANGELOG.md` 里该版本的段落与发布日期落进要被发布的那个提交，再打 tag。`v1.2.0` 的顺序反了——tag 打在文档对齐之前，于是随 tag 构建的 sdist 与源码归档里 `CHANGELOG.md` 抬头仍写「尚未打 tag」，与它本身就是该版本的发布制品相矛盾。tag 与制品一旦公开就不移动（移动会破坏已下载者的可复算性），补救只能是在 Release 正文写明制品内文本是 tag 前快照、并把对齐落在主线。wheel 的 METADATA 不含 README 或 CHANGELOG 正文，pip 安装路径不受影响。
+
 产物都在 `dist/`：
 
 | 文件 | 来源 |
