@@ -65,7 +65,7 @@ Windows 上 `python3` 可能是 Microsoft Store 的别名桩（exit 49），请�
 
 - 运行器矩阵 `ubuntu-latest` 与 `windows-latest`（`fail-fast: false`），Python 3.12，pytest 固定为 9.1.1；两个平台各出一道必需检查。
 - 每个平台上依次执行两道门槛：默认 `pytest -q`，以及 `PROJECT_MEMORY_REQUIRE_OPENSSL=1 pytest -q`。第二道先探测 openssl，探测不到就 `exit 1` 直接失败，不会打印跳过后放行。
-- 另有 `packaging` 作业（同样双平台，非必需检查）：`python -m build` 产 sdist+wheel，断言 wheel 内含 `project_memory/_skill/project-memory/SKILL.md`，再在干净 venv 里离线装 wheel、对一个新 git 仓库跑 `init --install both`，最后用原生启动器跑 `audit` 与 `search`；ubuntu 上还会解压 sdist 并在里面跑同一套 pytest，证明清单没漏测试要读的资源。它守的是「装得起也用得起」，不是只守构建成功。
+- 另有 `packaging` 作业（同样双平台，自 2026-11-09 起也是必需检查）：`python -m build` 产 sdist+wheel，断言 wheel 内含 `project_memory/_skill/project-memory/SKILL.md`，再在干净 venv 里离线装 wheel、对一个新 git 仓库跑 `init --install both`，最后用原生启动器跑 `audit` 与 `search`；ubuntu 上还会解压 sdist 并在里面跑同一套 pytest，证明清单没漏测试要读的资源。它守的是「装得起也用得起」，不是只守构建成功。
 - 权限只有 `contents: read`；checkout 不保留凭据；第三方 Action 按提交 SHA 固定。
 - 另有 `项目记忆审计` 工作流（`.github/workflows/project-memory-check.yml`）在 PR 与 `dev/v1.0` push 上跑 `audit --scope current --fail-on high`；它是报告性检查，不是必需状态检查。本仓库直接用自身源码运行，不依赖被 `.gitignore` 排除的 `tooling/` 副本。
 
@@ -81,6 +81,8 @@ Windows 上 `python3` 可能是 Microsoft Store 的别名桩（exit 49），请�
 `workflow_dispatch` 手动运行的检查不满足必需状态检查，只用于诊断。必需检查强制的是「这些检查通过」；`approval` 只验审批记录的签名与提交是否匹配，不证明批准来自独立真人。合并规则是：先确认该 pull request 的必需检查全部成功，再看代码；合入后由 push 触发的运行会在合并提交上再验证一次。
 
 **2026-11-08 增量**（以上快照之后的变化，逐条现状见 [`docs/CURRENT_STATE.md`](docs/CURRENT_STATE.md)）：`test.yml` 改成 ubuntu+windows 矩阵后，必需检查上下文已从单个 `pytest` 变为 `pytest (ubuntu-latest)`、`pytest (windows-latest)` 与 `approval`（矩阵作业会自动带上平台后缀，旧上下文名不再产生，因此必须同步改名，否则门禁永远红）。审批信任锚已轮换为 `ANCHOR-PROD-20261108`，演练锚 `ANCHOR-S3-EXERCISE-20261031` 已吊销；当前满足 `approval` 的是新锚下的真实签名审批，PR #61 与 PR #62 是首批经该链合并的 PR。签名审批的操作步骤见 `docs/OPERATIONS.zh-CN.md`。
+
+**2026-11-09 增量**：必需检查上下文增至五个，新增 `packaging (ubuntu-latest)` 与 `packaging (windows-latest)`；`strict=true`、`enforce_admins=true`、`allow_force_pushes=false`、`allow_deletions=false` 不变。加这两道是因为 `v1.2.0` 的核心承诺是「普通 pip 安装可用」，打包不设为必需，将来一个 PR 仍可能带着坏 wheel 进主线。`required_pull_request_reviews` 仍是 `null`、CODEOWNERS 仍只有 `.example`、Ruleset 仍 disabled——**没有**启用 GitHub 原生必需真人审查，因为那会与所有者明确要求的「走签批链然后自动完成」冲突；目前的人工批准由仓库外私钥签名的审批记录承载，不是 GitHub 审查 UI，是否改为原生强制由所有者决定。`v1.2.0` 已发布（Tag、Release 与 6 枚公开制品），逐条现状见 [`docs/CURRENT_STATE.md`](docs/CURRENT_STATE.md)。
 
 ## 目标、执行与独立验证
 
@@ -249,7 +251,7 @@ python3 -m project_memory goal evidence --repo . --id G-AUTH --criterion C1 \
 
 ### 发布构建与来源证明
 
-`release` 工作流由 `v*` tag 推送或手动 `workflow_dispatch` 触发，产出源码归档、sdist、wheel、`sha256sums.txt` 和 BUILD-INFO.json，向 GitHub 申请 artifact attestation，并把它们一起作为 workflow artifact 上传。它不创建 tag、不发布 Release、不读任何仓库 secret——打 tag、建 Release、挂资产仍是人工动作。外部验证一次 run：下载 artifact → `sha256sum -c sha256sums.txt` → 逐个 `gh attestation verify <文件> --repo MJ-Zeng/Project-Memory`；完整命令、失败判读和已知限制见 [OPERATIONS](docs/OPERATIONS.zh-CN.md#发布构建与来源证明)。attestation 只能在 hosted runner 上签发，本地静态测试锁的是工作流形状；tag 触发路径已经真实跑过——`v1.1.0` 的 tag 推送触发 run `41763116854`，绑定提交 `4918b86…`，产物已随 Release 公开，逐条事实与核查日期见 [docs/CURRENT_STATE.md](docs/CURRENT_STATE.md)。
+`release` 工作流由 `v*` tag 推送或手动 `workflow_dispatch` 触发，产出源码归档、sdist、wheel、`sha256sums.txt` 和 BUILD-INFO.json，向 GitHub 申请 artifact attestation，并把它们一起作为 workflow artifact 上传。它不创建 tag、不发布 Release、不读任何仓库 secret——打 tag、建 Release、挂资产都在工作流之外执行，由所有者本人或经所有者明确授权的 Agent 做（`v1.2.0` 即属后者）。外部验证一次 run：下载 artifact → `sha256sum -c sha256sums.txt` → 逐个 `gh attestation verify <文件> --repo MJ-Zeng/Project-Memory`；完整命令、失败判读和已知限制见 [OPERATIONS](docs/OPERATIONS.zh-CN.md#发布构建与来源证明)。attestation 只能在 hosted runner 上签发，本地静态测试锁的是工作流形状；tag 触发路径已经真实跑过——`v1.1.0` 的 tag 推送触发 run `41763116854`，绑定提交 `4918b86…`，产物已随 Release 公开，逐条事实与核查日期见 [docs/CURRENT_STATE.md](docs/CURRENT_STATE.md)。
 
 ## 两种审计范围
 
