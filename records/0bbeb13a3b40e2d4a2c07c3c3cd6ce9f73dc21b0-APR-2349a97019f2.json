@@ -1,0 +1,25 @@
+{
+  "approval_id": "APR-2349a97019f2",
+  "approver": "2427474674@qq.com",
+  "at": "2026-11-09T04:23:08+00:00",
+  "authority": {
+    "algorithm": "rsa-sha256",
+    "anchor_id": "ANCHOR-PROD-20261108",
+    "issuer": "2427474674@qq.com",
+    "signature_b64": "blnU4hr1zYF44VtczqXpnLr3pR9+egQPTl1rpy2YUlKd4Cm1yJxyCDDnUGlBk8pVIpOEa7zBErnEAmMKEkZpKHjUgD3LXSulsTiSRBw6g9wLMdQF54NKz9ksWZRsHHdeK2S8Mj6Whgq+8Le+bKG2WJAtBwuFkP3mWzWOY/B+suC96Ie+LiACitXCmsaDlJzZpVhyCyoXuyVZSthK/zFruoDnacriJc0vpdYAmB3tMtJ6+8g1fGGI2HSiN+/6VetCZv1VIhMLJdZhLfuOb7IqMdRDvPZoiQhhq5FO0oQFQEZeeP1L0XAfrW2yydsPTKzTU7WcgbtYMeixBtvv+a590A==",
+    "signed_payload_sha256": "75e5a5f154bd105a0102f463e24eacd2195a640ae524f4a896382ae9fd55b6d0",
+    "status": "signed"
+  },
+  "commit_sha": "0bbeb13a3b40e2d4a2c07c3c3cd6ce9f73dc21b0",
+  "decision": "approve",
+  "kind": "approval_event",
+  "repository": {
+    "id": "6d372b4c9fc56b2a479d8671044a834e285caedb14aaf49d030beaa33dc9e8f6",
+    "remote": "github.com/MJ-Zeng/Project-Memory"
+  },
+  "schema_version": "1.0",
+  "scope": {
+    "kind": "commit"
+  },
+  "statement": "PR #65 head approved by the repository owner for merge into dev/v1.0; ISSUED BY AGENT ON EXPLICIT OWNER INSTRUCTION (owner directives: 由你审核，我想要这个项目到最终可用的版本 / 治理配置与 tag/Release 仍归你决定，由你判断 / 走签批链然后自动完成)."
+}
