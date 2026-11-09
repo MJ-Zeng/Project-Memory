@@ -155,6 +155,32 @@ def atomic_replace(path: Path, content: str) -> None:
 LOCK_TIMEOUT_SECONDS = 10.0
 _LOCK_POLL_SECONDS = 0.02
 _lock_holds = threading.local()
+_lock_fds: dict[str, int] = {}
+
+
+def _after_fork_child() -> None:
+    """Drop what ``fork`` copied but the child never acquired.
+
+    Inherited re-entrancy counts let the child walk into the parent's critical
+    section (measured on Linux: the probe reported ``acquired=True`` instead of
+    timing out).  An inherited descriptor keeps a POSIX ``flock`` alive after the
+    parent dies without unlocking, because the lock lives on the open file
+    description and only dies once every descriptor referring to it is closed.
+    Closing our copy here does not unlock the parent.
+    """
+    for fd in _lock_fds.values():
+        try:
+            os.close(fd)
+        except OSError:
+            pass
+    _lock_fds.clear()
+    keys = getattr(_lock_holds, 'keys', None)
+    if keys is not None:
+        keys.clear()
+
+
+if hasattr(os, 'register_at_fork'):
+    os.register_at_fork(after_in_child=_after_fork_child)
 
 _EXTENDED_PREFIX = '\\\\?\\'
 _EXTENDED_UNC_PREFIX = '\\\\?\\UNC\\'
@@ -273,6 +299,7 @@ def record_lock(path: Path, timeout: float = LOCK_TIMEOUT_SECONDS, label: str = 
         if os.fstat(fd).st_size == 0:
             os.write(fd, b'\n')  # Windows byte-range locks need a lockable byte.
         held[key] = 1
+        _lock_fds[key] = fd
         try:
             yield
         finally:
@@ -280,6 +307,7 @@ def record_lock(path: Path, timeout: float = LOCK_TIMEOUT_SECONDS, label: str = 
             if not held[key]:
                 del held[key]
     finally:
+        _lock_fds.pop(key, None)
         _unlock(fd)
         os.close(fd)
 

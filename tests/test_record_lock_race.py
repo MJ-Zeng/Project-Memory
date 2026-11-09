@@ -31,7 +31,8 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from project_memory.common import PMError, record_lock
+from project_memory import common
+from project_memory.common import PMError, _lock_path_for, canonical_realpath, record_lock
 from project_memory.coordination import (_append_audit_entry, _goal_path, _mutate,
                                          _read_audit_entries, add_goal_evidence, audit_migrate,
                                          audit_verify, create_goal, load_goal)
@@ -375,6 +376,55 @@ class RecordLockRaceTest(unittest.TestCase):
         self.assertIn('超时', outcome['error'])
         self.assertIn('不同进程', outcome['error'].replace('其他进程', '不同进程'))
         self.assertTrue(outcome['other_acquired'], '不同记录之间不应互相阻塞')
+
+    def test_forked_child_inherits_neither_the_hold_nor_the_descriptor(self):
+        """``fork`` copies the re-entrancy counts and the open lock descriptor.
+
+        The counts let the child walk straight into the parent's critical section
+        (that is what ``test_lock_wait_is_bounded_and_reported`` measures through
+        ``multiprocessing``, which forks on Linux).  The descriptor is the quieter
+        half: a POSIX flock lives on the open file description, so a child that
+        keeps an inherited copy keeps the lock alive after the parent is killed
+        without unlocking.  Both must be dropped in the child, and the parent's
+        own hold must survive untouched.
+        """
+        if not hasattr(os, 'fork'):
+            self.skipTest('平台没有 fork，不存在这种继承')
+        path = _goal_path(self.root, GOAL)
+        read_fd, write_fd = os.pipe()
+        with record_lock(path, label='测试'):
+            key = os.path.normcase(canonical_realpath(_lock_path_for(path)[0]))
+            parent_fd = common._lock_fds[key]
+            pid = os.fork()
+            if pid == 0:
+                os.close(read_fd)
+                try:
+                    os.fstat(parent_fd)
+                    usable = True
+                except OSError:
+                    usable = False
+                payload = json.dumps({
+                    'registry': dict(common._lock_fds),
+                    'holds': dict(getattr(common._lock_holds, 'keys', {})),
+                    'usable': usable,
+                }).encode('utf-8')
+                os.write(write_fd, payload)
+                os.close(write_fd)
+                os._exit(0)
+            os.close(write_fd)
+            chunks = []
+            while True:
+                chunk = os.read(read_fd, 65536)
+                if not chunk:
+                    break
+                chunks.append(chunk)
+            os.close(read_fd)
+            os.waitpid(pid, 0)
+            self.assertIn(key, common._lock_fds, '子进程的清理不能动到父进程自己持有的锁')
+        child = json.loads(b''.join(chunks))
+        self.assertEqual(child['registry'], {}, '子进程不能带着父进程的锁描述符登记')
+        self.assertEqual(child['holds'], {}, '子进程不能继承可重入计数')
+        self.assertFalse(child['usable'], '继承来的描述符必须在子进程里关闭')
 
     def test_lock_releases_after_a_failed_write(self):
         path = _goal_path(self.root, GOAL)
