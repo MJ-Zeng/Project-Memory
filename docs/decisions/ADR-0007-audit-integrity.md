@@ -1,13 +1,15 @@
 ---
 id: "ADR-0007"
-status: "proposed"
+status: "accepted"
+approved_by: "2427474674@qq.com"
+approved_at: "2026-11-09"
 owner: "MJ-Zeng"
 related_issues: [28]
 ---
 
 # ADR-0007：审计账本与 Goal 状态的可验证性（B4）
 
-- 状态：`proposed`（Agent 起草；接受需人类批准，见 `docs/decisions/README.md`）
+- 状态：`accepted`（2026-11-09；所有者授权 Agent 代为落盘，批准人 2427474674@qq.com；批准证据见该 ADR 转为 accepted 的变更 PR 的 approval 上下文，APR 记录发布在 approvals 分支）
 - 日期：2026-10-29
 - 任务：B4（Issue #28）
 - 基线：`f7c91333bbc999626e87eb29555b2c7c1ccb1a8f`

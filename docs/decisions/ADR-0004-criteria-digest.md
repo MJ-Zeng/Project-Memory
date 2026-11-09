@@ -1,13 +1,15 @@
 ---
 id: "ADR-0004"
-status: "proposed"
+status: "accepted"
+approved_by: "2427474674@qq.com"
+approved_at: "2026-11-09"
 owner: "MJ-Zeng"
 related_issues: [16]
 ---
 
 # ADR-0004：判据定义摘要与证据分离（B3）
 
-- 状态：`proposed`（Agent 起草；接受需人类批准，见 `docs/decisions/README.md`）
+- 状态：`accepted`（2026-11-09；所有者授权 Agent 代为落盘，批准人 2427474674@qq.com；批准证据见该 ADR 转为 accepted 的变更 PR 的 approval 上下文，APR 记录发布在 approvals 分支）
 - 日期：2026-10-28
 - 任务：B3（Issue #16）
 - 基线：`832f2710bfde1cbc498ee6882a5e10b797db6a76`

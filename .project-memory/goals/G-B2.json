@@ -1,6 +1,18 @@
 {
-  "adrs": [],
-  "approved_by": null,
+  "adrs": [
+    "ADR-0003"
+  ],
+  "approvals": [
+    {
+      "approval_authority": "claimed_unverified",
+      "at": "2026-11-09T07:20:19+00:00",
+      "by": "2427474674@qq.com",
+      "from": "proposed",
+      "reason": "所有者于 2026-11-09 会话明示授权 Agent 代为批准（M6）；批准记录为 claimed_unverified，执行与验证记录未回填",
+      "to": "approved"
+    }
+  ],
+  "approved_by": "2427474674@qq.com",
   "background": "RC3 B2：_verification_ok 只查 receipt_integrity_valid，不查可验证执行来源；手写收据+有效签名可使 Goal achieved。",
   "constraints": [
     "不修改 B1/B3–B5 行为",
@@ -15,6 +27,13 @@
       "from": null,
       "reason": "created",
       "to": "proposed"
+    },
+    {
+      "at": "2026-11-09T07:20:19+00:00",
+      "by": "2427474674@qq.com",
+      "from": "proposed",
+      "reason": "所有者于 2026-11-09 会话明示授权 Agent 代为批准（M6）；批准记录为 claimed_unverified，执行与验证记录未回填",
+      "to": "approved"
     }
   ],
   "id": "G-B2",
@@ -23,9 +42,9 @@
   "outcome": "内容完整性与执行真实性分开；手写/自报 trusted 收据被拒；真实可信执行仍可用；无新绕过。",
   "owner": "PM-01",
   "prs": [],
-  "revision": 1,
+  "revision": 2,
   "schema_version": "1.2",
-  "status": "proposed",
+  "status": "approved",
   "success_criteria": [
     {
       "evidence": [],
@@ -65,5 +84,5 @@
     }
   ],
   "title": "B2 有效签名不得包裹伪造执行收据",
-  "updated_at": "2026-10-28T10:48:41+00:00"
+  "updated_at": "2026-11-09T07:20:19+00:00"
 }

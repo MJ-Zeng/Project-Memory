@@ -1,13 +1,15 @@
 ---
 id: "ADR-0008"
-status: "proposed"
+status: "accepted"
+approved_by: "2427474674@qq.com"
+approved_at: "2026-11-09"
 owner: "MJ-Zeng"
 related_issues: []
 ---
 
 # ADR-0008：信任锚生命周期（有效期、吊销、指纹）与审批的仓库身份复检
 
-- 状态：`proposed`（Agent 起草；接受需人类批准，见 `docs/decisions/README.md`）
+- 状态：`accepted`（2026-11-09；所有者授权 Agent 代为落盘，批准人 2427474674@qq.com；批准证据见该 ADR 转为 accepted 的变更 PR 的 approval 上下文，APR 记录发布在 approvals 分支）
 - 日期：2026-11-01
 - 任务：S4-2（差距 S4-G4 = B-13 锚无吊销/过期/轮换；S4-G9 `verify_approval` 不复检仓库身份）
 - 基线：`40d3f1dbfeaa9e0d588e805377bad0d2c0575535`（S4-1 合并头）
