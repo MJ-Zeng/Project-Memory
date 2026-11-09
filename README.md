@@ -37,7 +37,7 @@ project-memory --help                                                # 装好后
 
 wheel 与 sdist 都自带 Skill：构建时 `setup.py` 把唯一的 canonical `skill/project-memory` 复制进包内 `project_memory/_skill/`，`init` 找不到仓库根目录的 `skill/` 时回退到这份副本。两处都没有时 `init` 显式报错，不产出半成品工作区。
 
-制品来自本仓库的 GitHub Release，**不在 PyPI 上**：`pip install project-memory-skill` 会失败。先从 Release 下载对应版本的 `.whl`，再按上面第一条安装；逐件制品与来源证明的核对方法见 [OPERATIONS](docs/OPERATIONS.zh-CN.md#发布构建与来源证明)。
+制品来自本仓库的 GitHub Release，**不在 PyPI 上**：`pip install project-memory-skill` 会失败。从 [Releases 页面](https://github.com/MJ-Zeng/Project-Memory/releases/latest) 下载最新版本的 `.whl`（资产名形如 `project_memory_skill-<版本>-py3-none-any.whl`），再按上面第一条安装；逐件制品与来源证明的核对方法见 [OPERATIONS](docs/OPERATIONS.zh-CN.md#发布构建与来源证明)。
 
 **装好之后用 `project-memory` 启动器，不要用 `PYTHONPATH=... python3 -m project_memory`。** 后者会让 `sys.path` 上同时出现仓库内副本和 `site-packages` 副本，触发同名包防篡改守卫并 exit 3；这是 ADR-0005 的设计，不是故障。`PYTHONPATH` 形式只适用于没有 pip 安装本项目的解释器（CI、离线环境）。启动器先以 `-I -P` 隔离解释器，再按绝对路径运行 launcher。
 
