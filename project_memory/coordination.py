@@ -10,7 +10,8 @@ import re
 import subprocess
 from pathlib import Path
 
-from .common import PMError, atomic_replace, git_sha_optional, json_text, relpath, safe_json, utc_now, validate_identifier, write_new
+from .common import (PMError, atomic_replace, git_sha_optional, json_text,
+                     record_lock, relpath, safe_json, utc_now, validate_identifier, write_new)
 from .knowledge import (audit, iter_docs, load_config, load_doc, log_problem,
                         valid_http_url)
 from .workflows import handoff as write_handoff
@@ -178,18 +179,23 @@ def _diff(existing: dict, record: dict, keys) -> bool:
 
 
 def _mutate(path: Path, mutator) -> dict:
-    """Optimistic update with a revision check; never silently overwrite a newer record."""
-    for _ in range(3):
-        current = _load(path)
-        candidate = mutator(copy.deepcopy(current))
-        latest = _load(path)
-        if latest.get('revision', 1) != current.get('revision', 1):
-            continue
-        candidate['revision'] = int(current.get('revision', 1)) + 1
-        candidate['updated_at'] = utc_now()
-        atomic_replace(path, json_text(candidate))
-        return candidate
-    raise PMError(f'记录在更新期间发生变化，请重试：{path}')
+    """Optimistic update with a revision check; never silently overwrite a newer record.
+
+    The cross-process lock covers load -> mutate -> re-check -> replace, so two
+    writers cannot both pass the revision check and then overwrite each other.
+    """
+    with record_lock(path, label='记录'):
+        for _ in range(3):
+            current = _load(path)
+            candidate = mutator(copy.deepcopy(current))
+            latest = _load(path)
+            if latest.get('revision', 1) != current.get('revision', 1):
+                continue
+            candidate['revision'] = int(current.get('revision', 1)) + 1
+            candidate['updated_at'] = utc_now()
+            atomic_replace(path, json_text(candidate))
+            return candidate
+        raise PMError(f'记录在更新期间发生变化，请重试：{path}')
 
 
 def _git(repo: Path, *args):
@@ -568,6 +574,13 @@ def audit_verify(repo: Path) -> dict:
 
 def _append_audit_entry(repo: Path, fields: dict) -> dict:
     path = _audit_path(repo)
+    # The ledger is one shared append-only record: seq, prev_hash and entry_hash
+    # are only correct when read-modify-write cannot interleave with another writer.
+    with record_lock(path, label='审计账本'):
+        return _append_audit_entry_locked(repo, path, fields)
+
+
+def _append_audit_entry_locked(repo: Path, path: Path, fields: dict) -> dict:
     entries = []
     if path.is_file():
         try:
@@ -598,6 +611,11 @@ def _audit_attempt(repo: Path, **fields) -> dict:
 def audit_migrate(repo: Path) -> dict:
     """Give pre-1.3 unhashed audit lines a chain.  Migration is not a trust anchor."""
     path = _audit_path(repo)
+    with record_lock(path, label='审计账本'):
+        return _migrate_audit_ledger(repo, path)
+
+
+def _migrate_audit_ledger(repo: Path, path: Path) -> dict:
     if not path.is_file():
         raise PMError('没有可迁移的审计账本')
     raw = path.read_text(encoding='utf-8')

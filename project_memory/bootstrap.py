@@ -2,10 +2,27 @@
 from __future__ import annotations
 import subprocess
 from pathlib import Path
-from .common import PMError, atomic_replace, git_sha_optional, json_text, md_header, today, write_new
+from .common import (PMError, atomic_replace, ensure_inside_repo, git_sha_optional, json_text,
+                     md_header, normalize_repo_relative, today, write_new)
 
 TOOL_ROOT = Path(__file__).resolve().parent.parent
-SKILL_SOURCE = TOOL_ROOT / 'skill' / 'project-memory'
+PACKAGE_DIR = Path(__file__).resolve().parent
+
+
+def resolve_skill_source(tool_root: Path, package_dir: Path) -> Path:
+    """Prefer the repository tree; fall back to the copy shipped inside the wheel.
+
+    A wheel install has no repository root, so ``setup.py`` copies the same Skill
+    tree into ``project_memory/_skill`` at build time.  Both candidates are
+    returned as-is when neither exists, so ``init`` reports the path it looked at.
+    """
+    repo_copy = tool_root / 'skill' / 'project-memory'
+    if repo_copy.is_dir():
+        return repo_copy
+    return package_dir / '_skill' / 'project-memory'
+
+
+SKILL_SOURCE = resolve_skill_source(TOOL_ROOT, PACKAGE_DIR)
 
 CURRENT_STATE_BODY = '''# 当前项目状态
 
@@ -59,14 +76,17 @@ def copy_new_tree(source: Path, target: Path, files: list[str], base: Path):
         if not p.is_file() or '__pycache__' in p.parts or p.suffix == '.pyc':
             continue
         out = target / p.relative_to(source)
+        ensure_inside_repo(base, out, '初始化工具制品')
         if write_new(out, p.read_text(encoding='utf-8')):
             files.append(out.relative_to(base).as_posix())
 
 
 def _docs_root(value: str) -> str:
-    root = value.strip().replace('\\', '/').strip('/')
-    if not root or root == '.' or '..' in root.split('/'):
-        raise PMError('--docs-root 必须是非空的相对目录')
+    text = str(value).strip().replace('\\', '/')
+    if text.startswith('/'):
+        raise PMError('--docs-root / --mirror-root / --legacy-root 必须是仓库内相对目录，'
+                      f'不能是绝对路径或 UNC：{value!r}')
+    root = normalize_repo_relative(text.strip('/'), '--docs-root')
     return root
 
 
@@ -95,6 +115,8 @@ def sync_tooling(repo: Path, write: bool = False) -> dict:
         for path in sorted(files):
             rel = path.relative_to(source)
             out = target / rel
+            # The tooling copy overwrites: confirm the boundary before writing anything.
+            ensure_inside_repo(repo, out, '工具同步目标')
             key = out.relative_to(repo).as_posix()
             expected.add(key)
             content = path.read_text(encoding='utf-8')
@@ -142,7 +164,8 @@ def init(repo: Path, install: str = 'agents', docs_root: str = 'docs', profile: 
         raise PMError('init profile 不合法')
     if not SKILL_SOURCE.is_dir():
         raise PMError(f'当前安装缺少 Skill 资源目录：{SKILL_SOURCE}。'
-                      'wheel 安装不包含 skill/；请从分发目录运行，或改用 editable 安装：pip install -e .')
+                      '请从完整的分发目录运行，或改用 editable 安装：pip install -e .；'
+                      '自行构建 wheel 时需要仓库根目录的 setup.py 与 skill/ 一起参与构建。')
     root = _docs_root(docs_root)
     if root == 'docs' and not (repo / 'docs').exists() and (repo / 'doc').exists():
         raise PMError('已存在 doc/ 根目录；请显式传入 --docs-root，避免再创建一个竞争的 docs/ 目录')
@@ -151,7 +174,7 @@ def init(repo: Path, install: str = 'agents', docs_root: str = 'docs', profile: 
     adr_dir = root + '/decisions'
     new, skipped = [], []
     artifacts = {
-        '.project-memory/.gitignore': 'cache/\nissues/\nprs/\n',
+        '.project-memory/.gitignore': 'approvals/\ncache/\nissues/\nprs/\n',
         '.project-memory/config.json': json_text({
             'schema_version': '1.1',
             'canonical_root': root,
@@ -202,6 +225,7 @@ jobs:
             f'{root}/architecture/overview.md': md_header({'id': 'DOC-ARCH', 'kind': 'canonical', 'title': '架构总览', 'status': 'draft', 'owner': 'team', 'updated_at': today()}) + '# 架构总览\n\n待补：换成经过核实的系统架构。\n\n<!-- 占位稿保持 status: draft；内容核实后改成 current 并填 last_verified_at，再走人工审查。 -->\n',
         })
     for rel, body in artifacts.items():
+        ensure_inside_repo(repo, repo / rel, '初始化文件')
         if write_new(repo / rel, body):
             new.append(rel)
         else:

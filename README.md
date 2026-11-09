@@ -4,7 +4,7 @@
 
 它不负责审批、合并、关闭 Issue，也不判断文档里的结论是否正确。目标达成、ADR 接受和生产变更仍由人和 GitHub 规则决定。
 
-当前版本 `v1.1.0` 已于 2026-11-04 正式发布：annotated tag、GitHub Release 与 6 枚公开可下载的制品（含构建来源证明）。项目自同日进入维护模式，只处理真实缺陷、安全与兼容性问题。逐条发布事实、预期行为与已知限制只写在唯一一篇现状文档 [`docs/CURRENT_STATE.md`](docs/CURRENT_STATE.md) 里，本文不再复述。
+项目只处理真实缺陷、安全与兼容性问题。当前发布版本、annotated tag、GitHub Release、公开制品与构建来源证明的逐条事实，以及预期行为与已知限制，只写在唯一一篇现状文档 [`docs/CURRENT_STATE.md`](docs/CURRENT_STATE.md) 里，本文不复述，也不在这里维护第二份版本号。
 
 ## 快速开始
 
@@ -22,12 +22,24 @@ python3 -m project_memory --version
 python3 -m project_memory init --repo /path/to/git/repo --install both
 cd /path/to/git/repo
 
-# 初始化后的仓库自带 CLI，CI 和离线环境都能用
+# 初始化后的仓库自带 CLI，CI 和离线环境都能用（前提：该解释器没有另外 pip 安装本项目）
 PYTHONPATH=.project-memory/tooling python3 -m project_memory audit --repo . --scope current --fail-on high
 PYTHONPATH=.project-memory/tooling python3 -m project_memory search --repo . '项目 状态'
 ```
 
-也可以从分发目录安装：`python3 -m pip install -e .`，然后直接运行 `project-memory --help`。只支持 editable 安装：普通 wheel 安装不包含 `skill/` 资源，`init` 会显式报错而不是静默跳过 Skill 安装。
+wheel 安装与 editable 安装都可以，Skill 资源都随产物一起走：
+
+```bash
+python3 -m pip install project_memory_skill-<版本>-py3-none-any.whl   # 普通 wheel 安装
+python3 -m pip install -e .                                          # 从分发目录 editable 安装
+project-memory --help                                                # 装好后用原生启动器
+```
+
+wheel 与 sdist 都自带 Skill：构建时 `setup.py` 把唯一的 canonical `skill/project-memory` 复制进包内 `project_memory/_skill/`，`init` 找不到仓库根目录的 `skill/` 时回退到这份副本。两处都没有时 `init` 显式报错，不产出半成品工作区。
+
+制品来自本仓库的 GitHub Release，**不在 PyPI 上**：`pip install project-memory-skill` 会失败。先从 Release 下载对应版本的 `.whl`，再按上面第一条安装；逐件制品与来源证明的核对方法见 [OPERATIONS](docs/OPERATIONS.zh-CN.md#发布构建与来源证明)。
+
+**装好之后用 `project-memory` 启动器，不要用 `PYTHONPATH=... python3 -m project_memory`。** 后者会让 `sys.path` 上同时出现仓库内副本和 `site-packages` 副本，触发同名包防篡改守卫并 exit 3；这是 ADR-0005 的设计，不是故障。`PYTHONPATH` 形式只适用于没有 pip 安装本项目的解释器（CI、离线环境）。启动器先以 `-I -P` 隔离解释器，再按绝对路径运行 launcher。
 
 Windows 上用 Git Bash 时，先设置 `PYTHONUTF8=1`，并把 `python3` 换成实际可用的解释器路径。
 
@@ -52,7 +64,8 @@ Windows 上 `python3` 可能是 Microsoft Store 的别名桩（exit 49），请�
 本仓库的 `.github/workflows/test.yml` 在三种情况下运行同一套检查：目标为 `dev/v1.0` 的 pull request、合入 `dev/v1.0` 的 push，以及手动 `workflow_dispatch`。
 
 - 运行器矩阵 `ubuntu-latest` 与 `windows-latest`（`fail-fast: false`），Python 3.12，pytest 固定为 9.1.1；两个平台各出一道必需检查。
-- 每个平台上依次执行两道门槛：默认 `pytest -q`，以及 `PROJECT_MEMORY_REQUIRE_OPENSSL=1 pytest -q`。运行器没有 openssl 时，第二道会在日志里显式打印跳过，不会把跳过当成通过。
+- 每个平台上依次执行两道门槛：默认 `pytest -q`，以及 `PROJECT_MEMORY_REQUIRE_OPENSSL=1 pytest -q`。第二道先探测 openssl，探测不到就 `exit 1` 直接失败，不会打印跳过后放行。
+- 另有 `packaging` 作业（同样双平台，非必需检查）：`python -m build` 产 sdist+wheel，断言 wheel 内含 `project_memory/_skill/project-memory/SKILL.md`，再在干净 venv 里离线装 wheel、对一个新 git 仓库跑 `init --install both`，最后用原生启动器跑 `audit` 与 `search`；ubuntu 上还会解压 sdist 并在里面跑同一套 pytest，证明清单没漏测试要读的资源。它守的是「装得起也用得起」，不是只守构建成功。
 - 权限只有 `contents: read`；checkout 不保留凭据；第三方 Action 按提交 SHA 固定。
 - 另有 `项目记忆审计` 工作流（`.github/workflows/project-memory-check.yml`）在 PR 与 `dev/v1.0` push 上跑 `audit --scope current --fail-on high`；它是报告性检查，不是必需状态检查。本仓库直接用自身源码运行，不依赖被 `.gitignore` 排除的 `tooling/` 副本。
 
@@ -296,6 +309,8 @@ python3 -m project_memory init --repo /path/to/workspace --install none --profil
 只有 `start`、`finish` 和 `verify --pr` 会访问 GitHub API，而且只调只读接口。凭据从环境变量 `GITHUB_TOKEN` 读取，不放在命令行参数里。建议使用 GitHub App 安装令牌，或限制到具体仓库的 fine-grained token。`verify --pr` 还需要 `GITHUB_REPOSITORY`（`owner/repo`）指定读取哪个仓库。
 
 `decision`、`goal`、`run`、`verify`、`test-run`、`defect`、`reconcile`、`handoff` 和 `init` 只写本地文件，不推送、不合并、不审批、不关闭 Issue、不部署。`--reviewed-by` 和 `--test-evidence` 是声明，不是独立验证；真正的权限仍由 GitHub 规则和 CI 决定。`test-run --trusted` 只在 WSL2 可用时执行，隔离预检失败会返回 BLOCKED，不会退回普通子进程。
+
+本地写入有两道边界：记录的读-改-写由按路径命名的跨进程锁串行化（POSIX `flock`／Windows `msvcrt`，锁文件放在 `.project-memory/cache/locks/`，永不删除，删除会重新打开竞态），追加式审计账本同样在锁内重算哈希链；写入目标在落盘前校验必须位于仓库之内，绝对路径、盘符、`..`、以及经符号链接或 Windows 目录联接指向仓库外的路径都会被拒绝。两者都是同用户进程间的防误用与确定性逃逸封堵，不是对抗恶意本地进程的密码学边界：忽略锁的同用户进程拦不住，检查与写入之间被换掉路径组件的竞态也仍然存在。
 
 ## 语义检索的限制
 
