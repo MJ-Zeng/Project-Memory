@@ -1,6 +1,18 @@
 {
-  "adrs": [],
-  "approved_by": null,
+  "adrs": [
+    "ADR-0006"
+  ],
+  "approvals": [
+    {
+      "approval_authority": "claimed_unverified",
+      "at": "2026-11-09T07:20:21+00:00",
+      "by": "2427474674@qq.com",
+      "from": "proposed",
+      "reason": "所有者于 2026-11-09 会话明示授权 Agent 代为批准（M6）；批准记录为 claimed_unverified，执行与验证记录未回填",
+      "to": "approved"
+    }
+  ],
+  "approved_by": "2427474674@qq.com",
   "background": "test-run 默认 mode=local，只有快照+环境清理，无 OS 隔离；CLI 只 warning 仍执行；Agent 可跑任意宿主代码。RC3 B5。",
   "constraints": [
     "不删除/跳过既有测试",
@@ -15,6 +27,13 @@
       "from": null,
       "reason": "created",
       "to": "proposed"
+    },
+    {
+      "at": "2026-11-09T07:20:21+00:00",
+      "by": "2427474674@qq.com",
+      "from": "proposed",
+      "reason": "所有者于 2026-11-09 会话明示授权 Agent 代为批准（M6）；批准记录为 claimed_unverified，执行与验证记录未回填",
+      "to": "approved"
     }
   ],
   "id": "G-B5B",
@@ -23,9 +42,9 @@
   "outcome": "默认拒绝未隔离执行；显式 local/trusted 二选一；trusted 不可用 fail closed；收据不撒谎；B5A 不回归。",
   "owner": "PM-01",
   "prs": [],
-  "revision": 1,
+  "revision": 2,
   "schema_version": "1.2",
-  "status": "proposed",
+  "status": "approved",
   "success_criteria": [
     {
       "evidence": [],
@@ -71,5 +90,5 @@
     }
   ],
   "title": "B5B 默认 test-run 不得静默执行未隔离代码",
-  "updated_at": "2026-10-29T01:35:53+00:00"
+  "updated_at": "2026-11-09T07:20:21+00:00"
 }

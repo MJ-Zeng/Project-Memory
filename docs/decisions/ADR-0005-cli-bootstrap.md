@@ -1,13 +1,15 @@
 ---
 id: "ADR-0005"
-status: "proposed"
+status: "accepted"
+approved_by: "2427474674@qq.com"
+approved_at: "2026-11-09"
 owner: "MJ-Zeng"
 related_issues: [20]
 ---
 
 # ADR-0005：CLI 启动引导与同名包顶替防护（B5A）
 
-- 状态：`proposed`（Agent 起草；接受需人类批准，见 `docs/decisions/README.md`）
+- 状态：`accepted`（2026-11-09；所有者授权 Agent 代为落盘，批准人 2427474674@qq.com；批准证据见该 ADR 转为 accepted 的变更 PR 的 approval 上下文，APR 记录发布在 approvals 分支）
 - 日期：2026-10-28；B5A.1 整改：2026-10-29
 - 任务：B5A（Issue #20），B5A.1 整改（PR #22）
 - 基线：`ddd9dba28d518339348f55ebcc382aba070782d8`

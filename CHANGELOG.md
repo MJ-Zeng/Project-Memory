@@ -2,6 +2,15 @@
 
 本项目遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 的结构；版本号从 1.0.0 起表示本试点的首个发布门槛。历史以 Git 提交为准。
 
+## [未发布]
+
+### 变更
+
+- 治理收口（所有者 2026-11-09 会话授权 Agent 代为执行 M5/M6）：8 篇 ADR 由 `proposed` 改为 `accepted`，补 `approved_by`（所有者邮箱）与 `approved_at`；7 个 Goal 由 `proposed` 改为 `approved`，工具在记录里标注 `approval_authority: claimed_unverified`——批准是声明，不是经独立核验的人工审查。`docs/decisions/README.md` 补一条规则：所有者可以用明确指令授权 Agent 代为落盘，此时 ADR 正文与变更 PR 必须写明授权来源、批准人和证据位置。
+- Goal 与 ADR 建立关联：G-B0→ADR-0001、G-B1→ADR-0002、G-B2→ADR-0003、G-B3→ADR-0004、G-B4→ADR-0007、G-B5A→ADR-0005、G-B5B→ADR-0006。ADR-0008（信任锚生命周期）没有对应 Goal，对账保留 1 条 `accepted_adr_unlinked`（low），不为清零而硬关联。
+- 执行与验证记录未回填：`.project-memory/handoffs/` 的 1.1 记录只覆盖 B0/B1/B2、状态均为 `reported_unverified`，改写成 1.2 执行记录会凭空产生时间戳与来源；对账因此有 7 条 `goal_without_runs`（medium），这是准确反映当前状态。
+- `.project-memory/audit/verification_attempts.jsonl` 随本次状态转换首次入库：7 条带 `prev_hash` 链的 applied 转换记录，可离线复核顺序与内容。
+
 ## [1.2.0] — 2026-11-09（已发布：Tag `v1.2.0`、GitHub Release 与 6 枚公开制品）
 
 本版汇总自 `v1.1.0` 以来进入 `dev/v1.0` 的全部改动，核心是把「装得起但用不了」关掉：普通 `pip install` 之后 `init` 可用，跨进程记录锁与写入前仓库边界进入主线。发布提交 `7d4ae59d7dd92bd89ed766acf8a734e8c162dd2a`（tree `ae74fac640f82ffd56cc3959ad73d6e80a176a11`），Release id 438757506，构建 run `42563896275`。制品只在该 Release，**不在 PyPI 上**。发布事实与制品 SHA-256 见 `docs/CURRENT_STATE.md`。

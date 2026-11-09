@@ -1,13 +1,15 @@
 ---
 id: "ADR-0006"
-status: "proposed"
+status: "accepted"
+approved_by: "2427474674@qq.com"
+approved_at: "2026-11-09"
 owner: "MJ-Zeng"
 related_issues: [23]
 ---
 
 # ADR-0006：默认 `test-run` 不得静默执行未隔离代码（B5B）
 
-- 状态：`proposed`（Agent 起草；接受需人类批准，见 `docs/decisions/README.md`）
+- 状态：`accepted`（2026-11-09；所有者授权 Agent 代为落盘，批准人 2427474674@qq.com；批准证据见该 ADR 转为 accepted 的变更 PR 的 approval 上下文，APR 记录发布在 approvals 分支）
 - 日期：2026-10-29
 - 任务：B5B（Issue #23）
 - 基线：`bb536ec1ff67a855e9207cc59de53851a0722f60`

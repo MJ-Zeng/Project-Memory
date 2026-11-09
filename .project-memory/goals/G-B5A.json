@@ -1,6 +1,18 @@
 {
-  "adrs": [],
-  "approved_by": null,
+  "adrs": [
+    "ADR-0005"
+  ],
+  "approvals": [
+    {
+      "approval_authority": "claimed_unverified",
+      "at": "2026-11-09T07:20:20+00:00",
+      "by": "2427474674@qq.com",
+      "from": "proposed",
+      "reason": "所有者于 2026-11-09 会话明示授权 Agent 代为批准（M6）；批准记录为 claimed_unverified，执行与验证记录未回填",
+      "to": "approved"
+    }
+  ],
+  "approved_by": "2427474674@qq.com",
   "background": "cwd/PYTHONPATH 中的同名 project_memory 包可先于受信包被导入；CLI 验签/收据/状态机可能被整体替换。B1 复核 HIGH。",
   "constraints": [
     "不删除/跳过既有测试",
@@ -15,6 +27,13 @@
       "from": null,
       "reason": "created",
       "to": "proposed"
+    },
+    {
+      "at": "2026-11-09T07:20:20+00:00",
+      "by": "2427474674@qq.com",
+      "from": "proposed",
+      "reason": "所有者于 2026-11-09 会话明示授权 Agent 代为批准（M6）；批准记录为 claimed_unverified，执行与验证记录未回填",
+      "to": "approved"
     }
   ],
   "id": "G-B5A",
@@ -23,9 +42,9 @@
   "outcome": "受信 CLI 不被同名包劫持；无法保证时 fail closed；正常调用可用；test-run 不回归。",
   "owner": "PM-01",
   "prs": [],
-  "revision": 1,
+  "revision": 2,
   "schema_version": "1.2",
-  "status": "proposed",
+  "status": "approved",
   "success_criteria": [
     {
       "evidence": [],
@@ -71,5 +90,5 @@
     }
   ],
   "title": "B5A CLI 不得被同名 project_memory 模块顶替",
-  "updated_at": "2026-10-28T14:58:27+00:00"
+  "updated_at": "2026-11-09T07:20:20+00:00"
 }

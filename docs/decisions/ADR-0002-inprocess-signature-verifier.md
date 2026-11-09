@@ -1,13 +1,15 @@
 ---
 id: "ADR-0002"
-status: "proposed"
+status: "accepted"
+approved_by: "2427474674@qq.com"
+approved_at: "2026-11-09"
 owner: "MJ-Zeng"
 related_issues: [1]
 ---
 
 # ADR-0002：签名验签器进程内化（不再由 PATH / 环境变量选择验签器）
 
-- 状态：`proposed`（Agent 起草；接受需人类批准，见 `docs/decisions/README.md`）
+- 状态：`accepted`（2026-11-09；所有者授权 Agent 代为落盘，批准人 2427474674@qq.com；批准证据见该 ADR 转为 accepted 的变更 PR 的 approval 上下文，APR 记录发布在 approvals 分支）
 - 日期：2026-10-28
 - 任务：B1（Issue #1）
 - 基线：`25a919d63c7181fd4083e0fc1af33734d74c5515`（冻结参照 `0d08a1ad85144d11a46d6a361a2a3ce4eadbbed4`）
