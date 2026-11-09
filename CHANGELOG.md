@@ -2,7 +2,9 @@
 
 本项目遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 的结构；版本号从 1.0.0 起表示本试点的首个发布门槛。历史以 Git 提交为准。
 
-## [未发布] — 自 `v1.1.0` 起进入 `dev/v1.0` 的改动（代码已自报 `1.2.0`，尚未打 tag）
+## [1.2.0] — 2026-11-09（已发布：Tag `v1.2.0`、GitHub Release 与 6 枚公开制品）
+
+本版汇总自 `v1.1.0` 以来进入 `dev/v1.0` 的全部改动，核心是把「装得起但用不了」关掉：普通 `pip install` 之后 `init` 可用，跨进程记录锁与写入前仓库边界进入主线。发布提交 `7d4ae59d7dd92bd89ed766acf8a734e8c162dd2a`（tree `ae74fac640f82ffd56cc3959ad73d6e80a176a11`），Release id 438757506，构建 run `42563896275`。制品只在该 Release，**不在 PyPI 上**。发布事实与制品 SHA-256 见 `docs/CURRENT_STATE.md`。
 
 ### 修复
 
@@ -32,11 +34,12 @@
 - README 修掉与 PR #64 矛盾的 openssl 口径：第二道门槛先探测 openssl，探测不到就 `exit 1` 直接失败，不再写「打印跳过」（PR #65）。
 - `docs/OPERATIONS.zh-CN.md` 的发布构建节补构建输入说明：`MANIFEST.in` 为什么是承重墙、必须覆盖哪些目录、`setup.py` 钩子与 `resolve_skill_source` 的分工，以及漏料会在 `packaging` 作业变红而不是等用户安装后才报错（PR #65）。
 - `.gitignore` 补 `build/`、`dist/`、`*.egg-info/`，构建产物不再弄脏工作区（PR #65）。
+- 分支保护必需状态检查由三个增至五个，新增 `packaging (ubuntu-latest)` 与 `packaging (windows-latest)`；`strict=true`、`enforce_admins=true` 不变。理由是 v1.2.0 的核心承诺就是「普通 pip 安装可用」，打包不设为必需，将来一个 PR 仍可能带着坏 wheel 进主线。这是所有者把治理配置交 Agent 判断后做的决定（2026-11-09；属平台侧配置，不在 tag 的树里）。**未**启用 GitHub 原生 `required_pull_request_reviews`，也未建真实 CODEOWNERS：那会让所有者每个 PR 都必须点一次批准，与明确要求的「走签批链然后自动完成」冲突；目前人工批准由仓库外私钥签名的审批记录承载，是否改为 GitHub 原生强制由所有者决定。
 
 ### 新增
 
 - 仓库自接入：`init` 补齐 `.agents/skills` 安装、`docs/INDEX.md`、PR/Issue 模板、CODEOWNERS 示例，以及 `项目记忆审计` 工作流（跑本仓自身源码，`--fail-on high`，非必需检查）；`docs/CURRENT_STATE.md` 刷新到实测事实（合并 `b2c9e79`，PR #62）。
-- CI 新增 `packaging` 作业（ubuntu + windows，`fail-fast: false`，非必需状态检查）：`python -m build` → 断言 wheel 内含 `project_memory/_skill/project-memory/SKILL.md` → 干净 venv `--no-index` 装 wheel → 对新 git 仓库跑 `init --install both` → 用原生启动器跑 `audit --scope current --fail-on high` 与 `search`；ubuntu 上再解压 sdist 跑全量 pytest。venv 步骤先离开检出目录，否则 cwd 里的源码包会与 site-packages 副本同名并触发 B5A 守卫（PR #65）。
+- CI 新增 `packaging` 作业（ubuntu + windows，`fail-fast: false`；引入时为非必需检查，2026-11-09 起升为必需，见「变更」节）：`python -m build` → 断言 wheel 内含 `project_memory/_skill/project-memory/SKILL.md` → 干净 venv `--no-index` 装 wheel → 对新 git 仓库跑 `init --install both` → 用原生启动器跑 `audit --scope current --fail-on high` 与 `search`；ubuntu 上再解压 sdist 跑全量 pytest。venv 步骤先离开检出目录，否则 cwd 里的源码包会与 site-packages 副本同名并触发 B5A 守卫（PR #65）。
 - 新增 `setup.py` 与 `MANIFEST.in` 两个构建输入，wheel 与 sdist 都自带 Skill 资源（PR #65）。
 
 ### 测试
@@ -44,11 +47,12 @@
 - 新增回归固定：含冒号的任务 ID 走 `path_component` 净化、净化后同名冲突失败关闭（该行为自 `v1.1.0` 即存在，`common.py` 的 `path_component`，本轮只补测试，不是修复）；图谱坏 frontmatter 与 init 缺 Skill 资源两项均先在基线上做过负对照（合并 `34618ba`，PR #61）。
 - PR #64 新增并全部做过基线负对照（改动前失败、改动后通过）：版本单一来源三项结构断言与 `--version` 输出、`search` 暴露 `skipped`、审批锚环境变量被过滤、init 生成的架构稿为 draft、生成工作流的 checkout 固定与 `persist-credentials`、tooling 被忽略时的 manual action、CI openssl 步骤 `exit 1`。
 - PR #65 移植 `tests/test_record_lock_race.py` 与 `tests/test_repo_boundary.py`（632 行，与 PR #59 head 逐字节一致），用真实 `multiprocessing.Process` 竞争、Barrier 放在临界区内。负对照：保留新的 `common.py`（helper 存在）、只回退三个调用点文件，19 项行为断言在基线失败。第一版负对照只产生 ImportError，不构成行为证明，已废弃重做。
-- fork 继承缺陷的负对照在 Linux 上真跑过，不靠推断：WSL Ubuntu（Python 3.14.4、git 2.53.0）里两份副本只差一行——诱饵把 `os.register_at_fork` 注册删掉，其余逐字节相同。把启动方式强制成 `fork` 后，修复版 10 项全通过，诱饵版 2 项失败，其中一项正是 CI ubuntu 上那条 `assertFalse(outcome['acquired'])` → `AssertionError: True is not false`。新增的 `test_forked_child_inherits_neither_the_hold_nor_the_descriptor` 直接用 `os.fork()`，因此不受 `multiprocessing` 默认启动方式影响：Python 3.14 的 Linux 默认已改成 `forkserver`（实测），同一条诱饵在默认方式下只失败 1 项，强制 `fork` 后失败 2 项；CI 用的是 Python 3.12，默认仍是 `fork`。该用例在没有 `fork` 的平台上 skip。
+- fork 继承缺陷的负对照在 Linux 上真跑过，不靠推断：WSL Ubuntu（Python 3.14.4、git 2.53.0）里两份副本只差注册那两行——诱饵把 `os.register_at_fork` 的注册删掉，其余逐字节相同。把启动方式强制成 `fork` 后，修复版 10 项全通过，诱饵版 2 项失败，其中一项正是 CI ubuntu 上那条 `assertFalse(outcome['acquired'])` → `AssertionError: True is not false`。新增的 `test_forked_child_inherits_neither_the_hold_nor_the_descriptor` 直接用 `os.fork()`，因此不受 `multiprocessing` 默认启动方式影响：Python 3.14 的 Linux 默认已改成 `forkserver`（实测），同一条诱饵在默认方式下只失败 1 项，强制 `fork` 后失败 2 项；CI 用的是 Python 3.12，默认仍是 `fork`。该用例在没有 `fork` 的平台上 skip。
 - PR #65 新增 `tests/test_packaging.py` 6 项：Skill 源解析三态（仓库树优先、包内回退、两处都缺时仍报出查找路径）、构建钩子的复制目标与 bootstrap 回退目录一致、缺源树 fail-closed、清单覆盖构建与测试所需目录；另加一项断言 `init` 生成的 gitignore 含 `approvals/`。诱饵负对照：把生成的 gitignore 模板换成不含 `approvals/` 的非空诱饵，4 failed / 142 passed，恢复后 6 项通过。诱饵脚本第一版因转义层（JSON→bash→Python）在写入前就抛错、根本没跑起来，已用 `chr(92)` 构造字面量修正。
-- PR #65 端到端实测：`python -m build` exit 0（wheel 191344 B、sdist 386855 B、sdist 124 个文件）；干净 venv `--no-index` 装 wheel 后 `--version` 报 `project-memory 1.2.0`、对新 git 仓库 `init --install both` exit 0、原生启动器 `audit --scope current --fail-on high` 与 `search` 均 exit 0；仓库与解压 sdist 两处各跑全量 pytest，均 442 passed / 3 skipped / 20 subtests、exit 0。
+- PR #65 端到端实测：`python -m build` exit 0（wheel 191344 B、sdist 386855 B、sdist 124 个文件）；干净 venv `--no-index` 装 wheel 后 `--version` 报 `project-memory 1.2.0`、对新 git 仓库 `init --install both` exit 0、原生启动器 `audit --scope current --fail-on high` 与 `search` 均 exit 0；仓库与解压 sdist 两处各跑全量 pytest，均 442 passed / 3 skipped / 20 subtests、exit 0（这两次在补 fork 回归之前，所以没有第 4 个 skip）。补 fork 回归后在合并提交 `7d4ae59` 上复跑两道门禁，均 442 passed / 4 skipped / 20 subtests、exit 0。
+- `v1.2.0` 发布制品独立复核：从 release run `42563896275` 的 artifact 下载 6 个文件，`sha256sum -c sha256sums.txt` 四条全 OK、exit 0；`attestation.json` 的 5 个 subject sha256 摘要与下载件逐一相符；再从公开 Release 地址匿名取回 wheel 与清单，`cmp` 与 CI artifact 逐字节相同。用**这枚发布 wheel**（不是本地构建）重跑端到端：干净 venv `--no-index` 安装 → `project-memory 1.2.0` → 新 git 仓库 `init --install both` 四项产物齐全 → 启动器 `audit`（high 0 / medium 0 / low 5）与 `search`，全部 exit 0。
 
-同期在 v0.3 线 `feat/v0.3-goal-memory` 上合并的 PR #60（merge `19a6ce6`：仓库边界、记录锁、图谱容错、init 显式失败）不在 `dev/v1.0` 历史内，其图谱与 init 两项已由 PR #61 移植，仓库边界与记录锁两项已由 PR #65 从 PR #59 cherry-pick 移植，四项至此全部进入主线。PR #59（分支 `fix/concurrency-and-path-boundaries`）仍然开着、由另一会话负责，本批改动不触碰它；落地后它与主线构成被取代关系，是否关闭由所有者决定。
+同期在 v0.3 线 `feat/v0.3-goal-memory` 上合并的 PR #60（merge `19a6ce6`：仓库边界、记录锁、图谱容错、init 显式失败）不在 `dev/v1.0` 历史内，其图谱与 init 两项已由 PR #61 移植，仓库边界与记录锁两项已由 PR #65 从 PR #59 cherry-pick 移植，四项至此全部进入主线并随 `v1.2.0` 发布。PR #59（分支 `fix/concurrency-and-path-boundaries`）仍然开着、由另一会话负责，本批改动不触碰它；它与主线现在构成被取代关系，是否关闭由所有者决定。**需要所有者与该会话知道：PR #59 那份锁实现仍带 POSIX `fork` 继承缺陷**，修复只落在主线（`0bbeb13`），没有回写它的分支。
 
 ## [1.1.0] — 2026-11-04（已发布：Tag `v1.1.0`、GitHub Release 与 6 枚公开制品）
 
