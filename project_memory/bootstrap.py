@@ -6,7 +6,23 @@ from .common import (PMError, atomic_replace, ensure_inside_repo, git_sha_option
                      md_header, normalize_repo_relative, today, write_new)
 
 TOOL_ROOT = Path(__file__).resolve().parent.parent
-SKILL_SOURCE = TOOL_ROOT / 'skill' / 'project-memory'
+PACKAGE_DIR = Path(__file__).resolve().parent
+
+
+def resolve_skill_source(tool_root: Path, package_dir: Path) -> Path:
+    """Prefer the repository tree; fall back to the copy shipped inside the wheel.
+
+    A wheel install has no repository root, so ``setup.py`` copies the same Skill
+    tree into ``project_memory/_skill`` at build time.  Both candidates are
+    returned as-is when neither exists, so ``init`` reports the path it looked at.
+    """
+    repo_copy = tool_root / 'skill' / 'project-memory'
+    if repo_copy.is_dir():
+        return repo_copy
+    return package_dir / '_skill' / 'project-memory'
+
+
+SKILL_SOURCE = resolve_skill_source(TOOL_ROOT, PACKAGE_DIR)
 
 CURRENT_STATE_BODY = '''# 当前项目状态
 
@@ -148,7 +164,8 @@ def init(repo: Path, install: str = 'agents', docs_root: str = 'docs', profile: 
         raise PMError('init profile 不合法')
     if not SKILL_SOURCE.is_dir():
         raise PMError(f'当前安装缺少 Skill 资源目录：{SKILL_SOURCE}。'
-                      'wheel 安装不包含 skill/；请从分发目录运行，或改用 editable 安装：pip install -e .')
+                      '请从完整的分发目录运行，或改用 editable 安装：pip install -e .；'
+                      '自行构建 wheel 时需要仓库根目录的 setup.py 与 skill/ 一起参与构建。')
     root = _docs_root(docs_root)
     if root == 'docs' and not (repo / 'docs').exists() and (repo / 'doc').exists():
         raise PMError('已存在 doc/ 根目录；请显式传入 --docs-root，避免再创建一个竞争的 docs/ 目录')
@@ -157,7 +174,7 @@ def init(repo: Path, install: str = 'agents', docs_root: str = 'docs', profile: 
     adr_dir = root + '/decisions'
     new, skipped = [], []
     artifacts = {
-        '.project-memory/.gitignore': 'cache/\nissues/\nprs/\n',
+        '.project-memory/.gitignore': 'approvals/\ncache/\nissues/\nprs/\n',
         '.project-memory/config.json': json_text({
             'schema_version': '1.1',
             'canonical_root': root,

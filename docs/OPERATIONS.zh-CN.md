@@ -378,6 +378,8 @@ Windows 上用 Git Bash 时，先 `export PYTHONUTF8=1`，并把 `python3` 换�
 
 sdist 和源码归档都是 `.tar.gz`，靠 `project-memory-<short>-source` 前缀区分。attestation bundle 单独放在 attestation/attestation.json，不进 `dist/`：它由 `actions/attest-build-provenance` 的 `bundle-path` **输出**给出（这个 action 没有 `bundle-path` 输入），拷进 `dist/` 会让它出现在自己的哈希清单里。output 为空或指向的文件不存在时该步骤直接报错，不会留下一个自称已生成的空目录。
 
+`python -m build` 默认**先产 sdist，再从 sdist 里构建 wheel**，所以 `MANIFEST.in` 是承重墙而不是装饰：清单漏掉的目录不会进 wheel，也不会进「从 sdist 跑测试」的那道检查。当前清单必须覆盖 `skill/`（Skill 资源）、`setup.py`（构建钩子）、`bin/` 与 `_project_memory_launcher.py`（原生启动器）、`tests/`、`fixtures/`、`examples/`（测试要读的样本任务与 PR）、`.github/`（工作流形状测试要读）和 `docs/`。`setup.py` 的 `build_py` 钩子把唯一的 canonical `skill/project-memory` 复制进 `build/lib/project_memory/_skill/project-memory`，`bootstrap.resolve_skill_source` 优先仓库根目录的 `skill/`、找不到时回退这份包内副本；源树缺失时构建 `SystemExit`，不产出装得起却 `init` 不了的 wheel。改构建输入后要看 CI 的 `packaging` 作业：它在 ubuntu 上解压 sdist 跑全量 pytest，清单漏料会在那里变红，而不是等到用户 `pip install` 之后才报错。
+
 **不创建 Release。** 权限只有 `contents: read`、`id-token: write`、`attestations: write`；没有 `gh release create`、没有 Release API、不读任何仓库 secret（`gh attestation verify` 用的是当次 run 自带的 `github.token`）。打 tag、建 Release、挂资产由人工执行，本工作流不代办。
 
 外部验证一次已完成的 run：

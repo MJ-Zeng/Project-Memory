@@ -122,6 +122,12 @@ class ProjectMemoryTest(unittest.TestCase):
         self.assertFalse(any('PYTHONPATH=.project-memory/tooling' in action
                              for action in clean['manual_actions']), clean['manual_actions'])
 
+    def test_init_generated_gitignore_ignores_local_approval_records(self):
+        init(self.repo, 'none')
+        ignored = (self.repo / '.project-memory/.gitignore').read_text(encoding='utf-8')
+        self.assertIn('approvals/', ignored.splitlines(),
+                      'approval attach 的本地记录是发布到 approvals 分支前的暂存，不应弄脏工作区')
+
     def test_init_fails_explicitly_when_skill_source_missing(self):
         missing = self.repo / 'no-such-skill-source'
         with mock.patch('project_memory.bootstrap.SKILL_SOURCE', missing):
