@@ -2,7 +2,9 @@
 
 本项目遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 的结构；版本号从 1.0.0 起表示本试点的首个发布门槛。历史以 Git 提交为准。
 
-## [未发布]
+## [1.2.1] — 2026-11-10
+
+本版把 `v1.2.0` 之后进入 `dev/v1.0` 的治理收口、发布后文档对齐与受信启动器修复打包发布。核心是**已公开的 `v1.2.0` 制品在 Windows 默认 PATH 下会静默失败**：`bin/project-memory` 选中 Microsoft Store 占位别名时无任何输出地退出 49，而 README 正是让用户走这个入口。`v1.2.0` 的 tag 与 6 枚制品不移动、不重发，修复随本版发布。发布事实（tag 对象、Release id、制品 SHA-256）在发布后落进 `docs/CURRENT_STATE.md`。
 
 ### 变更
 
@@ -11,6 +13,10 @@
 - 执行与验证记录未回填：`.project-memory/handoffs/` 的 1.1 记录只覆盖 B0/B1/B2、状态均为 `reported_unverified`，改写成 1.2 执行记录会凭空产生时间戳与来源；对账因此有 7 条 `goal_without_runs`（medium），这是准确反映当前状态。
 - `.project-memory/audit/verification_attempts.jsonl` 随本次状态转换首次入库：7 条带 `prev_hash` 链的 applied 转换记录，可离线复核顺序与内容。
 - `docs/CURRENT_STATE.md` 的平台事实改为逐条自带核查日期，不再用一句「下列远端事实的核查日期是 …」统一刷新——发布事实锚在 tag 上、不随主线合并移动，而保护配置随时可改，两者新鲜度不同。
+- 版本号推进到 `1.2.1`，唯一来源仍是 `project_memory/__init__.py` 的 `__version__`，`pyproject.toml` 保持 `dynamic`。
+- 残留裁决（所有者 2026-11-10 会话把三项待决交 Agent 判断并执行）：① accepted ADR 正文里的引用提示**豁免不改**——12 处同名歧义、ADR-0005 的仓外运行时定位、ADR-0002/0007 的证据文件名都是启发式按裸文件名匹配的产物，不是内容错误，而改 accepted 正文需要人工批准，为清零改写历史违反门禁原则；裁决与理由记进 `docs/CURRENT_STATE.md` 的已知限制，计数保持非零。② 7 个 Goal **停在 `approved`，不转 `active`、不标 `achieved`**：它们描述的安全性质已随 PR #61–#65 交付，转 `active` 会谎称工作刚开始，达成又需要 criterion 证据映射＋独立验证＋人工批准，三者都不存在；补记历史执行等于凭空产生时间戳与来源，因此 7 条 `goal_without_runs` 保留为准确反映。③ ADR-0008 继续不硬关联 Goal，保留 1 条 `accepted_adr_unlinked`（low）。
+- `README.md` 追加 2026-11-10 增量：保护 JSON 里 `required_pull_request_reviews` 这个键**缺失**，不是值为 `null`。2026-11-02 快照与 2026-11-09 增量按追加式历史原样保留，由新增量更正口径，结论（GitHub 不强制人类批准）不变。
+- `docs/CURRENT_STATE.md` 的 `last_verified_at` 退回 `2026-11-08`：上一轮把它跟着 Agent 的实测日推到 2026-11-10，与本文变更记录里「所有测量均为 Agent 执行，`last_verified_at` 保留人工核查日期、不由 Agent 自行推进」自相矛盾。`updated_at` 照常前进，两个字段语义不同。
 
 ### 修复
 
