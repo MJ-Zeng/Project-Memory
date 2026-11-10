@@ -1,0 +1,25 @@
+{
+  "approval_id": "APR-e96c1e73c88f",
+  "approver": "2427474674@qq.com",
+  "at": "2026-11-10T03:22:53+00:00",
+  "authority": {
+    "algorithm": "rsa-sha256",
+    "anchor_id": "ANCHOR-PROD-20261108",
+    "issuer": "2427474674@qq.com",
+    "signature_b64": "LPkIfgxg5bBvrZmfn7jFCrUZScCwU3WAG8fhjiiYce9EnsGBvr/tltoZrKNh8V62aif2QBJlwLj/Qtpk7nD9RZnVkrJEnFnUsYBW1x868Tny/7Xp0b0cwFw8qhZB96zLmyze98kDKobMNQUy8pe0mCuGfEg2mm0MMyJb7WfsWCZoHctpIR4gjHtZW/S+gvgxQSUqb/YW3eq4It6iE93gp+1VZbD+cW1/Qxdgrav6G4d1ey537otI2+Hf8MD040jLB/5L8hoEBq5x1SMZGT14GQlbBPi+uOqc2XU/1il+irF4o65mt81T5TFqwIILXWc6TxASMJUrcXrNnhn4Vbhm/A==",
+    "signed_payload_sha256": "5e1faef6bcc8ef754ff1020ba9fcc7d41559d19d1b025ce2c7eb8472861cce5f",
+    "status": "signed"
+  },
+  "commit_sha": "089159e141eda828a65343aa284f6ab36e2ce3fc",
+  "decision": "approve",
+  "kind": "approval_event",
+  "repository": {
+    "id": "6d372b4c9fc56b2a479d8671044a834e285caedb14aaf49d030beaa33dc9e8f6",
+    "remote": "github.com/MJ-Zeng/Project-Memory"
+  },
+  "schema_version": "1.0",
+  "scope": {
+    "kind": "commit"
+  },
+  "statement": "所有者把项目推进到最终可用版本交 Agent 审核执行，并在本会话明示继续该任务；本记录由 Agent 依该指令用仓库外私钥代签，不冒充所有者本人操作 GitHub 审查。范围：受信启动器对不可运行解释器显式失败（exit 3 + 诊断）、Windows 批处理改用 call、入口文档事实漂移更正、两处文档引用写全；accepted ADR 正文未改，平台治理配置未改，不含 tag/Release。证据见 PR #68 正文与 CHANGELOG 未发布段。"
+}
