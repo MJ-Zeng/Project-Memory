@@ -1,0 +1,25 @@
+{
+  "approval_id": "APR-61993072dea2",
+  "approver": "2427474674@qq.com",
+  "at": "2026-11-10T07:35:37+00:00",
+  "authority": {
+    "algorithm": "rsa-sha256",
+    "anchor_id": "ANCHOR-PROD-20261108",
+    "issuer": "2427474674@qq.com",
+    "signature_b64": "pMjZfvzGJhcNbRsQ2K+6I8PaOFI3af/Eru0QXn2FdkgomfWIwdEsTjkqQUvd1LATBESnqQwsKEhW2ZoLEf5HnaKimfQRE6CT6iFI2suPClb+TlceKTTt8eFt6AVZ3vX79a/+z5jELuDupRux5XuZJkzrtNIof06nWGUQRLTgQSc09xyquXuqtz2tw1IuA9q9J2giJja92i43y8ZGqVVIEzceSnzCLZhwsqM9kXXGSbSjV62EAKg5y94k9BvKzynDH5Gj22bt3v46VJdt08PZc1UqWOM7toe9/ZY5xtdLndxvly1lXQf4aEeilykaiEEGUzpcAf1EXiQS1x3KsfMSrA==",
+    "signed_payload_sha256": "5b11c6a5835f48accae3911541b417c1bd23761a19deadedfc24d0629ad2928a",
+    "status": "signed"
+  },
+  "commit_sha": "9726de5843939fb7a2e64625bb6080b40952e391",
+  "decision": "approve",
+  "kind": "approval_event",
+  "repository": {
+    "id": "6d372b4c9fc56b2a479d8671044a834e285caedb14aaf49d030beaa33dc9e8f6",
+    "remote": "github.com/MJ-Zeng/Project-Memory"
+  },
+  "schema_version": "1.0",
+  "scope": {
+    "kind": "commit"
+  },
+  "statement": "所有者在 2026-11-10 会话中把「是否发 v1.2.1、是否删已合并分支、残留如何裁决」三项明确交 Agent 判断并执行；Agent 据此用仓库外审批私钥代签本记录，不冒充所有者本人操作 GitHub 审查。批准范围限于 PR #69 的 head 提交 9726de5843939fb7a2e64625bb6080b40952e391（版本 1.2.1、CHANGELOG 先落、残留裁决与两处漂移更正）。"
+}
