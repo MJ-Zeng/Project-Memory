@@ -84,6 +84,8 @@ Windows 上 `python3` 可能是 Microsoft Store 的别名桩（exit 49），请�
 
 **2026-11-09 增量**：必需检查上下文增至五个，新增 `packaging (ubuntu-latest)` 与 `packaging (windows-latest)`；`strict=true`、`enforce_admins=true`、`allow_force_pushes=false`、`allow_deletions=false` 不变。加这两道是因为 `v1.2.0` 的核心承诺是「普通 pip 安装可用」，打包不设为必需，将来一个 PR 仍可能带着坏 wheel 进主线。`required_pull_request_reviews` 仍是 `null`、CODEOWNERS 仍只有 `.example`、Ruleset 仍 disabled——**没有**启用 GitHub 原生必需真人审查，因为那会与所有者明确要求的「走签批链然后自动完成」冲突；目前的人工批准由仓库外私钥签名的审批记录承载，不是 GitHub 审查 UI，是否改为原生强制由所有者决定。`v1.2.0` 已发布（Tag、Release 与 6 枚公开制品），逐条现状见 [`docs/CURRENT_STATE.md`](docs/CURRENT_STATE.md)。
 
+**2026-11-10 增量**：实测 `dev/v1.0` 的保护 JSON 里 `required_pull_request_reviews` 这个键**缺失**，不是值为 `null`——上面 2026-11-02 快照与 2026-11-09 增量写的 `null` 是当时的记录口径，据此更正为「未配置」，读取方按缺失键处理。结论不变：GitHub 不强制任何人类批准。必需检查仍是五个，`strict=true`、`enforce_admins=true` 不变。
+
 ## 目标、执行与独立验证
 
 目标用可衡量的成功标准描述，不把 Issue 关闭当成完成：
