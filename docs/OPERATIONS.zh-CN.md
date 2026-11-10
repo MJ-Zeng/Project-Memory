@@ -51,13 +51,13 @@ last_verified_at: "2026-11-08"
 | `python -m project_memory ...`（未隔离） | 尽力而为 | 受信包已导入但 `sys.path` 上仍有同名包时 exit 3 拒绝；若同名包已在解析阶段胜出，受信代码不会执行（等价于整进程替换，无法进程内防护） |
 | `from _project_memory_launcher import main`（旧 pip `module:function` console script 形式） | **不受支持** | 在未隔离解释器里按 `sys.path` 解析顶层模块名，`PYTHONPATH`/cwd 同名文件会抢先执行（B5A.1 已复现 `FAKE_LAUNCHER`）；受支持入口只有原生包装器 |
 
-包装器解释器选择顺序：`PROJECT_MEMORY_PYTHON` → 同目录 venv 解释器 → `PATH` 上的 `python3`/`python`；启动脚本定位顺序：包装器同目录（安装布局）→ 上级目录（checkout 布局）。任一缺失则 exit 3（fail closed）。
+包装器解释器选择顺序：`PROJECT_MEMORY_PYTHON` → 同目录 venv 解释器 → `PATH` 上的 `python3`/`python`；启动脚本定位顺序：包装器同目录（安装布局）→ 上级目录（checkout 布局）。任一缺失则 exit 3（fail closed）。选中的解释器若根本跑不起来（例如 Windows 的 Microsoft Store 占位别名，无输出、exit 49 或 9009），包装器同样 exit 3，并在 stderr 指明该候选路径与 `PROJECT_MEMORY_PYTHON`，不再静默继承桩的退出码；CLI 自身的非零退出码原样透传，不触发这条诊断。Windows 批处理用 `call` 调用候选解释器，因此 `.bat`/`.cmd` 形式的 shim（如 pyenv-win）也能返回到包装器。
 
 `test-run` 子进程固定使用快照树作为 `PYTHONPATH`，并设置 `PYTHONSAFEPATH=1`/`PYTHONNOUSERSITE=1`；收据的 `isolation.python_env` 记录该清理状态。自动化脚本请使用原生包装器 `project-memory` 或带 `-I -P` 的入口，不要用裸 `python -m`。
 
 ## 测试期 openssl 与发布门禁（R1）
 
-openssl 只由测试使用（生成测试 RSA 密钥、对测试载荷签名），**不是运行时依赖**：CLI 的验签由 `authority.py` 在进程内完成，不调用外部 openssl。
+openssl 只由测试使用（生成测试 RSA 密钥、对测试载荷签名），**不是运行时依赖**：CLI 的验签由 `project_memory/authority.py` 在进程内完成，不调用外部 openssl。
 
 - 默认：找不到 openssl 时，B2/B3/B4 签名测试以 `SkipTest` 跳过，本地仍可运行其他测试；skip 只表示“未执行”，**不等于通过**。
 - 发布/CI：必须设置 `PROJECT_MEMORY_REQUIRE_OPENSSL=1`（也接受 `true`/`yes`，大小写不敏感）。此时找不到 openssl 会让签名测试 failed/error，命令以非零退出，消息同时包含 `openssl` 和 `PROJECT_MEMORY_REQUIRE_OPENSSL`。

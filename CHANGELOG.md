@@ -10,6 +10,14 @@
 - Goal 与 ADR 建立关联：G-B0→ADR-0001、G-B1→ADR-0002、G-B2→ADR-0003、G-B3→ADR-0004、G-B4→ADR-0007、G-B5A→ADR-0005、G-B5B→ADR-0006。ADR-0008（信任锚生命周期）没有对应 Goal，对账保留 1 条 `accepted_adr_unlinked`（low），不为清零而硬关联。
 - 执行与验证记录未回填：`.project-memory/handoffs/` 的 1.1 记录只覆盖 B0/B1/B2、状态均为 `reported_unverified`，改写成 1.2 执行记录会凭空产生时间戳与来源；对账因此有 7 条 `goal_without_runs`（medium），这是准确反映当前状态。
 - `.project-memory/audit/verification_attempts.jsonl` 随本次状态转换首次入库：7 条带 `prev_hash` 链的 applied 转换记录，可离线复核顺序与内容。
+- `docs/CURRENT_STATE.md` 的平台事实改为逐条自带核查日期，不再用一句「下列远端事实的核查日期是 …」统一刷新——发布事实锚在 tag 上、不随主线合并移动，而保护配置随时可改，两者新鲜度不同。
+
+### 修复
+
+- 受信启动器在候选解释器跑不起来时不再静默失败。`bin/project-memory` 原来用 `exec`、`bin/project-memory.cmd` 原来直接透传 `%ERRORLEVEL%`，选中 Windows 的 Microsoft Store 占位别名（`WindowsApps/python3`、`WindowsApps/python.exe`）时会**无任何输出**地退出 49 或 9009，看起来像命令不存在，而 README 正是让用户走这个入口。现在两个包装器都先运行候选、仅在其失败时再探测它能否启动，不可启动则 exit 3 并在 stderr 指明候选路径与 `PROJECT_MEMORY_PYTHON`；CLI 自身的非零退出码原样透传，不触发这条诊断。解释器选择顺序与 `-I -P` + 绝对路径启动脚本的信任模型不变（ADR-0005），成功路径不增加额外进程。
+- Windows 批处理改用 `call` 调用候选解释器：不加 `call` 时调用 `.bat`/`.cmd` 形式的 shim（如 pyenv-win）会一去不返，包装器后面的诊断与退出码处理根本不执行。回归测试用一个 exit 49 且无输出的桩解释器覆盖两种包装器，并断言 CLI 合法失败（exit 2）不会被误报成解释器问题；在基线包装器上做过负对照——基线返回 49 且 stdout/stderr 全空，修复版返回 3 并给出诊断。
+- `docs/CURRENT_STATE.md` 的三处事实漂移：PR #59 仍写着「仍开着、由另一会话负责，是否关闭由所有者决定」，实际已于 2026-11-09T07:17:44Z 经所有者授权关闭并附逐文件取代证明（head 仍 `64ce582`、分支保留）；分支保护写着 `required_pull_request_reviews` 仍是 `null`，2026-11-10 实测该键在保护 JSON 中**缺失**；补记 PR #66（head `dc73812`、merge `84ba949`）与 PR #67（head `d124b1b`、merge `7ff489b`、审批 `APR-b57557f6a987`，合并树与被批准 head 树逐字节相同）。
+- 文档引用写全：`docs/ARCHITECTURE.zh-CN.md` 的 `graph.json` 改为 `.project-memory/cache/graph.json` 并注明由 `graph` 生成、被 `.gitignore` 排除；`docs/OPERATIONS.zh-CN.md` 的 `authority.py` 改为 `project_memory/authority.py`，并补包装器对不可运行解释器的新行为。其余审计发现逐条分诊后**保留**：Release 资产名（`attestation.json`、`BUILD-INFO.json`）不是仓库路径，教程里的 `task.json` 是「新建」指令、`.project-memory/handoffs/demo-001/run-01.json` 是命令输出，`.project-memory/audit/head.json` 与 `migration.json` 是运行时产物；accepted ADR 正文一律不改，其中的同名歧义与坏链作为已知残留交所有者决定。
 
 ## [1.2.0] — 2026-11-09（已发布：Tag `v1.2.0`、GitHub Release 与 6 枚公开制品）
 

@@ -142,7 +142,7 @@ Issue 认领只能算约定。Agent 通过独立分支和工作树隔离写入�
 
 ### G. `graph` 和 `search`：关系与检索
 
-Graph 节点包括 `DOC:<path>`、`ADR-0001`、`ISSUE:<n>`、`PR:<n>`，边是 `references` 和 `supersedes`。输入来自配置的 doc/mirror/legacy 根，以及 `.project-memory/issues`、`.project-memory/prs` 下的本地快照；这两个快照目录默认被 `.gitignore` 排除，避免未经审查就把私有任务内容提交进仓库。`graph.json` 是可重建索引。
+Graph 节点包括 `DOC:<path>`、`ADR-0001`、`ISSUE:<n>`、`PR:<n>`，边是 `references` 和 `supersedes`。输入来自配置的 doc/mirror/legacy 根，以及 `.project-memory/issues`、`.project-memory/prs` 下的本地快照；这两个快照目录默认被 `.gitignore` 排除，避免未经审查就把私有任务内容提交进仓库。`.project-memory/cache/graph.json` 是可重建索引，由 `graph` 生成并被 `.gitignore` 排除，不入版本库。
 
 节点带 `authority` 和 `status`。默认检索排除 legacy、mirror 和已归档状态；`evidence` 文档仍可能出现，需要按 `status` 判断。没有找到的边放在 `unresolved`，不代表外部对象一定不存在。frontmatter 无法解析的文档进 `skipped`（`path` + `reason`），既不建节点也不参与检索；`graph` 与 `search` 都输出该字段，空数组表示没有跳过。跨仓库 URI 和 GraphQL/Project 关系留到后续版本。
 
