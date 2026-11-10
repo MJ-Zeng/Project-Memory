@@ -38,4 +38,12 @@ else
     exit 3
 fi
 
-exec "$_py" -I -P "$_launcher" "$@"
+# Not exec: a PATH stub (the Windows Store python3 alias) exits 49 with no output.
+_status=0
+"$_py" -I -P "$_launcher" "$@" || _status=$?
+if [ "$_status" -ne 0 ] && ! "$_py" -c 'import sys' >/dev/null 2>&1; then
+    printf 'project-memory: interpreter is not runnable: %s (exit %s)\n' "$_py" "$_status" >&2
+    printf 'project-memory: set PROJECT_MEMORY_PYTHON to a working Python 3.11+\n' >&2
+    exit 3
+fi
+exit "$_status"

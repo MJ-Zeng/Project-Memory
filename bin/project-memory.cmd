@@ -31,5 +31,13 @@ if not defined PY (
     exit /b 3
 )
 
-"%PY%" -I -P "%LAUNCHER%" %*
-exit /b %ERRORLEVEL%
+rem Not a bare exit: a PATH stub (the Windows Store python alias) exits 49 silently.
+rem "call" is required so a .bat/.cmd shim (pyenv-win) returns to this script.
+call "%PY%" -I -P "%LAUNCHER%" %*
+set "STATUS=%ERRORLEVEL%"
+if "%STATUS%"=="0" exit /b 0
+call "%PY%" -c "import sys" >nul 2>&1
+if not errorlevel 1 exit /b %STATUS%
+echo project-memory: interpreter is not runnable: %PY% (exit %STATUS%) 1>&2
+echo project-memory: set PROJECT_MEMORY_PYTHON to a working Python 3.11+ 1>&2
+exit /b 3

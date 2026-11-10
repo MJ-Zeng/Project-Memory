@@ -65,6 +65,19 @@ def _make_fake_launcher(base: Path) -> Path:
     return fake
 
 
+def _make_stub_interpreter(base: Path) -> Path:
+    """A candidate that exits non-zero without output, like the Store alias."""
+    base.mkdir(parents=True, exist_ok=True)
+    if IS_WIN:
+        stub = base / 'python.cmd'
+        stub.write_bytes(b'@exit /b 49\r\n')
+    else:
+        stub = base / 'python3'
+        stub.write_bytes(b'#!/bin/sh\nexit 49\n')
+        stub.chmod(0o755)
+    return stub
+
+
 def _make_shadow(base: Path) -> Path:
     package = base / 'project_memory'
     package.mkdir(parents=True)
@@ -199,6 +212,22 @@ class ConsoleEntryTest(unittest.TestCase):
                       PROJECT_MEMORY_PYTHON=sys.executable,
                       B5A_MARKER=self.marker)
         self.assert_trusted_help(result)
+
+    def test_unrunnable_interpreter_reports_diagnostic(self):
+        stub = _make_stub_interpreter(self.root / 'stub')
+        result = _run(_console_cmd(['--help']), self.root,
+                      PROJECT_MEMORY_PYTHON=stub)
+        output = result.stdout + result.stderr
+        self.assertEqual(result.returncode, 3, output)
+        self.assertIn('PROJECT_MEMORY_PYTHON', result.stderr)
+        self.assertIn(str(stub), result.stderr)
+        self.assertNotIn('FAKE_LAUNCHER', output)
+
+    def test_cli_failure_keeps_exit_code_without_interpreter_diagnostic(self):
+        result = _run(_console_cmd(['no-such-command']), self.root,
+                      PROJECT_MEMORY_PYTHON=sys.executable)
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertNotIn('interpreter is not runnable', result.stderr)
 
     def test_pyproject_does_not_ship_module_function_console_script(self):
         import tomllib
