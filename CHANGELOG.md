@@ -2,9 +2,9 @@
 
 本项目遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 的结构；版本号从 1.0.0 起表示本试点的首个发布门槛。历史以 Git 提交为准。
 
-## [1.2.1] — 2026-11-10
+## [1.2.1] — 2026-11-10（已发布：Tag `v1.2.1`、GitHub Release 与 6 枚公开制品）
 
-本版把 `v1.2.0` 之后进入 `dev/v1.0` 的治理收口、发布后文档对齐与受信启动器修复打包发布。核心是**已公开的 `v1.2.0` 制品在 Windows 默认 PATH 下会静默失败**：`bin/project-memory` 选中 Microsoft Store 占位别名时无任何输出地退出 49，而 README 正是让用户走这个入口。`v1.2.0` 的 tag 与 6 枚制品不移动、不重发，修复随本版发布。发布事实（tag 对象、Release id、制品 SHA-256）在发布后落进 `docs/CURRENT_STATE.md`。
+本版把 `v1.2.0` 之后进入 `dev/v1.0` 的治理收口、发布后文档对齐与受信启动器修复打包发布。核心是**已公开的 `v1.2.0` 制品在 Windows 默认 PATH 下会静默失败**：`bin/project-memory` 选中 Microsoft Store 占位别名时无任何输出地退出 49，而 README 正是让用户走这个入口。`v1.2.0` 的 tag 与 6 枚制品不移动、不重发，修复随本版发布。发布事实：annotated tag `v1.2.1`（对象 `4ab9b13f9c89cf9c565940ba7382f8f02cfa4cc1`）指向合并提交 `42d1ac9d7265a91fd0f1c68ccf0677ae0481fb48`，触发 release run `42938393414`，GitHub Release id 441130082 于 2026-11-11T01:27:42Z 公开，挂 6 枚资产；制品哈希、来源证明复核与端到端实测逐条记在 `docs/CURRENT_STATE.md`。抬头日期 `2026-11-10` 是发布内容合入主线之日，打 tag 与公开 Release 在 2026-11-11。
 
 ### 变更
 
