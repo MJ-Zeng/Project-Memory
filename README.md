@@ -15,6 +15,10 @@
 git clone https://github.com/MJ-Zeng/Project-Memory.git
 cd Project-Memory
 
+# 跑测试需要 pytest（版本与 pyproject.toml 的 dev extra 一致）；只用 CLI 不需要任何第三方库。
+# 这一步只装 pytest、不装本项目，下面两步才能用仓库内的离线副本。
+python3 -m pip install pytest==9.1.1
+
 # 在分发目录运行测试
 python3 -m pytest -q
 
