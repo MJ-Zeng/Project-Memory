@@ -86,6 +86,8 @@ Windows 上 `python3` 可能是 Microsoft Store 的别名桩（exit 49），请�
 
 **2026-11-10 增量**：实测 `dev/v1.0` 的保护 JSON 里 `required_pull_request_reviews` 这个键**缺失**，不是值为 `null`——上面 2026-11-02 快照与 2026-11-09 增量写的 `null` 是当时的记录口径，据此更正为「未配置」，读取方按缺失键处理。结论不变：GitHub 不强制任何人类批准。必需检查仍是五个，`strict=true`、`enforce_admins=true` 不变。
 
+**2026-11-11 增量**：`v1.2.1` 已发布（Tag、Release 与 6 枚公开制品），取代 `v1.2.0` 成为当前发布基线。发新版本的理由是已公开的 `v1.2.0` 制品在 Windows 默认 PATH 下会静默失败（选中 Store 占位别名时无输出地退出 49，`.cmd` 退出 9009），而本文正是让用户走那个入口；tag 与制品一旦公开就不移动、不重发，修复只能随新版本出去。必需检查仍是五个，`strict=true`、`enforce_admins=true` 不变，审查键仍按缺失处理。逐条现状见 [`docs/CURRENT_STATE.md`](docs/CURRENT_STATE.md)。
+
 ## 目标、执行与独立验证
 
 目标用可衡量的成功标准描述，不把 Issue 关闭当成完成：
@@ -253,7 +255,7 @@ python3 -m project_memory goal evidence --repo . --id G-AUTH --criterion C1 \
 
 ### 发布构建与来源证明
 
-`release` 工作流由 `v*` tag 推送或手动 `workflow_dispatch` 触发，产出源码归档、sdist、wheel、`sha256sums.txt` 和 BUILD-INFO.json，向 GitHub 申请 artifact attestation，并把它们一起作为 workflow artifact 上传。它不创建 tag、不发布 Release、不读任何仓库 secret——打 tag、建 Release、挂资产都在工作流之外执行，由所有者本人或经所有者明确授权的 Agent 做（`v1.2.0` 即属后者）。外部验证一次 run：下载 artifact → `sha256sum -c sha256sums.txt` → 逐个 `gh attestation verify <文件> --repo MJ-Zeng/Project-Memory`；完整命令、失败判读和已知限制见 [OPERATIONS](docs/OPERATIONS.zh-CN.md#发布构建与来源证明)。attestation 只能在 hosted runner 上签发，本地静态测试锁的是工作流形状；tag 触发路径已经真实跑过——`v1.1.0` 的 tag 推送触发 run `41763116854`，绑定提交 `4918b86…`，产物已随 Release 公开，逐条事实与核查日期见 [docs/CURRENT_STATE.md](docs/CURRENT_STATE.md)。
+`release` 工作流由 `v*` tag 推送或手动 `workflow_dispatch` 触发，产出源码归档、sdist、wheel、`sha256sums.txt` 和 BUILD-INFO.json，向 GitHub 申请 artifact attestation，并把它们一起作为 workflow artifact 上传。它不创建 tag、不发布 Release、不读任何仓库 secret——打 tag、建 Release、挂资产都在工作流之外执行，由所有者本人或经所有者明确授权的 Agent 做（`v1.2.0` 与 `v1.2.1` 即属后者）。外部验证一次 run：下载 artifact → `sha256sum -c sha256sums.txt` → 逐个 `gh attestation verify <文件> --repo MJ-Zeng/Project-Memory`；完整命令、失败判读和已知限制见 [OPERATIONS](docs/OPERATIONS.zh-CN.md#发布构建与来源证明)。attestation 只能在 hosted runner 上签发，本地静态测试锁的是工作流形状；tag 触发路径已经真实跑过三次，最近一次是 `v1.2.1` 的 tag 推送触发 run `42938393414`，绑定提交 `42d1ac9…`，产物已随 Release 公开，逐条事实与核查日期见 [docs/CURRENT_STATE.md](docs/CURRENT_STATE.md)。
 
 ## 两种审计范围
 
