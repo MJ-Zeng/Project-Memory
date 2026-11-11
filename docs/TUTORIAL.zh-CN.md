@@ -4,7 +4,7 @@ kind: "canonical"
 title: "教程与工作流"
 status: "current"
 owner: "MJ-Zeng"
-updated_at: "2026-11-08"
+updated_at: "2026-11-11"
 last_verified_at: "2026-11-08"
 ---
 
@@ -53,12 +53,21 @@ Windows 上如果 `python3` 没有输出，通常是 Store 别名或 PATH 问题
 
 ### 1.2 初始化
 
-从分发目录执行：
+先选一个入口，两种都行，但**不要混用**：
+
+- **已经 pip 安装本项目**（按 [README](../README.md) 装了 Release 的 wheel）：用 `project-memory` 启动器，在任意目录执行都可以。
+- **没有 pip 安装**：在克隆下来的分发目录里用 `python3 -m project_memory`（取得分发目录的命令见 [README 快速开始](../README.md#快速开始)，克隆出来的目录名是 `Project-Memory`）；进到目标仓库后改用 `PYTHONPATH=.project-memory/tooling` 形式，走仓库内那份离线副本。
 
 ```bash
-cd /c/Documents/02_Research/Code/project-memory-mvp
+# 已安装：任意目录
+project-memory init --repo "$DEMO" --install both
+
+# 未安装：cd 到你自己的克隆目录（下面是占位路径，换成你的）
+cd /path/to/project-memory
 python3 -m project_memory init --repo "$DEMO" --install both
 ```
+
+**下文统一写 `PYTHONPATH=.project-memory/tooling python3 -m project_memory`，那是「未安装」语境。** 如果你用的解释器已经 pip 安装了本项目（非 editable 的 wheel 安装），把这一整段换成 `project-memory` 再执行：`sys.path` 上同时出现 `site-packages` 里的实体包副本和仓库内副本时，ADR-0005 的同名包防篡改守卫会 exit 3，并在 stderr 点名那份副本、提示改用启动器。这是设计行为，不是故障。实测在装了 `1.2.1` wheel 的干净 venv 里：`PYTHONPATH` 形式 exit 3，而 `project-memory`（Git Bash）、`project-memory.cmd`（cmd）与不带 `PYTHONPATH` 的 `python -m project_memory` 三种入口都 exit 0，`init` 与 `audit` 结果一致。editable 安装（`pip install -e .`）是例外：它只在 `site-packages` 留 `.pth` 与 finder，没有实体包目录，守卫扫不到，因此不会 exit 3。
 
 `--install both` 会把 Skill 放进目标仓库的 `.agents/skills/project-memory/` 和 `.claude/skills/project-memory/`，同时把可离线运行的 CLI 复制到 `.project-memory/tooling/`。初始化只创建缺失文件，不覆盖、不提交、不推送。
 
@@ -107,7 +116,7 @@ PYTHONPATH=.project-memory/tooling python3 -m project_memory audit --repo . --sc
 
 ### 1.5 走一次任务流程
 
-新建 `task.json`：
+新建 `task.json`（字段形状相同的真实样本见 [`demo/pro3-release-2026-10-24/task.json`](../demo/pro3-release-2026-10-24/task.json)，它的 `id` 与正文更长，不要直接当本试跑的输入）：
 
 ```json
 {
@@ -156,6 +165,26 @@ PYTHONPATH=.project-memory/tooling python3 -m project_memory finish \
 ```
 
 没有 PR、也没有人类审查声明时，`recommendation` 会是 `do_not_close`，`blockers` 会列出缺少的 gate。这是正常结果。工具故意不自动关闭任务。
+
+上面那条命令实测的 `blockers` 是 `pr_merge_evidence`、`test_evidence_present`、`ci_evidence`、`review_attestation` 四项。注意 **`--test-evidence` 是自由文本指针，单独给它不会让测试门禁通过**：此时 `test_evidence_present` 是 `unknown`，detail 写「只有证据声明，没有命令、退出码和日志」。
+
+要让这一项变成 `pass`，需要命令、整数退出码和一份**本地可读取**的日志，而且这三件必须来自一次真实执行：先跑命令、把输出落盘、记下它自己的退出码，再把原值传进去。
+
+```bash
+python -m unittest discover -s tests > tut-test.log 2>&1
+rc=$?    # 用命令真实的退出码，不要手填 0
+
+PYTHONPATH=.project-memory/tooling python3 -m project_memory finish \
+  --repo . --task-file task.json \
+  --test-command "python -m unittest discover -s tests" \
+  --test-exit "$rc" --test-log ./tut-test.log \
+  --docs-impact not-applicable \
+  --docs-justification "试跑没有改动 canonical 文档"
+```
+
+本试跑的临时仓库里没有 `tests/`，所以第一条命令实测退出码是 1，门禁给 `fail`（detail：「测试命令退出码为 1，不能视为通过」）——这正好是一个负对照。放一个真能通过的测试再跑，实测退出码 0、日志是 unittest 的真实输出（`Ran 1 test … OK`），门禁才给 `pass`；此时 `blockers` 剩下 `pr_merge_evidence`、`ci_evidence`、`review_attestation` 三项，`recommendation` 仍是 `do_not_close`。日志路径不存在或只给网址时是 `unknown`，不会当成通过。
+
+**门禁只校验结构与日志可读性，不会替你重跑命令**，所以 `finish` 不做独立验证。要让测试成为可核验的观测证据，需要另一个执行记录先跑 `test-run` 拿收据再走 `verify`；证据级别的口径见 [workflows.md](../skill/project-memory/references/workflows.md)。
 
 ### 1.6 图谱与检索
 
