@@ -56,7 +56,7 @@ Windows 上如果 `python3` 没有输出，通常是 Store 别名或 PATH 问题
 先选一个入口，两种都行，但**不要混用**：
 
 - **已经 pip 安装本项目**（按 [README](../README.md) 装了 Release 的 wheel）：用 `project-memory` 启动器，在任意目录执行都可以。
-- **没有 pip 安装**：在克隆下来的分发目录里用 `python3 -m project_memory`；进到目标仓库后改用 `PYTHONPATH=.project-memory/tooling` 形式，走仓库内那份离线副本。
+- **没有 pip 安装**：在克隆下来的分发目录里用 `python3 -m project_memory`（取得分发目录的命令见 [README 快速开始](../README.md#快速开始)，克隆出来的目录名是 `Project-Memory`）；进到目标仓库后改用 `PYTHONPATH=.project-memory/tooling` 形式，走仓库内那份离线副本。
 
 ```bash
 # 已安装：任意目录

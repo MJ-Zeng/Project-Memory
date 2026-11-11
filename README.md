@@ -11,8 +11,11 @@
 需要 Python 3.11 或更高版本。默认功能不依赖第三方库。
 
 ```bash
+# 取得分发目录：克隆出来的目录名就是仓库名 Project-Memory
+git clone https://github.com/MJ-Zeng/Project-Memory.git
+cd Project-Memory
+
 # 在分发目录运行测试
-cd project-memory-mvp
 python3 -m pytest -q
 
 # CLI 自检：版本只有一个来源 project_memory.__version__，包元数据与 --version 都读它
