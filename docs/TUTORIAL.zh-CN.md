@@ -166,18 +166,25 @@ PYTHONPATH=.project-memory/tooling python3 -m project_memory finish \
 
 没有 PR、也没有人类审查声明时，`recommendation` 会是 `do_not_close`，`blockers` 会列出缺少的 gate。这是正常结果。工具故意不自动关闭任务。
 
-上面那条命令实测的 `blockers` 是 `pr_merge_evidence`、`test_evidence_present`、`ci_evidence`、`review_attestation` 四项。注意 **`--test-evidence` 是自由文本指针，单独给它不会让测试门禁通过**：此时 `test_evidence_present` 是 `unknown`，detail 写「只有证据声明，没有命令、退出码和日志」。要让它变成 `pass`，必须同时给出命令、整数退出码和一份**本地可读取**的日志：
+上面那条命令实测的 `blockers` 是 `pr_merge_evidence`、`test_evidence_present`、`ci_evidence`、`review_attestation` 四项。注意 **`--test-evidence` 是自由文本指针，单独给它不会让测试门禁通过**：此时 `test_evidence_present` 是 `unknown`，detail 写「只有证据声明，没有命令、退出码和日志」。
+
+要让这一项变成 `pass`，需要命令、整数退出码和一份**本地可读取**的日志，而且这三件必须来自一次真实执行：先跑命令、把输出落盘、记下它自己的退出码，再把原值传进去。
 
 ```bash
+python -m unittest discover -s tests > tut-test.log 2>&1
+rc=$?    # 用命令真实的退出码，不要手填 0
+
 PYTHONPATH=.project-memory/tooling python3 -m project_memory finish \
   --repo . --task-file task.json \
   --test-command "python -m unittest discover -s tests" \
-  --test-exit 0 --test-log ./tut-test.log \
+  --test-exit "$rc" --test-log ./tut-test.log \
   --docs-impact not-applicable \
   --docs-justification "试跑没有改动 canonical 文档"
 ```
 
-实测：三件齐全且日志可读 → `test_evidence_present: pass`，`blockers` 少了这一项，但 `recommendation` 仍是 `do_not_close`（PR、CI、人工审查都还缺）；退出码非 0 → `fail`；日志路径不存在或只给网址 → `unknown`，不会当成通过。门禁认的是可核对的结构化证据，不是「我跑过了」这句话。
+本试跑的临时仓库里没有 `tests/`，所以第一条命令实测退出码是 1，门禁给 `fail`（detail：「测试命令退出码为 1，不能视为通过」）——这正好是一个负对照。放一个真能通过的测试再跑，实测退出码 0、日志是 unittest 的真实输出（`Ran 1 test … OK`），门禁才给 `pass`；此时 `blockers` 剩下 `pr_merge_evidence`、`ci_evidence`、`review_attestation` 三项，`recommendation` 仍是 `do_not_close`。日志路径不存在或只给网址时是 `unknown`，不会当成通过。
+
+**门禁只校验结构与日志可读性，不会替你重跑命令**，所以 `finish` 不做独立验证。要让测试成为可核验的观测证据，需要另一个执行记录先跑 `test-run` 拿收据再走 `verify`；证据级别的口径见 [workflows.md](../skill/project-memory/references/workflows.md)。
 
 ### 1.6 图谱与检索
 
