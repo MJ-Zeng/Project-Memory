@@ -67,7 +67,7 @@ cd /path/to/project-memory
 python3 -m project_memory init --repo "$DEMO" --install both
 ```
 
-**下文统一写 `PYTHONPATH=.project-memory/tooling python3 -m project_memory`，那是「未安装」语境。** 如果你用的解释器已经 pip 安装了本项目，把这一整段换成 `project-memory` 再执行：`sys.path` 上同时出现 `site-packages` 副本和仓库内副本时，ADR-0005 的同名包防篡改守卫会 exit 3，并在 stderr 点名那份副本、提示改用启动器。这是设计行为，不是故障。实测在装了 `1.2.1` wheel 的干净 venv 里：`PYTHONPATH` 形式 exit 3，而 `project-memory`（Git Bash）、`project-memory.cmd`（cmd）与不带 `PYTHONPATH` 的 `python -m project_memory` 三种入口都 exit 0，`init` 与 `audit` 结果一致。
+**下文统一写 `PYTHONPATH=.project-memory/tooling python3 -m project_memory`，那是「未安装」语境。** 如果你用的解释器已经 pip 安装了本项目（非 editable 的 wheel 安装），把这一整段换成 `project-memory` 再执行：`sys.path` 上同时出现 `site-packages` 里的实体包副本和仓库内副本时，ADR-0005 的同名包防篡改守卫会 exit 3，并在 stderr 点名那份副本、提示改用启动器。这是设计行为，不是故障。实测在装了 `1.2.1` wheel 的干净 venv 里：`PYTHONPATH` 形式 exit 3，而 `project-memory`（Git Bash）、`project-memory.cmd`（cmd）与不带 `PYTHONPATH` 的 `python -m project_memory` 三种入口都 exit 0，`init` 与 `audit` 结果一致。editable 安装（`pip install -e .`）是例外：它只在 `site-packages` 留 `.pth` 与 finder，没有实体包目录，守卫扫不到，因此不会 exit 3。
 
 `--install both` 会把 Skill 放进目标仓库的 `.agents/skills/project-memory/` 和 `.claude/skills/project-memory/`，同时把可离线运行的 CLI 复制到 `.project-memory/tooling/`。初始化只创建缺失文件，不覆盖、不提交、不推送。
 
