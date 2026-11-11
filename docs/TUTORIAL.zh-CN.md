@@ -4,7 +4,7 @@ kind: "canonical"
 title: "教程与工作流"
 status: "current"
 owner: "MJ-Zeng"
-updated_at: "2026-11-08"
+updated_at: "2026-11-11"
 last_verified_at: "2026-11-08"
 ---
 
@@ -53,12 +53,21 @@ Windows 上如果 `python3` 没有输出，通常是 Store 别名或 PATH 问题
 
 ### 1.2 初始化
 
-从分发目录执行：
+先选一个入口，两种都行，但**不要混用**：
+
+- **已经 pip 安装本项目**（按 [README](../README.md) 装了 Release 的 wheel）：用 `project-memory` 启动器，在任意目录执行都可以。
+- **没有 pip 安装**：在克隆下来的分发目录里用 `python3 -m project_memory`；进到目标仓库后改用 `PYTHONPATH=.project-memory/tooling` 形式，走仓库内那份离线副本。
 
 ```bash
-cd /c/Documents/02_Research/Code/project-memory-mvp
+# 已安装：任意目录
+project-memory init --repo "$DEMO" --install both
+
+# 未安装：cd 到你自己的克隆目录（下面是占位路径，换成你的）
+cd /path/to/project-memory
 python3 -m project_memory init --repo "$DEMO" --install both
 ```
+
+**下文统一写 `PYTHONPATH=.project-memory/tooling python3 -m project_memory`，那是「未安装」语境。** 如果你用的解释器已经 pip 安装了本项目，把这一整段换成 `project-memory` 再执行：`sys.path` 上同时出现 `site-packages` 副本和仓库内副本时，ADR-0005 的同名包防篡改守卫会 exit 3，并在 stderr 点名那份副本、提示改用启动器。这是设计行为，不是故障。实测在装了 `1.2.1` wheel 的干净 venv 里：`PYTHONPATH` 形式 exit 3，而 `project-memory`（Git Bash）、`project-memory.cmd`（cmd）与不带 `PYTHONPATH` 的 `python -m project_memory` 三种入口都 exit 0，`init` 与 `audit` 结果一致。
 
 `--install both` 会把 Skill 放进目标仓库的 `.agents/skills/project-memory/` 和 `.claude/skills/project-memory/`，同时把可离线运行的 CLI 复制到 `.project-memory/tooling/`。初始化只创建缺失文件，不覆盖、不提交、不推送。
 
@@ -107,7 +116,7 @@ PYTHONPATH=.project-memory/tooling python3 -m project_memory audit --repo . --sc
 
 ### 1.5 走一次任务流程
 
-新建 `task.json`：
+新建 `task.json`（字段形状相同的真实样本见 [`demo/pro3-release-2026-10-24/task.json`](../demo/pro3-release-2026-10-24/task.json)，它的 `id` 与正文更长，不要直接当本试跑的输入）：
 
 ```json
 {
@@ -156,6 +165,19 @@ PYTHONPATH=.project-memory/tooling python3 -m project_memory finish \
 ```
 
 没有 PR、也没有人类审查声明时，`recommendation` 会是 `do_not_close`，`blockers` 会列出缺少的 gate。这是正常结果。工具故意不自动关闭任务。
+
+上面那条命令实测的 `blockers` 是 `pr_merge_evidence`、`test_evidence_present`、`ci_evidence`、`review_attestation` 四项。注意 **`--test-evidence` 是自由文本指针，单独给它不会让测试门禁通过**：此时 `test_evidence_present` 是 `unknown`，detail 写「只有证据声明，没有命令、退出码和日志」。要让它变成 `pass`，必须同时给出命令、整数退出码和一份**本地可读取**的日志：
+
+```bash
+PYTHONPATH=.project-memory/tooling python3 -m project_memory finish \
+  --repo . --task-file task.json \
+  --test-command "python -m unittest discover -s tests" \
+  --test-exit 0 --test-log ./tut-test.log \
+  --docs-impact not-applicable \
+  --docs-justification "试跑没有改动 canonical 文档"
+```
+
+实测：三件齐全且日志可读 → `test_evidence_present: pass`，`blockers` 少了这一项，但 `recommendation` 仍是 `do_not_close`（PR、CI、人工审查都还缺）；退出码非 0 → `fail`；日志路径不存在或只给网址 → `unknown`，不会当成通过。门禁认的是可核对的结构化证据，不是「我跑过了」这句话。
 
 ### 1.6 图谱与检索
 
